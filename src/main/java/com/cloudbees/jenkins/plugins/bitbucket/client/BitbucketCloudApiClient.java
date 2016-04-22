@@ -298,8 +298,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     @Override
     public void postBuildStatus(BitbucketBuildStatus status) {
-        // TODO use Bitbucket Cloud build status API
-        postCommitComment(status.getHash(), status.getDescription() + ". [See build result](" + status.getUrl() + ")");
+        String path = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/commit/" + status.getHash() + "/statuses/build";;
+        try {
+            postRequest(path, serialize(status));
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.log(Level.SEVERE, "Enconding error", e);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Can not comment on commit", e);
+        }
     }
 
     @Override
@@ -494,6 +500,11 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
         return response;
 
+    }
+
+    private <T> String serialize(T o) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(o);
     }
 
     private String postRequest(String path, String content) throws UnsupportedEncodingException {
