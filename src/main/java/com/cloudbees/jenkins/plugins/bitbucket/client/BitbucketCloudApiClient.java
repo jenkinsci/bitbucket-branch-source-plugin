@@ -308,11 +308,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             NameValuePair description = new NameValuePair("description", status.getDescription());
 
             postRequest(path, new NameValuePair[]{ state, key, name, url, description });
-
         } catch (UnsupportedEncodingException e) {
             LOGGER.log(Level.SEVERE, "Enconding error", e);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Can not comment on commit", e);
+            LOGGER.log(Level.SEVERE, "Can not update build status for commit", e);
         }
     }
 
