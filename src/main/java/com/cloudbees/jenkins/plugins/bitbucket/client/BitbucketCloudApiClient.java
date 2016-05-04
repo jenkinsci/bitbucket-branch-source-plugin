@@ -298,8 +298,21 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     @Override
     public void postBuildStatus(BitbucketBuildStatus status) {
-        // TODO use Bitbucket Cloud build status API
-        postCommitComment(status.getHash(), status.getDescription() + ". [See build result](" + status.getUrl() + ")");
+        String path = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/commit/" + status.getHash() + "/statuses/build";
+
+        try {
+            NameValuePair state       = new NameValuePair("state", status.getState());
+            NameValuePair key         = new NameValuePair("key", status.getKey());
+            NameValuePair name        = new NameValuePair("name", status.getName());
+            NameValuePair url         = new NameValuePair("url", status.getUrl());
+            NameValuePair description = new NameValuePair("description", status.getDescription());
+
+            postRequest(path, new NameValuePair[]{ state, key, name, url, description });
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.log(Level.SEVERE, "Enconding error", e);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Can not update build status for commit", e);
+        }
     }
 
     @Override
