@@ -5,9 +5,9 @@ machine:
 test:
   override:
     - mvn test:
-        timeout: 600
+        timeout: 1200
 
-general:
-  artifacts:
-    - "target/*hpi" # relative to the build directory
+#general:
+#  artifacts:
+#    - "target/*hpi" # relative to the build directory
 
