@@ -3,10 +3,10 @@ machine:
     AWS_REGION: 'ap-northeast-1'
 
 test:
-  override:
-    - mvn test:
-        timeout: 1200
+  pre:
+    - mvn package
   post:
     - mkdir $CIRCLE_ARTIFACTS/plugin
-    - mv target/* $CIRCLE_ARTIFACTS/plugin
+    - mv "target/*.hpi" $CIRCLE_ARTIFACTS/plugin
+    - mv "target/*.jar" $CIRCLE_ARTIFACTS/plugin
 
