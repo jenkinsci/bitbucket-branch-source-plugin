@@ -6,7 +6,7 @@ test:
   pre:
     - mvn package
     - mkdir $CIRCLE_ARTIFACTS/plugin
-    - mv "bitbucket-branch-source-plugin/target/*.hpi" $CIRCLE_ARTIFACTS/plugin
-    - mv "bitbucket-branch-source-plugin/target/*.jar" $CIRCLE_ARTIFACTS/plugin
+    - mv "~/bitbucket-branch-source-plugin/target/*.hpi" $CIRCLE_ARTIFACTS/plugin
+    - mv "~/bitbucket-branch-source-plugin/target/*.jar" $CIRCLE_ARTIFACTS/plugin
   override:
     - mvn test
