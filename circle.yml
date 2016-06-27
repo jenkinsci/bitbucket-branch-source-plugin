@@ -5,8 +5,8 @@ machine:
 test:
   pre:
     - mvn package
-  post:
     - mkdir $CIRCLE_ARTIFACTS/plugin
     - mv "target/*.hpi" $CIRCLE_ARTIFACTS/plugin
     - mv "target/*.jar" $CIRCLE_ARTIFACTS/plugin
-
+  override:
+    - mvn test
