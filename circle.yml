@@ -2,10 +2,6 @@ machine:
   environment:
     AWS_REGION: 'ap-northeast-1'
 
-dependencies:
-  pre:
-    - sudo apt-get install -y maven=3.0.5
-
 test:
   override:
     - mvn test:
