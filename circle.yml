@@ -7,7 +7,7 @@ test:
     - mvn test:
         timeout: 1200
 
-#general:
-#  artifacts:
-#    - "target/*hpi" # relative to the build directory
+general:
+  artifacts:
+    - "target" # relative to the build directory
 
