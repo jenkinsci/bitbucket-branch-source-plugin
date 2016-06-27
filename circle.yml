@@ -2,9 +2,10 @@ machine:
   environment:
     AWS_REGION: 'ap-northeast-1'
 
-dependencies:
-  pre:
-    - apt-get install -y maven
+test:
+  override:
+    - mvn test:
+        timeout: 600
 
 general:
   artifacts:
