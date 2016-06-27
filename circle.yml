@@ -6,8 +6,7 @@ test:
   override:
     - mvn test:
         timeout: 1200
-
-general:
-  artifacts:
-    - "target" # relative to the build directory
+  post:
+    - mkdir $CIRCLE_ARTIFACTS/plugin
+    - mv target/* $CIRCLE_ARTIFACTS/plugin
 
