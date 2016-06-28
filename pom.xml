@@ -32,7 +32,7 @@
     </parent>
 
     <artifactId>cloudbees-bitbucket-branch-source</artifactId>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.6-unifio</version>
     <packaging>hpi</packaging>
 
     <name>Bitbucket Branch Source Plugin</name>

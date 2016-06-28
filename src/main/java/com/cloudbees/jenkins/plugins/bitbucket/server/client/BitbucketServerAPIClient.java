@@ -260,7 +260,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             branches.addAll(page.getValues());
             while (!page.isLastPage() && pageNumber < MAX_PAGES) {
                 pageNumber++;
-                response = getRequest(String.format(API_PULL_REQUESTS_PATH, getUserCentricOwner(), repositoryName, page.getNextPageStart()));
+                response = getRequest(String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, page.getNextPageStart()));
                 page = parse(response, BitbucketServerBranches.class);
                 branches.addAll(page.getValues());
             }
