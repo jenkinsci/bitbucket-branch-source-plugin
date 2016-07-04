@@ -112,7 +112,7 @@ public class BranchScanningTest {
         // Only branch1 and my-feature-branch PR must be observed
         assertEquals(2, observer.getBranches().size());
         assertEquals("branch1", observer.getBranches().get(0));
-        assertEquals("PR-23", observer.getBranches().get(1));
+        assertEquals("PR-23: Title", observer.getBranches().get(1));
     }
 
     @Test
