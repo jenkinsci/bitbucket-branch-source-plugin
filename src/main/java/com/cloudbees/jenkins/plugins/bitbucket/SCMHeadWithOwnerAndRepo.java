@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import jenkins.scm.api.SCMHead;
 
 /**
@@ -31,11 +30,7 @@ import jenkins.scm.api.SCMHead;
  * <ul>
  *   <li>{@link #repoOwner}: the repository owner</li>
  *   <li>{@link #repoName}: the repository name</li>
- *   <li>{@link #pullRequestId}: the pull request ID (if it is representing a PR, null otherwise)</li>
  * </ul>
- * This information is required in this plugin since {@link BitbucketSCMSource} is processing pull requests
- * and they are managed as separate repositories in Bitbucket without any reference to them in the destination
- * repository.
  */
 public class SCMHeadWithOwnerAndRepo extends SCMHead {
 
@@ -45,19 +40,10 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
 
     private final String repoName;
 
-    private final Integer pullRequestId;
-
-    private static final String PR_BRANCH_PREFIX = "PR-";
-
-    public SCMHeadWithOwnerAndRepo(String repoOwner, String repoName, String branchName, Integer pullRequestId) {
+    public SCMHeadWithOwnerAndRepo(String repoOwner, String repoName, String branchName) {
         super(branchName);
         this.repoOwner = repoOwner;
         this.repoName = repoName;
-        this.pullRequestId = pullRequestId;
-    }
-
-    public SCMHeadWithOwnerAndRepo(String repoOwner, String repoName, String branchName) {
-        this(repoOwner, repoName, branchName, null);
     }
 
     public String getRepoOwner() {
@@ -69,24 +55,9 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
     }
 
     /**
-     * @return the original branch name without the "PR-owner-" part.
+     * @return the original branch name.
      */
     public String getBranchName() {
         return super.getName();
     }
-
-    /**
-     * Returns the prettified branch name by adding "PR-[ID]" if the branch is coming from a PR.
-     * Use {@link #getBranchName()} to get the real branch name.
-     */
-    @Override
-    public String getName() {
-        return pullRequestId != null ? PR_BRANCH_PREFIX + pullRequestId : getBranchName();
-    }
-
-    @CheckForNull
-    public Integer getPullRequestId() {
-        return pullRequestId;
-    }
-
 }

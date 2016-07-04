@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
 public class BitbucketPullRequestValue implements BitbucketPullRequest {
     private BitbucketPullRequestValueRepository source;
     private String id;
+    private String title;
 
     public BitbucketPullRequestSource getSource() {
         return source;
@@ -49,4 +50,11 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
         this.id = id;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 }

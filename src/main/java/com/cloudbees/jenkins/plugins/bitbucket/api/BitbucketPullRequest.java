@@ -39,4 +39,8 @@ public interface BitbucketPullRequest {
      */
     String getId();
 
+    /**
+     * @return pull request Title as provided by Bitbucket. It will be used for the job name.
+     */
+    String getTitle();
 }

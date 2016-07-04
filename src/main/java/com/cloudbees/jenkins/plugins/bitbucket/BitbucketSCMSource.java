@@ -33,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.*;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
@@ -40,11 +41,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
@@ -80,7 +76,7 @@ import jenkins.scm.api.SCMSourceOwner;
 
 /**
  * SCM source implementation for Bitbucket.
- * 
+ *
  * It provides a way to discover/retrieve branches and pull requests through the Bitbuclet REST API
  * which is much faster than the plain Git SCM source implementation.
  */
@@ -289,21 +285,24 @@ public class BitbucketSCMSource extends SCMSource {
         if (bitbucket.isPrivate()) {
             List<? extends BitbucketPullRequest> pulls = bitbucket.getPullRequests();
             for (final BitbucketPullRequest pull : pulls) {
+                BitbucketPullRequestSource source = pull.getSource();
+                BitbucketRepository repository = source.getRepository();
+                BitbucketBranch branch = source.getBranch();
                 listener.getLogger().println(
-                        "Checking PR from " + pull.getSource().getRepository().getFullName() + " and branch "
-                                + pull.getSource().getBranch().getName());
+                        "Checking PR from " + repository.getFullName() + " and branch "
+                                + branch.getName());
 
                 // Resolve full hash. See https://bitbucket.org/site/master/issues/11415/pull-request-api-should-return-full-commit
                 String hash = bitbucket.resolveSourceFullHash(pull);
                 if (hash != null) {
-                    observe(observer, listener,
-                            pull.getSource().getRepository().getOwnerName(),
-                            pull.getSource().getRepository().getRepositoryName(),
-                            pull.getSource().getBranch().getName(),
-                            hash,
-                            Integer.parseInt(pull.getId()));
+                    if (shouldObserve(listener, repository.getOwnerName(),
+                            repository.getRepositoryName(),
+                            branch.getName(), hash)) {
+                        PullrequestSCMHead prHead = new PullrequestSCMHead(pull);
+                        observe(observer, prHead, hash);
+                    }
                 } else {
-                    listener.getLogger().format("Can not resolve hash: [%s]%n", pull.getSource().getCommit().getHash());
+                    listener.getLogger().format("Can not resolve hash: [%s]%n", source.getCommit().getHash());
                 }
                 if (!observer.isObserving()) {
                     return;
@@ -323,16 +322,18 @@ public class BitbucketSCMSource extends SCMSource {
         List<? extends BitbucketBranch> branches = bitbucket.getBranches();
         for (BitbucketBranch branch : branches) {
             listener.getLogger().println("Checking branch " + branch.getName() + " from " + fullName);
-            observe(observer, listener, repoOwner, repository, branch.getName(),
-                    branch.getRawNode(), null);
+            if (shouldObserve(listener, repoOwner, repository, branch.getName(), branch.getRawNode())) {
+                SCMHeadWithOwnerAndRepo head = new SCMHeadWithOwnerAndRepo(repoOwner, repository, branch.getName());
+                observe(observer, head, branch.getRawNode());
+            }
         }
     }
 
-    private void observe(SCMHeadObserver observer, final TaskListener listener,
-            final String owner, final String repositoryName, 
-            final String branchName, final String hash, Integer prId) throws IOException {
+    private boolean shouldObserve(final TaskListener listener,
+                                  final String owner, final String repositoryName,
+                                  final String branchName, final String hash) throws IOException {
         if (isExcluded(branchName)) {
-            return;
+            return false;
         }
         final BitbucketApi bitbucket = getBitbucketConnector().create(owner, repositoryName, getScanCredentials());
         SCMSourceCriteria branchCriteria = getCriteria();
@@ -362,13 +363,18 @@ public class BitbucketSCMSource extends SCMSource {
             };
             if (branchCriteria.isHead(probe, listener)) {
                 listener.getLogger().println("Met criteria");
+                return true;
             } else {
                 listener.getLogger().println("Does not meet criteria");
-                return;
+                return false;
             }
         }
+        return true;
+    }
+
+    private void observe(SCMHeadObserver observer,
+                         SCMHead head, final String hash) throws IOException {
         SCMRevision revision;
-        SCMHeadWithOwnerAndRepo head = new SCMHeadWithOwnerAndRepo(owner, repositoryName, branchName, prId);
         if (getRepositoryType() == RepositoryType.MERCURIAL) {
             revision = new MercurialRevision(head, hash);
         } else {
@@ -455,7 +461,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
-     * 
+     *
      * @param branchName
      * @return true if branchName is excluded or is not included
      */
@@ -465,9 +471,9 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     /**
-     * Returns the pattern corresponding to the branches containing wildcards. 
-     * 
-     * @param branches space separated list of expressions. 
+     * Returns the pattern corresponding to the branches containing wildcards.
+     *
+     * @param branches space separated list of expressions.
      *        For example "*" which would match all branches and branch* would match branch1, branch2, etc.
      * @return pattern corresponding to the branches containing wildcards (ready to be used by {@link Pattern})
      */
