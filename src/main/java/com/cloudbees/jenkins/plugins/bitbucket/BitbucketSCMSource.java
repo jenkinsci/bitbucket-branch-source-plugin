@@ -372,7 +372,7 @@ public class BitbucketSCMSource extends SCMSource {
         return true;
     }
 
-    private void observe(SCMHeadObserver observer,
+    private synchronized void observe(SCMHeadObserver observer,
                          SCMHead head, final String hash) throws IOException {
         SCMRevision revision;
         if (getRepositoryType() == RepositoryType.MERCURIAL) {

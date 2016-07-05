@@ -9,6 +9,7 @@ import java.util.List;
 
 public class PullrequestSCMHead extends SCMHeadWithOwnerAndRepo {
 
+    private static final long serialVersionUID = 1L;
     private static final String PR_BRANCH_PREFIX = "PR-";
 
     private final PullRequestAction metatdata;
@@ -23,7 +24,7 @@ public class PullrequestSCMHead extends SCMHeadWithOwnerAndRepo {
     @NonNull
     @Override
     public String getName() {
-        return PR_BRANCH_PREFIX + metatdata.getId() + ": " + metatdata.getTitle();
+        return PR_BRANCH_PREFIX + metatdata.getId();
     }
 
     @NonNull

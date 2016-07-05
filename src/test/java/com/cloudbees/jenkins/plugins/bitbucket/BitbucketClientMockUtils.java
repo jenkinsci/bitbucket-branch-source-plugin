@@ -64,7 +64,7 @@ public class BitbucketClientMockUtils {
         }
 
         if (includePullRequests) {
-            when(bitbucket.getPullRequests()).thenReturn(Collections.singletonList(getPullRequest()));
+            when(bitbucket.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
             when(bitbucket.checkPathExists("my-feature-branch", "markerfile.txt")).thenReturn(true);
             when(bitbucket.resolveSourceFullHash(any(BitbucketPullRequestValue.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
