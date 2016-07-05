@@ -33,7 +33,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.*;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
@@ -76,7 +82,7 @@ import jenkins.scm.api.SCMSourceOwner;
 
 /**
  * SCM source implementation for Bitbucket.
- *
+ * <p>
  * It provides a way to discover/retrieve branches and pull requests through the Bitbuclet REST API
  * which is much faster than the plain Git SCM source implementation.
  */
@@ -373,7 +379,7 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     private synchronized void observe(SCMHeadObserver observer,
-                         SCMHead head, final String hash) throws IOException {
+                                      SCMHead head, final String hash) throws IOException {
         SCMRevision revision;
         if (getRepositoryType() == RepositoryType.MERCURIAL) {
             revision = new MercurialRevision(head, hash);
@@ -456,7 +462,7 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     public String getRemoteName() {
-      return "origin";
+        return "origin";
     }
 
     /**
@@ -474,7 +480,7 @@ public class BitbucketSCMSource extends SCMSource {
      * Returns the pattern corresponding to the branches containing wildcards.
      *
      * @param branches space separated list of expressions.
-     *        For example "*" which would match all branches and branch* would match branch1, branch2, etc.
+     *                 For example "*" which would match all branches and branch* would match branch1, branch2, etc.
      * @return pattern corresponding to the branches containing wildcards (ready to be used by {@link Pattern})
      */
     private String getPattern(String branches) {
@@ -554,7 +560,7 @@ public class BitbucketSCMSource extends SCMSource {
             try {
                 new URL(bitbucketServerUrl);
             } catch (MalformedURLException e) {
-                return FormValidation.error("Invalid URL: " +  e.getMessage());
+                return FormValidation.error("Invalid URL: " + e.getMessage());
             }
             return FormValidation.ok();
         }
