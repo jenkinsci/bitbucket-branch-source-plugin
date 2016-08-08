@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketProject;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -44,6 +45,8 @@ public class BitbucketCloudRepository implements BitbucketRepository {
 
     // JSON mapping added in setter because the field can not be called "private"
     private Boolean priv;
+
+    private BitbucketCloudProject project;
 
     @Override
     public String getScm() {
@@ -76,6 +79,10 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         this.updatedOn = updatedOn;
     }
 
+    public void setProject(BitbucketCloudProject project) {
+        this.project = project;
+    }
+
     @Override
     public String getOwnerName() {
         if (this.fullName != null) {
@@ -97,9 +104,19 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         return priv;
     }
 
+    @Override
+    public String getProjectName() {
+        if (this.project != null) {
+            return project.getName();
+        }
+        return null;
+    }
+
     @JsonProperty("is_private")
     public void setPrivate(Boolean priv) {
         this.priv = priv;
     }
+
+
 
 }
