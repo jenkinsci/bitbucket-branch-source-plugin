@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketProject;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
