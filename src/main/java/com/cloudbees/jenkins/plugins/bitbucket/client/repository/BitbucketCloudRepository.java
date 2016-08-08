@@ -108,7 +108,7 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         if (this.project != null) {
             return project.getName();
         }
-        return null;
+        return "";
     }
 
     @JsonProperty("is_private")
