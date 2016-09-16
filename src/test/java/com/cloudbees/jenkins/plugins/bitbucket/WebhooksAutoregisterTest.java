@@ -42,6 +42,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import hudson.util.RingBufferLogHandler;
 import jenkins.branch.BranchSource;
 import jenkins.branch.DefaultBranchPropertyStrategy;
+import jenkins.model.JenkinsLocationConfiguration;
 
 public class WebhooksAutoregisterTest {
 
@@ -67,9 +68,7 @@ public class WebhooksAutoregisterTest {
     }
 
     private void setRootUrl() throws IOException, SAXException, Exception {
-        HtmlForm configForm = j.createWebClient().goTo("configure").getFormByName("config");
-        configForm.getInputByName("_.url").setValueAttribute(j.getURL().toString().replace("localhost", "127.0.0.1"));
-        j.submit(configForm);
+        JenkinsLocationConfiguration.get().setUrl(j.getURL().toString().replace("localhost", "127.0.0.1"));
     }
 
     private void waitForLogFileMessage(String string, RingBufferLogHandler logs) throws IOException, InterruptedException {

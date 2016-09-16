@@ -193,10 +193,6 @@ public class BranchScanningIntegrationTest {
                 return new MultiBranchProjectImpl(parent, name);
             }
 
-            @Override 
-            public List<SCMDescriptor<?>> getSCMDescriptors() {
-                return SCM.all();
-            }
         }
     }
 

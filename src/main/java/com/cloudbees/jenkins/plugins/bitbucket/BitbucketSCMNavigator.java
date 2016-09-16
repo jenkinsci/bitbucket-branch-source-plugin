@@ -136,7 +136,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         this.bitbucketConnector = bitbucketConnector;
     }
 
-    private BitbucketApiConnector getBitbucketConnector() {
+    /*package*/ BitbucketApiConnector getBitbucketConnector() {
         if (bitbucketConnector == null) {
             bitbucketConnector = new BitbucketApiConnector(bitbucketServerUrl);
         }

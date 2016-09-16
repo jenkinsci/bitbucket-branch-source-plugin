@@ -46,7 +46,7 @@
     </licenses>
 
     <properties>
-        <jenkins.version>1.609.2</jenkins.version>
+        <jenkins.version>1.642.3</jenkins.version>
     </properties>
 
     <scm>
@@ -61,6 +61,11 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>scm-api</artifactId>
             <version>1.2</version>
+        </dependency>
+        <dependency><!-- Remove once DisplayNameItemListener is extracted -->
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>branch-api</artifactId>
+            <version>1.10.2</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -92,12 +97,6 @@
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-multibranch</artifactId>
             <version>1.11</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>branch-api</artifactId>
-            <version>1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
