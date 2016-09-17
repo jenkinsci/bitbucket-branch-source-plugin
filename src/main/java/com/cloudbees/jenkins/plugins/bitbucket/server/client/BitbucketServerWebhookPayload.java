@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.client;
+package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
-import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPullRequestEvent;
-import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPushEvent;
+import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPullRequestEvent;
+import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPushEvent;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -35,14 +35,14 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class BitbucketCloudWebhookPayload {
+public class BitbucketServerWebhookPayload {
 
-    private static final Logger LOGGER = Logger.getLogger(BitbucketCloudWebhookPayload.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(BitbucketServerWebhookPayload.class.getName());
 
     @CheckForNull
     public static BitbucketPushEvent pushEventFromPayload(@NonNull String payload) {
         try {
-            return parse(payload, BitbucketCloudPushEvent.class);
+            return parse(payload, BitbucketServerPushEvent.class);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
         }
@@ -52,7 +52,7 @@ public class BitbucketCloudWebhookPayload {
     @CheckForNull
     public static BitbucketPullRequestEvent pullRequestEventFromPayload(@NonNull String payload) {
         try {
-            return parse(payload, BitbucketCloudPullRequestEvent.class);
+            return parse(payload, BitbucketServerPullRequestEvent.class);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
         }

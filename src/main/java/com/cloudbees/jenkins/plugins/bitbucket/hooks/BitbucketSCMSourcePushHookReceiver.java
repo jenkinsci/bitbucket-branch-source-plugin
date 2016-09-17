@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import hudson.security.csrf.CrumbExclusion;
@@ -40,6 +41,13 @@ import org.kohsuke.stapler.StaplerRequest;
 import hudson.Extension;
 import hudson.model.UnprotectedRootAction;
 import hudson.util.HttpResponses;
+import org.apache.commons.io.IOUtils;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.StaplerRequest;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Process Bitbucket push and pull requests creations/updates hooks.
@@ -88,7 +96,18 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             LOGGER.info("Received unknown Bitbucket hook: " + eventKey + ". Skipping.");
             return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST, "X-Event-Key HTTP header invalid: " + eventKey);
         }
-        type.getProcessor().process(body);
+
+        String bitbucketKey = req.getHeader("X-Bitbucket-Type");
+        BitbucketType instanceType = null;
+        if (bitbucketKey != null) {
+            instanceType = BitbucketType.fromString(bitbucketKey);
+        }
+        if(instanceType == null){
+            LOGGER.log(Level.FINE, "X-Bitbucket-Type header not found. Bitbucket Cloud webhook incoming.");
+            instanceType = BitbucketType.CLOUD;
+        }
+
+        type.getProcessor().process(body, instanceType);
         return HttpResponses.ok();
     }
 

@@ -23,13 +23,13 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.events;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BitbucketPushEvent {
+public class BitbucketCloudPushEvent implements BitbucketPushEvent {
 
     private BitbucketCloudRepository repository;
 

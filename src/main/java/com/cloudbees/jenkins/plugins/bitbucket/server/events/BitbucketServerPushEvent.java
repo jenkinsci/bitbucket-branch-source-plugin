@@ -21,34 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.server.events;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-import java.util.logging.Logger;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class BitbucketServerPushEvent implements BitbucketPushEvent{
 
-public class PushHookProcessor extends HookProcessor {
+    private BitbucketServerRepository repository;
 
-    private static final Logger LOGGER = Logger.getLogger(PushHookProcessor.class.getName());
-
-    @Override
-    public void process(String payload, BitbucketType instanceType) {
-        if (payload != null) {
-            BitbucketPushEvent push;
-            if (instanceType == BitbucketType.SERVER) {
-                push = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
-            } else {
-                push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
-            }
-            if (push != null) {
-                String owner = push.getRepository().getOwnerName();
-                String repository = push.getRepository().getRepositoryName();
-
-                LOGGER.info(String.format("Received hook from Bitbucket. Processing push event on %s/%s", owner, repository));
-                scmSourceReIndex(owner, repository);
-            }
-        }
+    public BitbucketRepository getRepository() {
+        return repository;
     }
+
+    public void setRepository(BitbucketServerRepository repository) {
+        this.repository = repository;
+    }
+
 }
