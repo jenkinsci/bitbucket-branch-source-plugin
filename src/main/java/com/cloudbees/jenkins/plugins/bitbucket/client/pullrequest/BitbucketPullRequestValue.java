@@ -90,6 +90,9 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
             html = new Html();
             html.href = link;
         }
+        public void setHtml(Html html) {
+            this.html = html;
+        }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
         private static class Html {
