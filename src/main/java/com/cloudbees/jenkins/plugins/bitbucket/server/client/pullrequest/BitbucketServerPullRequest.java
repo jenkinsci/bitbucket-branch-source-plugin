@@ -34,6 +34,8 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     private String id;
 
+    private String title;
+
     @JsonProperty("fromRef")
     private BitbucketServerPullRequestSource source;
 
@@ -55,4 +57,12 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
         this.id = id;
     }
 
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 }

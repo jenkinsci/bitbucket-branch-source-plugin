@@ -159,6 +159,7 @@ public class BitbucketClientMockUtils {
         pr.setSource(source);
 
         pr.setId("23");
+        pr.setTitle("Title");
         return pr;
     }
 
