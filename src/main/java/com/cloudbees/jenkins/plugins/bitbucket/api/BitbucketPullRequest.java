@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 /**
  * Represents a pull request in Bitbucket.
  * Only the source repository is necessary, the destination repo is inferred.
@@ -37,6 +39,7 @@ public interface BitbucketPullRequest {
     /**
      * @return pull request ID as provided by Bitbucket. It can be used for notifications.
      */
+    @NonNull
     String getId();
 
     String getTitle();

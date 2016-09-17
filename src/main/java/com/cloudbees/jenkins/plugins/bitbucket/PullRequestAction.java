@@ -5,6 +5,7 @@ import java.net.URL;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.actions.ChangeRequestAction;
 
 public class PullRequestAction extends ChangeRequestAction {
@@ -25,6 +26,7 @@ public class PullRequestAction extends ChangeRequestAction {
     }
 
     @Override
+    @NonNull
     public String getId() {
         return number;
     }

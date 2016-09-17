@@ -82,7 +82,7 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public class Links {
+    public static class Links {
         private Html html;
         public Links() {}
         // for tests
@@ -92,14 +92,14 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
         }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        private class Html {
+        private static class Html {
             public String href;
             public Html() {}
         }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public class Author {
+    public static class Author {
         private String username;
         public Author() {}
         public Author(String username) {
