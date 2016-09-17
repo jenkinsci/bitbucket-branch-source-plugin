@@ -37,6 +37,12 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
     @JsonProperty("fromRef")
     private BitbucketServerPullRequestSource source;
 
+    private String title;
+
+    private String link;
+
+    private String authorLogin;
+
     @Override
     public BitbucketPullRequestSource getSource() {
         return source;
@@ -53,6 +59,23 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Override
+    public String getTitle() {
+        return this.title;
+    }
+
+    // TODO: unmapped, need proper JsonProperty in the field
+    @Override
+    public String getLink() {
+        return link;
+    }
+
+    // TODO: unmapped, need proper JsonProperty in the field
+    @Override
+    public String getAuthorLogin() {
+        return authorLogin;
     }
 
 }

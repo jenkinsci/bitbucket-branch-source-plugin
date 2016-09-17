@@ -64,7 +64,13 @@ public class BitbucketBuildStatusNotifications {
         String revision = extractRevision(build);
         if (revision != null) {
             Result result = build.getResult();
-            String url = DisplayURLProvider.get().getRunURL(build);
+            String url;
+            try {
+                url = DisplayURLProvider.get().getRunURL(build);
+            } catch (IllegalStateException e) {
+                listener.getLogger().println("Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is configured in Jenkins global configuration.");
+                return;
+            }
             BitbucketBuildStatus status = null;
             if (Result.SUCCESS.equals(result)) {
                 status = new BitbucketBuildStatus(revision, "This commit looks good", "SUCCESSFUL", url, build.getParent().getName(), build.getDisplayName());

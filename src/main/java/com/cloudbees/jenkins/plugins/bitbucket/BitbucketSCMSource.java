@@ -301,7 +301,7 @@ public class BitbucketSCMSource extends SCMSource {
                             pull.getSource().getRepository().getRepositoryName(),
                             pull.getSource().getBranch().getName(),
                             hash,
-                            Integer.parseInt(pull.getId()));
+                            pull);
                 } else {
                     listener.getLogger().format("Can not resolve hash: [%s]%n", pull.getSource().getCommit().getHash());
                 }
@@ -330,7 +330,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     private void observe(SCMHeadObserver observer, final TaskListener listener,
             final String owner, final String repositoryName, 
-            final String branchName, final String hash, Integer prId) throws IOException {
+            final String branchName, final String hash, BitbucketPullRequest pr) throws IOException {
         if (isExcluded(branchName)) {
             return;
         }
@@ -368,7 +368,7 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         SCMRevision revision;
-        SCMHeadWithOwnerAndRepo head = new SCMHeadWithOwnerAndRepo(owner, repositoryName, branchName, prId);
+        SCMHeadWithOwnerAndRepo head = new SCMHeadWithOwnerAndRepo(owner, repositoryName, branchName, pr);
         if (getRepositoryType() == RepositoryType.MERCURIAL) {
             revision = new MercurialRevision(head, hash);
         } else {

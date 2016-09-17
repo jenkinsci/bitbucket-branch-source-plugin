@@ -39,4 +39,10 @@ public interface BitbucketPullRequest {
      */
     String getId();
 
+    String getTitle();
+
+    String getLink();
+
+    String getAuthorLogin();
+
 }
