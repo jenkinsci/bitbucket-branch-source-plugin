@@ -37,6 +37,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue.Author;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
@@ -159,6 +160,8 @@ public class BitbucketClientMockUtils {
         pr.setSource(source);
 
         pr.setId("23");
+        pr.setAuthor(pr.new Author("amuniz"));
+        pr.setLinks(pr.new Links("https://bitbucket.org/amuniz/test-repos/pull-requests/23"));
         return pr;
     }
 
