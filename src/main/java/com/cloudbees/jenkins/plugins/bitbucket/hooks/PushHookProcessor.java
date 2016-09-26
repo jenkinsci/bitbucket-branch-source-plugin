@@ -45,9 +45,10 @@ public class PushHookProcessor extends HookProcessor {
             if (push != null) {
                 String owner = push.getRepository().getOwnerName();
                 String repository = push.getRepository().getRepositoryName();
+                String commitMessage = push.getCommitMessage();
 
                 LOGGER.info(String.format("Received hook from Bitbucket. Processing push event on %s/%s", owner, repository));
-                scmSourceReIndex(owner, repository);
+                scmSourceReIndex(owner, repository, commitMessage);
             }
         }
     }

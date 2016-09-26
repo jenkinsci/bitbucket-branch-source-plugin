@@ -46,10 +46,11 @@ public class PullRequestHookProcessor extends HookProcessor {
             if (pull != null) {
                 String owner = pull.getRepository().getOwnerName();
                 String repository = pull.getRepository().getRepositoryName();
+                String commitMessage = pull.getCommitMessage();
 
                 LOGGER.info(String.format("Received hook from Bitbucket. Processing pull request to %s/%s from %s/%s", 
                         owner, repository, pull.getPullRequest().getSource().getRepository().getOwnerName(), pull.getPullRequest().getSource().getRepository().getRepositoryName()));
-                scmSourceReIndex(owner, repository);
+                scmSourceReIndex(owner, repository, commitMessage);
             }
         }
     }

@@ -63,7 +63,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private boolean autoRegisterHooks = false;
     private String bitbucketServerUrl;
     private int sshPort = -1;
-
+    private String skipBuild = null;
+    
     /**
      * Bitbucket API client connector.
      */
@@ -116,6 +117,15 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @DataBoundSetter
     public void setSshPort(int sshPort) {
         this.sshPort = sshPort;
+    }
+
+    public String getSkipBuild() {
+        return skipBuild;
+    }
+
+    @DataBoundSetter
+    public void setSkipBuild(String skipBuild) {
+        this.skipBuild = skipBuild;
     }
 
     @DataBoundSetter
@@ -194,6 +204,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         scmSource.setAutoRegisterHook(isAutoRegisterHooks());
         scmSource.setBitbucketServerUrl(bitbucketServerUrl);
         scmSource.setSshPort(sshPort);
+        scmSource.setSkipBuild(skipBuild);
         projectObserver.addSource(scmSource);
         projectObserver.complete();
     }

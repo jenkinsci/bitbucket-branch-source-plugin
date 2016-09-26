@@ -38,4 +38,9 @@ public interface BitbucketPullRequestEvent {
      */
     BitbucketRepository getRepository();
 
+    /**
+     * @return the commit message from response.
+     */
+    String getCommitMessage();
+
 }

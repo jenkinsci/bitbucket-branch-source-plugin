@@ -8,4 +8,9 @@ public interface BitbucketPushEvent {
      * @return the destination repository that the push points to.
      */
     BitbucketRepository getRepository();
+
+    /**
+     * @return the commit message from response.
+     */
+    String getCommitMessage();
 }

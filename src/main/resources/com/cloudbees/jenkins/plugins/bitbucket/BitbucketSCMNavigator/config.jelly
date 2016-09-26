@@ -23,5 +23,8 @@
         <f:entry title="${%Bitbucket Server SSH port}" field="sshPort">
             <f:textbox />
         </f:entry>
+        <f:entry title="${%Build Skip Message}" field="skipBuild">
+            <f:textbox />
+        </f:entry>
     </f:advanced>
 </j:jelly>

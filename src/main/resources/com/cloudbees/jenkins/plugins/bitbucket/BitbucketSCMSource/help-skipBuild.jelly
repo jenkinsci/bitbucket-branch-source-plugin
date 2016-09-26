@@ -1,0 +1,8 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+  <l:ajax>
+    <div>
+      String value from commit message to skip the build.
+    </div>
+  </l:ajax>
+</j:jelly>

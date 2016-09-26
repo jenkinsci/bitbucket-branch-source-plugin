@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * Abstract hook processor.
  * 
  * Add new hook processors by extending this class and implement {@link #process(String, BitbucketType)}, extract owner and repository
- * name from the hook payload and then call {@link #scmSourceReIndex(String, String)} to launch a branch/PR reindexing
+ * name from the hook payload and then call {@link #scmSourceReIndex(String, String, String)} to launch a branch/PR reindexing
  * on the mathing SCMSource.
  * 
  * TODO: Improvement - We could schedule a build only in the affected job instead of running a full reindex (since we
@@ -62,8 +62,9 @@ public abstract class HookProcessor {
      * 
      * @param owner the repository owner as configured in the SCMSource
      * @param repository the repository name as configured in the SCMSource
+     * @param commitMessage the commit message for checking build skip
      */
-    protected void scmSourceReIndex(final String owner, final String repository) {
+    protected void scmSourceReIndex(final String owner, final String repository, final String commitMessage) {
         ACL.impersonate(ACL.SYSTEM, new Runnable() {
             @Override 
             public void run() {
@@ -74,9 +75,16 @@ public abstract class HookProcessor {
                         // Search for the correct SCM source
                         if (source instanceof BitbucketSCMSource && ((BitbucketSCMSource) source).getRepoOwner().equalsIgnoreCase(owner)
                                 && ((BitbucketSCMSource) source).getRepository().equals(repository)) {
-                            LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
-                            scmOwner.onSCMSourceUpdated(source);
-                            reindexed = true;
+                            String skipBuild = ((BitbucketSCMSource) source).getSkipBuild();                                                        
+                            if(!(skipBuild != null && commitMessage != null  && commitMessage.indexOf(skipBuild) != -1)) {
+                                LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());                              
+                                scmOwner.onSCMSourceUpdated(source);                                
+                            }
+                            else {
+                                String skipMessage = ((BitbucketSCMSource) source).getSkipBuild();
+                                LOGGER.info("Build skip due to commit message contains " + skipMessage);
+                            }
+                            reindexed = true;  
                         }
                     }
                 }
