@@ -80,9 +80,8 @@ public abstract class HookProcessor {
                                 LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());                              
                                 scmOwner.onSCMSourceUpdated(source);                                
                             }
-                            else {
-                                String skipMessage = ((BitbucketSCMSource) source).getSkipBuild();
-                                LOGGER.info("Build skip due to commit message contains " + skipMessage);
+                            else {                                
+                                LOGGER.info("Build skip due to commit message contains " + skipBuild);
                             }
                             reindexed = true;  
                         }
