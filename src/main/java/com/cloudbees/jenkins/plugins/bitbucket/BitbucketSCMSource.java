@@ -286,7 +286,7 @@ public class BitbucketSCMSource extends SCMSource {
         listener.getLogger().println("Looking up " + fullName + " for pull requests");
 
         final BitbucketApi bitbucket = getBitbucketConnector().create(repoOwner, repository, getScanCredentials());
-        if (bitbucket.isPrivate()) {
+        if (bitbucket.isPrivate() || bitbucketServerUrl != "https://bitbucket.org") {
             List<? extends BitbucketPullRequest> pulls = bitbucket.getPullRequests();
             for (final BitbucketPullRequest pull : pulls) {
                 listener.getLogger().println(
