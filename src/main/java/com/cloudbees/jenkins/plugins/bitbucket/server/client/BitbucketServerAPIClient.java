@@ -26,6 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,8 +37,10 @@ import java.util.logging.Logger;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -368,9 +372,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private String getRequest(String path) {
-        HttpClient client = getHttpClient();
-        client.getState().setCredentials(AuthScope.ANY, credentials);
         GetMethod httpget = new GetMethod(this.baseURL + path);
+        HttpClient client = getHttpClient(getMethodHost(httpget));
+        client.getState().setCredentials(AuthScope.ANY, credentials);
         client.getParams().setAuthenticationPreemptive(true);
         String response = null;
         InputStream responseBodyAsStream = null;
@@ -397,35 +401,46 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return response;
     }
 
-    private HttpClient getHttpClient() {
+    private HttpClient getHttpClient(String host) {
         HttpClient client = new HttpClient();
 
         client.getParams().setConnectionManagerTimeout(10 * 1000);
         client.getParams().setSoTimeout(60 * 1000);
 
+        setClientProxyParams(host, client);
+        return client;
+    }
+
+    private static void setClientProxyParams(String host, HttpClient client) {
         Jenkins jenkins = Jenkins.getInstance();
-        ProxyConfiguration proxy = null;
+        ProxyConfiguration proxyConfig = null;
         if (jenkins != null) {
-            proxy = jenkins.proxy;
+            proxyConfig = jenkins.proxy;
         }
-        if (proxy != null) {
-            LOGGER.info("Jenkins proxy: " + proxy.name + ":" + proxy.port);
-            client.getHostConfiguration().setProxy(proxy.name, proxy.port);
-            String username = proxy.getUserName();
-            String password = proxy.getPassword();
+
+        Proxy proxy = Proxy.NO_PROXY;
+        if (proxyConfig != null) {
+            proxy = proxyConfig.createProxy(host);
+        }
+
+        if (proxy.type() != Proxy.Type.DIRECT) {
+            final InetSocketAddress proxyAddress = (InetSocketAddress)proxy.address();
+            LOGGER.fine("Jenkins proxy: " + proxy.address());
+            client.getHostConfiguration().setProxy(proxyAddress.getHostString(), proxyAddress.getPort());
+            String username = proxyConfig.getUserName();
+            String password = proxyConfig.getPassword();
             if (username != null && !"".equals(username.trim())) {
-                LOGGER.info("Using proxy authentication (user=" + username + ")");
+                LOGGER.fine("Using proxy authentication (user=" + username + ")");
                 client.getState().setProxyCredentials(AuthScope.ANY,
                     new UsernamePasswordCredentials(username, password));
             }
         }
-        return client;
     }
 
     private int getRequestStatus(String path) {
-        HttpClient client = getHttpClient();
-        client.getState().setCredentials(AuthScope.ANY, credentials);
         GetMethod httpget = new GetMethod(this.baseURL + path);
+        HttpClient client = getHttpClient(getMethodHost(httpget));
+        client.getState().setCredentials(AuthScope.ANY, credentials);
         client.getParams().setAuthenticationPreemptive(true);
         try {
             client.executeMethod(httpget);
@@ -438,6 +453,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             httpget.releaseConnection();
         }
         return -1;
+    }
+
+    private static String getMethodHost(HttpMethod method) {
+        try {
+            return method.getURI().getHost();
+        } catch (URIException e) {
+            throw new IllegalStateException("Could not obtain host part for method " + method, e);
+        }
     }
 
     private <T> String serialize(T o) throws IOException {
@@ -466,7 +489,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private String postRequest(PostMethod httppost) throws UnsupportedEncodingException {
-        HttpClient client = getHttpClient();
+        HttpClient client = getHttpClient(getMethodHost(httppost));
         client.getState().setCredentials(AuthScope.ANY, credentials);
         client.getParams().setAuthenticationPreemptive(true);
         String response = null;
