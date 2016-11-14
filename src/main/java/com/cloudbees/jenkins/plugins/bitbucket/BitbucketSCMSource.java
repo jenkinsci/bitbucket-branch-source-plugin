@@ -491,14 +491,12 @@ public class BitbucketSCMSource extends SCMSource {
         StringBuilder quotedBranches = new StringBuilder();
         for (String wildcard : branches.split(" ")) {
             StringBuilder quotedBranch = new StringBuilder();
-            for (String branch : wildcard.split("\\*")) {
-                if (wildcard.startsWith("*") || quotedBranches.length() > 0) {
+            for (String branch : wildcard.split("((?<=\\*)|(?=\\*))")) {
+                if ("*".equals(branch)) {
                     quotedBranch.append(".*");
+                } else {
+                    quotedBranch.append(Pattern.quote(branch));
                 }
-                quotedBranch.append(Pattern.quote(branch));
-            }
-            if (wildcard.endsWith("*")) {
-                quotedBranch.append(".*");
             }
             if (quotedBranches.length() > 0) {
                 quotedBranches.append("|");
