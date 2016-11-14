@@ -1,0 +1,8 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+  <l:ajax>
+    <div>
+      Whether to create jobs for all discovered pull requests.
+    </div>
+  </l:ajax>
+</j:jelly>
