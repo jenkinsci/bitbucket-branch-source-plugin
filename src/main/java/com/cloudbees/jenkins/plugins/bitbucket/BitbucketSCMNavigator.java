@@ -63,17 +63,27 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private boolean autoRegisterHooks = false;
     private String bitbucketServerUrl;
     private int sshPort = -1;
+    private boolean skipPullRequests;
 
     /**
      * Bitbucket API client connector.
      */
     private transient BitbucketApiConnector bitbucketConnector;
 
+    public boolean isSkipPullRequests() {
+        return skipPullRequests;
+    }
+
     @DataBoundConstructor 
     public BitbucketSCMNavigator(String repoOwner, String credentialsId, String checkoutCredentialsId) {
         this.repoOwner = repoOwner;
         this.credentialsId = Util.fixEmpty(credentialsId);
         this.checkoutCredentialsId = checkoutCredentialsId;
+    }
+
+    @DataBoundSetter
+    public void setSkipPullRequests(boolean skipPullRequests) {
+        this.skipPullRequests = skipPullRequests;
     }
 
     @DataBoundSetter 
@@ -194,6 +204,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         scmSource.setAutoRegisterHook(isAutoRegisterHooks());
         scmSource.setBitbucketServerUrl(bitbucketServerUrl);
         scmSource.setSshPort(sshPort);
+        scmSource.setSkipPullRequests(isSkipPullRequests());
         projectObserver.addSource(scmSource);
         projectObserver.complete();
     }

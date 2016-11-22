@@ -17,6 +17,9 @@
         <f:entry title="${%Checkout credentials}" field="checkoutCredentialsId">
             <c:select default="${descriptor.SAME}"/>
         </f:entry>
+        <f:entry field="skipPullRequests">
+            <f:checkbox title="${%Skip pull requests}" />
+        </f:entry>
         <f:entry title="${%Bitbucket Server URL}" field="bitbucketServerUrl">
           <f:textbox />
         </f:entry>
