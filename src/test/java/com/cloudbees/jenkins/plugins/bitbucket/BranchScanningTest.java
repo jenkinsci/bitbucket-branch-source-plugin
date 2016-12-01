@@ -77,7 +77,7 @@ public class BranchScanningTest {
         BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT);
         List<UserRemoteConfig> remoteConfigs = source.getGitRemoteConfigs(new SCMHeadWithOwnerAndRepo("amuniz", "test-repos", "branch1"));
         assertEquals(1, remoteConfigs.size());
-        assertEquals("+refs/heads/branch1", remoteConfigs.get(0).getRefspec());
+        assertEquals("+refs/heads/branch1:refs/remotes/origin/branch1", remoteConfigs.get(0).getRefspec());
     }
 
     @Test

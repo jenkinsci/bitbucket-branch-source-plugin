@@ -431,7 +431,7 @@ public class BitbucketSCMSource extends SCMSource {
     protected List<UserRemoteConfig> getGitRemoteConfigs(SCMHeadWithOwnerAndRepo head) {
         List<UserRemoteConfig> result = new ArrayList<UserRemoteConfig>();
         String remote = getRemote(head.getRepoOwner(), head.getRepoName());
-        result.add(new UserRemoteConfig(remote, getRemoteName(), "+refs/heads/" + head.getBranchName(), getCheckoutEffectiveCredentials()));
+        result.add(new UserRemoteConfig(remote, getRemoteName(), "+refs/heads/" + head.getBranchName() + ":refs/remotes/origin/" + head.getBranchName(), getCheckoutEffectiveCredentials()));
         return result;
     }
 
