@@ -80,7 +80,7 @@ import jenkins.scm.api.SCMSourceOwner;
 
 /**
  * SCM source implementation for Bitbucket.
- * 
+ *
  * It provides a way to discover/retrieve branches and pull requests through the Bitbuclet REST API
  * which is much faster than the plain Git SCM source implementation.
  */
@@ -286,7 +286,7 @@ public class BitbucketSCMSource extends SCMSource {
         listener.getLogger().println("Looking up " + fullName + " for pull requests");
 
         final BitbucketApi bitbucket = getBitbucketConnector().create(repoOwner, repository, getScanCredentials());
-        if (bitbucket.isPrivate()) {
+        if (bitbucket.isPrivate() || bitbucketServerUrl != "https://bitbucket.org") {
             List<? extends BitbucketPullRequest> pulls = bitbucket.getPullRequests();
             for (final BitbucketPullRequest pull : pulls) {
                 listener.getLogger().println(
@@ -329,9 +329,15 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     private void observe(SCMHeadObserver observer, final TaskListener listener,
-            final String owner, final String repositoryName, 
+            final String owner, final String repositoryName,
             final String branchName, final String hash, BitbucketPullRequest pr) throws IOException {
-        if (isExcluded(branchName)) {
+
+        String branchNameForExclusionTest = branchName;
+        if (pr != null) {
+             branchNameForExclusionTest = String.format("PR-%s %s", pr.getId(), pr.getSource().getBranch().getName());
+         }
+
+        if (isExcluded(branchNameForExclusionTest)) {
             return;
         }
         final BitbucketApi bitbucket = getBitbucketConnector().create(owner, repositoryName, getScanCredentials());
@@ -455,7 +461,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
-     * 
+     *
      * @param branchName
      * @return true if branchName is excluded or is not included
      */
@@ -465,9 +471,9 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     /**
-     * Returns the pattern corresponding to the branches containing wildcards. 
-     * 
-     * @param branches space separated list of expressions. 
+     * Returns the pattern corresponding to the branches containing wildcards.
+     *
+     * @param branches space separated list of expressions.
      *        For example "*" which would match all branches and branch* would match branch1, branch2, etc.
      * @return pattern corresponding to the branches containing wildcards (ready to be used by {@link Pattern})
      */
