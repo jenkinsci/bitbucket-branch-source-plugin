@@ -58,4 +58,9 @@ public interface BitbucketRepository {
      */
     boolean isPrivate();
 
+    /**
+     * @return the project containing the repository
+     */
+    String getProjectName();
+
 }

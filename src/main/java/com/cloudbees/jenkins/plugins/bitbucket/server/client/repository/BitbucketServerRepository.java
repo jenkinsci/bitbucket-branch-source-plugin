@@ -77,6 +77,11 @@ public class BitbucketServerRepository implements BitbucketRepository {
         return !publc;
     }
 
+    @Override
+    public String getProjectName() {
+        return project.getName();
+    }
+
     @JsonProperty("public")
     public void setPublic(Boolean publc) {
         this.publc = publc;

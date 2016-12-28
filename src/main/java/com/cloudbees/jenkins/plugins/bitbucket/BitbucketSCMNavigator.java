@@ -60,6 +60,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private final String credentialsId;
     private final String checkoutCredentialsId;
     private String pattern = ".*";
+    private String project = ".*";
     private boolean autoRegisterHooks = false;
     private String bitbucketServerUrl;
     private int sshPort = -1;
@@ -69,17 +70,23 @@ public class BitbucketSCMNavigator extends SCMNavigator {
      */
     private transient BitbucketApiConnector bitbucketConnector;
 
-    @DataBoundConstructor 
+    @DataBoundConstructor
     public BitbucketSCMNavigator(String repoOwner, String credentialsId, String checkoutCredentialsId) {
         this.repoOwner = repoOwner;
         this.credentialsId = Util.fixEmpty(credentialsId);
         this.checkoutCredentialsId = checkoutCredentialsId;
     }
 
-    @DataBoundSetter 
+    @DataBoundSetter
     public void setPattern(String pattern) {
         Pattern.compile(pattern);
         this.pattern = pattern;
+    }
+
+    @DataBoundSetter
+    public void setProject(String project) {
+        Pattern.compile(project);
+        this.project = project;
     }
 
     @DataBoundSetter
@@ -103,6 +110,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     public String getPattern() {
         return pattern;
+    }
+
+    public String getProject() {
+        return project;
     }
 
     public boolean isAutoRegisterHooks() {
@@ -178,7 +189,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     private void add(TaskListener listener, SCMSourceObserver observer, BitbucketRepository repo) throws InterruptedException {
         String name = repo.getRepositoryName();
-        if (!Pattern.compile(pattern).matcher(name).matches()) {
+        String projectName = repo.getProjectName();
+        if (!Pattern.compile(pattern).matcher(name).matches() || !Pattern.compile(project).matcher(projectName).matches()) {
             listener.getLogger().format("Ignoring %s%n", name);
             return;
         }
@@ -198,7 +210,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         projectObserver.complete();
     }
 
-    @Extension 
+    @Extension
     public static class DescriptorImpl extends SCMNavigatorDescriptor {
 
         public static final String ANONYMOUS = BitbucketSCMSource.DescriptorImpl.ANONYMOUS;

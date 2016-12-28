@@ -10,6 +10,9 @@
     <f:entry title="${%Repository name pattern}" field="pattern">
         <f:textbox default=".*"/>
     </f:entry>
+    <f:entry title="${%Project name pattern}" field="project">
+        <f:textbox default=".*"/>
+    </f:entry>
     <f:entry field="autoRegisterHooks">
         <f:checkbox title="${%Auto-register webhooks}" />
     </f:entry>
