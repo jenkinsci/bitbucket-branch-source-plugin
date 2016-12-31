@@ -28,6 +28,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,6 +62,7 @@ import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.mercurial.MercurialSCM;
@@ -416,13 +418,19 @@ public class BitbucketSCMSource extends SCMSource {
                 return scm;
             } else {
                 // Defaults to Git
+                List<GitSCMExtension> extensions = new LinkedList<GitSCMExtension>();
+
                 BuildChooser buildChooser = revision instanceof AbstractGitSCMSource.SCMRevisionImpl ? new SpecificRevisionBuildChooser(
                         (AbstractGitSCMSource.SCMRevisionImpl) revision) : new DefaultBuildChooser();
+
+                extensions.add(new BuildChooserSetting(buildChooser));
+                extensions.add(new SubmoduleOption(false, true, false, "", 10000, true));
+
                 return new GitSCM(
                         getGitRemoteConfigs(h),
                         Collections.singletonList(new BranchSpec(h.getBranchName())),
                         false, Collections.<SubmoduleConfig>emptyList(),
-                        null, null, Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)));
+                        null, null, extensions);
             }
         }
         throw new IllegalArgumentException("An SCMHeadWithOwnerAndRepo required as parameter");
