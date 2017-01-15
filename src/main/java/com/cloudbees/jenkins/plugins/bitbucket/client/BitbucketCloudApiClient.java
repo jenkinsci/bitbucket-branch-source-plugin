@@ -258,11 +258,11 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Override
     @CheckForNull
     public String resolveSourceFullHash(BitbucketPullRequest pull) {
-        String response = getRequest(V2_API_BASE_URL + pull.getSource().getRepository().getOwnerName() + "/" + 
-                pull.getSource().getRepository().getRepositoryName() + "/commit/" + pull.getSource().getCommit().getHash());
         try {
+            String response = getRequest(V2_API_BASE_URL + pull.getSource().getRepository().getOwnerName() + "/" +
+                    pull.getSource().getRepository().getRepositoryName() + "/commit/" + pull.getSource().getCommit().getHash());
             return parse(response, BitbucketCloudCommit.class).getHash();
-        } catch (IOException e) {
+        } catch (BitbucketRequestException | IOException e) {
             LOGGER.log(Level.SEVERE, "cannot resolve PR commit " + pull.getSource().getCommit().getHash(), e);
         }
         return null;
