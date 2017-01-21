@@ -20,6 +20,12 @@
     <f:entry title="${%Exclude branches}" field="excludes">
       <f:textbox/>
     </f:entry>
+    <f:entry field="scanBranches">
+        <f:checkbox title="${%Scan branches}" default="true"/>
+    </f:entry>
+    <f:entry field="scanPullRequests">
+        <f:checkbox title="${%Scan pull requests}" default="true"/>
+    </f:entry>
     <f:entry title="${%Checkout Credentials}" field="checkoutCredentialsId">
       <c:select default="${descriptor.SAME}"/>
     </f:entry>

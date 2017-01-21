@@ -133,6 +133,16 @@ public class BitbucketSCMSource extends SCMSource {
     private String excludes = "";
 
     /**
+     * If true, branches are included when scanning in the retrieve process.
+     */
+    private boolean scanBranches = true;
+    
+    /**
+     * If true, pull requests are included when scanning in the retrieve process.
+     */
+    private boolean scanPullRequests = true;
+    
+    /**
      * If true, a webhook will be auto-registered in the repository managed by this source.
      */
     private boolean autoRegisterHook = false;
@@ -212,6 +222,24 @@ public class BitbucketSCMSource extends SCMSource {
     public void setExcludes(@NonNull String excludes) {
         Pattern.compile(getPattern(excludes));
         this.excludes = excludes;
+    }
+    
+    @DataBoundSetter
+    public void setScanBranches(boolean scanBranches) {
+        this.scanBranches = scanBranches;
+    }
+    
+    public boolean getScanBranches() {
+        return scanBranches;
+    }
+       
+    @DataBoundSetter
+    public void setScanPullRequests(boolean scanPullRequests) {
+        this.scanPullRequests = scanPullRequests;
+    }
+    
+    public boolean getScanPullRequests() {
+        return scanPullRequests;
     }
 
     public String getRepoOwner() {
@@ -304,9 +332,13 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         // Search branches
-        retrieveBranches(criteria, observer, listener);
+        if (getScanBranches()) {
+            retrieveBranches(criteria, observer, listener);
+        }
         // Search pull requests
-        retrievePullRequests(criteria, observer, listener);
+        if (getScanPullRequests()) {
+            retrievePullRequests(criteria, observer, listener);
+        }
     }
 
     private void retrievePullRequests(SCMSourceCriteria criteria, SCMHeadObserver observer, final TaskListener listener)

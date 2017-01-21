@@ -114,6 +114,30 @@ public class BranchScanningTest {
         assertEquals("branch1", observer.getBranches().get(0));
         assertEquals("PR-23", observer.getBranches().get(1));
     }
+    
+    @Test
+    public void scanTestDeactivatedPullRequests() throws IOException, InterruptedException {
+        BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT, true);
+        source.setScanPullRequests(false);
+        SCMHeadObserverImpl observer = new SCMHeadObserverImpl();
+        source.fetch(observer, BitbucketClientMockUtils.getTaskListenerMock());
+       
+        // Only branch1 must be observed
+        assertEquals(1, observer.getBranches().size());
+        assertEquals("branch1", observer.getBranches().get(0));
+    }
+
+    @Test
+    public void scanTestDeactivatedBranches() throws IOException, InterruptedException {
+        BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT, true);
+        source.setScanBranches(false);
+        SCMHeadObserverImpl observer = new SCMHeadObserverImpl();
+        source.fetch(observer, BitbucketClientMockUtils.getTaskListenerMock());
+       
+        // Only my-feature-branch PR must be observed
+        assertEquals(1, observer.getBranches().size());
+        assertEquals("PR-23", observer.getBranches().get(0));
+    }
 
     @Test
     public void gitSCMTest() {
