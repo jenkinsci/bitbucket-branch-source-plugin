@@ -151,6 +151,11 @@ public class BitbucketSCMSource extends SCMSource {
     private int sshPort = -1;
 
     /**
+     * Skip build based on commit message
+     */
+    private String skipBuild = null;
+
+    /**
      * Repository type.
      */
     private RepositoryType repositoryType;
@@ -244,6 +249,15 @@ public class BitbucketSCMSource extends SCMSource {
     @DataBoundSetter
     public void setSshPort(int sshPort) {
         this.sshPort = sshPort;
+    }
+
+    public String getSkipBuild() {
+        return skipBuild;
+    }
+
+    @DataBoundSetter
+    public void setSkipBuild(String skipBuild) {
+        this.skipBuild = skipBuild;
     }
 
     @DataBoundSetter

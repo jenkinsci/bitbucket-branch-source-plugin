@@ -32,6 +32,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 public class BitbucketCloudPushEvent implements BitbucketPushEvent {
 
     private BitbucketCloudRepository repository;
+    private String commitMessage;
 
     public BitbucketRepository getRepository() {
         return repository;
@@ -39,6 +40,14 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
 
     public void setRepository(BitbucketCloudRepository repository) {
         this.repository = repository;
+    }
+
+    public String getCommitMessage() {
+        return commitMessage;
+    }
+
+    public void setCommitMessage(String commitMessage) {
+        this.commitMessage = commitMessage;
     }
 
 }

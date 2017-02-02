@@ -34,6 +34,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 public class BitbucketServerWebhookPayload {
 
@@ -42,7 +44,12 @@ public class BitbucketServerWebhookPayload {
     @CheckForNull
     public static BitbucketPushEvent pushEventFromPayload(@NonNull String payload) {
         try {
-            return parse(payload, BitbucketServerPushEvent.class);
+            BitbucketServerPushEvent push = parse(payload, BitbucketServerPushEvent.class);
+            JSONArray changes = new JSONObject(payload).getJSONObject("push").getJSONArray("changes");                
+            JSONObject change = (JSONObject)changes.get(0);            
+            String commitMessage = change.getJSONObject("new").getJSONObject("target").getString("message");
+            push.setCommitMessage(commitMessage);            
+            return push;
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
         }

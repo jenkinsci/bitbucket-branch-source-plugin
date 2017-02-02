@@ -35,6 +35,7 @@ public class BitbucketServerPullRequestEvent implements BitbucketPullRequestEven
     @JsonProperty("pullrequest")
     private BitbucketServerPullRequest pullRequest;
 
+    private String commitMessage;
     private BitbucketServerRepository repository;
 
     @Override
@@ -53,6 +54,15 @@ public class BitbucketServerPullRequestEvent implements BitbucketPullRequestEven
 
     public void setRepository(BitbucketServerRepository repository) {
         this.repository = repository;
+    }
+
+    @Override
+    public String getCommitMessage() {
+        return commitMessage;
+    }
+
+    public void setCommitMessage(String commit) {
+        this.commitMessage = commitMessage;
     }
 
 }
