@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.io.IOException;
 
 /**
  * Bitbucket notifier implementation that sends notifications as commit comments.
@@ -40,12 +41,13 @@ public class BitbucketChangesetCommentNotifier extends BitbucketNotifier {
     }
 
     @Override
-    public void notify(String repoOwner, String repoName, String hash, String content) {
+    public void notify(String repoOwner, String repoName, String hash, String content)
+            throws IOException, InterruptedException {
         bitbucket.postCommitComment(hash, content);
     }
 
     @Override
-    public void buildStatus(BitbucketBuildStatus status) {
+    public void buildStatus(BitbucketBuildStatus status) throws IOException, InterruptedException {
         bitbucket.postBuildStatus(status);
     }
 

@@ -21,34 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import java.net.MalformedURLException;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class HttpsRepositoryUriResolver extends RepositoryUriResolver {
+public enum BitbucketRepositoryProtocol {
 
-    public HttpsRepositoryUriResolver(String baseUrl) throws MalformedURLException {
-        super(baseUrl);
+    /**
+     * SSH protocol.
+     */
+    SSH("ssh"),
+
+    /**
+     * HTTP protocol.
+     */
+    HTTP("http");
+
+    private String type;
+
+    BitbucketRepositoryProtocol(@NonNull String type) {
+        this.type = type;
     }
 
-    @Override
-    public String getRepositoryUri(String owner, String repository, RepositoryType type) {
-        String uri = null;
-        if (type == RepositoryType.MERCURIAL) {
-            if (isServer()) {
-                throw new IllegalStateException("Mercurial is not supported by Bitbucket Server (https://jira.atlassian.com/browse/BSERV-2469)");
-            }
-            uri = "/" + owner + "/" + repository;
-        } else {
-            // Defaults to git
-            uri = "/" + owner + "/" + repository + ".git";
-        }
-        if (isServer()) {
-            uri = getUrlAsString() + "/scm" + uri;
-        } else {
-            uri = getUrlAsString() + uri;
-        }
-        return uri;
+    public String getType() {
+        return type;
     }
 
+    @CheckForNull
+    public static BitbucketRepositoryProtocol fromString(String type) {
+        if (SSH.type.equals(type)) {
+            return SSH;
+        } else if (HTTP.type.equals(type)) {
+            return HTTP;
+        } else {
+            return null;
+        }
+    }
 }

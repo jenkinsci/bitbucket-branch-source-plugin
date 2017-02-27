@@ -26,6 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
@@ -44,47 +46,51 @@ import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSource;
 
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class BranchScanningTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private static final String repoOwner = "amuniz";
     private static final String repoName = "test";
     private static final String branchName = "branch1";
 
     @Test
-    public void uriResolverTest() {
-        BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT);
-        String remote = source.getRemote("amuniz", "test");
+    public void uriResolverTest() throws Exception {
+        BitbucketSCMSource source = getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT);
+        String remote = source.getRemote("amuniz", "test", source.getRepositoryType());
 
         // When there is no checkout credentials set, https must be resolved
         assertEquals("https://bitbucket.org/amuniz/test.git", remote);
 
-        source = getBitbucketSCMSourceMock(RepositoryType.MERCURIAL);
-        remote = source.getRemote("amuniz", "test");
+        source = getBitbucketSCMSourceMock(BitbucketRepositoryType.MERCURIAL);
+        remote = source.getRemote("amuniz", "test", source.getRepositoryType());
 
         // Resolve URL for Mercurial repositories
         assertEquals("https://bitbucket.org/amuniz/test", remote);
     }
 
     @Test
-    public void remoteConfigsTest() {
-        BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT);
-        List<UserRemoteConfig> remoteConfigs = source.getGitRemoteConfigs(new SCMHeadWithOwnerAndRepo("amuniz", "test-repos", "branch1"));
+    public void remoteConfigsTest() throws Exception {
+        BitbucketSCMSource source = getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT);
+        List<UserRemoteConfig> remoteConfigs = source.getGitRemoteConfigs(new BranchSCMHead("branch1", BitbucketRepositoryType.GIT));
         assertEquals(1, remoteConfigs.size());
         assertEquals("+refs/heads/branch1", remoteConfigs.get(0).getRefspec());
     }
 
     @Test
-    public void retrieveTest() throws IOException, InterruptedException {
-        BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT);
+    public void retrieveTest() throws Exception {
+        BitbucketSCMSource source = getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT);
 
-        SCMHeadWithOwnerAndRepo head = new SCMHeadWithOwnerAndRepo(repoOwner, repoName, branchName);
+        BranchSCMHead head = new BranchSCMHead(branchName, BitbucketRepositoryType.GIT);
         SCMRevision rev = source.retrieve(head, BitbucketClientMockUtils.getTaskListenerMock());
 
         // Last revision on branch1 must be returned
@@ -93,10 +99,10 @@ public class BranchScanningTest {
     }
 
     @Test
-    public void scanTest() throws IOException, InterruptedException {
-        BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT);
+    public void scanTest() throws Exception {
+        BitbucketSCMSource source = getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT);
         SCMHeadObserverImpl observer = new SCMHeadObserverImpl();
-        source.retrieve(observer, BitbucketClientMockUtils.getTaskListenerMock());
+        source.fetch(observer, BitbucketClientMockUtils.getTaskListenerMock());
 
         // Only branch1 must be observed
         assertEquals(1, observer.getBranches().size());
@@ -104,10 +110,10 @@ public class BranchScanningTest {
     }
 
     @Test
-    public void scanTestPullRequests() throws IOException, InterruptedException {
-        BitbucketSCMSource source = getBitbucketSCMSourceMock(RepositoryType.GIT, true);
+    public void scanTestPullRequests() throws Exception {
+        BitbucketSCMSource source = getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT, true);
         SCMHeadObserverImpl observer = new SCMHeadObserverImpl();
-        source.retrieve(observer, BitbucketClientMockUtils.getTaskListenerMock());
+        source.fetch(observer, BitbucketClientMockUtils.getTaskListenerMock());
 
         // Only branch1 and my-feature-branch PR must be observed
         assertEquals(2, observer.getBranches().size());
@@ -116,33 +122,33 @@ public class BranchScanningTest {
     }
 
     @Test
-    public void gitSCMTest() {
-        SCM scm = scmBuild(RepositoryType.GIT);
+    public void gitSCMTest() throws Exception {
+        SCM scm = scmBuild(BitbucketRepositoryType.GIT);
         assertTrue("SCM must be an instance of GitSCM", scm instanceof GitSCM);
     }
 
     @Test
-    public void mercurialSCMTest() {
-        SCM scm = scmBuild(RepositoryType.MERCURIAL);
+    public void mercurialSCMTest() throws Exception {
+        SCM scm = scmBuild(BitbucketRepositoryType.MERCURIAL);
         assertTrue("SCM must be an instance of MercurialSCM", scm instanceof MercurialSCM);
     }
 
-    private SCM scmBuild(RepositoryType type) {
+    private SCM scmBuild(BitbucketRepositoryType type) throws IOException, InterruptedException {
         BitbucketSCMSource source = getBitbucketSCMSourceMock(type);
-        return source.build(new SCMHeadWithOwnerAndRepo("amuniz", "test-repos", "branch1"));
+        return source.build(new BranchSCMHead("branch1", type));
     }
 
-    private BitbucketSCMSource getBitbucketSCMSourceMock(RepositoryType type, boolean includePullRequests) {
+    private BitbucketSCMSource getBitbucketSCMSourceMock(BitbucketRepositoryType type, boolean includePullRequests)
+            throws IOException, InterruptedException {
+        BitbucketCloudApiClient mock = BitbucketClientMockUtils.getAPIClientMock(type, includePullRequests);
+        BitbucketMockApiFactory.add(null, mock);
+
         BitbucketSCMSource source = new BitbucketSCMSource(null, "amuniz", "test-repos");
         source.setOwner(getSCMSourceOwnerMock());
-        BitbucketApiConnector mockFactory = mock(BitbucketApiConnector.class);
-        BitbucketCloudApiClient mockedApi = BitbucketClientMockUtils.getAPIClientMock(type, includePullRequests);
-        when(mockFactory.create(anyString(), anyString(), any(StandardUsernamePasswordCredentials.class))).thenReturn(mockedApi);
-        source.setBitbucketConnector(mockFactory);
         return source;
     }
 
-    private BitbucketSCMSource getBitbucketSCMSourceMock(RepositoryType type) {
+    private BitbucketSCMSource getBitbucketSCMSourceMock(BitbucketRepositoryType type) throws IOException, InterruptedException {
         return getBitbucketSCMSourceMock(type, false);
     }
 
@@ -155,6 +161,15 @@ public class BranchScanningTest {
                 return probe.exists("markerfile.txt");
             }
 
+            @Override
+            public int hashCode() {
+                return getClass().hashCode();
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                return getClass().isInstance(obj);
+            }
         });
         return mocked;
     }

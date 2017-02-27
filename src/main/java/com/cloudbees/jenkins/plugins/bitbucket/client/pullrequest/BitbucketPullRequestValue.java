@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestDestination;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
@@ -30,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketPullRequestValue implements BitbucketPullRequest {
+    private BitbucketPullRequestValueDestination destination;
     private BitbucketPullRequestValueRepository source;
     private String id;
     private String title;
@@ -44,6 +46,15 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
     public void setSource(BitbucketPullRequestValueRepository source) {
         this.source = source;
+    }
+
+    @Override
+    public BitbucketPullRequestValueDestination getDestination() {
+        return destination;
+    }
+
+    public void setDestination(BitbucketPullRequestValueDestination destination) {
+        this.destination = destination;
     }
 
     public String getId() {

@@ -37,6 +37,11 @@ public interface BitbucketPullRequest {
     BitbucketPullRequestSource getSource();
 
     /**
+     * @return the target repository of this pull request
+     */
+    BitbucketPullRequestDestination getDestination();
+
+    /**
      * @return pull request ID as provided by Bitbucket. It can be used for notifications.
      */
     @NonNull

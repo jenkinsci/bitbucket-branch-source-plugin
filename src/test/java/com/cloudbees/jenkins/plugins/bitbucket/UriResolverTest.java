@@ -23,46 +23,96 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import org.junit.Test;
 import static org.junit.Assert.*;
-
-import java.net.MalformedURLException;
 
 public class UriResolverTest {
 
     @Test
-    public void httpUriResolver() throws MalformedURLException {
-        HttpsRepositoryUriResolver r = new HttpsRepositoryUriResolver(null);
-        assertEquals("https://bitbucket.org/user1/repo1.git", r.getRepositoryUri("user1", "repo1", RepositoryType.GIT));
-        assertEquals("https://bitbucket.org/user1/repo1", r.getRepositoryUri("user1", "repo1", RepositoryType.MERCURIAL));
-        r = new HttpsRepositoryUriResolver("http://localhost:1234");
-        assertEquals("http://localhost:1234/scm/user2/repo2.git", r.getRepositoryUri("user2", "repo2", RepositoryType.GIT));
-        r = new HttpsRepositoryUriResolver("http://192.168.1.100:1234");
-        assertEquals("http://192.168.1.100:1234/scm/user2/repo2.git", r.getRepositoryUri("user2", "repo2", RepositoryType.GIT));
+    public void httpUriResolver() throws Exception {
+        BitbucketApi api = new BitbucketCloudApiClient("test", null, null);
+        assertEquals("https://bitbucket.org/user1/repo1.git", api.getRepositoryUri(
+                BitbucketRepositoryType.GIT,
+                BitbucketRepositoryProtocol.HTTP,
+                null,
+                "user1",
+                "repo1"
+        ));
+        assertEquals("https://bitbucket.org/user1/repo1", api.getRepositoryUri(
+                BitbucketRepositoryType.MERCURIAL,
+                BitbucketRepositoryProtocol.HTTP,
+                null,
+                "user1",
+                "repo1"
+        ));
+        api = new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false);
+        assertEquals("http://localhost:1234/scm/user2/repo2.git", api.getRepositoryUri(
+                BitbucketRepositoryType.GIT,
+                BitbucketRepositoryProtocol.HTTP,
+                null,
+                "user2",
+                "repo2"
+        ));
+        api = new BitbucketServerAPIClient("http://192.168.1.100:1234", "test", null, null, false);
+        assertEquals("http://192.168.1.100:1234/scm/user2/repo2.git", api.getRepositoryUri(
+                BitbucketRepositoryType.GIT,
+                BitbucketRepositoryProtocol.HTTP,
+                null,
+                "user2",
+                "repo2"
+        ));
     }
 
     @Test
-    public void sshUriResolver() throws MalformedURLException {
-        SshRepositoryUriResolver r = new SshRepositoryUriResolver(null, -1);
-        assertEquals("git@bitbucket.org:user1/repo1.git", r.getRepositoryUri("user1", "repo1", RepositoryType.GIT));
-        assertEquals("ssh://hg@bitbucket.org/user1/repo1", r.getRepositoryUri("user1", "repo1", RepositoryType.MERCURIAL));
-        r = new SshRepositoryUriResolver("http://localhost:1234", 7999);
-        assertEquals("ssh://git@localhost:7999/user2/repo2.git", r.getRepositoryUri("user2", "repo2", RepositoryType.GIT));
-        r = new SshRepositoryUriResolver("http://myserver", 7999);
-        assertEquals("ssh://git@myserver:7999/user2/repo2.git", r.getRepositoryUri("user2", "repo2", RepositoryType.GIT));
+    public void sshUriResolver() throws Exception {
+        BitbucketApi api = new BitbucketCloudApiClient("test", null, null);
+        assertEquals("git@bitbucket.org:user1/repo1.git", api.getRepositoryUri(
+                BitbucketRepositoryType.GIT,
+                BitbucketRepositoryProtocol.SSH,
+                null,
+                "user1",
+                "repo1"
+        ));
+        assertEquals("ssh://hg@bitbucket.org/user1/repo1", api.getRepositoryUri(
+                BitbucketRepositoryType.MERCURIAL,
+                BitbucketRepositoryProtocol.SSH,
+                null,
+                "user1",
+                "repo1"
+        ));
+        api = new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false);
+        assertEquals("ssh://git@localhost:7999/user2/repo2.git", api.getRepositoryUri(
+                BitbucketRepositoryType.GIT,
+                BitbucketRepositoryProtocol.SSH,
+                7999,
+                "user2",
+                "repo2"
+        ));
+        api = new BitbucketServerAPIClient("http://myserver", "test", null, null, false);
+        assertEquals("ssh://git@myserver:7999/user2/repo2.git", api.getRepositoryUri(
+                BitbucketRepositoryType.GIT,
+                BitbucketRepositoryProtocol.SSH,
+                7999,
+                "user2",
+                "repo2"
+        ));
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void httpUriResolverIllegalStates() throws MalformedURLException {
-        HttpsRepositoryUriResolver r = new HttpsRepositoryUriResolver("http://localhost:1234");
-        // Mercurial is not supported by Bitbucket Server
-        r.getRepositoryUri("user1", "repo1", RepositoryType.MERCURIAL);
+    @Test(expected = IllegalArgumentException.class)
+    public void httpUriResolverIllegalStates() throws Exception {
+        new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false)
+                .getRepositoryUri(BitbucketRepositoryType.MERCURIAL, BitbucketRepositoryProtocol.HTTP, null, "user1", "repo1");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void sshUriResolverIllegalStates() throws MalformedURLException {
-        SshRepositoryUriResolver r = new SshRepositoryUriResolver("http://localhost:1234", 7999);
-        // Mercurial is not supported by Bitbucket Server
-        r.getRepositoryUri("user1", "repo1", RepositoryType.MERCURIAL);
+    @Test(expected = IllegalArgumentException.class)
+    public void sshUriResolverIllegalStates() throws Exception {
+        new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false)
+                .getRepositoryUri(BitbucketRepositoryType.MERCURIAL, BitbucketRepositoryProtocol.SSH, null, "user1",
+                        "repo1");
     }
 }

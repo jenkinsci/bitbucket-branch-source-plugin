@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.kohsuke.accmod.Restricted;
@@ -72,7 +73,7 @@ public class BitbucketBuildStatus {
         this.description = description;
         this.state = state;
         this.url = url;
-        this.key = key;
+        this.key = DigestUtils.md5Hex(key);
         this.name = name;
     }
 
@@ -113,7 +114,7 @@ public class BitbucketBuildStatus {
     }
 
     public void setKey(String key) {
-        this.key = key;
+        this.key = DigestUtils.md5Hex(key);
     }
 
     public String getName() {

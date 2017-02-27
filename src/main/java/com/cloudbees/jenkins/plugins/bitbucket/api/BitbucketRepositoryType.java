@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public enum RepositoryType {
+public enum BitbucketRepositoryType {
 
     /**
      * Git repository.
@@ -40,7 +40,7 @@ public enum RepositoryType {
 
     private String type;
 
-    RepositoryType(@NonNull String type) {
+    BitbucketRepositoryType(@NonNull String type) {
         this.type = type;
     }
 
@@ -49,7 +49,7 @@ public enum RepositoryType {
     }
 
     @CheckForNull
-    public static RepositoryType fromString(String type) {
+    public static BitbucketRepositoryType fromString(String type) {
         if (GIT.type.equals(type)) {
             return GIT;
         } else if (MERCURIAL.type.equals(type)) {

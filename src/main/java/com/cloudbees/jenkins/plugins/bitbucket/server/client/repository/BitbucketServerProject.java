@@ -23,10 +23,16 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketServerProject implements BitbucketTeam {
@@ -36,6 +42,10 @@ public class BitbucketServerProject implements BitbucketTeam {
 
     @JsonProperty("name")
     private String displayName;
+
+    @JsonProperty("links")
+    @JsonDeserialize(keyAs = String.class, contentAs = BitbucketHref[].class)
+    private Map<String,BitbucketHref[]> links;
 
     @Override
     public String getName() {
@@ -55,4 +65,25 @@ public class BitbucketServerProject implements BitbucketTeam {
         this.displayName = displayName;
     }
 
+    @Override
+    public Map<String, BitbucketHref> getLinks() {
+        Map<String,BitbucketHref> result = new LinkedHashMap<>(links.size());
+        for (Map.Entry<String,BitbucketHref[]> entry: links.entrySet()) {
+            if (entry.getValue().length == 0) {
+                continue;
+            }
+            result.put(entry.getKey(), entry.getValue()[0]);
+        }
+        return result;
+    }
+
+    // Do not call this setLinks or Jackson will have issues
+    public void links(Map<String, BitbucketHref> links) {
+        Map<String, BitbucketHref[]> result = new LinkedHashMap<>();
+        for (Map.Entry<String,BitbucketHref> entry: links.entrySet()) {
+            BitbucketHref[] value = entry.getValue() == null ? new BitbucketHref[0] : new BitbucketHref[]{entry.getValue()};
+            result.put(entry.getKey(), value);
+        }
+        this.links = result;
+    }
 }

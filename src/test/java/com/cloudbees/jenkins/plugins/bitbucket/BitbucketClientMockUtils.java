@@ -24,9 +24,14 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,16 +54,17 @@ import jenkins.model.Jenkins;
 
 public class BitbucketClientMockUtils {
 
-    public static BitbucketCloudApiClient getAPIClientMock(RepositoryType type, boolean includePullRequests, 
-            boolean includeWebHooks) {
+    public static BitbucketCloudApiClient getAPIClientMock(BitbucketRepositoryType type, boolean includePullRequests,
+            boolean includeWebHooks) throws IOException, InterruptedException {
         BitbucketCloudApiClient bitbucket = mock(BitbucketCloudApiClient.class);
+        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), any(Integer.class), anyString(), anyString())).thenCallRealMethod();
         // mock branch list
         List<BitbucketCloudBranch> branches = new ArrayList<BitbucketCloudBranch>();
         branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
         branches.add(getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f"));
         // add branches
         when(bitbucket.getBranches()).thenReturn(branches);
-        if (RepositoryType.MERCURIAL == type) {
+        if (BitbucketRepositoryType.MERCURIAL == type) {
             withMockMercurialRepos(bitbucket);
         } else {
             withMockGitRepos(bitbucket);
@@ -90,7 +96,8 @@ public class BitbucketClientMockUtils {
         return bitbucket;
     }
 
-    public static BitbucketCloudApiClient getAPIClientMock(RepositoryType type, boolean includePullRequests) {
+    public static BitbucketCloudApiClient getAPIClientMock(BitbucketRepositoryType type, boolean includePullRequests)
+            throws IOException, InterruptedException {
         return getAPIClientMock(type, includePullRequests, false);
     }
 
@@ -118,7 +125,7 @@ public class BitbucketClientMockUtils {
         return t;
     }
 
-    private static void withMockGitRepos(BitbucketApi bitbucket) {
+    private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {
         BitbucketCloudRepository repo = new BitbucketCloudRepository();
         repo.setScm("git");
         repo.setFullName("amuniz/test-repos");
@@ -126,7 +133,7 @@ public class BitbucketClientMockUtils {
         when(bitbucket.getRepository()).thenReturn(repo);
     }
 
-    private static void withMockMercurialRepos(BitbucketApi bitbucket) {
+    private static void withMockMercurialRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {
         BitbucketCloudRepository repo = new BitbucketCloudRepository();
         repo.setScm("hg");
         repo.setFullName("amuniz/test-repos");
@@ -158,6 +165,15 @@ public class BitbucketClientMockUtils {
         source.setRepository(repository);
 
         pr.setSource(source);
+
+        BitbucketPullRequestValueDestination destination = new BitbucketPullRequestValueDestination();
+        branch = new BitbucketCloudBranch();
+        branch.setName("branch1");
+        destination.setBranch(branch);
+        repository = new BitbucketCloudRepository();
+        repository.setFullName("amuniz/test-repos");
+        destination.setRepository(repository);
+        pr.setDestination(destination);
 
         pr.setId("23");
         pr.setAuthor(new BitbucketPullRequestValue.Author("amuniz"));

@@ -1,0 +1,6 @@
+== BitBucket Branch Source Plugin
+
+=== Notes
+
+* Unlike GitHub, in BitBucket, https://bitbucket.org/site/master/issues/4828/team-admins-dont-have-read-access-to-forks[team admins do not have access to forks].
+This means that when you have a private repository, or a private fork of a public repository, the team admin will not be able to see the PRs within the fork.

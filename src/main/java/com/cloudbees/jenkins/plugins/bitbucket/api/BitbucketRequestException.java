@@ -23,7 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-public class BitbucketRequestException extends RuntimeException {
+import java.io.IOException;
+
+public class BitbucketRequestException extends IOException {
 
     private int httpCode;
 

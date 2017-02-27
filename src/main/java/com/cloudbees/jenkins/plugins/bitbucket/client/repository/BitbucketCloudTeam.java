@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import java.util.Map;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -36,6 +38,9 @@ public class BitbucketCloudTeam implements BitbucketTeam {
 
     @JsonProperty("display_name")
     private String displayName;
+
+    @JsonProperty("links")
+    private Map<String,BitbucketHref> links;
 
     @Override
     public String getName() {
@@ -55,4 +60,12 @@ public class BitbucketCloudTeam implements BitbucketTeam {
         this.displayName = displayName;
     }
 
+    @Override
+    public Map<String, BitbucketHref> getLinks() {
+        return links;
+    }
+
+    public void setLinks(Map<String, BitbucketHref> links) {
+        this.links = links;
+    }
 }

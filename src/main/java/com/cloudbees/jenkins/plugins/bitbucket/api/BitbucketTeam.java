@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import java.util.Map;
+
 /**
  * Represents a Bitbucket team (or a Project when working with Bitbucket Server).
  */
@@ -38,4 +40,10 @@ public interface BitbucketTeam {
      */
     String getDisplayName();
 
+    /**
+     * Gets the links of the project.
+     *
+     * @return the links of the project.
+     */
+    Map<String,BitbucketHref> getLinks();
 }

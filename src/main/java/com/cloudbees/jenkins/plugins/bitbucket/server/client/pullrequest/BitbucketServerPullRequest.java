@@ -37,6 +37,9 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
     @JsonProperty("fromRef")
     private BitbucketServerPullRequestSource source;
 
+    @JsonProperty("toRef")
+    private BitbucketServerPullRequestDestination destination;
+
     private String title;
 
     private String link;
@@ -50,6 +53,15 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     public void setSource(BitbucketServerPullRequestSource source) {
         this.source = source;
+    }
+
+    @Override
+    public BitbucketServerPullRequestDestination getDestination() {
+        return destination;
+    }
+
+    public void setDestination(BitbucketServerPullRequestDestination destination) {
+        this.destination = destination;
     }
 
     @Override

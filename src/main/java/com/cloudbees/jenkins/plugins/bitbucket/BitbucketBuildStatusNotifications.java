@@ -45,6 +45,7 @@ import hudson.plugins.mercurial.MercurialTagAction;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
+import java.io.IOException;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
@@ -60,7 +61,8 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
  */
 public class BitbucketBuildStatusNotifications {
 
-    private static void createBuildCommitStatus(@NonNull Run<?,?> build, @NonNull TaskListener listener, @NonNull BitbucketApi bitbucket) {
+    private static void createBuildCommitStatus(@NonNull Run<?,?> build, @NonNull TaskListener listener, @NonNull BitbucketApi bitbucket)
+            throws IOException, InterruptedException {
         String revision = extractRevision(build);
         if (revision != null) {
             Result result = build.getResult();
@@ -110,24 +112,13 @@ public class BitbucketBuildStatusNotifications {
         return revision;
     }
 
-    private static void createPullRequestCommitStatus(Run<?,?> build, TaskListener listener, BitbucketApi bitbucket) {
+    private static void createPullRequestCommitStatus(Run<?,?> build, TaskListener listener, BitbucketApi bitbucket)
+            throws IOException, InterruptedException {
         createBuildCommitStatus(build, listener, bitbucket);
     }
 
     private static BitbucketNotifier getNotifier(BitbucketApi bitbucket) {
         return new BitbucketChangesetCommentNotifier(bitbucket);
-    }
-
-    @CheckForNull
-    private static BitbucketApi buildBitbucketClientForBuild(Run<?,?> build, BitbucketSCMSource source) {
-        Job<?, ?> job = build.getParent();
-        StandardUsernamePasswordCredentials creds = source.getScanCredentials();
-        SCMHead _head = SCMHead.HeadByItem.findHead(job);
-        if (_head instanceof SCMHeadWithOwnerAndRepo) {
-            SCMHeadWithOwnerAndRepo head = (SCMHeadWithOwnerAndRepo) _head;
-            return new BitbucketApiConnector(source.getBitbucketServerUrl()).create(head.getRepoOwner(), head.getRepoName(), creds);
-        }
-        return null;
     }
 
     @CheckForNull
@@ -162,21 +153,17 @@ public class BitbucketBuildStatusNotifications {
         return null;
     }
     
-    private static void sendNotifications(Run<?, ?> build, TaskListener listener) {
+    private static void sendNotifications(Run<?, ?> build, TaskListener listener)
+            throws IOException, InterruptedException {
         BitbucketSCMSource source = lookUpSCMSource(build);
         if (source != null && extractRevision(build) != null) {
-            BitbucketApi bitbucket = buildBitbucketClientForBuild(build, source);
-            if (bitbucket != null) {
-                if (source.getRepoOwner().equals(bitbucket.getOwner()) &&
-                        source.getRepository().equals(bitbucket.getRepositoryName())) {
-                    listener.getLogger().println("[Bitbucket] Notifying commit build result");
-                    createBuildCommitStatus(build, listener, bitbucket);
-                } else {
-                    listener.getLogger().println("[Bitbucket] Notifying pull request build result");
-                    createPullRequestCommitStatus(build, listener, bitbucket);
-                }
+            SCMHead head = SCMHead.HeadByItem.findHead(build.getParent());
+            if (head instanceof PullRequestSCMHead) {
+                listener.getLogger().println("[Bitbucket] Notifying pull request build result");
+                createPullRequestCommitStatus(build, listener, source.buildBitbucketClient((PullRequestSCMHead) head));
             } else {
-                listener.getLogger().println("[Bitbucket] Can not get connection information from the source. Skipping notification...");
+                listener.getLogger().println("[Bitbucket] Notifying commit build result");
+                createBuildCommitStatus(build, listener, source.buildBitbucketClient());
             }
         }
     }
@@ -201,7 +188,11 @@ public class BitbucketBuildStatusNotifications {
 
         @Override 
         public void onCompleted(Run<?, ?> build, TaskListener listener) {
-            sendNotifications(build, listener);
+            try {
+                sendNotifications(build, listener);
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace(listener.error("Could not send notifications"));
+            }
         }
     }
 }
