@@ -48,8 +48,10 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.mercurial.MercurialSCM;
@@ -91,6 +93,7 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.eclipse.jgit.lib.Constants;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -163,11 +166,22 @@ public class BitbucketSCMSource extends SCMSource {
      */
     @CheckForNull
     private transient /*effectively final*/ Map<String, String> pullRequestTitleCache;
+
     /**
      * The cache of pull request contributors for each open PR.
      */
     @CheckForNull
     private transient /*effectively final*/ Map<String, ContributorMetadataAction> pullRequestContributorCache;
+    
+     /**
+      * Beavior of the job created
+      **/
+    private boolean buildOriginBranch = DescriptorImpl.defaultBuildOriginBranch;
+    private boolean buildOriginBranchWithPR = DescriptorImpl.defaultBuildOriginBranchWithPR;
+    private boolean buildOriginPRMerge = DescriptorImpl.defaultBuildOriginPRMerge;
+    private boolean buildOriginPRHead = DescriptorImpl.defaultBuildOriginPRHead;
+    private boolean buildForkPRHead = DescriptorImpl.defaultBuildForkPRHead;
+    private boolean buildForkPRMerge = DescriptorImpl.defaultBuildForkPRMerge;
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
 
@@ -253,6 +267,60 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
+    @DataBoundSetter
+    public void setBuildOriginBranch(boolean buildOriginBranch) {
+        this.buildOriginBranch = buildOriginBranch;
+    }
+
+    public boolean isBuildOriginBranch() {
+        return buildOriginBranch;
+    }
+
+    @DataBoundSetter
+    public void setBuildOriginBranchWithPR(boolean buildOriginBranchWithPR){
+        this.buildOriginBranchWithPR = buildOriginBranchWithPR;
+    }
+
+    public boolean isBuildOriginBranchWithPR(){
+        return buildOriginBranchWithPR;
+    }
+
+    @DataBoundSetter
+    public void setBuildOriginPRMerge(boolean buildOriginPRMerge){
+        this.buildOriginPRMerge = buildOriginPRMerge;
+    }
+
+    public boolean isBuildOriginPRMerge(){
+        return buildOriginPRMerge;
+    }
+
+    @DataBoundSetter
+    public void setBuildOriginPRHead(boolean buildOriginPRHead){
+        this.buildOriginPRHead = buildOriginPRHead;
+    }
+
+    public boolean isBuildOriginPRHead(){
+        return buildOriginPRHead;
+    }
+
+    @DataBoundSetter
+    public void setBuildForkPRHead(boolean buildForkPRHead){
+        this.buildForkPRHead = buildForkPRHead;
+    }
+
+    public boolean isBuildForkPRHead(){
+        return buildForkPRHead;
+    }
+
+    @DataBoundSetter
+    public void setBuildForkPRMerge(boolean buildForkPRMerge){
+        this.buildForkPRMerge = buildForkPRMerge;
+    }
+
+    public boolean isBuildForkPRMerge(){
+        return buildForkPRMerge;
+    }
+
     @CheckForNull
     public String getBitbucketServerUrl() {
         return bitbucketServerUrl;
@@ -319,14 +387,16 @@ public class BitbucketSCMSource extends SCMSource {
         // this has the side-effect of ensuring that repository type is always populated.
         listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
 
-        // Search branches
-        retrieveBranches(criteria, observer, listener);
+
         // Search pull requests
-        retrievePullRequests(criteria, observer, listener);
+        ArrayList<String> branchesObserved =  retrievePullRequests(criteria, observer, listener);
+        // Search branches
+        retrieveBranches(criteria, observer, listener, branchesObserved);
     }
 
-    private void retrievePullRequests(SCMSourceCriteria criteria, SCMHeadObserver observer, final TaskListener listener)
+    private ArrayList<String> retrievePullRequests(SCMSourceCriteria criteria, SCMHeadObserver observer, final TaskListener listener)
             throws IOException, InterruptedException {
+        ArrayList<String> branchesObserved = new ArrayList<String>();
         String fullName = repoOwner + "/" + repository;
         listener.getLogger().println("Looking up " + fullName + " for pull requests");
 
@@ -337,52 +407,60 @@ public class BitbucketSCMSource extends SCMSource {
             for (final BitbucketPullRequest pull : pulls) {
                 checkInterrupt();
                 listener.getLogger().println(
-                        "Checking PR from " + pull.getSource().getRepository().getFullName() + " and branch "
+                        "    Checking PR from " + pull.getSource().getRepository().getFullName() + " and branch "
                                 + pull.getSource().getBranch().getName());
-
                 // Resolve full hash. See https://bitbucket.org/site/master/issues/11415/pull-request-api-should-return-full-commit
-
                 String hash;
                 try {
                     hash = bitbucket.resolveSourceFullHash(pull);
                 } catch (BitbucketRequestException e) {
                     if (e.getHttpCode() == 403) {
                         listener.getLogger().println(
-                                "Do not have permission to view PR from " + pull.getSource().getRepository().getFullName() + " and branch "
+                                "      Do not have permission to view PR from " + pull.getSource().getRepository().getFullName() + " and branch "
                                         + pull.getSource().getBranch().getName());
                         // the credentials do not have permission, so we should not observe the PR ever
                         // the PR is dead to us, so this is the one case where we can squash the exception.
                         continue;
                     } else {
-                        // this is some other unexpected error, we need to abort observing, so throw.
-                        throw e;
+                        e.printStackTrace(
+                                listener.error("      Cannot resolve hash: [%s]%n", pull.getSource().getCommit().getHash()));
                     }
+                    continue;
                 }
+                Boolean fork = (!pull.getSource().getRepository().getOwnerName().equals(repoOwner));
+
                 getPullRequestTitleCache().put(pull.getId(), StringUtils.defaultString(pull.getTitle()));
                 livePRs.add(pull.getId());
                 getPullRequestContributorCache().put(pull.getId(),
                         // TODO get more details on the author
                         new ContributorMetadataAction(pull.getAuthorLogin(), null, null)
                 );
-                observe(criteria, observer, listener,
-                        pull.getSource().getRepository().getOwnerName(),
-                        pull.getSource().getRepository().getRepositoryName(),
-                        pull.getSource().getBranch().getName(),
-                        hash,
-                        pull);
+                if( (fork && buildForkPRMerge) || (fork && buildForkPRHead) || (!fork && buildOriginPRHead) || (!fork && buildOriginPRMerge)) {
+                    observe(criteria, observer, listener,
+                            pull.getSource().getRepository().getOwnerName(),
+                            pull.getSource().getRepository().getRepositoryName(),
+                            pull.getSource().getBranch().getName(),
+                            hash,
+                            pull,
+                            fork);
+                }
+                if (!fork) {
+                    branchesObserved.add(pull.getSource().getBranch().getName());
+                }
                 if (!observer.isObserving()) {
-                    return;
+                    listener.getLogger().format("      Skipping not observing... : [%s]%n", pull.getSource().getCommit().getHash());
                 }
             }
             getPullRequestTitleCache().keySet().retainAll(livePRs);
             getPullRequestContributorCache().keySet().retainAll(livePRs);
         } else {
-            listener.getLogger().format("Skipping pull requests for public repositories%n");
+            listener.getLogger().format("      Skipping pull requests for public repositories%n");
         }
+        return branchesObserved;
     }
 
     private void retrieveBranches(SCMSourceCriteria criteria, @NonNull final SCMHeadObserver observer,
-                                  @NonNull TaskListener listener)
+                                  @NonNull TaskListener listener, ArrayList<String> branchesObserved)
             throws IOException, InterruptedException {
         String fullName = repoOwner + "/" + repository;
         listener.getLogger().println("Looking up " + fullName + " for branches");
@@ -391,55 +469,25 @@ public class BitbucketSCMSource extends SCMSource {
         List<? extends BitbucketBranch> branches = bitbucket.getBranches();
         for (BitbucketBranch branch : branches) {
             checkInterrupt();
-            listener.getLogger().println("Checking branch " + branch.getName() + " from " + fullName);
-            observe(criteria, observer, listener, repoOwner, repository, branch.getName(),
-                    branch.getRawNode(), null);
+            listener.getLogger().println("    Checking branch " + branch.getName() + " from " + fullName);
+            boolean branchMatchPR  = branchesObserved.contains(branch.getName());
+            if( (buildOriginBranch && !branchMatchPR) || (buildOriginBranchWithPR && branchMatchPR) ) {
+                observe(criteria,observer, listener, repoOwner, repository, branch.getName(),
+                        branch.getRawNode(), null, false);
+            }
         }
     }
 
     private void observe(SCMSourceCriteria criteria, SCMHeadObserver observer, final TaskListener listener,
                          final String owner, final String repositoryName,
-                         final String branchName, final String hash, BitbucketPullRequest pr) throws IOException, InterruptedException {
+                         final String branchName, final String hash, BitbucketPullRequest pr, Boolean fork) throws IOException, InterruptedException {
         if (isExcluded(branchName)) {
             return;
         }
         final BitbucketApi bitbucket = BitbucketApiFactory.newInstance(bitbucketServerUrl, getScanCredentials(), owner, repositoryName);
         SCMSourceCriteria branchCriteria = criteria;
         if (branchCriteria != null) {
-            SCMSourceCriteria.Probe probe = new SCMSourceCriteria.Probe() {
-
-                @Override
-                public String name() {
-                    return branchName;
-                }
-
-                @Override
-                public long lastModified() {
-                    try {
-                        BitbucketCommit commit = bitbucket.resolveCommit(hash);
-                        if (commit == null) {
-                            listener.getLogger().format("Can not resolve commit by hash [%s] on repository %s/%s%n",
-                                    hash, bitbucket.getOwner(), bitbucket.getRepositoryName());
-                            return 0;
-                        }
-                        return commit.getDateMillis();
-                    } catch (InterruptedException | IOException e) {
-                        listener.getLogger().format("Can not resolve commit by hash [%s] on repository %s/%s%n",
-                                hash, bitbucket.getOwner(), bitbucket.getRepositoryName());
-                        return 0;
-                    }
-                }
-
-                @Override
-                public boolean exists(@NonNull String path) throws IOException {
-                    try {
-                        // TODO should be checking the revision not the head
-                        return bitbucket.checkPathExists(branchName, path);
-                    } catch (InterruptedException e) {
-                        throw new IOException("Interrupted", e);
-                    }
-                }
-            };
+            SCMSourceCriteria.Probe probe = getProbe(branchName, bitbucket, hash, listener);
             if (branchCriteria.isHead(probe, listener)) {
                 listener.getLogger().println("Met criteria");
             } else {
@@ -447,19 +495,110 @@ public class BitbucketSCMSource extends SCMSource {
                 return;
             }
         }
-        BitbucketRepositoryType repositoryType = getRepositoryType();
-        SCMRevision revision;
-        SCMHead head = pr != null
-                ? new PullRequestSCMHead(owner, repositoryName, repositoryType, branchName, pr)
-                : new BranchSCMHead(branchName, repositoryType);
-        if (repositoryType == BitbucketRepositoryType.MERCURIAL) {
-            revision = new MercurialRevision(head, hash);
-        } else {
-            revision = new AbstractGitSCMSource.SCMRevisionImpl(head, hash);
-        }
-        observer.observe(head, revision);
+        observeFactory(observer, listener, owner, repositoryName, branchName, hash, pr, fork);
     }
 
+    /**
+     * Use by {@link BitbucketSCMSource#observe}
+     */
+    private void observeFactory(SCMHeadObserver observer, final TaskListener listener,
+                                final String owner, final String repositoryName,
+                                final String branchName, final String hash, BitbucketPullRequest pr, Boolean fork) throws IOException, InterruptedException{
+        SCMHead head;
+        SCMRevision revision;
+        // This is a pullRequest
+        if(pr != null){
+            Boolean buildPRMerge = fork ? buildForkPRMerge : buildOriginPRMerge;
+            Boolean buildPRHead = fork ? buildForkPRHead : buildOriginPRHead;
+            Boolean addHeadSuffix = buildPRMerge && buildPRHead;
+
+            if (buildPRMerge) {
+                head = new PullRequestSCMHead(owner, repositoryName, getRepositoryType(), branchName, pr, true);
+                revision = getRevision(head, hash, pr);
+                observer.observe(head, revision);
+            }
+
+            if (buildPRHead) {
+                head = new PullRequestSCMHead(owner, repositoryName, getRepositoryType(), branchName, pr, false, addHeadSuffix);
+                revision = getRevision(head, hash, pr);
+                observer.observe(head, revision);
+            }
+        }else{
+            // Basic Branch
+            head = new BranchSCMHead(branchName, getRepositoryType());
+            revision = getRevision(head, hash, null);
+            observer.observe(head, revision);
+        }
+    }
+
+    /**
+     * Use by {@link BitbucketSCMSource#observeFactory}
+     * @param head Head of the commit
+     * @param hash Hash string of the commit
+     *
+     * @return A {@link jenkins.scm.api.SCMRevision}
+     */
+    private SCMRevision getRevision(final SCMHead head, final String hash, BitbucketPullRequest pr) throws IOException, InterruptedException{
+        SCMRevision revision;
+        if (getRepositoryType() == BitbucketRepositoryType.MERCURIAL) {
+            revision = new MercurialRevision(head, hash);
+        } else {
+            if (pr != null) {
+                PullRequestSCMHead head_ = (PullRequestSCMHead) head;
+                revision = head_.isMerge()
+                        ? new PullRequestSCMRevision(head_, pr.getDestination().getCommitHash(), hash)
+                        : new AbstractGitSCMSource.SCMRevisionImpl(head, hash);
+            }else{
+                 revision = new AbstractGitSCMSource.SCMRevisionImpl(head, hash);
+            }
+        }
+        return revision;
+    }
+
+    /**
+     * @param branchName branch name
+     * @param bitbucket the bitbucket api client
+     * @param hash the hash
+     * @param listener A TaskListener to log useful information
+     *
+     * @return A {@link jenkins.scm.api.SCMSourceCriteria.Probe}
+     */
+    protected SCMSourceCriteria.Probe getProbe(final String branchName, final BitbucketApi bitbucket,
+                                               final String hash, final TaskListener listener) {
+        return new SCMSourceCriteria.Probe() {
+            @Override
+            public String name() {
+                return branchName;
+            }
+
+            @Override
+            public long lastModified() {
+                try {
+                    BitbucketCommit commit = bitbucket.resolveCommit(hash);
+                    if (commit == null) {
+                        listener.getLogger().format("Can not resolve commit by hash [%s] on repository %s/%s%n",
+                                hash, bitbucket.getOwner(), bitbucket.getRepositoryName());
+                        return 0;
+                    }
+                    return commit.getDateMillis();
+                } catch (InterruptedException | IOException e) {
+                    listener.getLogger().format("Can not resolve commit by hash [%s] on repository %s/%s%n",
+                            hash, bitbucket.getOwner(), bitbucket.getRepositoryName());
+                    return 0;
+                }
+            }
+
+            @Override
+            public boolean exists(@NonNull String path) throws IOException {
+                try {
+                    // TODO should be checking the revision not the head
+                    return bitbucket.checkPathExists(branchName, path);
+                } catch (InterruptedException e) {
+                    throw new IOException("Interrupted", e);
+                }
+            }
+        };
+    }
 
 
     @Override
@@ -537,13 +676,21 @@ public class BitbucketSCMSource extends SCMSource {
                 return scm;
             } else {
                 // Defaults to Git
-                BuildChooser buildChooser = revision instanceof AbstractGitSCMSource.SCMRevisionImpl
-                        ? new SpecificRevisionBuildChooser((AbstractGitSCMSource.SCMRevisionImpl) revision)
-                        : new DefaultBuildChooser();
-                return new GitSCM(getGitRemoteConfigs(h),
+                GitSCM scm = new GitSCM(
+                        getGitRemoteConfigs(h),
                         Collections.singletonList(new BranchSpec(h.getBranchName())),
                         false, Collections.<SubmoduleConfig>emptyList(),
-                        null, null, Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)));
+                        null, null, new ArrayList<GitSCMExtension>());
+                BuildChooser buildChooser = new DefaultBuildChooser();
+                if(!h.isMerge()) {
+                    if(revision instanceof PullRequestSCMRevision){
+                        buildChooser = new SpecificRevisionBuildChooser((PullRequestSCMRevision) revision);
+                    }
+                    scm.getExtensions().add(new BuildChooserSetting(buildChooser));
+                }else{
+                    scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("upstream", h.getTarget().getName(), null, MergeCommand.GitPluginFastForwardMode.NO_FF)));
+                }
+                return scm;
             }
         }
         // head instanceof BranchSCMHead
@@ -579,7 +726,13 @@ public class BitbucketSCMSource extends SCMSource {
     protected List<UserRemoteConfig> getGitRemoteConfigs(PullRequestSCMHead head) {
         List<UserRemoteConfig> result = new ArrayList<UserRemoteConfig>();
         String remote = getRemote(head.getRepoOwner(), head.getRepository(), BitbucketRepositoryType.GIT);
-        result.add(new UserRemoteConfig(remote, getRemoteName(), "+refs/heads/" + head.getBranchName(), getCheckoutEffectiveCredentials()));
+        result.add(new UserRemoteConfig(remote, getRemoteName(), "+refs/heads/" + head.getBranchName() + ":refs/remotes/origin/" + head.getBranchName(), getCheckoutEffectiveCredentials()));
+        if(head.isMerge()){
+            //We must add a remote...
+            remote = getRemote(repoOwner,repository, BitbucketRepositoryType.GIT);
+            String upstreamRefs = "+refs/heads/" + head.getTarget().getName() + ":refs/remotes/upstream/" + head.getTarget().getName();
+            result.add(new UserRemoteConfig(remote, "upstream" , upstreamRefs, getCheckoutEffectiveCredentials()));
+        }
         return result;
     }
 
@@ -769,6 +922,13 @@ public class BitbucketSCMSource extends SCMSource {
         public static final String ANONYMOUS = "ANONYMOUS";
         public static final String SAME = "SAME";
 
+        public static final boolean defaultBuildOriginBranch = true;
+        public static final boolean defaultBuildOriginBranchWithPR = false;
+        public static final boolean defaultBuildOriginPRMerge = false;
+        public static final boolean defaultBuildOriginPRHead = true;
+        public static final boolean defaultBuildForkPRHead = true;
+        public static final boolean defaultBuildForkPRMerge = false;
+
         @Override
         public String getDisplayName() {
             return "Bitbucket";
@@ -792,6 +952,40 @@ public class BitbucketSCMSource extends SCMSource {
                 new URL(bitbucketServerUrl);
             } catch (MalformedURLException e) {
                 return FormValidation.error("Invalid URL: " +  e.getMessage());
+            }
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckBuildForkPRMerge(
+                @QueryParameter boolean buildOriginBranch,
+                @QueryParameter boolean buildOriginBranchWithPR,
+                @QueryParameter boolean buildOriginPRMerge,
+                @QueryParameter boolean buildOriginPRHead,
+                @QueryParameter boolean buildForkPRHead,
+                @QueryParameter boolean buildForkPRMerge) {
+            if (buildForkPRMerge && buildForkPRHead) {
+                return FormValidation.ok("Merged vs. unmerged PRs will be distinguished in the job name (PR-# vs. PR-#-head).");
+            }
+            if ( !(buildOriginBranch || buildOriginBranchWithPR || buildOriginPRMerge || buildOriginPRHead || buildForkPRHead|| buildForkPRMerge)){
+                return FormValidation.warning("You need to build something!");
+            }
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckBuildOriginPRMerge(
+                @QueryParameter boolean buildOriginPRMerge,
+                @QueryParameter boolean buildOriginPRHead){
+            if (buildOriginPRMerge && buildOriginPRHead) {
+                return FormValidation.ok("Merged vs. unmerged PRs will be distinguished in the job name (PR-# vs. PR-#-head).");
+            }
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckBuildOriginPRHead(
+                @QueryParameter boolean buildOriginBranchWithPR,
+                @QueryParameter boolean buildOriginPRHead){
+            if (buildOriginBranchWithPR && buildOriginPRHead) {
+                return FormValidation.warning("Redundant to build an origin PR both as a branch and as an unmerged PR.");
             }
             return FormValidation.ok();
         }

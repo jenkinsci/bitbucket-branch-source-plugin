@@ -77,7 +77,17 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private String bitbucketServerUrl;
     private int sshPort = -1;
 
-    @DataBoundConstructor
+    /**
+     * Beavior of the job created
+     **/
+    private boolean buildOriginBranch = DescriptorImpl.defaultBuildOriginBranch;
+    private boolean buildOriginBranchWithPR = DescriptorImpl.defaultBuildOriginBranchWithPR;
+    private boolean buildOriginPRMerge = DescriptorImpl.defaultBuildOriginPRMerge;
+    private boolean buildOriginPRHead = DescriptorImpl.defaultBuildOriginPRHead;
+    private boolean buildForkPRHead = DescriptorImpl.defaultBuildForkPRHead;
+    private boolean buildForkPRMerge = DescriptorImpl.defaultBuildForkPRMerge;
+
+    @DataBoundConstructor 
     public BitbucketSCMNavigator(String repoOwner, String credentialsId, String checkoutCredentialsId) {
         this.repoOwner = repoOwner;
         this.credentialsId = Util.fixEmpty(credentialsId);
@@ -137,6 +147,60 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             this.bitbucketServerUrl = this.bitbucketServerUrl.replaceAll("/$", "");
         }
         resetId();
+    }
+
+    @DataBoundSetter
+    public void setBuildOriginBranch(boolean buildOriginBranch) {
+        this.buildOriginBranch = buildOriginBranch;
+    }
+
+    public boolean isBuildOriginBranch() {
+        return buildOriginBranch;
+    }
+
+    @DataBoundSetter
+    public void setBuildOriginBranchWithPR(boolean buildOriginBranchWithPR){
+        this.buildOriginBranchWithPR = buildOriginBranchWithPR;
+    }
+
+    public boolean isBuildOriginBranchWithPR(){
+        return buildOriginBranchWithPR;
+    }
+
+    @DataBoundSetter
+    public void setBuildOriginPRMerge(boolean buildOriginPRMerge){
+        this.buildOriginPRMerge = buildOriginPRMerge;
+    }
+
+    public boolean isBuildOriginPRMerge(){
+        return buildOriginPRMerge;
+    }
+
+    @DataBoundSetter
+    public void setBuildOriginPRHead(boolean buildOriginPRHead){
+        this.buildOriginPRHead = buildOriginPRHead;
+    }
+
+    public boolean isBuildOriginPRHead(){
+        return buildOriginPRHead;
+    }
+
+    @DataBoundSetter
+    public void setBuildForkPRHead(boolean buildForkPRHead){
+        this.buildForkPRHead = buildForkPRHead;
+    }
+
+    public boolean isBuildForkPRHead(){
+        return buildForkPRHead;
+    }
+
+    @DataBoundSetter
+    public void setBuildForkPRMerge(boolean buildForkPRMerge){
+        this.buildForkPRMerge = buildForkPRMerge;
+    }
+
+    public boolean isBuildForkPRMerge(){
+        return buildForkPRMerge;
     }
 
     @CheckForNull
@@ -208,6 +272,12 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         scmSource.setAutoRegisterHook(isAutoRegisterHooks());
         scmSource.setBitbucketServerUrl(bitbucketServerUrl);
         scmSource.setSshPort(sshPort);
+        scmSource.setBuildOriginBranch(buildOriginBranch);
+        scmSource.setBuildOriginBranchWithPR(buildOriginBranchWithPR);
+        scmSource.setBuildOriginPRHead(buildOriginPRHead);
+        scmSource.setBuildOriginPRMerge(buildOriginPRMerge);
+        scmSource.setBuildForkPRHead(buildForkPRHead);
+        scmSource.setBuildForkPRMerge(buildForkPRMerge);
         projectObserver.addSource(scmSource);
         projectObserver.complete();
     }
@@ -282,6 +352,13 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         public static final String ANONYMOUS = BitbucketSCMSource.DescriptorImpl.ANONYMOUS;
         public static final String SAME = BitbucketSCMSource.DescriptorImpl.SAME;
 
+        public static final boolean defaultBuildOriginBranch = BitbucketSCMSource.DescriptorImpl.defaultBuildOriginBranch;
+        public static final boolean defaultBuildOriginBranchWithPR = BitbucketSCMSource.DescriptorImpl.defaultBuildOriginBranchWithPR;
+        public static final boolean defaultBuildOriginPRMerge = BitbucketSCMSource.DescriptorImpl.defaultBuildOriginPRMerge;
+        public static final boolean defaultBuildOriginPRHead = BitbucketSCMSource.DescriptorImpl.defaultBuildOriginPRHead;
+        public static final boolean defaultBuildForkPRHead = BitbucketSCMSource.DescriptorImpl.defaultBuildForkPRHead;
+        public static final boolean defaultBuildForkPRMerge = BitbucketSCMSource.DescriptorImpl.defaultBuildForkPRMerge;
+
         @Override
         public String getDisplayName() {
             return Messages.BitbucketSCMNavigator_DisplayName();
@@ -317,6 +394,40 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         public FormValidation doCheckBitbucketServerUrl(@QueryParameter String bitbucketServerUrl) {
             return BitbucketSCMSource.DescriptorImpl.doCheckBitbucketServerUrl(bitbucketServerUrl);
+        }
+
+        public FormValidation doCheckBuildForkPRMerge(
+                @QueryParameter boolean buildOriginBranch,
+                @QueryParameter boolean buildOriginBranchWithPR,
+                @QueryParameter boolean buildOriginPRMerge,
+                @QueryParameter boolean buildOriginPRHead,
+                @QueryParameter boolean buildForkPRHead,
+                @QueryParameter boolean buildForkPRMerge) {
+            if (buildForkPRMerge && buildForkPRHead) {
+                return FormValidation.ok("Merged vs. unmerged PRs will be distinguished in the job name (PR-# vs. PR-#-head).");
+            }
+            if ( !(buildOriginBranch || buildOriginBranchWithPR || buildOriginPRMerge || buildOriginPRHead || buildForkPRHead|| buildForkPRMerge)){
+                return FormValidation.warning("You need to build something!");
+            }
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckBuildOriginPRMerge(
+                @QueryParameter boolean buildOriginPRMerge,
+                @QueryParameter boolean buildOriginPRHead){
+            if (buildOriginPRMerge && buildOriginPRHead) {
+                return FormValidation.ok("Merged vs. unmerged PRs will be distinguished in the job name (PR-# vs. PR-#-head).");
+            }
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckBuildOriginPRHead(
+                @QueryParameter boolean buildOriginBranchWithPR,
+                @QueryParameter boolean buildOriginPRHead){
+            if (buildOriginBranchWithPR && buildOriginPRHead) {
+                return FormValidation.warning("Redundant to build an origin PR both as a branch and as an unmerged PR.");
+            }
+            return FormValidation.ok();
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String bitbucketServerUrl) {

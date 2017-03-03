@@ -29,5 +29,23 @@
     <f:entry title="${%Bitbucket Server SSH port}" field="sshPort">
       <f:textbox />
     </f:entry>
+    <f:entry  title="${%buildOriginBranch.title}" field="buildOriginBranch">
+        <f:checkbox default="${descriptor.defaultBuildOriginBranch}"/>
+    </f:entry>
+     <f:entry title="${%buildOriginBranchWithPR.title}" field="buildOriginBranchWithPR">
+        <f:checkbox default="${descriptor.defaultBuildOriginBranchWithPR}"/>
+    </f:entry>
+    <f:entry title="${%buildOriginPRHead.title}" field="buildOriginPRHead">
+        <f:checkbox default="${descriptor.defaultBuildOriginPRHead}"/>
+    </f:entry>
+    <f:entry title="${%buildOriginPRMerge.title}" field="buildOriginPRMerge">
+        <f:checkbox default="${descriptor.buildOriginPRMerge}"/>
+    </f:entry>
+    <f:entry title="${%buildForkPRHead.title}" field="buildForkPRHead">
+        <f:checkbox default="${descriptor.defaultBuildForkPRHead}"/>
+    </f:entry>
+    <f:entry title="${%buildForkPRMerge.title}" field="buildForkPRMerge">
+        <f:checkbox default="${descriptor.defaultBuildForkPRMerge}"/>
+    </f:entry>
   </f:advanced>
 </j:jelly>

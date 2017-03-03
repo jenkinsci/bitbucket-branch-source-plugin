@@ -38,6 +38,7 @@ import jenkins.scm.api.SCMHead;
 public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead {
 
     private static final String PR_BRANCH_PREFIX = "PR-";
+    public static final String PR_BRANCH_HEAD_SUFFIX= "-head";
 
     private static final long serialVersionUID = 1L;
 
@@ -50,6 +51,8 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead 
     private final String number;
 
     private final BranchSCMHead target;
+
+    private Boolean merge = false;
 
     public PullRequestSCMHead(String repoOwner, String repository, String branchName,
                               String number, BranchSCMHead target) {
@@ -83,6 +86,26 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead 
         return this;
     }
 
+    public PullRequestSCMHead(String repoOwner, String repository, BitbucketRepositoryType repositoryType, String branchName, BitbucketPullRequest pr, Boolean merge) {
+        super(PR_BRANCH_PREFIX + pr.getId());
+        this.repoOwner = repoOwner;
+        this.repository = repository;
+        this.branchName = branchName;
+        this.number = pr.getId();
+        this.target = new BranchSCMHead(pr.getDestination().getBranch().getName());
+        this.merge = merge;
+    }
+
+    public PullRequestSCMHead(String repoOwner, String repository, BitbucketRepositoryType repositoryType, String branchName, BitbucketPullRequest pr, Boolean merge, Boolean addSuffix) {
+        super(PR_BRANCH_PREFIX + pr.getId() + (addSuffix ? PR_BRANCH_HEAD_SUFFIX : ""));
+        this.repoOwner = repoOwner;
+        this.repository = repository;
+        this.branchName = branchName;
+        this.number = pr.getId();
+        this.target = new BranchSCMHead(pr.getDestination().getBranch().getName());
+        this.merge = merge;
+    }
+
     public String getRepoOwner() {
         return repoOwner;
     }
@@ -99,6 +122,10 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead 
         return target.getRepositoryType();
     }
 
+    public Boolean isMerge(){
+        return merge;
+    }
+
     @NonNull
     @Override
     public String getId() {
@@ -110,5 +137,6 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead 
     public SCMHead getTarget() {
         return target;
     }
+
 
 }

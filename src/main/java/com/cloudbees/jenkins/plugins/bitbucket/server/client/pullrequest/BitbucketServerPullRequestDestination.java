@@ -39,6 +39,9 @@ import org.codehaus.jackson.annotate.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketServerPullRequestDestination implements BitbucketPullRequestDestination {
 
+    @JsonProperty("latestCommit")
+    private String commitHash;
+
     @JsonProperty("displayId")
     private String branchName;
 
@@ -62,4 +65,7 @@ public class BitbucketServerPullRequestDestination implements BitbucketPullReque
         this.repository = repository;
     }
 
+    public String getCommitHash(){
+        return commitHash;
+    }
 }

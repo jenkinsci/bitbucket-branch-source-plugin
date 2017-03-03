@@ -41,6 +41,9 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
     private BitbucketCloudRepository repository;
     private BitbucketCloudBranch branch;
 
+    @JsonProperty("commit.hash")
+    private String latestCommit;
+
     @Override
     @JsonProperty("repository")
     public BitbucketRepository getRepository() {
@@ -63,4 +66,8 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
         this.branch = branch;
     }
 
+    @JsonProperty("commit.hash")
+    public String getCommitHash(){
+        return latestCommit;
+    }
 }

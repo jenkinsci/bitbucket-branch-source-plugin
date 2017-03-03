@@ -39,4 +39,9 @@ public interface BitbucketPullRequestDestination {
      */
     BitbucketBranch getBranch();
 
+    /**
+     * @return the branch head commit String
+     */
+    String getCommitHash();
+
 }

@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
@@ -117,8 +118,8 @@ public class BranchScanningTest {
 
         // Only branch1 and my-feature-branch PR must be observed
         assertEquals(2, observer.getBranches().size());
-        assertEquals("branch1", observer.getBranches().get(0));
-        assertEquals("PR-23", observer.getBranches().get(1));
+        assertEquals("PR-23", observer.getBranches().get(0));
+        assertEquals("branch1", observer.getBranches().get(1));
     }
 
     @Test
