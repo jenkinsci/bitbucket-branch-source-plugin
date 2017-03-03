@@ -20,6 +20,9 @@
     <f:entry title="${%Exclude branches}" field="excludes">
       <f:textbox/>
     </f:entry>
+    <f:entry title="${%Include all pull requests}" field="includeAllPullRequests">
+      <f:checkbox/>
+    </f:entry>
     <f:entry title="${%Checkout Credentials}" field="checkoutCredentialsId">
       <c:select default="${descriptor.SAME}"/>
     </f:entry>

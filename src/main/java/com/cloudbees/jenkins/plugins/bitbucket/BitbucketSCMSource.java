@@ -137,6 +137,11 @@ public class BitbucketSCMSource extends SCMSource {
     private String excludes = "";
 
     /**
+     * Whether to include all pull requests.
+     */
+    private boolean includeAllPullRequests;
+
+    /**
      * If true, a webhook will be auto-registered in the repository managed by this source.
      */
     private boolean autoRegisterHook = false;
@@ -216,6 +221,15 @@ public class BitbucketSCMSource extends SCMSource {
     public void setExcludes(@NonNull String excludes) {
         Pattern.compile(getPattern(excludes));
         this.excludes = excludes;
+    }
+
+    public boolean isIncludeAllPullRequests() {
+        return includeAllPullRequests;
+    }
+
+    @DataBoundSetter
+    public void setIncludeAllPullRequests(boolean includeAllPullRequests) {
+        this.includeAllPullRequests = includeAllPullRequests;
     }
 
     public String getRepoOwner() {
@@ -400,7 +414,7 @@ public class BitbucketSCMSource extends SCMSource {
     private void observe(SCMSourceCriteria criteria, SCMHeadObserver observer, final TaskListener listener,
                          final String owner, final String repositoryName,
                          final String branchName, final String hash, BitbucketPullRequest pr) throws IOException, InterruptedException {
-        if (isExcluded(branchName)) {
+        if (isExcluded(branchName, pr != null)) {
             return;
         }
         final BitbucketApi bitbucket = BitbucketApiFactory.newInstance(bitbucketServerUrl, getScanCredentials(), owner, repositoryName);
@@ -612,14 +626,16 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     /**
-     * Returns true if the branchName isn't matched by includes or is matched by excludes.
+     * Returns true if the branchName isn't matched by includes or is matched by excludes
+     * unless it is a pull requests and all pull requests should be built.
      * 
      * @param branchName
+     * @param isPullRequest
      * @return true if branchName is excluded or is not included
      */
-    private boolean isExcluded(String branchName) {
-        return !Pattern.matches(getPattern(getIncludes()), branchName)
-                || Pattern.matches(getPattern(getExcludes()), branchName);
+    private boolean isExcluded(String branchName, boolean isPullRequest) {
+        return !(isPullRequest && isIncludeAllPullRequests()) &&
+                (!Pattern.matches(getPattern(getIncludes()), branchName) || Pattern.matches(getPattern(getExcludes()), branchName));
     }
 
     /**
@@ -633,14 +649,12 @@ public class BitbucketSCMSource extends SCMSource {
         StringBuilder quotedBranches = new StringBuilder();
         for (String wildcard : branches.split(" ")) {
             StringBuilder quotedBranch = new StringBuilder();
-            for (String branch : wildcard.split("\\*")) {
-                if (wildcard.startsWith("*") || quotedBranches.length() > 0) {
+            for (String branch : wildcard.split("((?<=\\*)|(?=\\*))")) {
+                if ("*".equals(branch)) {
                     quotedBranch.append(".*");
+                } else {
+                    quotedBranch.append(Pattern.quote(branch));
                 }
-                quotedBranch.append(Pattern.quote(branch));
-            }
-            if (wildcard.endsWith("*")) {
-                quotedBranch.append(".*");
             }
             if (quotedBranches.length() > 0) {
                 quotedBranches.append("|");
