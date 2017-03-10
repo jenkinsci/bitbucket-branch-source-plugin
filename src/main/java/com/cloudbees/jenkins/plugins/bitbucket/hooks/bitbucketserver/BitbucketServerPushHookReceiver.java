@@ -67,7 +67,8 @@ public class BitbucketServerPushHookReceiver extends CrumbExclusion implements U
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketServerPushHookReceiver.class.getName());
     private static final String PATH = "bitbucket-server-hook";
-    private static final String FULL_PATH = PATH + "/notify";
+
+    public static final String FULL_PATH = PATH + "/notify";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

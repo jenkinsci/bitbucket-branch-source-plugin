@@ -34,8 +34,10 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +51,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
@@ -60,7 +63,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
@@ -72,23 +74,7 @@ import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.*;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Bitbucket API client.
@@ -109,9 +95,11 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_PROJECT_PATH = API_BASE_PATH + "/projects/%s";
     private static final String API_COMMIT_COMMENT_PATH = API_REPOSITORY_PATH + "/commits/%s/comments";
 
-    private static final String WEBHOOK_BASE_PATH = "/rest/webhook/1.0";
-    private static final String WEBHOOK_REPOSITORY_PATH = WEBHOOK_BASE_PATH + "/projects/%s/repos/%s/configurations";
-    private static final String WEBHOOK_REPOSITORY_CONFIG_PATH = WEBHOOK_REPOSITORY_PATH + "/%s";
+    private static final String REPOSITORY_HOOKS_BASE_PATH = "/rest/api/1.0/projects/%s/repos/%s/settings/hooks";
+
+    private static final String WEBHOOK_REPOSITORY_PATH = REPOSITORY_HOOKS_BASE_PATH + "/com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook";
+    private static final String WEBHOOK_REPOSITORY_SETTINGS_PATH = WEBHOOK_REPOSITORY_PATH + "/settings";
+    private static final String WEBHOOK_REPOSITORY_ENABLED_PATH = WEBHOOK_REPOSITORY_PATH + "/enabled";
 
     private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits/%s";
 
@@ -393,19 +381,54 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     @Override
     public void registerCommitWebHook(BitbucketWebHook hook) throws IOException, InterruptedException {
-        putRequest(String.format(WEBHOOK_REPOSITORY_PATH, getUserCentricOwner(), repositoryName), serialize(hook));
+        if (isPostReceivePluginInstalled()) {
+            String url = String.format(WEBHOOK_REPOSITORY_SETTINGS_PATH, getUserCentricOwner(), repositoryName);
+            Map<String, String> hookSettings = getHookSettings(url);
+            if (!hookSettings.values().contains(hook.getUrl())) {
+                hookSettings.put("hook-url-" + hookSettings.size(), hook.getUrl());
+                putRequest(url, serialize(hookSettings));
+            }
+            putRequest(String.format(WEBHOOK_REPOSITORY_ENABLED_PATH, getUserCentricOwner(), repositoryName), "");
+        } else {
+            LOGGER.log(Level.WARNING, "Bitbucket Server Post-Receive WebHooks add-on isn't installed. Can't register commit web hook.");
+        }
     }
 
     @Override
     public void removeCommitWebHook(BitbucketWebHook hook) throws IOException, InterruptedException {
-        deleteRequest(String.format(WEBHOOK_REPOSITORY_CONFIG_PATH, getUserCentricOwner(), repositoryName, hook.getUuid()));
+        String url = String.format(WEBHOOK_REPOSITORY_SETTINGS_PATH, getUserCentricOwner(), repositoryName);
+        Map<String, String> hookSettings = getHookSettings(url);
+        Map<String, String> newHookSettings = new HashMap<>();
+        for (String hookUrl : hookSettings.values()) {
+            if (!hookUrl.equals(hook.getUrl())) {
+                newHookSettings.put("hook-url-" + newHookSettings.size(), hookUrl);
+            }
+        }
+        if (newHookSettings.isEmpty()) {
+            deleteRequest(String.format(WEBHOOK_REPOSITORY_ENABLED_PATH, getUserCentricOwner(), repositoryName));
+        } else {
+            putRequest(url, serialize(hookSettings));
+        }
     }
 
     @NonNull
     @Override
     public List<? extends BitbucketWebHook> getWebHooks() throws IOException, InterruptedException {
-        String response = getRequest(String.format(WEBHOOK_REPOSITORY_PATH, getUserCentricOwner(), repositoryName));
-        return parse(response, BitbucketServerWebhooks.class);
+        List<BitbucketWebHook> result = new ArrayList<>();
+        if (isPostReceivePluginInstalled()) {
+            String body = getRequest(String.format(WEBHOOK_REPOSITORY_PATH, getUserCentricOwner(), repositoryName));
+            boolean enabled = new ObjectMapper().readTree(body).get("enabled").asBoolean();
+            Map<String, String> hookSettings = getHookSettings(String.format(WEBHOOK_REPOSITORY_SETTINGS_PATH, getUserCentricOwner(), repositoryName));
+            for (String hookUrl : hookSettings.values()) {
+                BitbucketServerWebhook webhook = new BitbucketServerWebhook();
+                webhook.setActive(enabled);
+                webhook.setUrl(hookUrl);
+                result.add(webhook);
+            }
+        } else {
+            LOGGER.log(Level.WARNING, "Bitbucket Server Post-Receive WebHooks add-on isn't installed. Can't register commit web hook.");
+        }
+        return result;
     }
 
     /**
@@ -615,4 +638,32 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return doRequest(request);
     }
 
+    private boolean isPostReceivePluginInstalled() throws IOException {
+        String url = String.format(REPOSITORY_HOOKS_BASE_PATH, getUserCentricOwner(), repositoryName);
+        String request = getRequest(url);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode node = objectMapper.readTree(request);
+        for (JsonNode value : node.get("values")) {
+            if (value.get("details").get("key").asText().equals("com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Map<String, String> getHookSettings(String url) throws IOException {
+        Map<String, String> hookSettings = new HashMap<>();
+        try {
+            String body = getRequest(url);
+            JsonNode node = new ObjectMapper().readTree(body);
+            Iterator<String> fieldNames = node.getFieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                hookSettings.put(fieldName, node.get(fieldName).asText());
+            }
+        } catch (FileNotFoundException e) {
+            // nothing to do
+        }
+        return hookSettings;
+    }
 }

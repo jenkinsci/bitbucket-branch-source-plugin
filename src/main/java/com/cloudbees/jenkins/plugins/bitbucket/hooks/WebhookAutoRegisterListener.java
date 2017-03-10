@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.bitbucketserver.BitbucketServerPushHookReceiver;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -136,7 +137,8 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     BitbucketWebHook existing = null;
                     for (BitbucketWebHook hook : existent) {
                         // Check if there is a hook pointing to us already
-                        if (hook.getUrl().equals(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
+                        String hookPath = source.getBitbucketServerUrl() == null ? BitbucketSCMSourcePushHookReceiver.FULL_PATH : BitbucketServerPushHookReceiver.FULL_PATH;
+                        if (hook.getUrl().equals(Jenkins.getActiveInstance().getRootUrl() + hookPath)) {
                             existing = hook;
                             break;
                         }
@@ -150,7 +152,10 @@ public class WebhookAutoRegisterListener extends ItemListener {
                                     source.getRepository()));
                             bitbucket.registerCommitWebHook(existing);
                         }
-                    } else  if (existing == null) {
+                    } else if (existing instanceof BitbucketServerWebhook && !existing.isActive()) {
+                        LOGGER.info(String.format("Updating hook for %s/%s", source.getRepoOwner(), source.getRepository()));
+                        bitbucket.registerCommitWebHook(existing);
+                    } else if (existing == null) {
                             LOGGER.info(String.format("Registering hook for %s/%s", source.getRepoOwner(), source.getRepository()));
                             bitbucket.registerCommitWebHook(getHook(source));
                     }
@@ -224,7 +229,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             BitbucketServerWebhook hook = new BitbucketServerWebhook();
             hook.setActive(true);
             hook.setDescription("Jenkins hook");
-            hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+            hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketServerPushHookReceiver.FULL_PATH);
             return hook;
         }
     }
