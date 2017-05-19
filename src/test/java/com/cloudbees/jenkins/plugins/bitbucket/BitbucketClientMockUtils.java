@@ -72,14 +72,14 @@ public class BitbucketClientMockUtils {
 
         if (includePullRequests) {
             when(bitbucket.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
-            when(bitbucket.checkPathExists("my-feature-branch", "markerfile.txt")).thenReturn(true);
             when(bitbucket.resolveSourceFullHash(any(BitbucketPullRequestValue.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
+            when(bitbucket.checkPathExists("e851558f77c098d21af6bb8cc54a423f7cf12147", "markerfile.txt")).thenReturn(true);
         }
 
         // mock file exists
-        when(bitbucket.checkPathExists("branch1", "markerfile.txt")).thenReturn(true);
-        when(bitbucket.checkPathExists("branch2", "markerfile.txt")).thenReturn(false);
+        when(bitbucket.checkPathExists("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", "markerfile.txt")).thenReturn(true);
+        when(bitbucket.checkPathExists("707c59ce8292c927dddb6807fcf9c3c5e7c9b00f", "markerfile.txt")).thenReturn(false);
 
         // Team discovering mocks
         when(bitbucket.getTeam()).thenReturn(getTeam());
