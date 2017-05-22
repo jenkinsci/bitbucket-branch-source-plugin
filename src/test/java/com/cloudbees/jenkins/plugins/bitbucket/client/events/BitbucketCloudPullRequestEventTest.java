@@ -64,7 +64,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -84,7 +84,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
@@ -104,7 +104,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
@@ -129,7 +129,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -149,7 +149,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
@@ -169,7 +169,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
@@ -193,7 +193,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -213,7 +213,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
@@ -233,7 +233,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
@@ -257,7 +257,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -277,7 +277,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("stable"));
@@ -297,7 +297,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
@@ -321,7 +321,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -341,7 +341,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
@@ -361,7 +361,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
@@ -385,7 +385,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -405,7 +405,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
@@ -426,7 +426,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
@@ -450,7 +450,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -470,7 +470,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
@@ -490,7 +490,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());

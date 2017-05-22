@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -114,27 +115,27 @@ public class BitbucketCloudRepository implements BitbucketRepository {
     }
 
     @JsonIgnore
-    public Map<String, BitbucketHref> getLinks() {
+    public Map<String, List<BitbucketHref>> getLinks() {
         if (links == null) {
             return null;
         }
-        Map<String, BitbucketHref> result = new HashMap<>();
+        Map<String, List<BitbucketHref>> result = new HashMap<>();
         for (Map.Entry<String, List<BitbucketHref>> entry : this.links.entrySet()) {
             if (!entry.getValue().isEmpty()) {
-                result.put(entry.getKey(), entry.getValue().get(0));
+                result.put(entry.getKey(), new ArrayList<>(entry.getValue()));
             }
         }
         return result;
     }
 
     @JsonIgnore
-    public void setLinks(Map<String, BitbucketHref> links) {
+    public void setLinks(Map<String, List<BitbucketHref>> links) {
         if (links == null) {
             this.links = null;
         } else {
             this.links = new HashMap<>();
-            for (Map.Entry<String, BitbucketHref> entry : links.entrySet()) {
-                this.links.put(entry.getKey(), Collections.singletonList(entry.getValue()));
+            for (Map.Entry<String, List<BitbucketHref>> entry : links.entrySet()) {
+                this.links.put(entry.getKey(), new ArrayList<>(entry.getValue()));
             }
         }
     }

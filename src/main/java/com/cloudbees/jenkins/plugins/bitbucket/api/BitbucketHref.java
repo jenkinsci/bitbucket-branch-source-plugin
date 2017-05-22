@@ -40,8 +40,8 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketHref {
+    private String name;
     private String href;
-
 
     // Used for marshalling/unmarshalling
     @Restricted(DoNotUse.class)
@@ -50,6 +50,19 @@ public class BitbucketHref {
 
     public BitbucketHref(String href) {
         this.href = href;
+    }
+
+    public BitbucketHref(String name, String href) {
+        this.name = name;
+        this.href = href;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getHref() {

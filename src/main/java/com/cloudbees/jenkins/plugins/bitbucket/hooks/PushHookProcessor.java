@@ -41,6 +41,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -111,18 +112,22 @@ public class PushHookProcessor extends HookProcessor {
                                 if (getPayload() instanceof BitbucketCloudPushEvent) {
                                     return false;
                                 }
-                                Map<String, BitbucketHref> links = getPayload().getRepository().getLinks();
+                                Map<String, List<BitbucketHref>> links = getPayload().getRepository().getLinks();
                                 if (links != null && links.containsKey("self")) {
-                                    try {
-                                        URI navUri = new URI(serverUrl);
-                                        URI evtUri = new URI(links.get("self").getHref());
-                                        if (!navUri.getHost().equalsIgnoreCase(evtUri.getHost())) {
-                                            // from a different Bitbucket server
-                                            return false;
+                                    boolean matches = false;
+                                    for (BitbucketHref link : links.get("self")) {
+                                        try {
+                                            URI navUri = new URI(serverUrl);
+                                            URI evtUri = new URI(link.getHref());
+                                            if (navUri.getHost().equalsIgnoreCase(evtUri.getHost())) {
+                                                matches = true;
+                                                break;
+                                            }
+                                        } catch (URISyntaxException e) {
+                                            // ignore
                                         }
-                                    } catch (URISyntaxException e) {
-                                        // ignore
                                     }
+                                    return matches;
                                 }
                             }
                             return true;

@@ -28,6 +28,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
@@ -83,7 +85,7 @@ public class BitbucketClientMockUtils {
 
         // Team discovering mocks
         when(bitbucket.getTeam()).thenReturn(getTeam());
-        when(bitbucket.getRepositories()).thenReturn(getRepositories());
+        when(bitbucket.getRepositories()).thenReturn(getRepositories(type));
 
         // Auto-registering hooks
         if (includeWebHooks) {
@@ -107,14 +109,42 @@ public class BitbucketClientMockUtils {
         return Arrays.asList(hook);
     }
 
-    private static List<BitbucketCloudRepository> getRepositories() {
+    private static List<BitbucketCloudRepository> getRepositories(
+            BitbucketRepositoryType type) {
         BitbucketCloudRepository r1 = new BitbucketCloudRepository();
         r1.setFullName("myteam/repo1");
+        HashMap<String, List<BitbucketHref>> links = new HashMap<>();
+        links.put("self", Collections.singletonList(
+                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/repo1")
+        ));
+        links.put("clone", Arrays.asList(
+                new BitbucketHref("https","https://bitbucket.org/amuniz/repo1.git"),
+                new BitbucketHref("ssh","ssh://git@bitbucket.org/amuniz/repo1.git")
+        ));
+        r1.setLinks(links);
         BitbucketCloudRepository r2 = new BitbucketCloudRepository();
         r2.setFullName("myteam/repo2");
+        links = new HashMap<>();
+        links.put("self", Collections.singletonList(
+                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/repo2")
+        ));
+        links.put("clone", Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/amuniz/repo2.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/amuniz/repo2.git")
+        ));
+        r1.setLinks(links);
         BitbucketCloudRepository r3 = new BitbucketCloudRepository();
         // test mock hack to avoid a lot of harness code
         r3.setFullName("amuniz/test-repos");
+        links = new HashMap<>();
+        links.put("self", Collections.singletonList(
+                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos")
+        ));
+        links.put("clone", Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/amuniz/test-repos.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/amuniz/test-repos.git")
+        ));
+        r1.setLinks(links);
         return Arrays.asList(r1, r2, r3);
     }
 

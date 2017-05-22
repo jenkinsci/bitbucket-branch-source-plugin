@@ -73,7 +73,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private String pattern = ".*";
     private boolean autoRegisterHooks = false;
     private String bitbucketServerUrl;
-    private int sshPort = -1;
     /**
      * Ant match expression that indicates what branches to include in the retrieve process.
      */
@@ -150,15 +149,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     public boolean isAutoRegisterHooks() {
         return autoRegisterHooks;
-    }
-
-    public int getSshPort() {
-        return sshPort;
-    }
-
-    @DataBoundSetter
-    public void setSshPort(int sshPort) {
-        this.sshPort = sshPort;
     }
 
     @DataBoundSetter
@@ -260,7 +250,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         scmSource.setCheckoutCredentialsId(checkoutCredentialsId);
         scmSource.setAutoRegisterHook(isAutoRegisterHooks());
         scmSource.setBitbucketServerUrl(bitbucketServerUrl);
-        scmSource.setSshPort(sshPort);
         scmSource.setIncludes(includes);
         scmSource.setExcludes(excludes);
         projectObserver.addSource(scmSource);

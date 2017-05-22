@@ -66,7 +66,7 @@ public class BitbucketServerPushEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
         assertThat(event.getChanges(), not(containsInAnyOrder()));
     }

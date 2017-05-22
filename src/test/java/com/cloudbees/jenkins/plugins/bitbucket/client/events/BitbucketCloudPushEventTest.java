@@ -65,7 +65,7 @@ public class BitbucketCloudPushEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getChanges(), not(containsInAnyOrder()));
         assertThat(event.getChanges().size(), is(1));
@@ -92,7 +92,7 @@ public class BitbucketCloudPushEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getChanges(), not(containsInAnyOrder()));
     }
@@ -109,7 +109,7 @@ public class BitbucketCloudPushEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getChanges(), containsInAnyOrder());
     }
@@ -125,7 +125,7 @@ public class BitbucketCloudPushEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getChanges(), not(containsInAnyOrder()));
         assertThat(event.getChanges().size(), is(3));

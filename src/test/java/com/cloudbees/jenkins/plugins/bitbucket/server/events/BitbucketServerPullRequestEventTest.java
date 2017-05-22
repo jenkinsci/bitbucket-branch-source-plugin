@@ -67,7 +67,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), notNullValue());
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
 
         assertThat(event.getPullRequest(), notNullValue());
@@ -86,7 +86,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
@@ -105,7 +105,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 anyOf(is("http://local.example.com:7990/bitbucket/projects/~USER/repos/rep_1/browse"),
                         is("http://local.example.com:7990/bitbucket/users/user/repos/rep_1/browse")));
 
@@ -139,7 +139,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(pullRequest.getDestination().getRepository().isPrivate(), is(true));
         assertThat(pullRequest.getDestination().getRepository().getLinks(), notNullValue());
         assertThat(pullRequest.getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(pullRequest.getDestination().getRepository().getLinks().get("self").getHref(),
+        assertThat(pullRequest.getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
         assertThat(pullRequest.getDestination().getBranch(), notNullValue());
         assertThat(pullRequest.getDestination().getBranch().getName(), is("master"));
@@ -159,7 +159,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(pullRequest.getSource().getRepository().isPrivate(), is(true));
         assertThat(pullRequest.getSource().getRepository().getLinks(), notNullValue());
         assertThat(pullRequest.getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(pullRequest.getSource().getRepository().getLinks().get("self").getHref(),
+        assertThat(pullRequest.getSource().getRepository().getLinks().get("self").get(0).getHref(),
                 anyOf(is("http://local.example.com:7990/bitbucket/projects/~USER/repos/rep_1/browse"),
                         is("http://local.example.com:7990/bitbucket/users/user/repos/rep_1/browse"))
         );
