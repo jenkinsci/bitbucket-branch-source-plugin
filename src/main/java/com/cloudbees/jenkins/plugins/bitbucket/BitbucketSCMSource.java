@@ -80,6 +80,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
@@ -351,7 +352,11 @@ public class BitbucketSCMSource extends SCMSource {
                 checkInterrupt();
                 PullRequestSCMHead head = new PullRequestSCMHead(pull.getSource().getRepository().getOwnerName(),
                         pull.getSource().getRepository().getRepositoryName(), repositoryType,
-                        pull.getSource().getBranch().getName(), pull);
+                        pull.getSource().getBranch().getName(), pull,
+                        getRepoOwner().equalsIgnoreCase(pull.getSource().getRepository().getOwnerName())
+                                ? SCMHeadOrigin.DEFAULT : new SCMHeadOrigin.Fork(
+                                pull.getSource().getRepository().getOwnerName())
+                );
                 if (includes != null && !includes.contains(head)) {
                     continue;
                 }

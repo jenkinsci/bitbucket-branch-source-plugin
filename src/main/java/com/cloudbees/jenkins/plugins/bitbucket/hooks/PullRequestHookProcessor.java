@@ -35,7 +35,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebh
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPullRequestEvent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.scm.SCM;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -48,10 +47,10 @@ import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
+import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_DECLINED;
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_MERGED;
@@ -167,7 +166,14 @@ public class PullRequestHookProcessor extends HookProcessor {
                                 getPayload().getPullRequest().getSource().getRepository().getRepositoryName(),
                                 type,
                                 getPayload().getPullRequest().getSource().getBranch().getName(),
-                                getPayload().getPullRequest()
+                                getPayload().getPullRequest(),
+                                ((BitbucketSCMSource) source).getRepoOwner().equalsIgnoreCase(
+                                        getPayload().getPullRequest().getSource().getRepository().getOwnerName()
+                                )
+                                        ? SCMHeadOrigin.DEFAULT
+                                        : new SCMHeadOrigin.Fork(
+                                                getPayload().getPullRequest().getSource().getRepository().getOwnerName()
+                                        )
                         );
                         if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
                             // special case for repo being deleted

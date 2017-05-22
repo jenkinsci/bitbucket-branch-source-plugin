@@ -40,6 +40,7 @@ import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadMigration;
+import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 import org.kohsuke.accmod.Restricted;
@@ -92,7 +93,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
 
         public PR(String repoOwner, String repository, String branchName, String number,
                   BranchSCMHead target) {
-            super(repoOwner, repository, branchName, number, target);
+            super(repoOwner, repository, branchName, number, target, null);
         }
     }
 
@@ -144,7 +145,10 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                 target = "\u0000";
             }
             return new PullRequestSCMHead(head.getRepoOwner(), head.getRepository(), head.getBranchName(), head.getId(),
-                    new BranchSCMHead(target, BitbucketRepositoryType.MERCURIAL));
+                    new BranchSCMHead(target, BitbucketRepositoryType.MERCURIAL),
+                    source.getRepoOwner().equalsIgnoreCase(head.getRepoOwner())
+                            ? SCMHeadOrigin.DEFAULT
+                            : new SCMHeadOrigin.Fork(head.getRepoOwner()));
         }
 
         @Override
@@ -174,7 +178,10 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                 target = "\u0000";
             }
             return new PullRequestSCMHead(head.getRepoOwner(), head.getRepository(), head.getBranchName(), head.getId(),
-                    new BranchSCMHead(target, BitbucketRepositoryType.GIT));
+                    new BranchSCMHead(target, BitbucketRepositoryType.GIT),
+                    source.getRepoOwner().equalsIgnoreCase(head.getRepoOwner())
+                            ? SCMHeadOrigin.DEFAULT
+                            : new SCMHeadOrigin.Fork(head.getRepoOwner()));
         }
 
         @Override
