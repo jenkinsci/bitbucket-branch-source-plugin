@@ -681,7 +681,7 @@ public class BitbucketSCMSource extends SCMSource {
      * @param branchName
      * @return true if branchName is excluded or is not included
      */
-    private boolean isExcluded(String branchName) {
+    boolean isExcluded(String branchName) {
         return !Pattern.matches(getPattern(getIncludes()), branchName)
                 || Pattern.matches(getPattern(getExcludes()), branchName);
     }
@@ -698,7 +698,7 @@ public class BitbucketSCMSource extends SCMSource {
         for (String wildcard : branches.split(" ")) {
             StringBuilder quotedBranch = new StringBuilder();
             for (String branch : wildcard.split("\\*")) {
-                if (wildcard.startsWith("*") || quotedBranches.length() > 0) {
+                if (wildcard.startsWith("*") || quotedBranch.length() > 0) {
                     quotedBranch.append(".*");
                 }
                 quotedBranch.append(Pattern.quote(branch));
