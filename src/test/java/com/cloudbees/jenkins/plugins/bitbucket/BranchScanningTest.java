@@ -66,13 +66,13 @@ public class BranchScanningTest {
     @Test
     public void uriResolverTest() throws Exception {
         BitbucketSCMSource source = getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT);
-        String remote = source.getRemote("amuniz", "test", source.getRepositoryType());
+        String remote = source.getRemote(repoOwner, repoName, source.getRepositoryType());
 
         // When there is no checkout credentials set, https must be resolved
         assertEquals("https://bitbucket.org/amuniz/test.git", remote);
 
         source = getBitbucketSCMSourceMock(BitbucketRepositoryType.MERCURIAL);
-        remote = source.getRemote("amuniz", "test", source.getRepositoryType());
+        remote = source.getRemote(repoOwner, repoName, source.getRepositoryType());
 
         // Resolve URL for Mercurial repositories
         assertEquals("https://bitbucket.org/amuniz/test", remote);
@@ -131,6 +131,15 @@ public class BranchScanningTest {
     public void mercurialSCMTest() throws Exception {
         SCM scm = scmBuild(BitbucketRepositoryType.MERCURIAL);
         assertTrue("SCM must be an instance of MercurialSCM", scm instanceof MercurialSCM);
+    }
+
+    /**
+     * Tests scanning of Mercurial repos that have a branch name with spaces. Testing with no cred access
+     */
+    @Test
+    public void mercurialBranchNameWithSpacesTest () throws Exception {
+        BitbucketCloudApiClient api = new BitbucketCloudApiClient("alexjo", "bugrep-forest", null);
+        assertTrue(api.checkPathExists("name with spaces", "Jenkinsfile"));
     }
 
     private SCM scmBuild(BitbucketRepositoryType type) throws IOException, InterruptedException {

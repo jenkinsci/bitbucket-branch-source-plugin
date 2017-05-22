@@ -272,7 +272,8 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @Override
     public boolean checkPathExists(@NonNull String branch, @NonNull String path) throws IOException, InterruptedException {
-        int status = getRequestStatus(V1_API_BASE_URL + owner + "/" + repositoryName + "/raw/" + branch + "/" + path);
+        int status = getRequestStatus(V1_API_BASE_URL + owner + "/" + repositoryName + "/raw/" +
+                branch.replaceAll(" ", "%20") + "/" + path);
         return status == HttpStatus.SC_OK;
     }
 
