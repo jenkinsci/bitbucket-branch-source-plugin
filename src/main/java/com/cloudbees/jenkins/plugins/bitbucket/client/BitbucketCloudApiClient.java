@@ -78,6 +78,7 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
@@ -272,8 +273,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @Override
     public boolean checkPathExists(@NonNull String branch, @NonNull String path) throws IOException, InterruptedException {
+        if (branch.contains(":"))
+            throw new IllegalArgumentException("The character ':' cannot be used in a named branch");
         int status = getRequestStatus(V1_API_BASE_URL + owner + "/" + repositoryName + "/raw/" +
-                branch.replaceAll(" ", "%20") + "/" + path);
+                URIUtil.encodePath(branch) + "/" + path);
         return status == HttpStatus.SC_OK;
     }
 

@@ -134,12 +134,22 @@ public class BranchScanningTest {
     }
 
     /**
-     * Tests scanning of Mercurial repos that have a branch name with spaces. Testing with no cred access
+     * Tests scanning of Mercurial repos that have a branch name with characters that need to be uri encoded. Testing
+     * with no cred access
      */
     @Test
-    public void mercurialBranchNameWithSpacesTest () throws Exception {
+    public void mercurialBranchNameUriEncodingTest () throws Exception {
         BitbucketCloudApiClient api = new BitbucketCloudApiClient("alexjo", "bugrep-forest", null);
+        // branch with spaces in the names can be used
         assertTrue(api.checkPathExists("name with spaces", "Jenkinsfile"));
+        // branch other characters in the name can be used
+        assertTrue(api.checkPathExists("~`!@#$%^&*()_+=[]{}\\|;\"<>,./\\?a", "Jenkinsfile"));
+        // ':' is an invalid hg branch name character
+        try {
+            api.checkPathExists("branch:dev-12345", "Jenkinsfile");
+        } catch (IllegalArgumentException e) {
+            assertEquals("The character ':' cannot be used in a named branch", e.getMessage());
+        }
     }
 
     private SCM scmBuild(BitbucketRepositoryType type) throws IOException, InterruptedException {
