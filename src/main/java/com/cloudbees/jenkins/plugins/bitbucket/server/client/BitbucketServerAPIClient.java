@@ -34,7 +34,6 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,7 +59,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
@@ -72,23 +70,9 @@ import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.*;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Bitbucket API client.
@@ -118,8 +102,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final int MAX_PAGES = 100;
 
     /**
-     * Repository owner.
-     * This must be null if {@link #project} is not null.
+     * Repository owner or Project name.
      */
     private String owner;
 
@@ -253,8 +236,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         try {
             List<BitbucketServerPullRequest> pullRequests = new ArrayList<>();
             Integer pageNumber = 1;
-            String response = getRequest(url);
-            BitbucketServerPullRequests page = parse(response, BitbucketServerPullRequests.class);
+            BitbucketServerPullRequests page = getResponse(url,BitbucketServerPullRequests.class);
             pullRequests.addAll(page.getValues());
             while (!page.isLastPage() && pageNumber < MAX_PAGES) {
                 if (Thread.interrupted()) {
@@ -263,8 +245,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 pageNumber++;
                 url = String.format(API_PULL_REQUESTS_PATH, getUserCentricOwner(), repositoryName,
                         page.getNextPageStart());
-                response = getRequest(url);
-                page = parse(response, BitbucketServerPullRequests.class);
+                page  = getResponse(url,BitbucketServerPullRequests.class);
                 pullRequests.addAll(page.getValues());
             }
             return pullRequests;
@@ -280,12 +261,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @NonNull
     public BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException {
         String url = String.format(API_PULL_REQUEST_PATH, getUserCentricOwner(), repositoryName, id);
-        String response = getRequest(url);
-        try {
-            return parse(response, BitbucketServerPullRequest.class);
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        return getResponse(url, BitbucketServerPullRequest.class);
     }
 
     /**
@@ -299,12 +275,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                     "Cannot get a repository from an API instance that is not associated with a repository");
         }
         String url = String.format(API_REPOSITORY_PATH, getUserCentricOwner(), repositoryName);
-        String response = getRequest(url);
-        try {
-            return parse(response, BitbucketServerRepository.class);
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        return getResponse(url, BitbucketServerRepository.class);
     }
 
     /**
@@ -335,12 +306,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @Override
     public String getDefaultBranch() throws IOException {
         String url = String.format(API_DEFAULT_BRANCH_PATH, getUserCentricOwner(), repositoryName);
-        try {
-            String response = getRequest(url);
-            return parse(response, BitbucketServerBranch.class).getName();
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        return getResponse(url, BitbucketServerBranch.class).getName();
     }
 
     /**
@@ -354,8 +320,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         try {
             List<BitbucketServerBranch> branches = new ArrayList<>();
             Integer pageNumber = 1;
-            String response = getRequest(url);
-            BitbucketServerBranches page = parse(response, BitbucketServerBranches.class);
+            BitbucketServerBranches page = getResponse(url, BitbucketServerBranches.class);
             branches.addAll(page.getValues());
             while (!page.isLastPage() && pageNumber < MAX_PAGES) {
                 if (Thread.interrupted()) {
@@ -363,8 +328,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 }
                 pageNumber++;
                 url = String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, page.getNextPageStart());
-                response = getRequest(url);
-                page = parse(response, BitbucketServerBranches.class);
+                page = getResponse(url, BitbucketServerBranches.class);
                 branches.addAll(page.getValues());
             }
             return branches;
@@ -377,12 +341,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @Override
     public BitbucketCommit resolveCommit(@NonNull String hash) throws IOException {
         String url = String.format(API_COMMITS_PATH, getUserCentricOwner(), repositoryName, hash);
-        try {
-            String response = getRequest(url);
-            return parse(response, BitbucketServerCommit.class);
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        return getResponse(url, BitbucketServerCommit.class);
     }
 
     /** {@inheritDoc} */
@@ -405,8 +364,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @NonNull
     @Override
     public List<? extends BitbucketWebHook> getWebHooks() throws IOException, InterruptedException {
-        String response = getRequest(String.format(WEBHOOK_REPOSITORY_PATH, getUserCentricOwner(), repositoryName));
-        return parse(response, BitbucketServerWebhooks.class);
+        return getResponse(String.format(WEBHOOK_REPOSITORY_PATH, getUserCentricOwner(), repositoryName), BitbucketServerWebhooks.class);
     }
 
     /**
@@ -418,12 +376,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             return null;
         } else {
             String url = String.format(API_PROJECT_PATH, getOwner());
-            try {
-                String response = getRequest(url);
-                return parse(response, BitbucketServerProject.class);
-            } catch (IOException e) {
-                throw new IOException("I/O error when accessing URL: " + url, e);
-            }
+            return getResponse(url, BitbucketServerProject.class);
         }
     }
 
@@ -439,8 +392,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         try {
             List<BitbucketServerRepository> repositories = new ArrayList<>();
             Integer pageNumber = 1;
-            String response = getRequest(url);
-            BitbucketServerRepositories page = parse(response, BitbucketServerRepositories.class);
+            BitbucketServerRepositories page = getResponse(url, BitbucketServerRepositories.class);
             repositories.addAll(page.getValues());
             while (!page.isLastPage() && pageNumber < MAX_PAGES) {
                 if (Thread.interrupted()) {
@@ -448,8 +400,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 }
                 pageNumber++;
                 url = String.format(API_REPOSITORIES_PATH, getUserCentricOwner(), page.getNextPageStart());
-                response = getRequest(url);
-                page = parse(response, BitbucketServerRepositories.class);
+                page  = getResponse(url, BitbucketServerRepositories.class);
                 repositories.addAll(page.getValues());
             }
             return repositories;
@@ -470,28 +421,36 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return getRepository().isPrivate();
     }
 
-
-    private <T> T parse(String response, Class<T> clazz) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(response, clazz);
-    }
-
-    private String getRequest(String path) throws IOException {
+    /**
+     *
+     * @param path relative path for bitbucket server api
+     * @param clazz the class used for deserialization
+     * @param <T> generic type
+     * @return the response object
+     * @throws IOException
+     */
+    private <T> T getResponse(String path, Class<T> clazz) throws IOException {
         GetMethod httpget = new GetMethod(this.baseURL + path);
         HttpClient client = getHttpClient(getMethodHost(httpget));
         try {
             client.executeMethod(httpget);
-            String response = new String(httpget.getResponseBody(), "UTF-8");
             if (httpget.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("URL: " + path);
             }
             if (httpget.getStatusCode() != HttpStatus.SC_OK) {
-                throw new BitbucketRequestException(httpget.getStatusCode(), "HTTP request error. Status: " + httpget.getStatusCode() + ": " + httpget.getStatusText() + ".\n" + response);
+                throw new BitbucketRequestException(httpget.getStatusCode(), "HTTP request error. Status: "
+                        + httpget.getStatusCode() + ": " + httpget.getStatusText() + ".\n" + httpget.getResponseBodyAsString());
             }
-            return response;
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream input = httpget.getResponseBodyAsStream();
+            T object = mapper.reader(clazz).readValue(input);
+            input.close();
+            return object;
         } catch (BitbucketRequestException | FileNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "Request failed for url:" + path, e);
             throw e;
         } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Communication error for url: " + path, e);
             throw new IOException("Communication error for url: " + path, e);
         } finally {
             httpget.releaseConnection();
