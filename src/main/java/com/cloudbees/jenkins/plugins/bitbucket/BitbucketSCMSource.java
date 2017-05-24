@@ -91,6 +91,7 @@ import jenkins.scm.api.metadata.ObjectMetadataAction;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.eclipse.jgit.lib.Constants;
@@ -781,8 +782,8 @@ public class BitbucketSCMSource extends SCMSource {
                         URLEncoder.encode(Constants.R_HEADS + head.getName(), "UTF-8");
                 title = null;
             }
-            result.add(new BitbucketLink("icon-bitbucket-branch", serverUrl + "/" + branchUrl));
-            result.add(new ObjectMetadataAction(title, null, serverUrl+"/"+branchUrl));
+            result.add(new BitbucketLink("icon-bitbucket-branch", serverUrl + "/" + URIUtil.encodePath(branchUrl)));
+            result.add(new ObjectMetadataAction(title, null, serverUrl + "/" + URIUtil.encodePath(branchUrl)));
         } else {
             String branchUrl;
             String title;
@@ -798,8 +799,8 @@ public class BitbucketSCMSource extends SCMSource {
                 branchUrl = repoOwner + "/" + repository + "/branch/" + head.getName();
                 title = null;
             }
-            result.add(new BitbucketLink("icon-bitbucket-branch", serverUrl + "/" + branchUrl));
-            result.add(new ObjectMetadataAction(title, null, serverUrl + "/" + branchUrl));
+            result.add(new BitbucketLink("icon-bitbucket-branch", serverUrl + "/" + URIUtil.encodePath(branchUrl)));
+            result.add(new ObjectMetadataAction(title, null, serverUrl + "/" + URIUtil.encodePath(branchUrl)));
         }
         SCMSourceOwner owner = getOwner();
         if (owner instanceof Actionable) {

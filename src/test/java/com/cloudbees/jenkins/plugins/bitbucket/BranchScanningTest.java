@@ -23,9 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import static com.cloudbees.jenkins.plugins.bitbucket.BitbucketClientMockUtils.getAPIClientMock;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+import static org.powermock.api.support.membermodification.MemberMatcher.method;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import hudson.model.TaskListener;
@@ -52,7 +54,11 @@ import org.junit.Test;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 public class BranchScanningTest {
 
@@ -66,13 +72,13 @@ public class BranchScanningTest {
     @Test
     public void uriResolverTest() throws Exception {
         BitbucketSCMSource source = getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT);
-        String remote = source.getRemote("amuniz", "test", source.getRepositoryType());
+        String remote = source.getRemote(repoOwner, repoName, source.getRepositoryType());
 
         // When there is no checkout credentials set, https must be resolved
         assertEquals("https://bitbucket.org/amuniz/test.git", remote);
 
         source = getBitbucketSCMSourceMock(BitbucketRepositoryType.MERCURIAL);
-        remote = source.getRemote("amuniz", "test", source.getRepositoryType());
+        remote = source.getRemote(repoOwner, repoName, source.getRepositoryType());
 
         // Resolve URL for Mercurial repositories
         assertEquals("https://bitbucket.org/amuniz/test", remote);
@@ -140,7 +146,7 @@ public class BranchScanningTest {
 
     private BitbucketSCMSource getBitbucketSCMSourceMock(BitbucketRepositoryType type, boolean includePullRequests)
             throws IOException, InterruptedException {
-        BitbucketCloudApiClient mock = BitbucketClientMockUtils.getAPIClientMock(type, includePullRequests);
+        BitbucketCloudApiClient mock = getAPIClientMock(type, includePullRequests);
         BitbucketMockApiFactory.add(null, mock);
 
         BitbucketSCMSource source = new BitbucketSCMSource(null, "amuniz", "test-repos");
@@ -186,4 +192,5 @@ public class BranchScanningTest {
             return branches;
         }
     }
+
 }
