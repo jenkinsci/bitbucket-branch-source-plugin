@@ -1,0 +1,11 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+  <l:ajax>
+    <div>
+      <p>
+        If this option is activated, branches are included for scanning. Deactivate
+        it if only pull requests should be returned by scanning.
+      </p>
+    </div>
+  </l:ajax>
+</j:jelly>
