@@ -23,9 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import static com.cloudbees.jenkins.plugins.bitbucket.BitbucketClientMockUtils.getAPIClientMock;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+import static org.powermock.api.support.membermodification.MemberMatcher.method;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import hudson.model.TaskListener;
@@ -52,7 +54,11 @@ import org.junit.Test;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 public class BranchScanningTest {
 
@@ -133,25 +139,6 @@ public class BranchScanningTest {
         assertTrue("SCM must be an instance of MercurialSCM", scm instanceof MercurialSCM);
     }
 
-    /**
-     * Tests scanning of Mercurial repos that have a branch name with characters that need to be uri encoded. Testing
-     * with no cred access
-     */
-    @Test
-    public void mercurialBranchNameUriEncodingTest () throws Exception {
-        BitbucketCloudApiClient api = new BitbucketCloudApiClient("alexjo", "bugrep-forest", null);
-        // branch with spaces in the names can be used
-        assertTrue(api.checkPathExists("name with spaces", "Jenkinsfile"));
-        // branch other characters in the name can be used
-        assertTrue(api.checkPathExists("~`!@#$%^&*()_+=[]{}\\|;\"<>,./\\?a", "Jenkinsfile"));
-        // ':' is an invalid hg branch name character
-        try {
-            api.checkPathExists("branch:dev-12345", "Jenkinsfile");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The character ':' cannot be used in a named branch", e.getMessage());
-        }
-    }
-
     private SCM scmBuild(BitbucketRepositoryType type) throws IOException, InterruptedException {
         BitbucketSCMSource source = getBitbucketSCMSourceMock(type);
         return source.build(new BranchSCMHead("branch1", type));
@@ -159,7 +146,7 @@ public class BranchScanningTest {
 
     private BitbucketSCMSource getBitbucketSCMSourceMock(BitbucketRepositoryType type, boolean includePullRequests)
             throws IOException, InterruptedException {
-        BitbucketCloudApiClient mock = BitbucketClientMockUtils.getAPIClientMock(type, includePullRequests);
+        BitbucketCloudApiClient mock = getAPIClientMock(type, includePullRequests);
         BitbucketMockApiFactory.add(null, mock);
 
         BitbucketSCMSource source = new BitbucketSCMSource(null, "amuniz", "test-repos");
@@ -205,4 +192,5 @@ public class BranchScanningTest {
             return branches;
         }
     }
+
 }

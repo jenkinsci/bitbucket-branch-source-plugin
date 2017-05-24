@@ -58,8 +58,6 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -273,8 +271,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @Override
     public boolean checkPathExists(@NonNull String branch, @NonNull String path) throws IOException, InterruptedException {
-        if (branch.contains(":"))
-            throw new IllegalArgumentException("The character ':' cannot be used in a named branch");
         int status = getRequestStatus(V1_API_BASE_URL + owner + "/" + repositoryName + "/raw/" +
                 URIUtil.encodePath(branch) + "/" + path);
         return status == HttpStatus.SC_OK;
