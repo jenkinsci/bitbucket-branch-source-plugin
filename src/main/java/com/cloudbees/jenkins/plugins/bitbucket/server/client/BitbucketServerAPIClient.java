@@ -27,14 +27,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,7 +59,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
@@ -72,23 +70,7 @@ import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.*;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Bitbucket API client.
@@ -481,7 +463,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         HttpClient client = getHttpClient(getMethodHost(httpget));
         try {
             client.executeMethod(httpget);
-            String response = new String(httpget.getResponseBody(), "UTF-8");
+            String response = getResponseBody(httpget);
             if (httpget.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("URL: " + path);
             }
@@ -496,6 +478,18 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         } finally {
             httpget.releaseConnection();
         }
+    }
+
+    private String getResponseBody(HttpMethod httpMethod) throws IOException {
+        StringBuilder response = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(httpMethod.getResponseBodyAsStream(), "UTF-8"));
+        String line = null;
+        while ((line = reader.readLine()) != null)
+        {
+            response.append(line).append(System.getProperty("line.separator"));
+        }
+        reader.close();
+        return response.toString();
     }
 
     private HttpClient getHttpClient(String host) {
@@ -595,7 +589,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 // 204, no content
                 return "";
             }
-            String response = new String(httppost.getResponseBody(), "UTF-8");
+            String response = getResponseBody(httppost);
             if (httppost.getStatusCode() != HttpStatus.SC_OK && httppost.getStatusCode() != HttpStatus.SC_CREATED) {
                 throw new BitbucketRequestException(httppost.getStatusCode(), "HTTP request error. Status: " + httppost.getStatusCode() + ": " + httppost.getStatusText() + ".\n" + response);
             }

@@ -51,9 +51,8 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URLEncoder;
@@ -481,6 +480,18 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         return getRepositories(null);
     }
 
+    private String getResponseBody(HttpMethod httpMethod) throws IOException {
+        StringBuilder response = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(httpMethod.getResponseBodyAsStream(), "UTF-8"));
+        String line = null;
+        while ((line = reader.readLine()) != null)
+        {
+            response.append(line).append(System.getProperty("line.separator"));
+        }
+        reader.close();
+        return response.toString();
+    }
+
     private synchronized HttpClient getHttpClient() {
         if (this.client == null) {
             HttpClient client = new HttpClient(connectionManager);
@@ -563,7 +574,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         GetMethod httpget = new GetMethod(path);
         try {
             executeMethod(client, httpget);
-            String response = new String(httpget.getResponseBody(), "UTF-8");
+            String response = getResponseBody(httpget);
             if (httpget.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("URL: " + path);
             }
@@ -631,7 +642,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 // 204, no content
                 return "";
             }
-            String response = new String(httppost.getResponseBody(), "UTF-8");
+            String response = getResponseBody(httppost);
             if (httppost.getStatusCode() != HttpStatus.SC_OK && httppost.getStatusCode() != HttpStatus.SC_CREATED) {
                 throw new BitbucketRequestException(httppost.getStatusCode(), "HTTP request error. Status: " + httppost.getStatusCode() + ": " + httppost.getStatusText() + ".\n" + response);
             }
