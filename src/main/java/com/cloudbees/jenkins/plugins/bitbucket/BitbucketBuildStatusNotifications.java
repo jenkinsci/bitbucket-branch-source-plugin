@@ -40,13 +40,16 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.model.listeners.SCMListener;
 import hudson.plugins.git.Revision;
-import hudson.plugins.git.util.BuildData;
 import hudson.plugins.mercurial.MercurialTagAction;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
+
+import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
@@ -97,11 +100,10 @@ public class BitbucketBuildStatusNotifications {
     @CheckForNull
     private static String extractRevision(Run<?, ?> build) {
         String revision = null;
-        BuildData gitBuildData = build.getAction(BuildData.class);
-        if (gitBuildData != null) {
-            Revision lastBuiltRevision = gitBuildData.getLastBuiltRevision();
-            if (lastBuiltRevision != null) {
-                revision = lastBuiltRevision.getSha1String();
+        SCMRevision scmRevision = SCMRevisionAction.getRevision(build);
+        if (scmRevision != null) {
+            if (scmRevision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
+                revision = ((AbstractGitSCMSource.SCMRevisionImpl) scmRevision).getHash();
             }
         } else {
             MercurialTagAction action = build.getAction(MercurialTagAction.class);
