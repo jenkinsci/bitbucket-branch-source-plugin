@@ -47,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
+import jenkins.branch.OrganizationFolder;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMNavigatorDescriptor;
 import jenkins.scm.api.SCMNavigatorEvent;
@@ -237,8 +239,31 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
         for (BitbucketRepository repo : repositories) {
             checkInterrupt();
-            add(listener, observer, repo);
+            if (shouldObserveRepo(repo)) {
+                add(listener, observer, repo);
+            }
         }
+    }
+
+    private boolean shouldObserveRepo(BitbucketRepository repo) {
+        if (!isAutoRegisterHooks()) {
+            return true;
+        }
+        String repoName = repo.getRepositoryName();
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            return jenkins.getItems().stream()
+                    .filter(OrganizationFolder.class::isInstance)
+                    .map(OrganizationFolder.class::cast)
+                    .filter(folder -> folder.getSCMNavigators().stream()
+                            .filter(BitbucketSCMNavigator.class::isInstance)
+                            .map(BitbucketSCMNavigator.class::cast)
+                            .allMatch(navigator -> repoOwner.equals(navigator.getRepoOwner()))
+                    )
+                    .flatMap(folder -> folder.getItems().stream())
+                    .noneMatch(project -> repoName.equals(project.getName()));
+        }
+        return true;
     }
 
     private void add(TaskListener listener, SCMSourceObserver observer, BitbucketRepository repo)
