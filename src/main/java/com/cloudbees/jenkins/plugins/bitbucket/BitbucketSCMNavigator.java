@@ -239,20 +239,20 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
         for (BitbucketRepository repo : repositories) {
             checkInterrupt();
-            if (shouldObserveRepo(repo)) {
+            if (shouldObserveRepo(listener, repo)) {
                 add(listener, observer, repo);
             }
         }
     }
 
-    private boolean shouldObserveRepo(BitbucketRepository repo) {
+    private boolean shouldObserveRepo(TaskListener listener, BitbucketRepository repo) {
         if (!isAutoRegisterHooks()) {
             return true;
         }
-        String repoName = repo.getRepositoryName();
+        String name = repo.getRepositoryName();
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
-            return jenkins.getItems().stream()
+            boolean jobExists = jenkins.getItems().stream()
                     .filter(OrganizationFolder.class::isInstance)
                     .map(OrganizationFolder.class::cast)
                     .filter(folder -> folder.getSCMNavigators().stream()
@@ -261,7 +261,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                             .allMatch(navigator -> repoOwner.equals(navigator.getRepoOwner()))
                     )
                     .flatMap(folder -> folder.getItems().stream())
-                    .noneMatch(project -> repoName.equals(project.getName()));
+                    .anyMatch(project -> name.equals(project.getName()));
+            if (jobExists) {
+                listener.getLogger().format("Skipping %s, job already exists%n", name);
+                return false;
+            }
         }
         return true;
     }
