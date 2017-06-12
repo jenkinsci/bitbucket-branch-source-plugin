@@ -49,12 +49,14 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.MercurialSCM.RevisionType;
+import hudson.plugins.mercurial.browser.BitBucket;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -586,50 +588,69 @@ public class BitbucketSCMSource extends SCMSource {
                 ));
             }
         }
+        String browserUrl = buildBitbucketClient().getRepositoryUri(repositoryType, BitbucketRepositoryProtocol.HTTP, null, repoOwner, repository);
         if (head instanceof PullRequestSCMHead) {
             PullRequestSCMHead h = (PullRequestSCMHead) head;
             if (repositoryType == BitbucketRepositoryType.MERCURIAL) {
                 MercurialSCM scm = new MercurialSCM(getRemote(h.getRepoOwner(), h.getRepository(),
                         BitbucketRepositoryType.MERCURIAL));
                 // If no revision specified the branch name will be used as revision
-                scm.setRevision(revision instanceof MercurialRevision
-                        ? ((MercurialRevision) revision).getHash()
-                        : h.getBranchName()
-                );
-                scm.setRevisionType(RevisionType.BRANCH);
+                if (revision instanceof MercurialRevision) {
+                    scm.setRevision(((MercurialRevision) revision).getHash());
+                    scm.setRevisionType(RevisionType.CHANGESET);
+                } else {
+                    scm.setRevision(h.getBranchName());
+                    scm.setRevisionType(RevisionType.BRANCH);
+                }
                 scm.setCredentialsId(getCheckoutEffectiveCredentials());
+                try {
+                    scm.setBrowser(new BitBucket(browserUrl));
+                } catch (MalformedURLException e) {
+                    LOGGER.log(Level.WARNING, "Could not set repository browser: ", e);
+                }
                 return scm;
             } else {
                 // Defaults to Git
                 BuildChooser buildChooser = revision instanceof AbstractGitSCMSource.SCMRevisionImpl
                         ? new SpecificRevisionBuildChooser((AbstractGitSCMSource.SCMRevisionImpl) revision)
                         : new DefaultBuildChooser();
-                return new GitSCM(getGitRemoteConfigs(h),
+                GitSCM scm = new GitSCM(getGitRemoteConfigs(h),
                         Collections.singletonList(new BranchSpec(h.getBranchName())),
                         false, Collections.<SubmoduleConfig>emptyList(),
                         null, null, Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)));
+                scm.setBrowser(new BitbucketWeb(browserUrl));
+                return scm;
             }
         }
         // head instanceof BranchSCMHead
         if (repositoryType == BitbucketRepositoryType.MERCURIAL) {
             MercurialSCM scm = new MercurialSCM(getRemote(repoOwner, repository, BitbucketRepositoryType.MERCURIAL));
             // If no revision specified the branch name will be used as revision
-            scm.setRevision(revision instanceof MercurialRevision
-                    ? ((MercurialRevision) revision).getHash()
-                    : head.getName()
-            );
-            scm.setRevisionType(RevisionType.BRANCH);
+            if (revision instanceof MercurialRevision) {
+                scm.setRevision(((MercurialRevision) revision).getHash());
+                scm.setRevisionType(RevisionType.CHANGESET);
+            } else {
+                scm.setRevision(head.getName());
+                scm.setRevisionType(RevisionType.BRANCH);
+            }
             scm.setCredentialsId(getCheckoutEffectiveCredentials());
+            try {
+                scm.setBrowser(new BitBucket(browserUrl));
+            } catch (MalformedURLException e) {
+                LOGGER.log(Level.WARNING, "Could not set repository browser: ", e);
+            }
             return scm;
         } else {
             // Defaults to Git
             BuildChooser buildChooser = revision instanceof AbstractGitSCMSource.SCMRevisionImpl
                     ? new SpecificRevisionBuildChooser((AbstractGitSCMSource.SCMRevisionImpl) revision)
                     : new DefaultBuildChooser();
-            return new GitSCM(getGitRemoteConfigs((BranchSCMHead)head),
+            GitSCM scm = new GitSCM(getGitRemoteConfigs((BranchSCMHead) head),
                     Collections.singletonList(new BranchSpec(head.getName())),
                     false, Collections.<SubmoduleConfig>emptyList(),
                     null, null, Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)));
+            scm.setBrowser(new BitbucketWeb(browserUrl));
+            return scm;
         }
     }
 
