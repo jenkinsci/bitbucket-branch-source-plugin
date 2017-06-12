@@ -60,4 +60,12 @@ public class BitbucketServerBranch implements BitbucketBranch {
         this.latestCommit = latestCommit;
     }
 
+    public void setName(String displayId) {
+        this.displayId = displayId;
+    }
+
+    public void setRawNode(String latestCommit) {
+        this.latestCommit = latestCommit;
+    }
+
 }

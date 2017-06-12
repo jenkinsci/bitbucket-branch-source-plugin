@@ -1,0 +1,102 @@
+{
+  "actor": {
+    "username": "user",
+    "displayName": "User"
+  },
+  "pullrequest": {
+    "id": "1",
+    "title": "Markdown formatting",
+    "link": "http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/pull-requests/1",
+    "authorLogin": "User",
+    "fromRef": {
+      "repository": {
+        "scmId": "git",
+        "project": {
+          "key": "~USER",
+          "name": "User"
+        },
+        "slug": "rep_1",
+        "links": {
+          "self": [
+            {
+              "href": "http://local.example.com:7990/bitbucket/projects/~USER/repos/rep_1/browse"
+            }
+          ]
+        },
+        "public": false,
+        "owner": {
+          "username": "~USER",
+          "displayName": "~USER"
+        },
+        "fullName": "~USER/rep_1",
+        "ownerName": "~USER"
+      },
+      "commit": {
+        "message": null,
+        "date": null,
+        "hash": "feb8d676cd70406cecd4128c8fd1bee30282db11",
+        "authorTimestamp": 0
+      },
+      "branch": {
+        "name": "master",
+        "rawNode": "feb8d676cd70406cecd4128c8fd1bee30282db11"
+      }
+    },
+    "toRef": {
+      "repository": {
+        "scmId": "git",
+        "project": {
+          "key": "PROJECT_1",
+          "name": "Project 1"
+        },
+        "slug": "rep_1",
+        "links": {
+          "self": [
+            {
+              "href": "http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"
+            }
+          ]
+        },
+        "public": false,
+        "owner": {
+          "username": "PROJECT_1",
+          "displayName": "PROJECT_1"
+        },
+        "fullName": "PROJECT_1/rep_1",
+        "ownerName": "PROJECT_1"
+      },
+      "commit": {
+        "message": null,
+        "date": null,
+        "hash": "d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49",
+        "authorTimestamp": 0
+      },
+      "branch": {
+        "name": "master",
+        "rawNode": "d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"
+      }
+    }
+  },
+  "repository": {
+    "scmId": "git",
+    "project": {
+      "key": "PROJECT_1",
+      "name": "Project 1"
+    },
+    "slug": "rep_1",
+    "links": {
+      "self": [
+        {
+          "href": "http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"
+        }
+      ]
+    },
+    "public": false,
+    "owner": {
+      "username": "PROJECT_1",
+      "displayName": "PROJECT_1"
+    },
+    "fullName": "PROJECT_1/rep_1",
+    "ownerName": "PROJECT_1"
+  }
+}

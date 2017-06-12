@@ -26,8 +26,5 @@
     <f:entry title="${%Bitbucket Server URL}" field="bitbucketServerUrl">
       <f:textbox />
     </f:entry>
-    <f:entry title="${%Bitbucket Server SSH port}" field="sshPort">
-      <f:textbox />
-    </f:entry>
   </f:advanced>
 </j:jelly>

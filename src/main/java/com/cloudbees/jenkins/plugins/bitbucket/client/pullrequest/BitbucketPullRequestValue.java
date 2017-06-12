@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestDestination;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketPullRequestValue implements BitbucketPullRequest {
@@ -40,7 +40,7 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
     private Author author;
 
-    public BitbucketPullRequestSource getSource() {
+    public BitbucketPullRequestValueRepository getSource() {
         return source;
     }
 
@@ -92,6 +92,10 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
         this.author = author;
     }
 
+    public String getAuthorDisplayName() {
+        return author.displayName;
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Links {
         private Html html;
@@ -101,23 +105,56 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
             html = new Html();
             html.href = link;
         }
+
+        public Html getHtml() {
+            return html;
+        }
+
         public void setHtml(Html html) {
             this.html = html;
         }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
         private static class Html {
-            public String href;
+            private String href;
             public Html() {}
+
+            public String getHref() {
+                return href;
+            }
+
+            public void setHref(String href) {
+                this.href = href;
+            }
         }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Author {
         private String username;
+        @JsonProperty("display_name")
+        private String displayName;
         public Author() {}
         public Author(String username) {
             this.username = username;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        @JsonIgnore
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @JsonIgnore
+        public void setDisplayName(String displayName) {
+            this.displayName = displayName;
         }
     }
 

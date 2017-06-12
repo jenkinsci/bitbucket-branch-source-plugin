@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,10 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
@@ -42,7 +40,7 @@ public class BitbucketPullRequestValueRepository implements BitbucketPullRequest
 
     @Override
     @JsonProperty("repository")
-    public BitbucketRepository getRepository() {
+    public BitbucketCloudRepository getRepository() {
         return repository;
     }
 
@@ -53,7 +51,7 @@ public class BitbucketPullRequestValueRepository implements BitbucketPullRequest
 
     @Override
     @JsonProperty("branch")
-    public BitbucketBranch getBranch() {
+    public BitbucketCloudBranch getBranch() {
         return branch;
     }
 

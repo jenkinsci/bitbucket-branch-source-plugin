@@ -1,0 +1,52 @@
+{
+  "actor": {
+    "username": "admin",
+    "displayName": "Administrator"
+  },
+  "repository": {
+    "scmId": "git",
+    "project": {
+      "key": "PROJECT_1",
+      "name": "Project 1"
+    },
+    "slug": "rep_1",
+    "links": {
+      "self": [
+        {
+          "href": "http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"
+        }
+      ]
+    },
+    "public": false,
+    "owner": {
+      "username": "PROJECT_1",
+      "displayName": "PROJECT_1"
+    },
+    "fullName": "PROJECT_1/rep_1",
+    "ownerName": "PROJECT_1"
+  },
+  "push": {
+    "changes": [
+      {
+        "created": false,
+        "closed": false,
+        "new": {
+          "type": "branch",
+          "name": "master",
+          "target": {
+            "type": "commit",
+            "hash": "836d9f1f2fa7fea7831ceddcd85f0fbf1b9f8f60"
+          }
+        },
+        "old": {
+          "type": "branch",
+          "name": "master",
+          "target": {
+            "type": "commit",
+            "hash": "c985ccefce4df3b0ddc45a885c4881bfd8d24a47"
+          }
+        }
+      }
+    ]
+  }
+}

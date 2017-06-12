@@ -90,7 +90,7 @@ public interface BitbucketApi {
     /**
      * Returns the repository details.
      *
-     * @return the repository specified by {@link #getOwner()}/{@link #getRepositoryName()} 
+     * @return the repository specified by {@link #getOwner()}/{@link #getRepositoryName()}
      *      (or null if repositoryName is not set)
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.

@@ -14,14 +14,17 @@
         <f:checkbox title="${%Auto-register webhooks}" />
     </f:entry>
     <f:advanced>
+        <f:entry title="${%Include branches}" field="includes">
+            <f:textbox default="*"/>
+        </f:entry>
+        <f:entry title="${%Exclude branches}" field="excludes">
+            <f:textbox/>
+        </f:entry>
         <f:entry title="${%Checkout credentials}" field="checkoutCredentialsId">
             <c:select default="${descriptor.SAME}"/>
         </f:entry>
         <f:entry title="${%Bitbucket Server URL}" field="bitbucketServerUrl">
           <f:textbox />
-        </f:entry>
-        <f:entry title="${%Bitbucket Server SSH port}" field="sshPort">
-            <f:textbox />
         </f:entry>
     </f:advanced>
 </j:jelly>

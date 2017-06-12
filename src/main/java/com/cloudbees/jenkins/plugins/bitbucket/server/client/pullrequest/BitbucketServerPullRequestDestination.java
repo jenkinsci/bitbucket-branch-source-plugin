@@ -35,6 +35,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketSer
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonSetter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketServerPullRequestDestination implements BitbucketPullRequestDestination {
@@ -44,14 +45,37 @@ public class BitbucketServerPullRequestDestination implements BitbucketPullReque
 
     private BitbucketServerRepository repository;
 
+    @JsonProperty
+    private BitbucketServerCommit commit;
+
     @Override
     public BitbucketRepository getRepository() {
         return repository;
     }
 
     @Override
+    @JsonProperty
     public BitbucketBranch getBranch() {
-        return new BitbucketServerBranch(branchName, null);
+        return new BitbucketServerBranch(branchName, getLatestCommit());
+    }
+
+    @Override
+    public BitbucketCommit getCommit() {
+        return commit;
+    }
+
+    @JsonProperty
+    public void setBranch(BitbucketServerBranch branch) {
+        branchName = branch == null ? null : branch.getName();
+    }
+
+    public String getLatestCommit() {
+        return commit == null ? null : commit.getHash();
+    }
+
+    @JsonProperty
+    public void setLatestCommit(String latestCommit) {
+        this.commit = new BitbucketServerCommit(latestCommit);
     }
 
     public void setBranchName(String branchName) {

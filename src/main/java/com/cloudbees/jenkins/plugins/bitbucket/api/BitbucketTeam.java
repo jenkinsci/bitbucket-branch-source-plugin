@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,5 +46,5 @@ public interface BitbucketTeam {
      *
      * @return the links of the project.
      */
-    Map<String,BitbucketHref> getLinks();
+    Map<String,List<BitbucketHref>> getLinks();
 }

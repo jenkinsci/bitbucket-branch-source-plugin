@@ -1,0 +1,215 @@
+{
+  "pullrequest": {
+    "merge_commit": null,
+    "description": "description of PR",
+    "links": {
+      "decline": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/decline"
+      },
+      "commits": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/commits"
+      },
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3"
+      },
+      "comments": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/comments"
+      },
+      "merge": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/merge"
+      },
+      "html": {
+        "href": "https://bitbucket.org/cloudbeers/temp/pull-requests/3"
+      },
+      "activity": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/activity"
+      },
+      "diff": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/diff"
+      },
+      "approve": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/approve"
+      },
+      "statuses": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/pullrequests/3/statuses"
+      }
+    },
+    "title": "Forking for PR",
+    "close_source_branch": false,
+    "reviewers": [],
+    "destination": {
+      "commit": {
+        "hash": "5449b752db4f",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commit/5449b752db4f"
+          }
+        }
+      },
+      "branch": {
+        "name": "master"
+      },
+      "repository": {
+        "full_name": "cloudbeers/temp",
+        "type": "repository",
+        "name": "temp",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"
+          },
+          "html": {
+            "href": "https://bitbucket.org/cloudbeers/temp"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/cloudbeers/temp/avatar/32/"
+          }
+        },
+        "uuid": "{708c9715-0ecc-4a5d-87ed-63c4ba48ea06}"
+      }
+    },
+    "comment_count": 0,
+    "closed_by": {
+      "username": "stephenc",
+      "display_name": "Stephen Connolly",
+      "type": "user",
+      "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/stephenc"
+        },
+        "html": {
+          "href": "https://bitbucket.org/stephenc/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/stephenc/avatar/32/"
+        }
+      }
+    },
+    "source": {
+      "commit": {
+        "hash": "63e3d18dca4c",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork/commit/63e3d18dca4c"
+          }
+        }
+      },
+      "branch": {
+        "name": "master"
+      },
+      "repository": {
+        "full_name": "stephenc/temp-fork",
+        "type": "repository",
+        "name": "temp-fork",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"
+          },
+          "html": {
+            "href": "https://bitbucket.org/stephenc/temp-fork"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/stephenc/temp-fork/avatar/32/"
+          }
+        },
+        "uuid": "{f58c57d2-28b0-44f4-8c30-ea83e4825381}"
+      }
+    },
+    "participants": [],
+    "state": "DECLINED",
+    "task_count": 0,
+    "created_on": "2017-03-06T11:52:20.092358+00:00",
+    "reason": "",
+    "updated_on": "2017-03-06T12:05:11.484201+00:00",
+    "author": {
+      "username": "stephenc",
+      "display_name": "Stephen Connolly",
+      "type": "user",
+      "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/stephenc"
+        },
+        "html": {
+          "href": "https://bitbucket.org/stephenc/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/stephenc/avatar/32/"
+        }
+      }
+    },
+    "type": "pullrequest",
+    "id": 3
+  },
+  "actor": {
+    "username": "stephenc",
+    "display_name": "Stephen Connolly",
+    "type": "user",
+    "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/stephenc"
+      },
+      "html": {
+        "href": "https://bitbucket.org/stephenc/"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/account/stephenc/avatar/32/"
+      }
+    }
+  },
+  "repository": {
+    "website": "",
+    "scm": "git",
+    "name": "temp",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"
+      },
+      "html": {
+        "href": "https://bitbucket.org/cloudbeers/temp"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/cloudbeers/temp/avatar/32/"
+      }
+    },
+    "project": {
+      "key": "DUB",
+      "type": "project",
+      "uuid": "{7f08415d-57d0-4172-8978-059345fa0369}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/teams/cloudbeers/projects/DUB"
+        },
+        "html": {
+          "href": "https://bitbucket.org/account/user/cloudbeers/projects/DUB"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/user/cloudbeers/projects/DUB/avatar/32"
+        }
+      },
+      "name": "dublin"
+    },
+    "full_name": "cloudbeers/temp",
+    "owner": {
+      "username": "cloudbeers",
+      "display_name": "cloudbeers",
+      "type": "team",
+      "uuid": "{5e429024-1f85-425f-8955-8af0c35d1b41}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/teams/cloudbeers"
+        },
+        "html": {
+          "href": "https://bitbucket.org/cloudbeers/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/cloudbeers/avatar/32/"
+        }
+      }
+    },
+    "type": "repository",
+    "is_private": true,
+    "uuid": "{708c9715-0ecc-4a5d-87ed-63c4ba48ea06}"
+  }
+}

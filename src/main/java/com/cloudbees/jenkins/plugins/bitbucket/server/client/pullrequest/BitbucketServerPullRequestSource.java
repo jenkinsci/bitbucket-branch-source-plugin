@@ -33,12 +33,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
+import org.codehaus.jackson.annotate.JsonSetter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketServerPullRequestSource implements BitbucketPullRequestSource {
 
-    @JsonProperty("latestCommit")
-    private String commitHash;
+    @JsonProperty
+    private BitbucketServerCommit commit;
 
     @JsonProperty("displayId")
     private String branchName;
@@ -52,16 +53,22 @@ public class BitbucketServerPullRequestSource implements BitbucketPullRequestSou
 
     @Override
     public BitbucketBranch getBranch() {
-        return new BitbucketServerBranch(branchName, commitHash);
+        return new BitbucketServerBranch(branchName, commit == null ? null : commit.getHash());
     }
 
     @Override
     public BitbucketCommit getCommit() {
-        return new BitbucketServerCommit(commitHash);
+        return commit;
     }
 
-    public void setCommitHash(String commitHash) {
-        this.commitHash = commitHash;
+    @JsonSetter
+    public void setBranch(BitbucketServerBranch branch) {
+        branchName = branch == null ? null : branch.getName();
+    }
+
+    @JsonSetter
+    public void setLatestCommit(String latestCommit) {
+        this.commit = new BitbucketServerCommit(latestCommit);
     }
 
     public void setBranchName(String branchName) {

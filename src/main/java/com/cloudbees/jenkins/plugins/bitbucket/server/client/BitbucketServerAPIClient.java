@@ -60,20 +60,35 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequests;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepositories;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.*;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Bitbucket API client.
@@ -94,6 +109,10 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_PROJECT_PATH = API_BASE_PATH + "/projects/%s";
     private static final String API_COMMIT_COMMENT_PATH = API_REPOSITORY_PATH + "/commits/%s/comments";
 
+    private static final String WEBHOOK_BASE_PATH = "/rest/webhook/1.0";
+    private static final String WEBHOOK_REPOSITORY_PATH = WEBHOOK_BASE_PATH + "/projects/%s/repos/%s/configurations";
+    private static final String WEBHOOK_REPOSITORY_CONFIG_PATH = WEBHOOK_REPOSITORY_PATH + "/%s";
+
     private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits/%s";
 
     private static final int MAX_PAGES = 100;
@@ -105,7 +124,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private String owner;
 
     /**
-     * Thre repository that this object is managing.
+     * The repository that this object is managing.
      */
     private String repositoryName;
 
@@ -116,7 +135,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     /**
      * Credentials to access API services.
-     * Almost @NonNull (but null is accepted for annonymous access).
+     * Almost @NonNull (but null is accepted for anonymous access).
      */
     private UsernamePasswordCredentials credentials;
 
@@ -146,9 +165,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * In Bitbucket server the top level entity is the Project, but the JSON API accepts users as a replacement
      * of Projects in most of the URLs (it's called user centric API).
      *
-     * This method returns the appropiate string to be placed in request URLs taking into account if this client
+     * This method returns the appropriate string to be placed in request URLs taking into account if this client
      * object was created as a user centric instance or not.
-     * 
+     *
      * @return the ~user or project
      */
     public String getUserCentricOwner() {
@@ -194,6 +213,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                         } else {
                             result.append(url.getAuthority());
                         }
+                        result.append(url.getPath());
                         result.append("/scm/");
                         result.append(owner);
                         result.append('/');
@@ -231,7 +251,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         String url = String.format(API_PULL_REQUESTS_PATH, getUserCentricOwner(), repositoryName, 0);
 
         try {
-            List<BitbucketServerPullRequest> pullRequests = new ArrayList<BitbucketServerPullRequest>();
+            List<BitbucketServerPullRequest> pullRequests = new ArrayList<>();
             Integer pageNumber = 1;
             String response = getRequest(url);
             BitbucketServerPullRequests page = parse(response, BitbucketServerPullRequests.class);
@@ -332,7 +352,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         String url = String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, 0);
 
         try {
-            List<BitbucketServerBranch> branches = new ArrayList<BitbucketServerBranch>();
+            List<BitbucketServerBranch> branches = new ArrayList<>();
             Integer pageNumber = 1;
             String response = getRequest(url);
             BitbucketServerBranches page = parse(response, BitbucketServerBranches.class);
@@ -373,20 +393,20 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     @Override
-    public void registerCommitWebHook(@NonNull BitbucketWebHook hook) {
-        // TODO
+    public void registerCommitWebHook(BitbucketWebHook hook) throws IOException, InterruptedException {
+        putRequest(String.format(WEBHOOK_REPOSITORY_PATH, getUserCentricOwner(), repositoryName), serialize(hook));
     }
 
     @Override
-    public void removeCommitWebHook(@NonNull BitbucketWebHook hook) {
-        // TODO
+    public void removeCommitWebHook(BitbucketWebHook hook) throws IOException, InterruptedException {
+        deleteRequest(String.format(WEBHOOK_REPOSITORY_CONFIG_PATH, getUserCentricOwner(), repositoryName, hook.getUuid()));
     }
 
     @NonNull
     @Override
-    public List<BitbucketWebHook> getWebHooks() {
-        // TODO
-        return Collections.emptyList();
+    public List<? extends BitbucketWebHook> getWebHooks() throws IOException, InterruptedException {
+        String response = getRequest(String.format(WEBHOOK_REPOSITORY_PATH, getUserCentricOwner(), repositoryName));
+        return parse(response, BitbucketServerWebhooks.class);
     }
 
     /**
@@ -417,7 +437,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         String url = String.format(API_REPOSITORIES_PATH, getUserCentricOwner(), 0);
 
         try {
-            List<BitbucketServerRepository> repositories = new ArrayList<BitbucketServerRepository>();
+            List<BitbucketServerRepository> repositories = new ArrayList<>();
             Integer pageNumber = 1;
             String response = getRequest(url);
             BitbucketServerRepositories page = parse(response, BitbucketServerRepositories.class);
@@ -562,6 +582,10 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private String postRequest(PostMethod httppost) throws IOException {
+        return doRequest(httppost);
+    }
+
+    private String doRequest(HttpMethod httppost) throws IOException {
         HttpClient client = getHttpClient(getMethodHost(httppost));
         client.getState().setCredentials(AuthScope.ANY, credentials);
         client.getParams().setAuthenticationPreemptive(true);
@@ -579,6 +603,17 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         } finally {
             httppost.releaseConnection();
         }
+    }
+
+    private String putRequest(String path, String content) throws IOException {
+        PutMethod request = new PutMethod(this.baseURL + path);
+        request.setRequestEntity(new StringRequestEntity(content, "application/json", "UTF-8"));
+        return doRequest(request);
+    }
+
+    private String deleteRequest(String path) throws IOException {
+        DeleteMethod request = new DeleteMethod(this.baseURL + path);
+        return doRequest(request);
     }
 
 }

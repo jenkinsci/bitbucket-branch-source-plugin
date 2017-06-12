@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 CloudBees, Inc.
+ * Copyright (c) 2016-2017 CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,8 @@
 
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestDestination;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
@@ -40,10 +37,11 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class BitbucketPullRequestValueDestination implements BitbucketPullRequestDestination {
     private BitbucketCloudRepository repository;
     private BitbucketCloudBranch branch;
+    private BitbucketCloudCommit commit;
 
     @Override
     @JsonProperty("repository")
-    public BitbucketRepository getRepository() {
+    public BitbucketCloudRepository getRepository() {
         return repository;
     }
 
@@ -54,7 +52,7 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
 
     @Override
     @JsonProperty("branch")
-    public BitbucketBranch getBranch() {
+    public BitbucketCloudBranch getBranch() {
         return branch;
     }
 
@@ -63,4 +61,14 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
         this.branch = branch;
     }
 
+    @Override
+    @JsonProperty("commit")
+    public BitbucketCommit getCommit() {
+        return commit;
+    }
+
+    @JsonProperty("commit")
+    public void setCommit(BitbucketCloudCommit commit) {
+        this.commit = commit;
+    }
 }

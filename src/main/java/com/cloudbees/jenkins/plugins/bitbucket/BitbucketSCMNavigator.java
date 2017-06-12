@@ -23,68 +23,102 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
-import hudson.console.HyperlinkNote;
-import hudson.model.Action;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import javax.annotation.CheckForNull;
-
-import jenkins.scm.api.SCMNavigatorEvent;
-import jenkins.scm.api.SCMNavigatorOwner;
-import jenkins.scm.api.SCMSourceCategory;
-import jenkins.scm.api.metadata.ObjectMetadataAction;
-import jenkins.scm.impl.UncategorizedSCMSourceCategory;
-import org.apache.commons.lang.StringUtils;
-import org.jenkins.ui.icon.Icon;
-import org.jenkins.ui.icon.IconSet;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
+import hudson.console.HyperlinkNote;
+import hudson.model.Action;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.IOException;
+import java.io.ObjectStreamException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import javax.annotation.CheckForNull;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMNavigatorDescriptor;
+import jenkins.scm.api.SCMNavigatorEvent;
+import jenkins.scm.api.SCMNavigatorOwner;
+import jenkins.scm.api.SCMSourceCategory;
 import jenkins.scm.api.SCMSourceObserver;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.metadata.ObjectMetadataAction;
+import jenkins.scm.impl.UncategorizedSCMSourceCategory;
+import org.apache.commons.lang.StringUtils;
+import org.jenkins.ui.icon.Icon;
+import org.jenkins.ui.icon.IconSet;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
 public class BitbucketSCMNavigator extends SCMNavigator {
 
     private final String repoOwner;
-    private final String credentialsId;
-    private final String checkoutCredentialsId;
+    private String credentialsId;
+    private String checkoutCredentialsId;
     private String pattern = ".*";
     private boolean autoRegisterHooks = false;
     private String bitbucketServerUrl;
-    private int sshPort = -1;
+    /**
+     * Ant match expression that indicates what branches to include in the retrieve process.
+     */
+    private String includes = "*";
+
+    /**
+     * Ant match expression that indicates what branches to exclude in the retrieve process.
+     */
+    private String excludes = "";
+
 
     @DataBoundConstructor
+    public BitbucketSCMNavigator(String repoOwner) {
+        this.repoOwner = repoOwner;
+        this.credentialsId = null; // highlighting the default is anonymous unless you configure explicitly
+        this.checkoutCredentialsId = BitbucketSCMSource.DescriptorImpl.SAME;
+    }
+
+    @Deprecated // retained for binary compatibility
     public BitbucketSCMNavigator(String repoOwner, String credentialsId, String checkoutCredentialsId) {
         this.repoOwner = repoOwner;
         this.credentialsId = Util.fixEmpty(credentialsId);
         this.checkoutCredentialsId = checkoutCredentialsId;
     }
 
-    @DataBoundSetter 
+    private Object readResolve() throws ObjectStreamException {
+        if (includes == null) {
+            includes = "*";
+        }
+        if (excludes == null) {
+            excludes = "";
+        }
+        return this;
+    }
+
+    @DataBoundSetter
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = Util.fixEmpty(credentialsId);
+    }
+
+    @DataBoundSetter
+    public void setCheckoutCredentialsId(String checkoutCredentialsId) {
+        this.checkoutCredentialsId = checkoutCredentialsId;
+    }
+
+    @DataBoundSetter
     public void setPattern(String pattern) {
         Pattern.compile(pattern);
         this.pattern = pattern;
@@ -117,15 +151,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         return autoRegisterHooks;
     }
 
-    public int getSshPort() {
-        return sshPort;
-    }
-
-    @DataBoundSetter
-    public void setSshPort(int sshPort) {
-        this.sshPort = sshPort;
-    }
-
     @DataBoundSetter
     public void setBitbucketServerUrl(String url) {
         if (StringUtils.equals(this.bitbucketServerUrl, url)) {
@@ -142,6 +167,24 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @CheckForNull
     public String getBitbucketServerUrl() {
         return bitbucketServerUrl;
+    }
+
+    public String getIncludes() {
+        return includes;
+    }
+
+    @DataBoundSetter
+    public void setIncludes(String includes) {
+        this.includes = includes;
+    }
+
+    public String getExcludes() {
+        return excludes;
+    }
+
+    @DataBoundSetter
+    public void setExcludes(String excludes) {
+        this.excludes = excludes;
     }
 
     @NonNull
@@ -207,7 +250,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         scmSource.setCheckoutCredentialsId(checkoutCredentialsId);
         scmSource.setAutoRegisterHook(isAutoRegisterHooks());
         scmSource.setBitbucketServerUrl(bitbucketServerUrl);
-        scmSource.setSshPort(sshPort);
+        scmSource.setIncludes(includes);
+        scmSource.setExcludes(excludes);
         projectObserver.addSource(scmSource);
         projectObserver.complete();
     }
@@ -268,14 +312,19 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         return result;
     }
 
-    private static String getLink(Map<String, BitbucketHref> links, String name) {
+    private static String getLink(Map<String, List<BitbucketHref>> links, String name) {
         if (links == null) {
             return null;
         }
-        BitbucketHref href = links.get(name);
+        List<BitbucketHref> hrefs = links.get(name);
+        if (hrefs == null || hrefs.isEmpty()) {
+            return null;
+        }
+        BitbucketHref href = hrefs.get(0);
         return href == null ? null : href.getHref();
     }
 
+    @Symbol("bitbucket")
     @Extension
     public static class DescriptorImpl extends SCMNavigatorDescriptor {
 

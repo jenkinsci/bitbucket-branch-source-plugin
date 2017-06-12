@@ -23,10 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -56,6 +60,13 @@ import jenkins.scm.api.SCMSourceOwners;
 public class WebhookAutoRegisterListener extends ItemListener {
 
     private static final Logger LOGGER = Logger.getLogger(WebhookAutoRegisterListener.class.getName());
+    private static final List<String> CLOUD_EVENTS = Collections.unmodifiableList(Arrays.asList(
+            HookEventType.PUSH.getKey(),
+            HookEventType.PULL_REQUEST_CREATED.getKey(),
+            HookEventType.PULL_REQUEST_UPDATED.getKey(),
+            HookEventType.PULL_REQUEST_MERGED.getKey(),
+            HookEventType.PULL_REQUEST_DECLINED.getKey()
+    ));
 
     private static ExecutorService executorService;
 
@@ -122,17 +133,26 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 if (source.isAutoRegisterHook()) {
                     BitbucketApi bitbucket = source.buildBitbucketClient();
                     List<? extends BitbucketWebHook> existent = bitbucket.getWebHooks();
-                    boolean exists = false;
+                    BitbucketWebHook existing = null;
                     for (BitbucketWebHook hook : existent) {
                         // Check if there is a hook pointing to us already
                         if (hook.getUrl().equals(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
-                            exists = true;
+                            existing = hook;
                             break;
                         }
                     }
-                    if (!exists) {
+                    if (existing instanceof BitbucketRepositoryHook) {
+                        if (!existing.getEvents().containsAll(CLOUD_EVENTS)) {
+                            Set<String> events = new TreeSet<>(existing.getEvents());
+                            events.addAll(CLOUD_EVENTS);
+                            ((BitbucketRepositoryHook) existing).setEvents(new ArrayList<String>(events));
+                            LOGGER.info(String.format("Updating hook for %s/%s", source.getRepoOwner(),
+                                    source.getRepository()));
+                            bitbucket.registerCommitWebHook(existing);
+                        }
+                    } else  if (existing == null) {
                             LOGGER.info(String.format("Registering hook for %s/%s", source.getRepoOwner(), source.getRepository()));
-                            bitbucket.registerCommitWebHook(getHook());
+                            bitbucket.registerCommitWebHook(getHook(source));
                     }
                 }
             }
@@ -159,7 +179,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     LOGGER.info(String.format("Removing hook for %s/%s", source.getRepoOwner(), source.getRepository()));
                     bitbucket.removeCommitWebHook(hook);
                 } else {
-                    LOGGER.log(Level.FINE, String.format("NOT removing hook for %s/%s because does not exists or its used in other project", 
+                    LOGGER.log(Level.FINE, String.format("NOT removing hook for %s/%s because does not exists or its used in other project",
                             source.getRepoOwner(), source.getRepository()));
                 }
             }
@@ -192,15 +212,21 @@ public class WebhookAutoRegisterListener extends ItemListener {
         return sources;
     }
 
-    private BitbucketWebHook getHook() {
-        // TODO: generalize this for BB server
-        BitbucketRepositoryHook hooks = new BitbucketRepositoryHook();
-        hooks.setActive(true);
-        hooks.setDescription("Jenkins hooks");
-        hooks.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
-        hooks.setEvents(Arrays.asList(HookEventType.PUSH.getKey(), 
-                HookEventType.PULL_REQUEST_CREATED.getKey(), HookEventType.PULL_REQUEST_UPDATED.getKey()));
-        return hooks;
+    private BitbucketWebHook getHook(BitbucketSCMSource owner) {
+        if (owner.getBitbucketServerUrl() == null) {
+            BitbucketRepositoryHook hook = new BitbucketRepositoryHook();
+            hook.setActive(true);
+            hook.setDescription("Jenkins hook");
+            hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+            hook.setEvents(CLOUD_EVENTS);
+            return hook;
+        } else {
+            BitbucketServerWebhook hook = new BitbucketServerWebhook();
+            hook.setActive(true);
+            hook.setDescription("Jenkins hook");
+            hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+            return hook;
+        }
     }
 
     /**

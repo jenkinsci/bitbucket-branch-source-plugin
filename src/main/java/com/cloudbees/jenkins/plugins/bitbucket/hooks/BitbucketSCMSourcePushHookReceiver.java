@@ -34,6 +34,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import jenkins.scm.api.SCMEvent;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -86,6 +87,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
      * @throws IOException if there is any issue reading the HTTP content paylod.
      */
     public HttpResponse doNotify(StaplerRequest req) throws IOException {
+        String origin = SCMEvent.originOf(req);
         String body = IOUtils.toString(req.getInputStream());
         String eventKey = req.getHeader("X-Event-Key");
         if (eventKey == null) {
@@ -107,7 +109,11 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             instanceType = BitbucketType.CLOUD;
         }
 
-        type.getProcessor().process(body, instanceType);
+        try {
+            type.getProcessor().process(type, body, instanceType, origin);
+        } catch (AbstractMethodError e) {
+            type.getProcessor().process(body, instanceType);
+        }
         return HttpResponses.ok();
     }
 
