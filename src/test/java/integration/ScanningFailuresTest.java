@@ -125,7 +125,7 @@ public class ScanningFailuresTest {
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
 
-        when(api.checkPathExists("master", "Jenkinsfile")).thenReturn(true);
+        when(api.checkPathExists(sampleRepo.head(), "Jenkinsfile")).thenReturn(true);
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
@@ -191,7 +191,7 @@ public class ScanningFailuresTest {
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
 
-        when(api.checkPathExists("master", "Jenkinsfile")).thenReturn(true);
+        when(api.checkPathExists(sampleRepo.head(), "Jenkinsfile")).thenReturn(true);
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
@@ -218,7 +218,7 @@ public class ScanningFailuresTest {
         assertThat(master, notNullValue());
 
         // an error in checkPathExists(...)
-        when(api.checkPathExists("master", "Jenkinsfile")).thenThrow(new IOException(message));
+        when(api.checkPathExists(sampleRepo.head(), "Jenkinsfile")).thenThrow(new IOException(message));
 
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.FAILURE));
@@ -249,7 +249,7 @@ public class ScanningFailuresTest {
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
 
-        when(api.checkPathExists("master", "Jenkinsfile")).thenReturn(true);
+        when(api.checkPathExists(sampleRepo.head(), "Jenkinsfile")).thenReturn(true);
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
@@ -311,7 +311,7 @@ public class ScanningFailuresTest {
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
 
-        when(api.checkPathExists("master", "Jenkinsfile")).thenReturn(true);
+        when(api.checkPathExists(sampleRepo.head(), "Jenkinsfile")).thenReturn(true);
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),

@@ -111,4 +111,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead 
         return target;
     }
 
+    public String getRefSpec() {
+        return "+refs/heads/" + this.getBranchName();
+    }
 }
