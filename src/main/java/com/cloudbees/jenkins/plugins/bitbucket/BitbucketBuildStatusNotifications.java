@@ -46,10 +46,13 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.lang.IllegalStateException;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
+
 
 /**
  * This class encapsulates all Bitbucket notifications logic.
@@ -69,7 +72,11 @@ public class BitbucketBuildStatusNotifications {
             String url;
             try {
                 url = DisplayURLProvider.get().getRunURL(build);
-            } catch (IllegalStateException e) {
+                URI testURI = new URI(url);
+                if (!testURI.getHost().contains(".")) {
+                    throw new IllegalStateException("Jenkins RootURL not a FQDN");
+                }
+            } catch (IllegalStateException|java.net.URISyntaxException e) {
                 listener.getLogger().println("Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is configured in Jenkins global configuration.");
                 return;
             }
