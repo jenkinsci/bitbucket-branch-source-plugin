@@ -50,6 +50,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
+import hudson.Util;
 import hudson.util.Secret;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -272,7 +273,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @Override
     public boolean checkPathExists(@NonNull String branch, @NonNull String path) throws IOException, InterruptedException {
-        int status = getRequestStatus(V1_API_BASE_URL + owner + "/" + repositoryName + "/raw/" + branch + "/" + path);
+        int status = getRequestStatus(V1_API_BASE_URL + owner + "/" + repositoryName + "/raw/" + Util.rawEncode(branch) + "/" + path);
         return status == HttpStatus.SC_OK;
     }
 
