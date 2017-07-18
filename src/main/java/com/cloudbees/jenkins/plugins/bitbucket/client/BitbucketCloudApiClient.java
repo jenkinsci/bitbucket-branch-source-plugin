@@ -52,17 +52,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
 import hudson.Util;
 import hudson.util.Secret;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.HostConfiguration;
@@ -83,6 +72,20 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+
+import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
 
 public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
@@ -289,11 +292,17 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     /**
      * {@inheritDoc}
      */
-    @NonNull
+    @Nullable
     @Override
     public String getDefaultBranch() throws IOException, InterruptedException {
         String url = V1_API_BASE_URL + this.owner + "/" + this.repositoryName + "/main-branch";
-        String response = getRequest(url);
+        String response;
+        try {
+            response = getRequest(url);
+        } catch (FileNotFoundException e) {
+            LOGGER.fine(String.format("Could not find default branch for %s/%s", this.owner, this.repositoryName));
+            return null;
+        }
         ObjectMapper mapper = new ObjectMapper();
         JsonNode name = mapper.readTree(response).get("name");
         if (name != null) {

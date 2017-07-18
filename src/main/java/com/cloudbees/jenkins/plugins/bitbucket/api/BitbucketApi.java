@@ -26,6 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 
@@ -121,11 +123,11 @@ public interface BitbucketApi {
     /**
      * Gets the default branch in the repository.
      *
-     * @return the default branch in the repository.
+     * @return the default branch in the repository or null if no default branch set
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    @NonNull
+    @Nullable
     String getDefaultBranch() throws IOException, InterruptedException;
 
     /**
