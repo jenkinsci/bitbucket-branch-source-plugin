@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 
@@ -127,7 +126,7 @@ public interface BitbucketApi {
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    @Nullable
+    @CheckForNull
     String getDefaultBranch() throws IOException, InterruptedException;
 
     /**

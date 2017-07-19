@@ -73,7 +73,6 @@ import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -292,7 +291,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     /**
      * {@inheritDoc}
      */
-    @Nullable
+    @CheckForNull
     @Override
     public String getDefaultBranch() throws IOException, InterruptedException {
         String url = V1_API_BASE_URL + this.owner + "/" + this.repositoryName + "/main-branch";
