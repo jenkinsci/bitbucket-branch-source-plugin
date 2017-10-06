@@ -123,6 +123,12 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.scribe.model.OAuthConfig;
+import org.scribe.model.OAuthConstants;
+import org.scribe.model.Token;
+
 public class BitbucketCloudApiClient implements BitbucketApi {
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
@@ -778,6 +784,37 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Override
     public List<BitbucketCloudRepository> getRepositories() throws IOException, InterruptedException {
         return getRepositories(null);
+    }
+
+    private synchronized HttpClient getHttpClient() {
+        if (this.client == null) {
+            HttpClient client = new HttpClient(connectionManager);
+            client.getParams().setConnectionManagerTimeout(10 * 1000);
+            client.getParams().setSoTimeout(60 * 1000);
+
+            if (credentials != null) {
+                if(this.token == null) {
+                    OAuthConfig config = new OAuthConfig(credentials.getUserName(), credentials.getPassword());
+                    BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
+                    Token token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
+                    this.token = token;
+                }
+//                client.getState().setCredentials(AuthScope.ANY, credentials);
+//                client.getParams().setAuthenticationPreemptive(true);
+                client.getParams().setAuthenticationPreemptive(false);
+            } else {
+                client.getParams().setAuthenticationPreemptive(false);
+            }
+
+            setClientProxyParams("bitbucket.org", client);
+            this.client = client;
+        }
+
+        return this.client;
+    }
+
+    private synchronized void signRequest(HttpMethod request) {
+        request.addRequestHeader(OAuthConstants.HEADER, "Bearer " + this.token.getToken());
     }
 
     private void setClientProxyParams(String host, HttpClientBuilder builder) {
