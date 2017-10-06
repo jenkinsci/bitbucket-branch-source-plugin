@@ -23,17 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.*;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommit;
@@ -83,6 +73,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.scribe.model.OAuthConfig;
+import org.scribe.model.OAuthConstants;
+import org.scribe.model.Token;
 
 public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
@@ -101,6 +94,8 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         connectionManager.getParams().setDefaultMaxConnectionsPerHost(20);
         connectionManager.getParams().setMaxTotalConnections(22);
     }
+
+    private Token token;
 
     public BitbucketCloudApiClient(String owner, String repositoryName, StandardUsernamePasswordCredentials creds) {
         if (creds != null) {
@@ -512,8 +507,15 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             client.getParams().setSoTimeout(60 * 1000);
 
             if (credentials != null) {
-                client.getState().setCredentials(AuthScope.ANY, credentials);
-                client.getParams().setAuthenticationPreemptive(true);
+                if(this.token == null) {
+                    OAuthConfig config = new OAuthConfig(credentials.getUserName(), credentials.getPassword());
+                    BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
+                    Token token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
+                    this.token = token;
+                }
+//                client.getState().setCredentials(AuthScope.ANY, credentials);
+//                client.getParams().setAuthenticationPreemptive(true);
+                client.getParams().setAuthenticationPreemptive(false);
             } else {
                 client.getParams().setAuthenticationPreemptive(false);
             }
@@ -523,6 +525,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         return this.client;
+    }
+
+    private synchronized void signRequest(HttpMethod request) {
+        request.addRequestHeader(OAuthConstants.HEADER, "Bearer " + this.token.getToken());
     }
 
     private static void setClientProxyParams(String host, HttpClient client) {
@@ -589,6 +595,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private String getRequest(String path) throws IOException, InterruptedException {
         HttpClient client = getHttpClient();
         GetMethod httpget = new GetMethod(path);
+        signRequest(httpget);
         try {
             executeMethod(client, httpget);
             String response = getResponseContent(httpget, httpget.getResponseContentLength());
@@ -618,6 +625,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private int getRequestStatus(String path) throws IOException {
         HttpClient client = getHttpClient();
         GetMethod httpget = new GetMethod(path);
+        signRequest(httpget);
         try {
             executeMethod(client, httpget);
             return httpget.getStatusCode();
@@ -639,6 +647,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private void deleteRequest(String path) throws IOException, InterruptedException {
         HttpClient client = getHttpClient();
         DeleteMethod httppost = new DeleteMethod(path);
+        signRequest(httppost);
         try {
             executeMethod(client, httppost);
             while (httppost.getStatusCode() == API_RATE_LIMIT_CODE) {
@@ -662,6 +671,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private String postRequest(PostMethod httppost) throws IOException, InterruptedException {
         HttpClient client = getHttpClient();
+        signRequest(httppost);
         try {
             executeMethod(client, httppost);
             while (httppost.getStatusCode() == API_RATE_LIMIT_CODE) {
@@ -717,12 +727,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private String postRequest(String path, String content) throws IOException, InterruptedException {
         PostMethod httppost = new PostMethod(path);
+        signRequest(httppost);
         httppost.setRequestEntity(new StringRequestEntity(content, "application/json", "UTF-8"));
         return postRequest(httppost);
     }
 
     private String postRequest(String path, NameValuePair[] params) throws IOException, InterruptedException {
         PostMethod httppost = new PostMethod(path);
+        signRequest(httppost);
         httppost.setRequestBody(params);
         return postRequest(httppost);
     }
