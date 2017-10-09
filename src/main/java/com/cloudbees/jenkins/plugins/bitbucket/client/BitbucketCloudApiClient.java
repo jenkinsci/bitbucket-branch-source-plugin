@@ -727,14 +727,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private String postRequest(String path, String content) throws IOException, InterruptedException {
         PostMethod httppost = new PostMethod(path);
-        signRequest(httppost);
         httppost.setRequestEntity(new StringRequestEntity(content, "application/json", "UTF-8"));
         return postRequest(httppost);
     }
 
     private String postRequest(String path, NameValuePair[] params) throws IOException, InterruptedException {
         PostMethod httppost = new PostMethod(path);
-        signRequest(httppost);
         httppost.setRequestBody(params);
         return postRequest(httppost);
     }
