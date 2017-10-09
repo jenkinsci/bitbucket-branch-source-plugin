@@ -4,6 +4,7 @@ import org.eclipse.jgit.util.Base64;
 import org.scribe.builder.api.DefaultApi20;
 import org.scribe.model.*;
 import org.scribe.oauth.OAuth20ServiceImpl;
+import java.nio.charset.StandardCharsets;
 
 public class BitbucketOAuthService extends OAuth20ServiceImpl {
     private static final String GRANT_TYPE_KEY = "grant_type";
@@ -36,7 +37,7 @@ public class BitbucketOAuthService extends OAuth20ServiceImpl {
     private String getHttpBasicAuthHeaderValue() {
         String authStr = config.getApiKey() + ":" + config.getApiSecret();
 
-        return "Basic " + Base64.encodeBytes(authStr.getBytes());
+        return "Basic " + Base64.encodeBytes(authStr.getBytes(StandardCharsets.UTF_8));
     }
 
     private String getBearerAuthHeaderValue(Token token) {
