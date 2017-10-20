@@ -65,7 +65,7 @@ public class BitbucketClientMockUtils {
         branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
         branches.add(getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f"));
         // add branches
-        when(bitbucket.getBranches()).thenReturn(branches);
+        when((List<BitbucketBranch>) ((Object) bitbucket.getBranches())).thenReturn(branches);
         if (BitbucketRepositoryType.MERCURIAL == type) {
             withMockMercurialRepos(bitbucket);
         } else {
