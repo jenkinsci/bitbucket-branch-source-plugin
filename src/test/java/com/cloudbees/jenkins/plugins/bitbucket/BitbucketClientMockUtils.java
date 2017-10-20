@@ -24,11 +24,13 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranchAPI2;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
@@ -38,13 +40,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudT
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import hudson.model.TaskListener;
+import jenkins.model.Jenkins;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import jenkins.model.Jenkins;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -58,7 +61,7 @@ public class BitbucketClientMockUtils {
         BitbucketCloudApiClient bitbucket = mock(BitbucketCloudApiClient.class);
         when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), any(Integer.class), anyString(), anyString())).thenCallRealMethod();
         // mock branch list
-        List<BitbucketCloudBranch> branches = new ArrayList<BitbucketCloudBranch>();
+        List<BitbucketBranch> branches = new ArrayList<>();
         branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
         branches.add(getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f"));
         // add branches
