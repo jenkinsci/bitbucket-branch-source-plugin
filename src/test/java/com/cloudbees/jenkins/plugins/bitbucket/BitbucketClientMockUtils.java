@@ -65,7 +65,7 @@ public class BitbucketClientMockUtils {
         branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
         branches.add(getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f"));
         // add branches
-        when((List<BitbucketBranch>) ((Object) bitbucket.getBranches())).thenReturn(branches);
+        when(bitbucket.getBranches()).thenReturn(branches);
         if (BitbucketRepositoryType.MERCURIAL == type) {
             withMockMercurialRepos(bitbucket);
         } else {
@@ -172,10 +172,11 @@ public class BitbucketClientMockUtils {
         when(bitbucket.getRepository()).thenReturn(repo);
     }
 
-    private static BitbucketCloudBranch getBranch(String name, String hash) {
-        BitbucketCloudBranch b = new BitbucketCloudBranch();
+    private static BitbucketCloudBranchAPI2 getBranch(String name, String hash) {
+        BitbucketCloudBranchAPI2 b = new BitbucketCloudBranchAPI2();
         b.setName(name);
-        b.setRawNode(hash);
+        b.setTarget(new BitbucketCloudBranchAPI2.Target());
+        b.getTarget().setHash(hash);
         return b;
     }
 
