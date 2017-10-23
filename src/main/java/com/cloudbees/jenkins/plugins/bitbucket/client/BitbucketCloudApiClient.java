@@ -317,12 +317,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @NonNull
     @Override
-    public List<? extends BitbucketBranch> getBranches() throws IOException, InterruptedException {
+    public List<BitbucketBranch> getBranches() throws IOException, InterruptedException {
         String urlTemplate = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/refs/branches?page=%d&pagelen=50";
         int pageNumber = 1;
         String url;
         String response = getRequest(url = String.format(urlTemplate, pageNumber));
-        List<BitbucketCloudBranchAPI2> branches = new ArrayList<>();
+        List<BitbucketBranch> branches = new ArrayList<>();
         BitbucketCloudBranchs page;
         try {
             page = parse(response, BitbucketCloudBranchs.class);
