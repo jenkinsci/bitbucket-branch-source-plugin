@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
@@ -34,7 +35,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranchAPI2;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranchs;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommits;
@@ -52,17 +54,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
 import hudson.Util;
 import hudson.util.Secret;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.HostConfiguration;
@@ -83,6 +74,18 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
@@ -314,14 +317,33 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @NonNull
     @Override
-    public List<BitbucketCloudBranch> getBranches() throws IOException, InterruptedException {
-        String url = V1_API_BASE_URL + this.owner + "/" + this.repositoryName + "/branches";
-        String response = getRequest(url);
+    public List<BitbucketBranch> getBranches() throws IOException, InterruptedException {
+        String urlTemplate = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/refs/branches?page=%d&pagelen=50";
+        int pageNumber = 1;
+        String url;
+        String response = getRequest(url = String.format(urlTemplate, pageNumber));
+        List<BitbucketBranch> branches = new ArrayList<>();
+        BitbucketCloudBranchs page;
         try {
-            return parseBranchesJson(response);
+            page = parse(response, BitbucketCloudBranchs.class);
         } catch (IOException e) {
             throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
+        branches.addAll(page.getValues());
+        while (page.getNext() != null) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            pageNumber++;
+            response = getRequest(url = String.format(urlTemplate, pageNumber));
+            try {
+                page = parse(response, BitbucketCloudBranchs.class);
+            } catch (IOException e) {
+                throw new IOException("I/O error when parsing response from URL: " + url, e);
+            }
+            branches.addAll(page.getValues());
+        }
+        return branches;
     }
 
     /**
@@ -727,17 +749,13 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         return postRequest(httppost);
     }
 
-    private List<BitbucketCloudBranch> parseBranchesJson(String response) throws IOException {
-        List<BitbucketCloudBranch> branches = new ArrayList<BitbucketCloudBranch>();
+    private List<BitbucketCloudBranchAPI2> parseBranchesJson(String response) throws IOException {
+        List<BitbucketCloudBranchAPI2> branches = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
         JSONObject obj = JSONObject.fromObject(response);
-        for (Object name : obj.keySet()) {
-            BitbucketCloudBranch b = mapper.readValue(obj.getJSONObject((String) name).toString(), BitbucketCloudBranch.class);
-            if (b.getName() == null) {
-                // The branch name is null sometimes in API JSON response (unknown reason)
-                b.setName((String) name);
-            }
-            branches.add(b);
+        for (Object branch : obj.getJSONArray("values")) {
+                BitbucketCloudBranchAPI2 b = mapper.readValue(branch.toString(), BitbucketCloudBranchAPI2.class);
+                branches.add(b);
         }
         return branches;
     }
