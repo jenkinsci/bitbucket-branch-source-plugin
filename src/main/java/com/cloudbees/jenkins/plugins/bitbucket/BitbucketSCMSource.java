@@ -292,6 +292,7 @@ public class BitbucketSCMSource extends SCMSource {
             traits.add(new ForkPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.HEAD),
                     new ForkPullRequestDiscoveryTrait.TrustEveryone()));
             traits.add(new PublicRepoPullRequestFilterTrait());
+            traits.add(new DisableNotificationsTrait());
         }
         return this;
     }

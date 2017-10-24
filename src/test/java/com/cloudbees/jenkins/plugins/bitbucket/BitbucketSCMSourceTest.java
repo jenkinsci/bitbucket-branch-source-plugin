@@ -80,6 +80,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
@@ -120,6 +121,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
@@ -160,6 +162,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
@@ -200,6 +203,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
@@ -245,6 +249,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
@@ -285,6 +290,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("*")),
@@ -330,6 +336,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("feature/*")),
@@ -375,6 +382,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.ITEM))
@@ -415,6 +423,7 @@ public class BitbucketSCMSourceTest {
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(DisableNotificationsTrait.class),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
