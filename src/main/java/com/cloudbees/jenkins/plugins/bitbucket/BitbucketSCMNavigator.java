@@ -164,6 +164,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         this.traits.add(new ForkPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.HEAD),
                 new ForkPullRequestDiscoveryTrait.TrustEveryone()));
         this.traits.add(new PublicRepoPullRequestFilterTrait());
+        this.traits.add(new DisableNotificationsTrait());
         if (checkoutCredentialsId != null
                 && !BitbucketSCMSource.DescriptorImpl.SAME.equals(checkoutCredentialsId)) {
             this.traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
@@ -187,6 +188,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     new ForkPullRequestDiscoveryTrait.TrustEveryone())
             );
             this.traits.add(new PublicRepoPullRequestFilterTrait());
+            this.traits.add(new DisableNotificationsTrait());
             if ((includes != null && !"*".equals(includes)) || (excludes != null && !"".equals(excludes))) {
                 traits.add(new WildcardSCMHeadFilterTrait(
                         StringUtils.defaultIfBlank(includes, "*"),
