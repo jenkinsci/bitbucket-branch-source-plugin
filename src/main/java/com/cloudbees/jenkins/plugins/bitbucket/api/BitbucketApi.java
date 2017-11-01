@@ -23,11 +23,16 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.util.List;
+import jenkins.scm.api.SCMFile;
 
 /**
  * Provides access to a specific repository.
@@ -239,5 +244,20 @@ public interface BitbucketApi {
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     boolean isPrivate() throws IOException, InterruptedException;
-
+    
+	/**
+	 * @param parent
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public Iterable<SCMFile> getDirectoryContent(BitbucketSCMFile parent) throws IOException, InterruptedException;
+	
+	/**
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException;
 }
