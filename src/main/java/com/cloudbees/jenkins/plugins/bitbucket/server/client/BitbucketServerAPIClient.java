@@ -683,13 +683,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         String ref = Util.rawEncode(parent.getRef());
         int start=0;
         String url = String.format(API_REPOSITORY_PATH+"/browse/%s?at=%s", owner, repositoryName, path, ref);
-        String response = getRequest(String.format(url+"&start=%s&limit=%s", start, 500));
+        String response = getRequest(url + String.format("&start=%s&limit=%s", start, 500));
         Map<String,Object> content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
         Map page = (Map) content.get("children");
         List<Map> values = (List<Map>) page.get("values");
         collectFileAndDirectories(parent, path, values, files);
         while (!(boolean)page.get("isLastPage")){
-            response = getRequest(String.format(url+"&start=%s&limit=%s", start, 500));
+            response = getRequest(url + String.format("&start=%s&limit=%s", start, 500));
             content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
             page = (Map) content.get("children");
         }
@@ -719,12 +719,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         String ref = Util.rawEncode(file.getRef());
         int start=0;
         String url = String.format(API_REPOSITORY_PATH+"/browse/%s?at=%s", owner, repositoryName, path, ref);
-        String response = getRequest(String.format(url+"&start=%s&limit=%s", start, 500));
+        String response = getRequest(url + String.format("&start=%s&limit=%s", start, 500));
         Map<String,Object> content = collectLines(response, lines);
 
         while(!(boolean)content.get("isLastPage")){
             start += (int) content.get("size");
-            response = getRequest(String.format(url+"&start=%s&limit=&s", start, 500));
+            response = getRequest(url + String.format("&start=%s&limit=&s", start, 500));
             content = collectLines(response, lines);
         }
         return IOUtils.toInputStream(StringUtils.join(lines,'\n'), "UTF-8");
