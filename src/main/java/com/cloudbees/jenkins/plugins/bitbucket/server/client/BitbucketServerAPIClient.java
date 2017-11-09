@@ -724,7 +724,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         while(!(boolean)content.get("isLastPage")){
             start += (int) content.get("size");
-            response = getRequest(url + String.format("&start=%s&limit=&s", start, 500));
+            response = getRequest(url + String.format("&start=%s&limit=%s", start, 500));
             content = collectLines(response, lines);
         }
         return IOUtils.toInputStream(StringUtils.join(lines,'\n'), "UTF-8");
