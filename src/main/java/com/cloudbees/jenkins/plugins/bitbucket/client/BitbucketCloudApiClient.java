@@ -124,8 +124,15 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         client.getParams().setSoTimeout(60 * 1000);
 
         if (credentials != null) {
-            client.getState().setCredentials(AuthScope.ANY, credentials);
-            client.getParams().setAuthenticationPreemptive(true);
+            if(this.token == null) {
+                OAuthConfig config = new OAuthConfig(credentials.getUserName(), credentials.getPassword());
+                BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
+                Token token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
+                this.token = token;
+            }
+//                client.getState().setCredentials(AuthScope.ANY, credentials);
+//                client.getParams().setAuthenticationPreemptive(true);
+            client.getParams().setAuthenticationPreemptive(false);
         } else {
             client.getParams().setAuthenticationPreemptive(false);
         }
