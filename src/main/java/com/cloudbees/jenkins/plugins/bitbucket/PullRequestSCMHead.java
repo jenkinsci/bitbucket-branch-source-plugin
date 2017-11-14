@@ -140,6 +140,14 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPronoun() {
+        return Messages.PullRequestSCMHead_Pronoun();
+    }
+
     public String getRepoOwner() {
         return repoOwner;
     }

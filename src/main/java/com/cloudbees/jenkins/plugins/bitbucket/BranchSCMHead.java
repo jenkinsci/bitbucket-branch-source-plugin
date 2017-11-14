@@ -78,4 +78,12 @@ public class BranchSCMHead extends SCMHead {
     public BitbucketRepositoryType getRepositoryType() {
         return repositoryType;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPronoun() {
+        return Messages.BranchSCMHead_Pronoun();
+    }
 }

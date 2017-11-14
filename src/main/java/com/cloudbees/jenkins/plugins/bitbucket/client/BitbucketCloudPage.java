@@ -21,54 +21,57 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
+package com.cloudbees.jenkins.plugins.bitbucket.client;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Map;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
 
-public class BitbucketCloudTeam implements BitbucketTeam {
+/**
+ * Bitbucket paginated resource
+ */
+public class BitbucketCloudPage<T> extends BitbucketPage<T> {
+    private final int pageLength;
+    private final int page;
+    private final int size;
+    private final String next;
+    private final List<T> values;
 
-    @JsonProperty("username")
-    private String name;
-
-    @JsonProperty("display_name")
-    private String displayName;
-
-    @JsonProperty("links")
-    @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
-    private Map<String,List<BitbucketHref>> links;
-
-    @Override
-    public String getName() {
-        return name;
+    public BitbucketCloudPage(@JsonProperty("pagelen") int pageLength,
+                       @JsonProperty("page") int page,
+                       @JsonProperty("size") int size,
+                       @Nullable @JsonProperty("next") String next,
+                       @Nonnull @JsonProperty("values") List<T> values) {
+        this.pageLength = pageLength;
+        this.page = page;
+        this.size = size;
+        this.next = next;
+        this.values = ImmutableList.copyOf(values);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public int getSize() {
+        return size;
     }
 
-    @Override
-    public String getDisplayName() {
-        return displayName;
+    public List<T> getValues() {
+        return values;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public String getNext(){
+        return next;
     }
 
-    @Override
-    @JsonIgnore
-    public Map<String, List<BitbucketHref>> getLinks() {
-        return links;
+    public boolean isLastPage() {
+        return next == null;
     }
 
-    @JsonIgnore
-    public void setLinks(Map<String, List<BitbucketHref>> links) {
-        this.links = links;
+    public int getPageLength() {
+        return pageLength;
+    }
+
+    public int getPage() {
+        return page;
     }
 }

@@ -23,72 +23,63 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.branch;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketCloudBranch implements BitbucketBranch {
+    private final String name;
+    private long dateInMillis;
+    private String hash;
 
-    @JsonProperty("raw_node")
-    private String rawNode;
-
-    private String name;
-
-    //Bitbucket cloud signals timestamps formatted after "2017-08-30 07:45:04+00:00"
-    @JsonProperty("utctimestamp")
-    private String date;
-
-    // Needed for compatibility with different Bitbucket API JSON messages
-    private String branch;
-
-    public String getBranch() {
-        return branch;
+    @JsonCreator
+    public BitbucketCloudBranch(@Nonnull @JsonProperty("name") String name, @Nullable @JsonProperty("target") BitbucketCloudBranch.Target target) {
+        this.name = name;
+        if(target != null) {
+            this.dateInMillis = target.repo.getUpdatedOn() != null ? target.repo.getUpdatedOn().getTime() : 0;
+            this.hash = target.hash;
+        }
     }
 
-    public void setBranch(String branch) {
-        this.branch = branch;
+    public BitbucketCloudBranch(@Nonnull String name, String hash, long dateInMillis) {
+        this.name = name;
+        this.dateInMillis = dateInMillis;
+        this.hash = hash;
     }
 
-    @Override
-    
     public String getRawNode() {
-        return rawNode;
+        return hash;
+    }
+
+    public void setDateMillis(long dateInMillis) {
+        this.dateInMillis = dateInMillis;
+    }
+
+    public void setRawNode(String hash) {
+        this.hash = hash;
     }
 
     @Override
     public String getName() {
-        return name != null ? name : branch;
-    }
-
-    public String getDate() {
-        return date;
+        return name;
     }
 
     @Override
     public long getDateMillis() {
-        final SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssXXX");
-        try {
-            return dateParser.parse(date).getTime();
-        } catch (ParseException e) {
-            return 0;
+        return dateInMillis;
+    }
+
+    public static class Target {
+        private final String hash;
+        private final BitbucketCloudRepository repo;
+
+        @JsonCreator
+        public Target(@Nonnull @JsonProperty("hash") String hash, @Nonnull @JsonProperty("repository") BitbucketCloudRepository repo) {
+            this.hash = hash;
+            this.repo = repo;
         }
     }
-
-    public void setRawNode(String rawNode) {
-        this.rawNode = rawNode;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
 }

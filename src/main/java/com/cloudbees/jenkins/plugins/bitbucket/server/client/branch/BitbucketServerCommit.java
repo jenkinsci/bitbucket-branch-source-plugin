@@ -23,12 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketServerCommit implements BitbucketCommit {
 
     private String message;

@@ -25,9 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketRepositoryHooks {
 
     private String next;

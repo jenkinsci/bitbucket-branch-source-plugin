@@ -38,13 +38,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudT
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import hudson.model.TaskListener;
+import jenkins.model.Jenkins;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import jenkins.model.Jenkins;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -170,18 +171,14 @@ public class BitbucketClientMockUtils {
     }
 
     private static BitbucketCloudBranch getBranch(String name, String hash) {
-        BitbucketCloudBranch b = new BitbucketCloudBranch();
-        b.setName(name);
-        b.setRawNode(hash);
-        return b;
+        return new BitbucketCloudBranch(name,hash,0);
     }
 
     private static BitbucketPullRequestValue getPullRequest() {
         BitbucketPullRequestValue pr = new BitbucketPullRequestValue();
         BitbucketPullRequestValueRepository source = new BitbucketPullRequestValueRepository();
 
-        BitbucketCloudBranch branch = new BitbucketCloudBranch();
-        branch.setName("my-feature-branch");
+        BitbucketCloudBranch branch = new BitbucketCloudBranch("my-feature-branch", null, 0);
         source.setBranch(branch);
 
         BitbucketCloudCommit commit = new BitbucketCloudCommit();
@@ -195,8 +192,7 @@ public class BitbucketClientMockUtils {
         pr.setSource(source);
 
         BitbucketPullRequestValueDestination destination = new BitbucketPullRequestValueDestination();
-        branch = new BitbucketCloudBranch();
-        branch.setName("branch1");
+        branch = new BitbucketCloudBranch("branch1", null, 0);
         destination.setBranch(branch);
         repository = new BitbucketCloudRepository();
         repository.setFullName("amuniz/test-repos");

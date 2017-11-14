@@ -23,13 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketPullRequestValue implements BitbucketPullRequest {
     private BitbucketPullRequestValueDestination destination;
     private BitbucketPullRequestValueRepository source;
@@ -96,7 +93,6 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
         return author.displayName;
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Links {
         private Html html;
         public Links() {}
@@ -114,7 +110,6 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
             this.html = html;
         }
 
-        @JsonIgnoreProperties(ignoreUnknown = true)
         private static class Html {
             private String href;
             public Html() {}
@@ -129,7 +124,6 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Author {
         private String username;
         @JsonProperty("display_name")

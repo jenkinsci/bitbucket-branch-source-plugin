@@ -23,11 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketServerBranch implements BitbucketBranch {
 
     private String displayId;

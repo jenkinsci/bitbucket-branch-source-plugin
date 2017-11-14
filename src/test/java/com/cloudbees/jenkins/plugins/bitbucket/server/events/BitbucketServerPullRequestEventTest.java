@@ -23,21 +23,20 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.events;
 
+import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
-import java.io.IOException;
-import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 public class BitbucketServerPullRequestEventTest {
@@ -121,7 +120,7 @@ public class BitbucketServerPullRequestEventTest {
     @Test
     public void apiResponse() throws Exception {
         BitbucketServerPullRequest pullRequest =
-                new ObjectMapper().readValue(payload, BitbucketServerPullRequest.class);
+                JsonParser.toJava(payload, BitbucketServerPullRequest.class);
         assertThat(pullRequest, notNullValue());
         assertThat(pullRequest.getTitle(), is("Markdown formatting"));
         assertThat(pullRequest.getAuthorLogin(), is("User"));

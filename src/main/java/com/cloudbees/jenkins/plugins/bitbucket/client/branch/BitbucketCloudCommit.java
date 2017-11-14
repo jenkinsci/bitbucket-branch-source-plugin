@@ -23,15 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.branch;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketCloudCommit implements BitbucketCommit {
 
     private String message;

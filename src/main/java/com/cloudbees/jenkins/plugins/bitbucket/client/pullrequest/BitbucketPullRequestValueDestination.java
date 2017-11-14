@@ -30,10 +30,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestDestinati
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketPullRequestValueDestination implements BitbucketPullRequestDestination {
     private BitbucketCloudRepository repository;
     private BitbucketCloudBranch branch;

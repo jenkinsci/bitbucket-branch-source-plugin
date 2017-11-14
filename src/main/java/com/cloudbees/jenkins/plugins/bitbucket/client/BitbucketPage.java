@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,34 +21,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
+package com.cloudbees.jenkins.plugins.bitbucket.client;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryOwner;
-import org.codehaus.jackson.annotate.JsonProperty;
+import java.util.List;
 
-public class BitbucketCloudRepositoryOwner implements BitbucketRepositoryOwner {
+/**
+ * Bitbucket API pagination
+ */
+public abstract class BitbucketPage <T> {
+    /**
+     * Page size
+     *
+     * @return page size
+     */
+    public abstract int getSize();
 
-    private String username;
+    /**
+     * List of values in this page
+     *
+     * @return list of values
+     */
+    public abstract List<T> getValues();
 
-    @JsonProperty("display_name")
-    private String displayName;
+    /**
+     * URL to the next page
+     *
+     * @return next page url
+     */
+    public abstract String getNext();
 
-    @Override
-    public String getUsername() {
-        return username;
-    }
+    /**
+     *  Boolean to tell if this is last page
+     * @return If true then last page, otherwise
+     */
+    public abstract boolean isLastPage();
 
-    @Override
-    public String getDisplayName() {
-        return displayName;
-    }
+    /**
+     * Number of pages
+     *
+     * @return number of pages
+     */
+    public abstract int getPageLength();
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
+    /**
+     * Page number
+     *
+     * @return page number
+     */
+    public abstract int getPage();
 }

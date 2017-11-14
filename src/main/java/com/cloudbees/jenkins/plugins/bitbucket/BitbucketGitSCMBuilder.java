@@ -53,6 +53,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import jenkins.scm.api.mixin.TagSCMHead;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -101,6 +102,8 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                 String pullId = ((PullRequestSCMHead) head).getId();
                 withRefSpec("+refs/pull-requests/" + pullId + "/from:refs/remotes/@{remote}/" + head.getName());
             }
+        } else if (head instanceof TagSCMHead ){
+            withRefSpec("+refs/tags/" + head.getName() + ":refs/tags/" + head.getName());
         } else {
             withRefSpec("+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
         }

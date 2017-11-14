@@ -32,6 +32,7 @@ import hudson.model.listeners.ItemListener;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -102,7 +103,11 @@ public class WebhooksAutoregisterTest {
             while (limit < 5) {
                 rootDir.wait(1000);
                 for (LogRecord r : logs.getView()) {
-                    if (r.getMessage().contains(string)) {
+                    String message = r.getMessage();
+                    if (r.getParameters() != null) {
+                        message = MessageFormat.format(message, r.getParameters());
+                    }
+                    if (message.contains(string)) {
                         return;
                     }
                 }

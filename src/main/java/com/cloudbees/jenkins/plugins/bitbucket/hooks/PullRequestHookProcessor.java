@@ -28,10 +28,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
@@ -68,7 +70,7 @@ public class PullRequestHookProcessor extends HookProcessor {
     private static final Logger LOGGER = Logger.getLogger(PullRequestHookProcessor.class.getName());
 
     @Override
-    public void process(final HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
+    public void process(final HookEventType hookEvent, String payload, final BitbucketType instanceType, String origin) {
         if (payload != null) {
             BitbucketPullRequestEvent pull;
             if (instanceType == BitbucketType.SERVER) {
@@ -98,7 +100,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                             return false;
                         }
                         BitbucketSCMNavigator bbNav = (BitbucketSCMNavigator) navigator;
-                        if (!isServerUrlMatch(bbNav.getBitbucketServerUrl())) {
+                        if (!isServerUrlMatch(bbNav.getServerUrl())) {
                             return false;
                         }
                         return bbNav.getRepoOwner().equalsIgnoreCase(getPayload().getRepository().getOwnerName());
@@ -185,16 +187,30 @@ public class PullRequestHookProcessor extends HookProcessor {
                             if (strategies.size() > 1) {
                                 branchName = branchName + "-" + strategy.name().toLowerCase(Locale.ENGLISH);
                             }
-                            PullRequestSCMHead head = new PullRequestSCMHead(
-                                    branchName,
-                                    pullRepoOwner,
-                                    pullRepository,
-                                    type,
-                                    pull.getSource().getBranch().getName(),
-                                    pull,
-                                    headOrigin,
-                                    strategy
-                            );
+                            PullRequestSCMHead head;
+                            if (instanceType == BitbucketType.CLOUD) {
+                                head = new PullRequestSCMHead(
+                                        branchName,
+                                        pullRepoOwner,
+                                        pullRepository,
+                                        type,
+                                        pull.getSource().getBranch().getName(),
+                                        pull,
+                                        headOrigin,
+                                        strategy
+                                );
+                            } else {
+                                head = new PullRequestSCMHead(
+                                        branchName,
+                                        src.getRepoOwner(),
+                                        src.getRepository(),
+                                        type,
+                                        branchName,
+                                        pull,
+                                        headOrigin,
+                                        strategy
+                                );
+                            }
                             if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
                                 // special case for repo being deleted
                                 result.put(head, null);

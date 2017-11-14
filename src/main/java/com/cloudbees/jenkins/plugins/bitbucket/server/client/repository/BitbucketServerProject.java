@@ -24,18 +24,13 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import java.util.List;
 import java.util.Map;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
-
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketServerProject implements BitbucketTeam {
 
     @JsonProperty("key")

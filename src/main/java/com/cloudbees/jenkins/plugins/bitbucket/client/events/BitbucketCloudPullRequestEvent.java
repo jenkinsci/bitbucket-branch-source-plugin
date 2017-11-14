@@ -29,10 +29,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepositoryOwner;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent {
 
     @JsonProperty("pullrequest")
@@ -92,9 +94,9 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
             if (this.pullRequest.getSource() != null
                     && this.pullRequest.getSource().getCommit() != null
                     && this.pullRequest.getSource().getBranch() != null
-                    && this.pullRequest.getSource().getBranch().getDate() == null) {
+                    && this.pullRequest.getSource().getBranch().getDateMillis() == 0) {
                 this.pullRequest.getSource().getBranch()
-                        .setDate(this.pullRequest.getSource().getCommit().getDate());
+                        .setDateMillis(toDate(this.pullRequest.getSource().getCommit().getDate()));
             }
             if (this.pullRequest.getDestination() != null
                     && this.pullRequest.getDestination().getRepository() != null) {
@@ -115,6 +117,19 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                 this.pullRequest.getDestination().getBranch()
                         .setRawNode(this.pullRequest.getDestination().getCommit().getHash());
             }
+        }
+    }
+
+    private long toDate(String dateStr){
+        if(StringUtils.isBlank(dateStr)){
+            return 0;
+        }
+        final SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        dateParser.setTimeZone(TimeZone.getTimeZone("GMT"));
+        try {
+            return dateParser.parse(dateStr).getTime();
+        } catch (ParseException e) {
+            return 0;
         }
     }
 

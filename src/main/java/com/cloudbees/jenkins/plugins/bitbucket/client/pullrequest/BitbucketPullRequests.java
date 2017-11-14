@@ -23,11 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import java.util.List;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketPullRequests {
 
     private List<BitbucketPullRequestValue> values;

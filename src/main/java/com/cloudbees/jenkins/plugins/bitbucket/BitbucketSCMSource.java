@@ -636,16 +636,30 @@ public class BitbucketSCMSource extends SCMSource {
                     } else {
                         branchName = "PR-" + pull.getId() + "-" + strategy.name().toLowerCase(Locale.ENGLISH);
                     }
+                    PullRequestSCMHead head;
+                    if (originBitbucket instanceof BitbucketCloudApiClient) {
+                        head = new PullRequestSCMHead(branchName,
+                                pullRepoOwner,
+                                pullRepository,
+                                repositoryType,
+                                pull.getSource().getBranch().getName(),
+                                pull,
+                                originOf(pullRepoOwner, pullRepository),
+                                strategy
+                        );
+                    } else {
+                        head = new PullRequestSCMHead(branchName,
+                                repoOwner,
+                                repository,
+                                repositoryType,
+                                branchName,
+                                pull,
+                                originOf(pullRepoOwner, pullRepository),
+                                strategy
+                        );
+                    }
                     if (request.process(
-                            new PullRequestSCMHead(branchName,
-                                    pullRepoOwner,
-                                    pullRepository,
-                                    repositoryType,
-                                    pull.getSource().getBranch().getName(),
-                                    pull,
-                                    originOf(pullRepoOwner, pullRepository),
-                                    strategy
-                            ),
+                            head,
                             new SCMSourceRequest.IntermediateLambda<String>() {
                                 @Nullable
                                 @Override
@@ -764,7 +778,8 @@ public class BitbucketSCMSource extends SCMSource {
 
     @Override
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
-        List<? extends BitbucketBranch> branches = buildBitbucketClient().getBranches();
+        final BitbucketApi bitbucket = buildBitbucketClient();
+        List<? extends BitbucketBranch> branches = bitbucket.getBranches();
         if (head instanceof PullRequestSCMHead) {
             PullRequestSCMHead h = (PullRequestSCMHead) head;
             String targetRevision = findRawNode(h.getTarget().getName(), branches, listener);
@@ -773,15 +788,22 @@ public class BitbucketSCMSource extends SCMSource {
                         new Object[]{repoOwner, repository, h.getTarget().getName()});
                 return null;
             }
-            branches = head.getOrigin() == SCMHeadOrigin.DEFAULT
-                    ? branches
-                    : buildBitbucketClient(h).getBranches();
-            String sourceRevision = findRawNode(h.getBranchName(), branches, listener);
+            String sourceRevision;
+            if (bitbucket instanceof BitbucketCloudApiClient) {
+                branches = head.getOrigin() == SCMHeadOrigin.DEFAULT
+                        ? branches
+                        : buildBitbucketClient(h).getBranches();
+                sourceRevision = findRawNode(h.getBranchName(), branches, listener);
+            } else {
+                final List<? extends BitbucketPullRequest> pullRequests = bitbucket.getPullRequests();
+                sourceRevision = findPRRawNode(h.getId(), pullRequests, listener);
+            }
             if (sourceRevision == null) {
-                LOGGER.log(Level.WARNING, "No branch found in {0}/{1} with name [{2}]",
+                LOGGER.log(Level.WARNING, "No revision found in {0}/{1} for PR-{2} [{3}]",
                         new Object[]{
                                 h.getRepoOwner(),
                                 h.getRepository(),
+                                h.getId(),
                                 h.getBranchName()
                         });
                 return null;
@@ -833,6 +855,28 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         listener.getLogger().format("Cannot find the branch %s%n", branchName);
+        return null;
+    }
+
+    private String findPRRawNode(String prId, List<? extends BitbucketPullRequest> pullRequests, TaskListener listener) {
+        for (BitbucketPullRequest pr : pullRequests) {
+            if (prId.equals(pr.getId())) {
+                String revision = pr.getSource().getCommit().getHash();
+                if (revision == null) {
+                    if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
+                        listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s%n",
+                                prId);
+                    } else {
+                        listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s. "
+                                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
+                                prId);
+                    }
+                    return null;
+                }
+                return revision;
+            }
+        }
+        listener.getLogger().format("Cannot find the PR-%s%n", prId);
         return null;
     }
 

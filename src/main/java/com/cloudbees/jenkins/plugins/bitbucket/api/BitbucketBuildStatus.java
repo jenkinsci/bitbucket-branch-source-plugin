@@ -25,11 +25,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketBuildStatus {
 
     /**

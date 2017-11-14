@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,34 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryOwner;
-import org.codehaus.jackson.annotate.JsonProperty;
+package com.cloudbees.jenkins.plugins.bitbucket;
 
-public class BitbucketCloudRepositoryOwner implements BitbucketRepositoryOwner {
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-    private String username;
 
-    @JsonProperty("display_name")
-    private String displayName;
+/**
+ * Utility functions
+ */
+@Restricted(NoExternalUse.class)
+public class Utils {
 
-    @Override
-    public String getUsername() {
-        return username;
+    /**
+     * URL encodes each path segment
+     * @param path path separated by '/'
+     * @return encoded path separated by '/'
+     */
+    public static @NonNull String encodePath(@NonNull String path){
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (String segment : StringUtils.split(path, "/")) {
+            sb.append(Util.rawEncode(segment));
+            if (first) {
+                first = false;
+            } else {
+                sb.append('/');
+            }
+        }
+        return sb.toString();
     }
-
-    @Override
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
 }

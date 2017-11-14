@@ -23,14 +23,13 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
+import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPushEvent;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,7 +41,7 @@ public class BitbucketCloudWebhookPayload {
     @CheckForNull
     public static BitbucketPushEvent pushEventFromPayload(@NonNull String payload) {
         try {
-            return parse(payload, BitbucketCloudPushEvent.class);
+            return JsonParser.toJava(payload, BitbucketCloudPushEvent.class);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
         }
@@ -52,16 +51,11 @@ public class BitbucketCloudWebhookPayload {
     @CheckForNull
     public static BitbucketPullRequestEvent pullRequestEventFromPayload(@NonNull String payload) {
         try {
-            return parse(payload, BitbucketCloudPullRequestEvent.class);
+            return JsonParser.toJava(payload, BitbucketCloudPullRequestEvent.class);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
         }
         return null;
-    }
-
-    private static <T> T parse(String response, Class<T> clazz) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(response, clazz);
     }
 
 }

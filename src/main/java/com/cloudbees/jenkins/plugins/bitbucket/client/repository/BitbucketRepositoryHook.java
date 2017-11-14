@@ -23,13 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
-import java.util.List;
-
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+import java.util.List;
+
 public class BitbucketRepositoryHook implements BitbucketWebHook {
 
     private String uuid;

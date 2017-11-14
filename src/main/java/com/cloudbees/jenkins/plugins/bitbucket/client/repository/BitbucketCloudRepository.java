@@ -24,20 +24,16 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
-
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryOwner;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketCloudRepository implements BitbucketRepository {
 
     private String scm;
@@ -48,7 +44,7 @@ public class BitbucketCloudRepository implements BitbucketRepository {
     private BitbucketCloudRepositoryOwner owner;
 
     @JsonProperty("updated_on")
-    private String updatedOn;
+    private Date updatedOn;
 
     // JSON mapping added in setter because the field can not be called "private"
     private Boolean priv;
@@ -84,8 +80,12 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         this.owner = owner;
     }
 
-    public void setUpdatedOn(String updatedOn) {
-        this.updatedOn = updatedOn;
+    public void setUpdatedOn(Date updatedOn) {
+        this.updatedOn = updatedOn == null ? null : (Date)updatedOn.clone();
+    }
+
+    public Date getUpdatedOn() {
+        return updatedOn == null ? null : (Date)updatedOn.clone();
     }
 
     @Override

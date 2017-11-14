@@ -8,6 +8,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
+import org.apache.commons.lang.StringUtils;
 
 @Extension(ordinal = -1000)
 public class BitbucketServerApiFactory extends BitbucketApiFactory {
@@ -20,6 +21,9 @@ public class BitbucketServerApiFactory extends BitbucketApiFactory {
     @Override
     protected BitbucketApi create(@Nullable String serverUrl, @Nullable StandardUsernamePasswordCredentials credentials,
                                   @NonNull String owner, @CheckForNull String repository) {
+        if(StringUtils.isBlank(serverUrl)){
+            throw new IllegalArgumentException("serverUrl is required");
+        }
         return new BitbucketServerAPIClient(serverUrl, owner, repository, credentials, false);
     }
 }
