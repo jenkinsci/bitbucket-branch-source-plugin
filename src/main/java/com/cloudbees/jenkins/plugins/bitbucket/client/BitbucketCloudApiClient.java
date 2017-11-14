@@ -194,6 +194,21 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         // Create Http client
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
+
+//        if (credentials != null) {
+//            if(this.token == null) {
+//                OAuthConfig config = new OAuthConfig(credentials.getUserName(), credentials.getPassword());
+//                BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
+//                Token token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
+//                this.token = token;
+//            }
+////                client.getState().setCredentials(AuthScope.ANY, credentials);
+////                client.getParams().setAuthenticationPreemptive(true);
+//            client.getParams().setAuthenticationPreemptive(false);
+//       } else {
+//            client.getParams().setAuthenticationPreemptive(false);
+//        }
+
         httpClientBuilder.setKeepAliveStrategy((__, ___) -> MILLISECONDS.convert(5, SECONDS));
         httpClientBuilder.setConnectionManager(connectionManager);
         httpClientBuilder.setConnectionManagerShared(true);
