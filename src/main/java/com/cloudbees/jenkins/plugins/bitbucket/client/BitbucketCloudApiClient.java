@@ -70,6 +70,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
+
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
@@ -533,6 +536,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private int executeMethod(HttpMethod httpMethod) throws InterruptedException, IOException {
         int status = client.executeMethod(httpMethod);
         while (status == API_RATE_LIMIT_CODE) {
+            release(httpMethod);
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
@@ -563,7 +567,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                         "HTTP request error. Status: " + httpget.getStatusCode() + ": " + httpget.getStatusText()
                                 + ".\n" + IOUtils.toString(response));
             }
-            return response;
+            return new ClosingConnectionInputStream(response, httpget, client);
         } catch (BitbucketRequestException | FileNotFoundException e) {
             throw e;
         } catch (IOException e) {
@@ -584,7 +588,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         } catch (IOException e) {
             throw new IOException("Communication error for url: " + path, e);
         } finally {
-            httpHead.releaseConnection();
+            release(httpHead);
         }
     }
 
@@ -603,7 +607,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         } catch (IOException e) {
             throw new IOException("Communication error for url: " + path, e);
         } finally {
-            httppost.releaseConnection();
+            release(httppost);
         }
     }
 
@@ -628,9 +632,17 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 throw new IOException("Communication error", e);
             }
         } finally {
-            httppost.releaseConnection();
+            release(httppost);
         }
+    }
 
+    private void release(HttpMethod method) {
+        try {
+            closeQuietly(method.getResponseBodyAsStream());
+        } catch(IOException ioex) {
+        }
+        method.releaseConnection();
+        client.getHttpConnectionManager().closeIdleConnections(0);
     }
 
     private String getResponseContent(HttpMethod httppost, long len) throws IOException {
