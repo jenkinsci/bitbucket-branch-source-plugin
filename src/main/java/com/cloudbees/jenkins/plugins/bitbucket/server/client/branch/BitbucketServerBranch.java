@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.google.common.base.Supplier;
 
 public class BitbucketServerBranch implements BitbucketBranch {
 
@@ -31,7 +32,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
 
     private String latestCommit;
 
-    private long timestamp;
+    private Supplier<Long> timestamp;
 
     public BitbucketServerBranch() {
     }
@@ -52,12 +53,12 @@ public class BitbucketServerBranch implements BitbucketBranch {
     }
 
     public long getTimestamp() {
-        return timestamp;
+        return timestamp.get();
     }
 
     @Override
     public long getDateMillis() {
-        return timestamp;
+        return timestamp.get();
     }
 
     public void setDisplayId(String displayId) {
@@ -76,7 +77,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
         this.latestCommit = latestCommit;
     }
 
-    public void setTimestamp(long timestamp) {
+    public void setTimestamp(Supplier<Long> timestamp) {
         this.timestamp = timestamp;
     }
 

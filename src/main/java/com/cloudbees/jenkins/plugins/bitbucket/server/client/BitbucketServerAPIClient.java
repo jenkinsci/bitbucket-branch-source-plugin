@@ -380,10 +380,18 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 branches.addAll(page.getValues());
             }
             for (BitbucketServerBranch branch: branches) {
-                BitbucketCommit commit = resolveCommit(branch.getRawNode());
-                if (commit != null) {
-                    branch.setTimestamp(commit.getDateMillis());
-                }
+                branch.setTimestamp(() -> {
+                    try {
+                        BitbucketCommit commit = resolveCommit(branch.getRawNode());
+                        if (commit != null) {
+                            return commit.getDateMillis();
+                        }
+                    } catch (IOException e) {
+                        LOGGER.log(Level.FINE, "Error resolving commit: {0}",e);
+                    }
+                    return null;
+                });
+
             }
             return branches;
         } catch (IOException e) {
