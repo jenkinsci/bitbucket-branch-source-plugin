@@ -381,7 +381,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 page = JsonParser.toJava(response, BitbucketServerBranches.class);
                 branches.addAll(page.getValues());
             }
-            for (BitbucketServerBranch branch: branches) {
+            for (final BitbucketServerBranch branch: branches) {
                 branch.setTimestamp(new Supplier<Long>() {
                     @Override
                     public Long get() {
