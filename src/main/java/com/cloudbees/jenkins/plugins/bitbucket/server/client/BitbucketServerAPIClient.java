@@ -46,6 +46,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhooks;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.google.common.base.Supplier;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
@@ -380,16 +382,19 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 branches.addAll(page.getValues());
             }
             for (BitbucketServerBranch branch: branches) {
-                branch.setTimestamp(() -> {
-                    try {
-                        BitbucketCommit commit = resolveCommit(branch.getRawNode());
-                        if (commit != null) {
-                            return commit.getDateMillis();
+                branch.setTimestamp(new Supplier<Long>() {
+                    @Override
+                    public Long get() {
+                        try {
+                            BitbucketCommit commit = BitbucketServerAPIClient.this.resolveCommit(branch.getRawNode());
+                            if (commit != null) {
+                                return commit.getDateMillis();
+                            }
+                        } catch (IOException e) {
+                            LOGGER.log(Level.FINE, "Error resolving commit: {0}", e);
                         }
-                    } catch (IOException e) {
-                        LOGGER.log(Level.FINE, "Error resolving commit: {0}",e);
+                        return null;
                     }
-                    return null;
                 });
 
             }
