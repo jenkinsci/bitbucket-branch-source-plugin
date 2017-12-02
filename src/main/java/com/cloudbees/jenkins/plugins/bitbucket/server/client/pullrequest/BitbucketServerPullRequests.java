@@ -33,6 +33,8 @@ public class BitbucketServerPullRequests {
 
     private Integer size;
 
+    private Integer limit;
+
     @JsonProperty("isLastPage")
     private Boolean lastPage;
 
@@ -52,6 +54,14 @@ public class BitbucketServerPullRequests {
 
     public void setSize(Integer size) {
         this.size = size;
+    }
+
+    public Integer getLimit() {
+        return limit;
+    }
+
+    public void setLimit(Integer limit) {
+        this.limit = limit;
     }
 
     public boolean isLastPage() {
