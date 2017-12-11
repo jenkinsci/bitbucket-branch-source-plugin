@@ -24,6 +24,11 @@
     <!-- TODO switch back to f:select once Jenkins core has JENKINS-42443 -->
     <f2:select/>
   </f:entry>
+  <f:advanced>
+    <f:entry title="${%Client Certificate}" field="certificateCredentialsId">
+      <c:select/>
+    </f:entry>
+  </f:advanced>
   <f:entry title="${%Behaviours}" field="traits">
     <scm:traits field="traits"/>
   </f:entry>

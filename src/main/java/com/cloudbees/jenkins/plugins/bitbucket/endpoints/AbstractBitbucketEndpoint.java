@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -53,6 +54,12 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     private final String credentialsId;
 
     /**
+     * The {@link StandardCertificateCredentials#getId()} of the certificate to use for auto-management of hooks.
+     */
+    @CheckForNull
+    private final String certificateCredentialsId;
+
+    /**
      * Constructor.
      *
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -62,6 +69,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? credentialsId : null;
+        this.certificateCredentialsId = null;
     }
 
     /**
@@ -126,6 +134,23 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
                         URIRequirementBuilder.fromUri(getServerUrl()).build()
                 ),
                 CredentialsMatchers.withId(credentialsId)
+        );
+    }
+
+    /**
+     * Looks up the {@link StandardCertificateCredentials} to use for auto-management of hooks.
+     *
+     * @return the credentials or {@code null}.
+     */
+    public StandardCertificateCredentials certificateCredentials() {
+        return StringUtils.isBlank(certificateCredentialsId) ? null : CredentialsMatchers.firstOrNull(
+                CredentialsProvider.lookupCredentials(
+                        StandardCertificateCredentials.class,
+                        Jenkins.getActiveInstance(),
+                        ACL.SYSTEM,
+                        URIRequirementBuilder.fromUri(getServerUrl()).build()
+                ),
+                CredentialsMatchers.withId(certificateCredentialsId)
         );
     }
 

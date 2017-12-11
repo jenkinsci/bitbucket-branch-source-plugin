@@ -41,10 +41,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.*;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -144,6 +141,11 @@ public class BitbucketSCMSource extends SCMSource {
      */
     @CheckForNull
     private String credentialsId;
+
+    /**
+     * Certificate credentials used to access the Bitbucket REST API.
+     */
+    private String certificateCredentialsId;
 
     /**
      * Repository owner.
@@ -301,9 +303,17 @@ public class BitbucketSCMSource extends SCMSource {
         return credentialsId;
     }
 
+    @CheckForNull
+    public String getCertificateCredentialsId() { return certificateCredentialsId; }
+
     @DataBoundSetter
     public void setCredentialsId(@CheckForNull String credentialsId) {
         this.credentialsId = Util.fixEmpty(credentialsId);
+    }
+
+    @DataBoundSetter
+    public void setCertificateCredentialsId(@CheckForNull String credentialsId) {
+        this.certificateCredentialsId = Util.fixEmpty(credentialsId);
     }
 
     @NonNull
@@ -504,11 +514,11 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     public BitbucketApi buildBitbucketClient() {
-        return BitbucketApiFactory.newInstance(getServerUrl(), credentials(), repoOwner, repository);
+        return BitbucketApiFactory.newInstance(getServerUrl(), credentials(), certificateCredentials(), repoOwner, repository);
     }
 
     public BitbucketApi buildBitbucketClient(PullRequestSCMHead head) {
-        return BitbucketApiFactory.newInstance(getServerUrl(), credentials(), head.getRepoOwner(), head.getRepository());
+        return BitbucketApiFactory.newInstance(getServerUrl(), credentials(), certificateCredentials(), head.getRepoOwner(), head.getRepository());
     }
 
     @Override
@@ -615,6 +625,7 @@ public class BitbucketSCMSource extends SCMSource {
                     ? BitbucketApiFactory.newInstance(
                     getServerUrl(),
                     credentials(),
+                    null,
                     pullRepoOwner,
                     pullRepository
             )
@@ -996,6 +1007,15 @@ public class BitbucketSCMSource extends SCMSource {
         );
     }
 
+    StandardCertificateCredentials certificateCredentials() {
+        return BitbucketCredentials.lookupCredentials(
+                getServerUrl(),
+                getOwner(),
+                getCertificateCredentialsId(),
+                StandardCertificateCredentials.class
+        );
+    }
+
     @NonNull
     @Override
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event,
@@ -1179,9 +1199,25 @@ public class BitbucketSCMSource extends SCMSource {
             return result;
         }
 
+        public ListBoxModel doFillCertificateCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
+            StandardListBoxModel result = new StandardListBoxModel();
+            result.includeEmptyValue();
+            result.includeMatchingAs(
+                    context instanceof Queue.Task
+                            ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                            : ACL.SYSTEM,
+                    context,
+                    StandardCertificateCredentials.class,
+                    URIRequirementBuilder.fromUri(serverUrl).build(),
+                    CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardCertificateCredentials.class))
+            );
+            return result;
+        }
+
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
                                                   @QueryParameter String credentialsId,
+                                                  @QueryParameter String certificateCredentialsId,
                                                   @QueryParameter String repoOwner)
                 throws IOException, InterruptedException {
             if (StringUtils.isBlank(repoOwner)) {
@@ -1196,8 +1232,14 @@ public class BitbucketSCMSource extends SCMSource {
                     credentialsId,
                     StandardUsernamePasswordCredentials.class
             );
+            StandardCertificateCredentials certificateCredentials = BitbucketCredentials.lookupCredentials(
+                    serverUrl,
+                    context,
+                    certificateCredentialsId,
+                    StandardCertificateCredentials.class
+            );
             try {
-                BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, credentials, repoOwner, null);
+                BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, credentials, certificateCredentials, repoOwner, null);
                 BitbucketTeam team = bitbucket.getTeam();
                 List<? extends BitbucketRepository> repositories =
                         bitbucket.getRepositories(team != null ? null : UserRoleInRepository.OWNER);

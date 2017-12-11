@@ -110,6 +110,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
             final BitbucketApi bitbucket = BitbucketApiFactory.newInstance(
                     source.getServerUrl(),
                     source.credentials(),
+                    source.certificateCredentials(),
                     source.getRepoOwner(),
                     source.getRepository()
             );

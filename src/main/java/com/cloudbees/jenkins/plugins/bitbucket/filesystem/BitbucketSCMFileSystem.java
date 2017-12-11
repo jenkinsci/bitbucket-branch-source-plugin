@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -115,19 +116,40 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             }
         }
 
+        private static StandardCertificateCredentials lookupScanCertificateCredentials(@CheckForNull Item context,
+                @CheckForNull String scanCertificateCredentialsId) {
+            if (Util.fixEmpty(scanCertificateCredentialsId) == null) {
+                return null;
+            } else {
+                return CredentialsMatchers.firstOrNull(
+                        CredentialsProvider.lookupCredentials(
+                                StandardCertificateCredentials.class,
+                                context,
+                                context instanceof Queue.Task
+                                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                                        : ACL.SYSTEM
+                        ),
+                        CredentialsMatchers.withId(scanCertificateCredentialsId)
+                );
+            }
+        }
+
         @Override
         public SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
             BitbucketSCMSource src = (BitbucketSCMSource) source;
             
             String credentialsId = src.getCredentialsId();
+            String certCredentialsId = src.getCertificateCredentialsId();
             String owner = src.getRepoOwner();
             String repository = src.getRepository();
             String serverUrl = src.getServerUrl();
             StandardUsernamePasswordCredentials credentials;
             credentials = lookupScanCredentials(src.getOwner(), credentialsId);
+            StandardCertificateCredentials certCredentials;
+            certCredentials = lookupScanCertificateCredentials(src.getOwner(), certCredentialsId);
             
-            BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, credentials, owner, repository);
+            BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, credentials, certCredentials, owner, repository);
             String ref;
             if (head instanceof BranchSCMHead) {
                 ref = head.getName();

@@ -45,6 +45,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepositories;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhooks;
+import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -69,22 +70,18 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.type.TypeReference;
+
 import static com.cloudbees.jenkins.plugins.bitbucket.Utils.encodePath;
 
 /**
@@ -132,13 +129,16 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * Almost @NonNull (but null is accepted for anonymous access).
      */
     private final UsernamePasswordCredentials credentials;
+    private final StandardCertificateCredentials certificateCredentials;
 
     private final String baseURL;
 
     public BitbucketServerAPIClient(@NonNull String baseURL, @NonNull String owner, @CheckForNull String repositoryName,
-                                    @CheckForNull StandardUsernamePasswordCredentials creds, boolean userCentric) {
+                                    @CheckForNull StandardUsernamePasswordCredentials creds,
+                                    @CheckForNull StandardCertificateCredentials certCreds, boolean userCentric) {
         this.credentials = (creds != null) ? new UsernamePasswordCredentials(creds.getUsername(),
                 Secret.toString(creds.getPassword())) : null;
+        this.certificateCredentials = certCreds;
         this.userCentric = userCentric;
         this.owner = owner;
         this.repositoryName = repositoryName;
@@ -524,7 +524,44 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private HttpClient getHttpClient(String host) {
-        HttpClient client = new HttpClient();
+        HttpClient client;
+
+        if (certificateCredentials == null) {
+            client = new HttpClient();
+        } else {
+            client = new HttpClient(new SimpleHttpConnectionManager() {
+                // This is the only way I could figure out to use the custom ProtocolFactory without installing it as
+                // a global URL Scheme handler for https.
+                @Override
+                public HttpConnection getConnectionWithTimeout(HostConfiguration hostConfig, long timeout) {
+                    Protocol protocol = new Protocol("https",
+                            new ClientCertSSLProtocolSocketFactory(
+                                    certificateCredentials.getKeyStore(),
+                                    certificateCredentials.getPassword().getPlainText()),
+                            443);
+
+                    boolean wasNull = httpConnection == null;
+
+                    HttpConnection superResult = super.getConnectionWithTimeout(hostConfig, timeout);
+
+                    if (wasNull) {
+                        httpConnection = new HttpConnection(
+                                hostConfig.getProxyHost(),
+                                hostConfig.getProxyPort(),
+                                hostConfig.getHost(),
+                                hostConfig.getPort(),
+                                protocol
+                        );
+                        httpConnection.setLocalAddress(hostConfig.getLocalAddress());
+                        httpConnection.setHttpConnectionManager(this);
+                        httpConnection.getParams().setDefaults(this.getParams());
+                        return httpConnection;
+                    } else {
+                        return superResult;
+                    }
+                }
+            });
+        }
 
         client.getParams().setConnectionManagerTimeout(10 * 1000);
         client.getParams().setSoTimeout(60 * 1000);
