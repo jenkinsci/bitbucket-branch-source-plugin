@@ -54,7 +54,12 @@ public enum HookEventType {
     /**
      * See <a href="https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Declined">EventPayloads-Declined</a>
      */
-    PULL_REQUEST_DECLINED("pullrequest:rejected", PullRequestHookProcessor.class);
+    PULL_REQUEST_DECLINED("pullrequest:rejected", PullRequestHookProcessor.class),
+
+    /**
+     * See <a href="https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Approved">EventPayloads-Approved</a>
+     */
+    PULL_REQUEST_APPROVED("pullrequest:approved", PullRequestHookProcessor.class);
 
     private String key;
     private Class<?> clazz;

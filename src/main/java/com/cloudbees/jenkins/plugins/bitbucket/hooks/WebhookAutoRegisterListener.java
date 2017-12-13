@@ -69,7 +69,8 @@ public class WebhookAutoRegisterListener extends ItemListener {
             HookEventType.PULL_REQUEST_CREATED.getKey(),
             HookEventType.PULL_REQUEST_UPDATED.getKey(),
             HookEventType.PULL_REQUEST_MERGED.getKey(),
-            HookEventType.PULL_REQUEST_DECLINED.getKey()
+            HookEventType.PULL_REQUEST_DECLINED.getKey(),
+            HookEventType.PULL_REQUEST_APPROVED.getKey()
     ));
 
     private static ExecutorService executorService;

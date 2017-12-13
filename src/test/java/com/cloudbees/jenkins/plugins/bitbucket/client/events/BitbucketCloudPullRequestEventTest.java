@@ -502,4 +502,68 @@ public class BitbucketCloudPullRequestEventTest {
                 anyOf(is("a72355f35fde"), is("a72355f35fde2ad4f5724a279b970ef7b6729131")));
     }
 
+    @Test
+    public void approvedPayload() throws Exception {
+        BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
+        assertThat(event.getRepository(), notNullValue());
+        assertThat(event.getRepository().getScm(), is("git"));
+        assertThat(event.getRepository().getFullName(), is("cloudbeers/temp"));
+        assertThat(event.getRepository().getOwner().getDisplayName(), is("cloudbeers"));
+        assertThat(event.getRepository().getOwner().getUsername(), is("cloudbeers"));
+        assertThat(event.getRepository().getRepositoryName(), is("temp"));
+        assertThat(event.getRepository().isPrivate(), is(true));
+        assertThat(event.getRepository().getLinks(), notNullValue());
+        assertThat(event.getRepository().getLinks().get("self"), notNullValue());
+        assertThat(event.getRepository().getLinks().get("self").getHref(),
+                is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
+
+        assertThat(event.getPullRequest(), notNullValue());
+        assertThat(event.getPullRequest().getTitle(), is("README.md edited online with Bitbucket"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getLink(),
+                is("https://bitbucket.org/cloudbeers/temp/pull-requests/2"));
+
+        assertThat(event.getPullRequest().getDestination(), notNullValue());
+        assertThat(event.getPullRequest().getDestination().getRepository(), notNullValue());
+        assertThat(event.getPullRequest().getDestination().getRepository().getScm(), is("git"));
+        assertThat(event.getPullRequest().getDestination().getRepository().getFullName(), is("cloudbeers/temp"));
+        assertThat(event.getPullRequest().getDestination().getRepository().getOwner().getDisplayName(),
+                is("cloudbeers"));
+        assertThat(event.getPullRequest().getDestination().getRepository().getOwner().getUsername(), is("cloudbeers"));
+        assertThat(event.getPullRequest().getDestination().getRepository().getRepositoryName(), is("temp"));
+        assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").getHref(),
+                is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
+        assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
+                anyOf(is("f612156eff2c"), is("f612156eff2c958f52f8e6e20c71f396aeaeaff4")));
+        assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
+        assertThat(event.getPullRequest().getDestination().getCommit().getHash(),
+                anyOf(is("f612156eff2c"), is("f612156eff2c958f52f8e6e20c71f396aeaeaff4")));
+
+        assertThat(event.getPullRequest().getSource(), notNullValue());
+        assertThat(event.getPullRequest().getSource().getRepository(), notNullValue());
+        assertThat(event.getPullRequest().getSource().getRepository().getScm(), is("git"));
+        assertThat(event.getPullRequest().getSource().getRepository().getFullName(), is("cloudbeers/temp"));
+        assertThat(event.getPullRequest().getSource().getRepository().getOwner().getDisplayName(), is("cloudbeers"));
+        assertThat(event.getPullRequest().getSource().getRepository().getOwner().getUsername(), is("cloudbeers"));
+        assertThat(event.getPullRequest().getSource().getRepository().getRepositoryName(), is("temp"));
+        assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").getHref(),
+                is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
+
+        assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
+        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("foo"));
+        assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
+                anyOf(is("a72355f35fde"), is("a72355f35fde2ad4f5724a279b970ef7b6729131")));
+        assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
+        assertThat(event.getPullRequest().getSource().getCommit().getHash(),
+                anyOf(is("a72355f35fde"), is("a72355f35fde2ad4f5724a279b970ef7b6729131")));
+    }
+
 }
