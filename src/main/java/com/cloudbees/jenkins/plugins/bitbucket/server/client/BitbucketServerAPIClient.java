@@ -46,7 +46,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhooks;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.google.common.base.Supplier;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -66,6 +65,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -384,19 +384,16 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 branches.addAll(page.getValues());
             }
             for (final BitbucketServerBranch branch: branches) {
-                branch.setTimestamp(new Supplier<Long>() {
-                    @Override
-                    public Long get() {
-                        try {
-                            BitbucketCommit commit = BitbucketServerAPIClient.this.resolveCommit(branch.getRawNode());
-                            if (commit != null) {
-                                return commit.getDateMillis();
-                            }
-                        } catch (IOException e) {
-                            LOGGER.log(Level.FINE, "Error resolving commit: {0}", e);
+                branch.setTimestamp(() -> {
+                    try {
+                        BitbucketCommit commit = BitbucketServerAPIClient.this.resolveCommit(branch.getRawNode());
+                        if (commit != null) {
+                            return commit.getDateMillis();
                         }
-                        return null;
+                    } catch (IOException e) {
+                        LOGGER.log(Level.FINE, "Error resolving commit: {0}", e);
                     }
+                    return null;
                 });
 
             }

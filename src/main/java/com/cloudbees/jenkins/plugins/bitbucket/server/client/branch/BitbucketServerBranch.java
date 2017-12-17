@@ -23,8 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
+import java.util.function.Supplier;
+
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
-import com.google.common.base.Supplier;
+
 
 public class BitbucketServerBranch implements BitbucketBranch {
 
