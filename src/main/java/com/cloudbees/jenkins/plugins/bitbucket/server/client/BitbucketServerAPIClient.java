@@ -46,7 +46,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhooks;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
@@ -113,8 +112,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String WEBHOOK_REPOSITORY_CONFIG_PATH = WEBHOOK_REPOSITORY_PATH + "/%s";
 
     private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits/%s";
-
-    private static final int MAX_PAGES = 100;
 
     /**
      * Repository owner.
@@ -250,15 +247,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         try {
             List<BitbucketServerPullRequest> pullRequests = new ArrayList<>();
-            Integer pageNumber = 1;
             String response = getRequest(url);
             BitbucketServerPullRequests page = JsonParser.toJava(response, BitbucketServerPullRequests.class);
             pullRequests.addAll(page.getValues());
-            while (!page.isLastPage() && pageNumber < MAX_PAGES) {
+            while (!page.isLastPage()) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                pageNumber++;
                 // Limit can be set by admin to lower value, so use limit provided by page
                 url = String.format(API_PULL_REQUESTS_PATH, getUserCentricOwner(), repositoryName,
                         page.getNextPageStart(), page.getLimit());
@@ -368,15 +363,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         try {
             List<BitbucketServerBranch> branches = new ArrayList<>();
-            Integer pageNumber = 1;
             String response = getRequest(url);
             BitbucketServerBranches page = JsonParser.toJava(response, BitbucketServerBranches.class);
             branches.addAll(page.getValues());
-            while (!page.isLastPage() && pageNumber < MAX_PAGES) {
+            while (!page.isLastPage()) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                pageNumber++;
                 // Limit can be set by admin to lower value, so use limit provided by page
                 url = String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, page.getNextPageStart(), page.getLimit());
                 response = getRequest(url);
@@ -387,9 +380,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 branch.setTimestamp(() -> {
                     try {
                         BitbucketCommit commit = BitbucketServerAPIClient.this.resolveCommit(branch.getRawNode());
-                        if (commit != null) {
+                if (commit != null) {
                             return commit.getDateMillis();
-                        }
+                }
                     } catch (IOException e) {
                         LOGGER.log(Level.FINE, "Error resolving commit: {0}", e);
                     }
@@ -470,15 +463,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         try {
             List<BitbucketServerRepository> repositories = new ArrayList<>();
-            Integer pageNumber = 1;
             String response = getRequest(url);
             BitbucketServerRepositories page = JsonParser.toJava(response, BitbucketServerRepositories.class);
             repositories.addAll(page.getValues());
-            while (!page.isLastPage() && pageNumber < MAX_PAGES) {
+            while (!page.isLastPage()) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                pageNumber++;
                 url = String.format(API_REPOSITORIES_PATH, getUserCentricOwner(), page.getNextPageStart());
                 response = getRequest(url);
                 page = JsonParser.toJava(response, BitbucketServerRepositories.class);
@@ -702,6 +693,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         List<Map> values = (List<Map>) page.get("values");
         collectFileAndDirectories(parent, path, values, files);
         while (!(boolean)page.get("isLastPage")){
+            start += (int) content.get("size");
             response = getRequest(url + String.format("&start=%s&limit=%s", start, 500));
             content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
             page = (Map) content.get("children");
