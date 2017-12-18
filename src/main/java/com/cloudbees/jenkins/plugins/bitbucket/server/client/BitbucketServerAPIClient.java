@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -100,8 +101,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_REPOSITORIES_PATH = API_BASE_PATH + "/projects/%s/repos?start=%s";
     private static final String API_REPOSITORY_PATH = API_BASE_PATH + "/projects/%s/repos/%s";
     private static final String API_DEFAULT_BRANCH_PATH = API_BASE_PATH + "/projects/%s/repos/%s/branches/default";
-    private static final String API_BRANCHES_PATH = API_BASE_PATH + "/projects/%s/repos/%s/branches?start=%s";
-    private static final String API_PULL_REQUESTS_PATH = API_BASE_PATH + "/projects/%s/repos/%s/pull-requests?start=%s";
+    private static final String API_BRANCHES_PATH = API_BASE_PATH + "/projects/%s/repos/%s/branches?start=%s&limit=%s";
+    private static final String API_PULL_REQUESTS_PATH = API_BASE_PATH + "/projects/%s/repos/%s/pull-requests?start=%s&limit=%s";
     private static final String API_PULL_REQUEST_PATH = API_BASE_PATH + "/projects/%s/repos/%s/pull-requests/%s";
     private static final String API_BROWSE_PATH = API_REPOSITORY_PATH + "/browse/%s?at=%s";
     private static final String API_COMMITS_PATH = API_REPOSITORY_PATH + "/commits/%s";
@@ -244,7 +245,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @NonNull
     @Override
     public List<BitbucketServerPullRequest> getPullRequests() throws IOException, InterruptedException {
-        String url = String.format(API_PULL_REQUESTS_PATH, getUserCentricOwner(), repositoryName, 0);
+        String url = String.format(API_PULL_REQUESTS_PATH, getUserCentricOwner(), repositoryName, 0, 200);
 
         try {
             List<BitbucketServerPullRequest> pullRequests = new ArrayList<>();
@@ -255,8 +256,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
+                // Limit can be set by admin to lower value, so use limit provided by page
                 url = String.format(API_PULL_REQUESTS_PATH, getUserCentricOwner(), repositoryName,
-                        page.getNextPageStart());
+                        page.getNextPageStart(), page.getLimit());
                 response = getRequest(url);
                 page = JsonParser.toJava(response, BitbucketServerPullRequests.class);
                 pullRequests.addAll(page.getValues());
@@ -359,7 +361,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @Override
     @NonNull
     public List<BitbucketServerBranch> getBranches() throws IOException, InterruptedException {
-        String url = String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, 0);
+        String url = String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, 0, 200);
 
         try {
             List<BitbucketServerBranch> branches = new ArrayList<>();
@@ -370,16 +372,25 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                url = String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, page.getNextPageStart());
+                // Limit can be set by admin to lower value, so use limit provided by page
+                url = String.format(API_BRANCHES_PATH, getUserCentricOwner(), repositoryName, page.getNextPageStart(), page.getLimit());
                 response = getRequest(url);
                 page = JsonParser.toJava(response, BitbucketServerBranches.class);
                 branches.addAll(page.getValues());
             }
-            for (BitbucketServerBranch branch: branches) {
-                BitbucketCommit commit = resolveCommit(branch.getRawNode());
+            for (final BitbucketServerBranch branch: branches) {
+                branch.setTimestamp(() -> {
+                    try {
+                        BitbucketCommit commit = BitbucketServerAPIClient.this.resolveCommit(branch.getRawNode());
                 if (commit != null) {
-                    branch.setTimestamp(commit.getDateMillis());
+                            return commit.getDateMillis();
                 }
+                    } catch (IOException e) {
+                        LOGGER.log(Level.FINE, "Error resolving commit: {0}", e);
+                    }
+                    return null;
+                });
+
             }
             return branches;
         } catch (IOException e) {
