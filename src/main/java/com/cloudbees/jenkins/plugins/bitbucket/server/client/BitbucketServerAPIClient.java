@@ -717,7 +717,11 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @Override
     public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
         List<String> lines = new ArrayList<>();
-        String path = encodePath(file.getPath());
+        StringBuilder path = new StringBuilder();
+        for (String segment : StringUtils.split(file.getPath(), "/")) {
+            path.append(encodePath(segment));
+            path.append('/');
+        }
         String ref = Util.rawEncode(file.getRef());
         int start=0;
         String url = String.format(API_REPOSITORY_PATH+"/browse/%s?at=%s", owner, repositoryName, path, ref);
