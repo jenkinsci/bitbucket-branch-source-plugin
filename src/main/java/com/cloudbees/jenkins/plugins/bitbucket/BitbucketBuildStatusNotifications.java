@@ -90,8 +90,8 @@ public class BitbucketBuildStatusNotifications {
         } else {
             status = new BitbucketBuildStatus(hash, "The tests have started...", "INPROGRESS", url, key, name);
         }
-        new BitbucketChangesetCommentNotifier(bitbucket).buildStatus(status);
-        if (result != null) {
+        if (result != null && !Result.NOT_BUILT.equals(result)) {
+            new BitbucketChangesetCommentNotifier(bitbucket).buildStatus(status);
             listener.getLogger().println("[Bitbucket] Build result notified");
         }
     }
