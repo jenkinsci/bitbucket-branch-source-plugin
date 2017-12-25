@@ -45,13 +45,13 @@ public class Utils {
     public static @NonNull String encodePath(@NonNull String path){
         StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (String segment : StringUtils.split(path, "/")) {
-            sb.append(Util.rawEncode(segment));
+        for (String segment : path.split("/")) {
             if (first) {
                 first = false;
             } else {
                 sb.append('/');
             }
+            sb.append(Util.rawEncode(segment));
         }
         return sb.toString();
     }

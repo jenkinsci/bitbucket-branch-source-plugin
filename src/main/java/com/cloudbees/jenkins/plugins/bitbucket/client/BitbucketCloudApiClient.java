@@ -66,6 +66,8 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -74,6 +76,7 @@ import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.NameValuePair;
@@ -83,6 +86,7 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -396,6 +400,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      * {@inheritDoc}
      */
     @Override
+    public void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException {
+        putRequest(V2_API_BASE_URL + owner + "/" + repositoryName + "/hooks/" + Util.rawEncode(hook.getUuid()), JsonParser.toJson(hook));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void removeCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException {
         if (StringUtils.isBlank(hook.getUuid())) {
             throw new BitbucketException("Hook UUID required");
@@ -508,6 +520,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 throw new IOException("I/O error when parsing response from URL: " + url, e);
             }
         }
+        Collections.sort(repositories, new Comparator<BitbucketCloudRepository>() {
+            @Override
+            public int compare(BitbucketCloudRepository o1, BitbucketCloudRepository o2) {
+                return o1.getRepositoryName().compareTo(o2.getRepositoryName());
+            }
+        });
         return repositories;
     }
 
@@ -654,7 +672,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
     }
 
-    private String postRequest(PostMethod httppost) throws IOException, InterruptedException {
+    private String doRequest(HttpMethodBase httppost) throws IOException, InterruptedException {
         HttpClient client = getHttpClient();
         signRequest(httppost);
         try {
@@ -701,16 +719,22 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         return response;
     }
 
+    private String putRequest(String path, String content) throws IOException, InterruptedException  {
+        PutMethod request = new PutMethod(path);
+        request.setRequestEntity(new StringRequestEntity(content, "application/json", "UTF-8"));
+        return doRequest(request);
+    }
+
     private String postRequest(String path, String content) throws IOException, InterruptedException {
         PostMethod httppost = new PostMethod(path);
         httppost.setRequestEntity(new StringRequestEntity(content, "application/json", "UTF-8"));
-        return postRequest(httppost);
+        return doRequest(httppost);
     }
 
     private String postRequest(String path, NameValuePair[] params) throws IOException, InterruptedException {
         PostMethod httppost = new PostMethod(path);
         httppost.setRequestBody(params);
-        return postRequest(httppost);
+        return doRequest(httppost);
     }
 
     private List<BitbucketCloudBranch> getAllBranches(String response) throws IOException, InterruptedException {

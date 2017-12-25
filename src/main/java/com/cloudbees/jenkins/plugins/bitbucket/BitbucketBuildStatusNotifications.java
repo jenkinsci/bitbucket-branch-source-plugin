@@ -39,6 +39,7 @@ import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import javax.annotation.CheckForNull;
+import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
@@ -56,6 +57,13 @@ public class BitbucketBuildStatusNotifications {
     private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,
                                      @NonNull BitbucketApi bitbucket, @NonNull String hash)
             throws IOException, InterruptedException {
+        JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
+        if (cfg == null || cfg.getUrl() == null) {
+            listener.getLogger().println(
+                    "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
+                            + " configured in Jenkins global configuration.");
+            return;
+        }
         String url;
         try {
             url = DisplayURLProvider.get().getRunURL(build);

@@ -175,6 +175,15 @@ public interface BitbucketApi {
     void registerCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException;
 
     /**
+     * Update a webhook on the repository.
+     *
+     * @param hook the webhook object
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException;
+
+    /**
      * Remove the webhook (ID field required) from the repository.
      *
      * @param hook the webhook object
