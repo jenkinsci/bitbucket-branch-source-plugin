@@ -43,7 +43,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 /**
  * {@link SCMHead} for a BitBucket Pull request
  *
- * @since FIXME
+ * @since 2.0.0
  */
 public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2 {
 

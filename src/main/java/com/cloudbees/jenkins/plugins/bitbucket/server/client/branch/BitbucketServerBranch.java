@@ -24,14 +24,21 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 public class BitbucketServerBranch implements BitbucketBranch {
+    private static Logger LOGGER = Logger.getLogger(BitbucketServerBranch.class.getName());
 
     private String displayId;
 
     private String latestCommit;
 
-    private long timestamp;
+    private Long timestamp;
+    private Callable<Long> timestampClosure;
 
     public BitbucketServerBranch() {
     }
@@ -52,12 +59,12 @@ public class BitbucketServerBranch implements BitbucketBranch {
     }
 
     public long getTimestamp() {
-        return timestamp;
+        return timestamp();
     }
 
     @Override
     public long getDateMillis() {
-        return timestamp;
+        return timestamp();
     }
 
     public void setDisplayId(String displayId) {
@@ -78,6 +85,27 @@ public class BitbucketServerBranch implements BitbucketBranch {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    @Restricted(NoExternalUse.class)
+    public void setTimestampClosure(Callable<Long> timestampClosure) {
+        this.timestampClosure = timestampClosure;
+    }
+
+    private long timestamp() {
+        if (timestamp == null) {
+            if (timestampClosure == null) {
+                timestamp = 0L;
+            } else {
+                try {
+                    timestamp = timestampClosure.call();
+                } catch (Exception e) {
+                    LOGGER.log(Level.FINER, "Could not determine timestamp", e);
+                    timestamp = 0L;
+                }
+            }
+        }
+        return timestamp;
     }
 
 }

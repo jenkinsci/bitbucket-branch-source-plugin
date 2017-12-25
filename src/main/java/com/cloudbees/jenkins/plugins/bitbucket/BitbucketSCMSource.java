@@ -1200,7 +1200,7 @@ public class BitbucketSCMSource extends SCMSource {
                 BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, credentials, repoOwner, null);
                 BitbucketTeam team = bitbucket.getTeam();
                 List<? extends BitbucketRepository> repositories =
-                        bitbucket.getRepositories(team != null ? null : UserRoleInRepository.OWNER);
+                        bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
                 if (repositories.isEmpty()) {
                     throw new FillErrorResponse(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner), true);
                 }
