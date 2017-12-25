@@ -673,7 +673,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     private String doRequest(HttpMethodBase httppost) throws IOException, InterruptedException {
-        HttpClient client = getHttpClient();
         signRequest(httppost);
         try {
             executeMethod(httppost);
