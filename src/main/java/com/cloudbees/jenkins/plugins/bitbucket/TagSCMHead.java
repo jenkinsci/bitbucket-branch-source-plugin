@@ -34,7 +34,7 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
  *
  * @since 2.0.0
  */
-public class TagSCMHead extends SCMHead implements jenkins.scm.api.mixin.TagSCMHead {
+public class TagSCMHead extends SCMHead {
 
     private static final long serialVersionUID = 1L;
 
@@ -78,10 +78,4 @@ public class TagSCMHead extends SCMHead implements jenkins.scm.api.mixin.TagSCMH
     public BitbucketRepositoryType getRepositoryType() {
         return repositoryType;
     }
-
-	@Override
-	public long getTimestamp() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 }

@@ -875,7 +875,7 @@ public class BitbucketSCMSource extends SCMSource {
             if (getRepositoryType() == BitbucketRepositoryType.MERCURIAL) {
                 return new MercurialRevision(head, revision);
             } else {
-                GitTagSCMHead gitHead = new GitTagSCMHead(head.getName(), ((TagSCMHead) head).getTimestamp());
+                GitTagSCMHead gitHead = new GitTagSCMHead(head.getName(), 0L);
                 return new GitTagSCMRevision(gitHead, revision);
             }
         } else {
