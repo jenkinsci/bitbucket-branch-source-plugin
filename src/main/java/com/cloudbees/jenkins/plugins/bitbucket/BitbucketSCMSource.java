@@ -33,6 +33,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTag;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
@@ -86,6 +87,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
+import jenkins.plugins.git.GitTagSCMHead;
+import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
@@ -564,7 +567,16 @@ public class BitbucketSCMSource extends SCMSource {
                 });
             }
             if (request.isFetchTags()) {
-                // TODO request.setTags(...);
+                request.setTags(new LazyIterable<BitbucketTag>() {
+                    @Override
+                    protected Iterable<BitbucketTag> create() {
+                        try {
+                            return (Iterable<BitbucketTag>) buildBitbucketClient().getTags();
+                        } catch (IOException | InterruptedException e) {
+                            throw new BitbucketSCMSource.WrappedException(e);
+                        }
+                    }
+                });
             }
 
             // now server the request
@@ -577,7 +589,7 @@ public class BitbucketSCMSource extends SCMSource {
                 retrievePullRequests(request);
             }
             if (request.isFetchTags() && !request.isComplete()) {
-                // TODO
+                retrieveTags(request);
             }
         } catch (WrappedException e) {
             e.unwrap();
@@ -776,6 +788,37 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().format("%n  %d branches were processed%n", count);
     }
 
+    private void retrieveTags(final BitbucketSCMSourceRequest request)
+            throws IOException, InterruptedException {
+        String fullName = repoOwner + "/" + repository;
+        request.listener().getLogger().println("Looking up " + fullName + " for tags");
+
+        final BitbucketApi bitbucket = buildBitbucketClient();
+        Map<String, List<BitbucketHref>> links = bitbucket.getRepository().getLinks();
+        if (links != null && links.containsKey("clone")) {
+            cloneLinks = links.get("clone");
+        }
+        int count = 0;
+        for (final BitbucketTag tag : request.getTags()) {
+            request.listener().getLogger().println("Checking tag " + tag.getName() + " from " + fullName);
+            count++;
+            if (request.process(new TagSCMHead(tag.getName(), repositoryType),
+                    new SCMSourceRequest.IntermediateLambda<String>() {
+                        @Nullable
+                        @Override
+                        public String create() {
+                            return tag.getRawNode();
+                        }
+                    }, new BitbucketProbeFactory(bitbucket, request), new BitbucketRevisionFactory(),
+                    new CriteriaWitness(request)
+            )) {
+                request.listener().getLogger().format("%n  %d tags were processed (query completed)%n", count);
+                return;
+            }
+        }
+        request.listener().getLogger().format("%n  %d tags were processed%n", count);
+    }
+
     @Override
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
         final BitbucketApi bitbucket = buildBitbucketClient();
@@ -821,6 +864,20 @@ public class BitbucketSCMSource extends SCMSource {
                         new SCMRevisionImpl(h, sourceRevision)
                 );
             }
+        } else if (head instanceof TagSCMHead) {
+            List<? extends BitbucketTag> tags = bitbucket.getTags();
+            String revision = findTagRawNode(head.getName(), tags, listener);
+            if (revision == null) {
+                LOGGER.log(Level.WARNING, "No tag found in {0}/{1} with name [{2}]",
+                        new Object[]{repoOwner, repository, head.getName()});
+                return null;
+            }
+            if (getRepositoryType() == BitbucketRepositoryType.MERCURIAL) {
+                return new MercurialRevision(head, revision);
+            } else {
+                GitTagSCMHead gitHead = new GitTagSCMHead(head.getName(), ((TagSCMHead) head).getTimestamp());
+                return new GitTagSCMRevision(gitHead, revision);
+            }
         } else {
             String revision = findRawNode(head.getName(), branches, listener);
             if (revision == null) {
@@ -858,6 +915,28 @@ public class BitbucketSCMSource extends SCMSource {
         return null;
     }
 
+    private String findTagRawNode(String tagName, List<? extends BitbucketTag> tags, TaskListener listener) {
+        for (BitbucketTag t : tags) {
+            if (tagName.equals(t.getName())) {
+                String revision = t.getRawNode();
+                if (revision == null) {
+                    if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
+                        listener.getLogger().format("Cannot resolve the hash of the revision in tag %s%n",
+                                tagName);
+                    } else {
+                        listener.getLogger().format("Cannot resolve the hash of the revision in tag %s. "
+                                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
+                                tagName);
+                    }
+                    return null;
+                }
+                return revision;
+            }
+        }
+        listener.getLogger().format("Cannot find the tag %s%n", tagName);
+        return null;
+    }
+
     private String findPRRawNode(String prId, List<? extends BitbucketPullRequest> pullRequests, TaskListener listener) {
         for (BitbucketPullRequest pr : pullRequests) {
             if (prId.equals(pr.getId())) {
@@ -887,8 +966,10 @@ public class BitbucketSCMSource extends SCMSource {
             type = ((PullRequestSCMHead) head).getRepositoryType();
         } else if (head instanceof BranchSCMHead) {
             type = ((BranchSCMHead) head).getRepositoryType();
+        } else if (head instanceof TagSCMHead) {
+            type = ((TagSCMHead) head).getRepositoryType();
         } else {
-            throw new IllegalArgumentException("Either PullRequestSCMHead or BranchSCMHead required as parameter");
+            throw new IllegalArgumentException("Either PullRequestSCMHead, TagSCMHead or BranchSCMHead required as parameter");
         }
         if (type == null) {
             if (revision instanceof MercurialRevision) {
@@ -1047,6 +1128,9 @@ public class BitbucketSCMSource extends SCMSource {
                 if (contributor != null) {
                     result.add(contributor);
                 }
+            } else if (head instanceof TagSCMHead) {
+                branchUrl = repoOwner + "/" + repository + "/commits/tag/" + Util.rawEncode(head.getName());
+                title = null;
             } else {
                 branchUrl = repoOwner + "/" + repository + "/branch/" + Util.rawEncode(head.getName());
                 title = null;
@@ -1069,6 +1153,7 @@ public class BitbucketSCMSource extends SCMSource {
                         + "?sourceBranch=" + URLEncoder.encode(Constants.R_HEADS + head.getName(), "UTF-8");
                 title = null;
             }
+            //TODO Link for tag in bitbucket server
             result.add(new BitbucketLink("icon-bitbucket-branch", getServerUrl() + "/" + branchUrl));
             result.add(new ObjectMetadataAction(title, null, getServerUrl()+"/"+branchUrl));
         }

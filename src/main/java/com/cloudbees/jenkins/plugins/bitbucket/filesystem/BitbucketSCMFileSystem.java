@@ -28,6 +28,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.filesystem;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.TagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -130,6 +131,8 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, credentials, owner, repository);
             String ref;
             if (head instanceof BranchSCMHead) {
+                ref = head.getName();
+            } else if (head instanceof TagSCMHead) {
                 ref = head.getName();
             } else if (head instanceof PullRequestSCMHead) {
                 PullRequestSCMHead pr = (PullRequestSCMHead) head;

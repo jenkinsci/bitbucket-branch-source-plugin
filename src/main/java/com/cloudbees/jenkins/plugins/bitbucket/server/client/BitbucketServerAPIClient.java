@@ -45,6 +45,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepositories;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhooks;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.tag.BitbucketServerTag;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.tag.BitbucketServerTags;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -108,6 +110,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_COMMITS_PATH = API_REPOSITORY_PATH + "/commits/%s";
     private static final String API_PROJECT_PATH = API_BASE_PATH + "/projects/%s";
     private static final String API_COMMIT_COMMENT_PATH = API_REPOSITORY_PATH + "/commits/%s/comments";
+    private static final String API_TAGS_PATH = API_BASE_PATH + "/projects/%s/repos/%s/tags?start=%s&limit=%d";
 
     private static final String WEBHOOK_BASE_PATH = "/rest/webhook/1.0";
     private static final String WEBHOOK_REPOSITORY_PATH = WEBHOOK_BASE_PATH + "/projects/%s/repos/%s/configurations";
@@ -383,6 +386,48 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 });
             }
             return branches;
+        } catch (IOException e) {
+            throw new IOException("I/O error when accessing URL: " + url, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @NonNull
+    public List<BitbucketServerTag> getTags() throws IOException, InterruptedException {
+        String url = String.format(API_TAGS_PATH, getUserCentricOwner(), repositoryName, 0, DEFAULT_PAGE_LIMIT);
+
+        try {
+            List<BitbucketServerTag> tags = new ArrayList<>();
+            String response = getRequest(url);
+            BitbucketServerTags page = JsonParser.toJava(response, BitbucketServerTags.class);
+            tags.addAll(page.getValues());
+            while (!page.isLastPage()) {
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+                Integer limit = page.getLimit();
+                url = String.format(API_TAGS_PATH, getUserCentricOwner(), repositoryName, page.getNextPageStart(),
+                        limit == null ? DEFAULT_PAGE_LIMIT : limit);
+                response = getRequest(url);
+                page = JsonParser.toJava(response, BitbucketServerTags.class);
+                tags.addAll(page.getValues());
+            }
+            for (final BitbucketServerTag tag: tags) {
+                tag.setTimestampClosure(new Callable<Long>() {
+                    @Override
+                    public Long call() throws Exception {
+                        BitbucketCommit commit = resolveCommit(tag.getRawNode());
+                        if (commit != null) {
+                            return commit.getDateMillis();
+                        }
+                        return 0L;
+                    }
+                });
+            }
+            return tags;
         } catch (IOException e) {
             throw new IOException("I/O error when accessing URL: " + url, e);
         }

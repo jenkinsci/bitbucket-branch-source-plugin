@@ -25,6 +25,8 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTag;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
@@ -114,7 +116,9 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     @CheckForNull
     private Iterable<BitbucketBranch> branches;
-    // TODO private Iterable<BitbucketTag> tags;
+
+    @CheckForNull
+    private Iterable<BitbucketTag> tags;
 
     /**
      * Constructor.
@@ -363,7 +367,13 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         return Util.fixNull(branches);
     }
 
-    // TODO Iterable<BitbucketTag> getTags() and setTags(...)
+    public final void setTags(@CheckForNull Iterable<BitbucketTag> tags) {
+        this.tags = tags;
+    }
+
+    public final Iterable<BitbucketTag> getTags() {
+        return Util.fixNull(tags);
+    }
 
     /**
      * {@inheritDoc}
