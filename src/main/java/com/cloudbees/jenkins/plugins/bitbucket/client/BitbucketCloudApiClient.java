@@ -48,6 +48,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketReposi
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositorySource;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.PaginatedBitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.tag.BitbucketCloudTag;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -329,6 +330,21 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         String response = getRequest(url);
         try {
             return getAllBranches(response);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public List<BitbucketCloudTag> getTags() throws IOException, InterruptedException {
+        String url = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/refs/tags";
+        String response = getRequest(url);
+        try {
+            return getAllTags(response);
         } catch (IOException e) {
             throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
@@ -700,6 +716,20 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             branches.addAll(page.getValues());
         }
         return branches;
+    }
+
+    private List<BitbucketCloudTag> getAllTags(String response) throws IOException, InterruptedException {
+        List<BitbucketCloudTag> tags = new ArrayList<BitbucketCloudTag>();
+        BitbucketCloudPage<BitbucketCloudTag> page = JsonParser.mapper.readValue(response,
+                new TypeReference<BitbucketCloudPage<BitbucketCloudTag>>(){});
+        tags.addAll(page.getValues());
+        while (!page.isLastPage()){
+            response = getRequest(page.getNext());
+            page = JsonParser.mapper.readValue(response,
+                    new TypeReference<BitbucketCloudPage<BitbucketCloudBranch>>(){});
+            tags.addAll(page.getValues());
+        }
+        return tags;
     }
 
     public Iterable<SCMFile> getDirectoryContent(final BitbucketSCMFile parent) throws IOException, InterruptedException {

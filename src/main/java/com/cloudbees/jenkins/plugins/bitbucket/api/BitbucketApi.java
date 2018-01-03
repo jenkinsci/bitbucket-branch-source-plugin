@@ -144,6 +144,16 @@ public interface BitbucketApi {
     List<? extends BitbucketBranch> getBranches() throws IOException, InterruptedException;
 
     /**
+     * Returns the tags in the repository.
+     *
+     * @return the list of tags in the repository.
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    @NonNull
+    List<? extends BitbucketTag> getTags() throws IOException, InterruptedException;
+
+    /**
      * Resolve the commit object given its hash.
      *
      * @param hash the hash to resolve
