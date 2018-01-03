@@ -19,6 +19,11 @@
   <f:entry title="${%Owner}" field="repoOwner">
     <f:textbox/>
   </f:entry>
+  <f:advanced>
+    <f:entry title="${%Client Certificate}" field="certificateCredentialsId">
+      <c:select/>
+    </f:entry>
+  </f:advanced>
   <f:entry title="${%Behaviours}" field="traits">
     <scm:traits field="traits"/>
   </f:entry>

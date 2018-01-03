@@ -50,6 +50,11 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
     @CheckForNull
     private final String credentialsId;
     /**
+     * The certificate credentials id or {@code null}
+     */
+    @CheckForNull
+    private final String certificateCredentialsId;
+    /**
      * The repository owner.
      */
     @NonNull
@@ -65,12 +70,13 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
      * @param repoName      the project name.
      */
     public BitbucketSCMSourceBuilder(@CheckForNull String id, @NonNull String serverUrl,
-                                     @CheckForNull String credentialsId, @NonNull String repoOwner,
-                                     @NonNull String repoName) {
+                                     @CheckForNull String credentialsId, @CheckForNull String certificateCredentialsId,
+                                     @NonNull String repoOwner, @NonNull String repoName) {
         super(BitbucketSCMSource.class, repoName);
         this.id = id;
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
         this.credentialsId = credentialsId;
+        this.certificateCredentialsId = certificateCredentialsId;
         this.repoOwner = repoOwner;
     }
 
@@ -105,6 +111,14 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
     }
 
     /**
+     * The certificate credentials that the {@link BitbucketSCMSource} will use.
+     *
+     * @return the certificate credentials that the {@link BitbucketSCMSource} will use.
+     */
+    @CheckForNull
+    public final String certificateCredentialsId() { return certificateCredentialsId; }
+
+    /**
      * The repository owner that the {@link BitbucketSCMSource} will be configured to use.
      *
      * @return the repository owner that the {@link BitbucketSCMSource} will be configured to use.
@@ -124,6 +138,7 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
         result.setId(id());
         result.setServerUrl(serverUrl());
         result.setCredentialsId(credentialsId());
+        result.setCertificateCredentialsId(certificateCredentialsId());
         result.setTraits(traits());
         return result;
     }

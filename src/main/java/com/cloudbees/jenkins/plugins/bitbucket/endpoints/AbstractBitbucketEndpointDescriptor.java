@@ -23,7 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.plugins.credentials.Credentials;
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -60,6 +63,22 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
                 StandardUsernameCredentials.class,
                 URIRequirementBuilder.fromUri(serverUrl).build(),
                 CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class)
+        );
+        return result;
+    }
+
+    @Restricted(NoExternalUse.class) //stapler
+    @SuppressWarnings("unused")
+    public ListBoxModel doFillCertificateCredentialsIdItems(@QueryParameter String serverUrl) {
+        Jenkins jenkins = Jenkins.getActiveInstance();
+        jenkins.checkPermission(Jenkins.ADMINISTER);
+        StandardListBoxModel result = new StandardListBoxModel();
+        result.includeMatchingAs(
+                ACL.SYSTEM,
+                jenkins,
+                StandardCertificateCredentials.class,
+                URIRequirementBuilder.fromUri(serverUrl).build(),
+                CredentialsMatchers.instanceOf(StandardCertificateCredentials.class)
         );
         return result;
     }
