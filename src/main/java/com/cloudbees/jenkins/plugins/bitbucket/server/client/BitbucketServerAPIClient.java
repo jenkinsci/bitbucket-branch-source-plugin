@@ -70,6 +70,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import net.sf.json.JSONObject;
@@ -671,6 +673,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         if (jenkins != null) {
             proxyConfig = jenkins.proxy;
         }
+
+        // Create pattern to remove 'scheme://' from the host parameter
+        Pattern r = Pattern.compile("^.*?://(.*)");
+        Matcher m = r.matcher(host);
+    
+        if (m.find()) {
+            host = m.group(1);
+        }	
 
         Proxy proxy = Proxy.NO_PROXY;
         if (proxyConfig != null) {
