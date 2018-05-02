@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
@@ -36,6 +37,15 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebh
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPushEvent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.scm.SCM;
+import jenkins.plugins.git.AbstractGitSCMSource;
+import jenkins.scm.api.SCMEvent;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadEvent;
+import jenkins.scm.api.SCMNavigator;
+import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMSource;
+import org.joda.time.Instant;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -44,20 +54,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.plugins.git.AbstractGitSCMSource;
-import jenkins.scm.api.SCMEvent;
-import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.SCMHeadEvent;
-import jenkins.scm.api.SCMNavigator;
-import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.SCMSource;
 
 public class PushHookProcessor extends HookProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(PushHookProcessor.class.getName());
 
     @Override
-    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
+    public void process(final HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
         if (payload != null) {
             BitbucketPushEvent push;
             if (instanceType == BitbucketType.SERVER) {
@@ -158,11 +161,14 @@ public class PushHookProcessor extends HookProcessor {
                                 return Collections.emptyMap();
                             }
                             Map<SCMHead, SCMRevision> result = new HashMap<>();
-                            for (BitbucketPushEvent.Change change: getPayload().getChanges()) {
+                            for (final BitbucketPushEvent.Change change: getPayload().getChanges()) {
                                 if (change.isClosed()) {
                                     result.put(new BranchSCMHead(change.getOld().getName(), type), null);
                                 } else {
-                                    BranchSCMHead head = new BranchSCMHead(change.getNew().getName(), type);
+                                    SCMHead head = "tag".equalsIgnoreCase(change.getNew().getType()) ?
+                                        //TODO: from where to retrieve timestamp ?
+                                        new BitbucketTagSCMHead(change.getNew().getName(), Instant.now().getMillis(), type) :
+                                        new BranchSCMHead(change.getNew().getName(), type);
                                     switch (type) {
                                         case GIT:
                                             result.put(head, new AbstractGitSCMSource.SCMRevisionImpl(head, change.getNew().getTarget().getHash()));
