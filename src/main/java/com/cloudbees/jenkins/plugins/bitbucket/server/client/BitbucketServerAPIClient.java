@@ -618,6 +618,15 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return getRepository().isPrivate();
     }
 
+    /**
+     * This method is different with {@link #doRequest(HttpRequestBase)} in exception handling
+     * it throws {@link FileNotFoundException} on 404 error code, while {@link #doRequest(HttpRequestBase)} throws
+     * {@link BitbucketRequestException}
+     *
+     * @param path
+     * @return
+     * @throws IOException
+     */
     private String getRequest(String path) throws IOException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
 
@@ -677,8 +686,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
 
         setClientProxyParams(host, httpClientBuilder);
-
-        return httpClientBuilder.build();
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10 * 1000)
+                .setConnectionRequestTimeout(60 * 1000)
+                .setSocketTimeout(60 * 1000)
+                .build();
+        return httpClientBuilder.setDefaultRequestConfig(requestConfig).build();
     }
 
     private void setClientProxyParams(String host, HttpClientBuilder builder) {
@@ -759,12 +772,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private String doRequest(HttpRequestBase request) throws IOException {
-        RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setConnectTimeout(10 * 1000);
-        requestConfig.setConnectionRequestTimeout(60 * 1000);
-        requestConfig.setSocketTimeout(60 * 1000);
-        request.setConfig(requestConfig.build());
-
         try(CloseableHttpClient client = getHttpClient(getMethodHost(request));
                 CloseableHttpResponse response = client.execute(request, context)) {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NO_CONTENT) {
