@@ -875,12 +875,17 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
         List<String> lines = new ArrayList<>();
         int start=0;
+        String ref = file.getRef();
+        if(ref.startsWith("PR-")) {
+            String prId = ref.split("-")[1];
+            ref = getPullRequestById(Integer.valueOf(prId)).getSource().getBranch().getName();
+        }
         UriTemplate template = UriTemplate
                 .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
                 .set("owner", getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", file.getPath().split(Operator.PATH.getSeparator()))
-                .set("at", file.getRef())
+                .set("at", ref)
                 .set("start", start)
                 .set("limit", 500);
         String url = template.expand();
