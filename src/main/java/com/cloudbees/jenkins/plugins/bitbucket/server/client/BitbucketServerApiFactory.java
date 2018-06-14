@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.cache.CachedBitbucketApi;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -24,6 +25,7 @@ public class BitbucketServerApiFactory extends BitbucketApiFactory {
         if(StringUtils.isBlank(serverUrl)){
             throw new IllegalArgumentException("serverUrl is required");
         }
-        return new BitbucketServerAPIClient(serverUrl, owner, repository, credentials, false);
+        return new CachedBitbucketApi(serverUrl,owner,repository,credentials);
+        //return new BitbucketServerAPIClient(serverUrl, owner, repository, credentials, false);
     }
 }

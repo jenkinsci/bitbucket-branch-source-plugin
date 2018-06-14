@@ -26,12 +26,12 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.cache.BitbucketCache;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPushEvent;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,21 +41,27 @@ public class BitbucketServerWebhookPayload {
 
     @CheckForNull
     public static BitbucketPushEvent pushEventFromPayload(@NonNull String payload) {
+        BitbucketPushEvent result = null;
         try {
-            return JsonParser.toJava(payload, BitbucketServerPushEvent.class);
-        } catch (IOException e) {
+            LOGGER.log(Level.INFO, "Received pushEventFromPayload");
+            result =  JsonParser.toJava(payload, BitbucketServerPushEvent.class);
+            BitbucketCache.getInstance().invalidate(result.getRepository());
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
         }
-        return null;
+        return result;
     }
 
     @CheckForNull
     public static BitbucketPullRequestEvent pullRequestEventFromPayload(@NonNull String payload) {
+        BitbucketPullRequestEvent result = null;
         try {
-            return JsonParser.toJava(payload, BitbucketServerPullRequestEvent.class);
-        } catch (IOException e) {
+            LOGGER.log(Level.INFO, "Received pullRequestEventFromPayload");
+            result =  JsonParser.toJava(payload, BitbucketServerPullRequestEvent.class);
+            BitbucketCache.getInstance().invalidate(result.getRepository());
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
         }
-        return null;
+        return result;
     }
 }
