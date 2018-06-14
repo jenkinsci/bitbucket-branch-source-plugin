@@ -135,6 +135,12 @@ public class CachedBitbucketApi implements BitbucketApi {
         }
     }
 
+    @NonNull
+    @Override
+    public List<? extends BitbucketBranch> getTags() throws IOException, InterruptedException {
+        return delegate.getTags();
+    }
+
     @Override
     public BitbucketCommit resolveCommit(@NonNull String hash) throws IOException, InterruptedException {
         try {
@@ -160,6 +166,11 @@ public class CachedBitbucketApi implements BitbucketApi {
     @Override
     public void registerCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException {
         delegate.registerCommitWebHook(hook);
+    }
+
+    @Override
+    public void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException {
+        delegate.updateCommitWebHook(hook);
     }
 
     @Override
