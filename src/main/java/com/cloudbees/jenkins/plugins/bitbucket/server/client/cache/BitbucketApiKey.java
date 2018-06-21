@@ -21,8 +21,13 @@ public class BitbucketApiKey {
         this.serverUrl = serverUrl;
         this.ownerName = owner;
         this.repositoryName = repository;
-        this.username = credentials.getUsername();
-        this.password=  credentials.getPassword().getEncryptedValue();
+        if (credentials != null) {
+            this.username = credentials.getUsername();
+            this.password = credentials.getPassword().getEncryptedValue();
+        } else {
+            username = null;
+            password = null;
+        }
     }
 
     @Override
