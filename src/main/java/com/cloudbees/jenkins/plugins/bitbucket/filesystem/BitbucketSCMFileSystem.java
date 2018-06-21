@@ -135,10 +135,11 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                 ref = head.getName();
             } else if (head instanceof PullRequestSCMHead) {
                 PullRequestSCMHead pr = (PullRequestSCMHead) head;
-                if (!(pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) && pr.getRepository() != null) {
-                    return new BitbucketSCMFileSystem(apiClient, pr.getOriginName(), rev);
+                if (pr.getRepository() != null) {
+                    ref = pr.getOriginName();
+                } else {
+                    return null; // TODO support merge revisions somehow
                 }
-                return null; // TODO support merge revisions somehow
             } else if (head instanceof BitbucketTagSCMHead) {
                  ref = "tags/" + head.getName();
             } else {

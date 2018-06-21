@@ -185,7 +185,11 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
     @NonNull
     @Override
     public String getOriginName() {
-        return branchName;
+        if (strategy == ChangeRequestCheckoutStrategy.MERGE) {
+            return "pull-requests/"+number+"/merge";
+        } else  {
+            return "pull-requests/"+number+"/from";
+        }
     }
 
     @NonNull
