@@ -36,9 +36,12 @@ import hudson.model.listeners.SCMListener;
 import hudson.plugins.mercurial.MercurialSCMSource;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
+import hudson.tasks.test.AbstractTestResultAction;
+
 import java.io.File;
 import java.io.IOException;
 import javax.annotation.CheckForNull;
+
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHeadObserver;
@@ -94,23 +97,36 @@ public class BitbucketBuildStatusNotifications {
         Result result = build.getResult();
         String buildDescription = build.getDescription();
         String statusDescription;
-        String state;
+        BitbucketBuildStatus.State state;
         if (Result.SUCCESS.equals(result)) {
-            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit looks good.");
-            state = "SUCCESSFUL";
+            statusDescription = StringUtils.defaultIfBlank(buildDescription,
+                    Messages.BitbucketBuildStatusNotifications_DescriptionSuccess());
+            state = BitbucketBuildStatus.State.SUCCESSFUL;
         } else if (Result.UNSTABLE.equals(result)) {
-            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
-            state = "FAILED";
+            statusDescription = StringUtils.defaultIfBlank(buildDescription,
+                    Messages.BitbucketBuildStatusNotifications_DescriptionUnstable());
+            state = BitbucketBuildStatus.State.FAILED;
         } else if (Result.FAILURE.equals(result)) {
-            statusDescription = StringUtils.defaultIfBlank(buildDescription, "There was a failure building this commit.");
-            state = "FAILED";
+            statusDescription = StringUtils.defaultIfBlank(buildDescription,
+                    Messages.BitbucketBuildStatusNotifications_DescriptionFailed());
+            state = BitbucketBuildStatus.State.FAILED;
         } else if (result != null) { // ABORTED etc.
-            statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
-            state = "FAILED";
+            statusDescription = StringUtils.defaultIfBlank(buildDescription,
+                    Messages.BitbucketBuildStatusNotifications_DescriptionUnknown());
+            state = BitbucketBuildStatus.State.FAILED;
         } else {
-            statusDescription = StringUtils.defaultIfBlank(buildDescription, "The build is in progress...");
-            state = "INPROGRESS";
+            statusDescription = StringUtils.defaultIfBlank(buildDescription,
+                    Messages.BitbucketBuildStatusNotifications_DescriptionInProgress());
+            state = BitbucketBuildStatus.State.INPROGRESS;
         }
+
+        AbstractTestResultAction testResult = build.getAction(AbstractTestResultAction.class);
+        if (testResult != null) {
+            int totalTestsCount = testResult.getTotalCount();
+            int passedCount = totalTestsCount - testResult.getFailCount();
+            statusDescription = statusDescription + ". " + passedCount + " of " + totalTestsCount + " tests passed";
+        }
+
         status = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name);
         new BitbucketChangesetCommentNotifier(bitbucket).buildStatus(status);
         if (result != null) {
@@ -167,7 +183,7 @@ public class BitbucketBuildStatusNotifications {
 
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
-                               SCMRevisionState pollingBaseline) throws Exception {
+                               SCMRevisionState pollingBaseline) {
             try {
                 sendNotifications(build, listener);
             } catch (IOException | InterruptedException e) {

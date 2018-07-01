@@ -41,10 +41,15 @@ public class BitbucketBuildStatus {
      */
     private String description;
 
+    public enum State {
+        INPROGRESS,
+        SUCCESSFUL,
+        FAILED
+    }
     /**
      * One of: INPROGRESS|SUCCESSFUL|FAILED
      */
-    private String state;
+    private State state;
 
     /**
      * The URL to liunk from the status details
@@ -66,7 +71,7 @@ public class BitbucketBuildStatus {
     @Restricted(DoNotUse.class)
     public BitbucketBuildStatus() {}
 
-    public BitbucketBuildStatus(String hash, String description, String state, String url, String key, String name) {
+    public BitbucketBuildStatus(String hash, String description, State state, String url, String key, String name) {
         this.hash = hash;
         this.description = description;
         this.state = state;
@@ -91,11 +96,11 @@ public class BitbucketBuildStatus {
         this.description = description;
     }
 
-    public String getState() {
+    public State getState() {
         return state;
     }
 
-    public void setState(String state) {
+    public void setState(State state) {
         this.state = state;
     }
 
@@ -124,3 +129,4 @@ public class BitbucketBuildStatus {
     }
 
 }
+
