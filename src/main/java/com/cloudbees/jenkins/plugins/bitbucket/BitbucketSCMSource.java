@@ -666,7 +666,7 @@ public class BitbucketSCMSource extends SCMSource {
                                 repoOwner,
                                 repository,
                                 repositoryType,
-                                branchName,
+                                pull.getSource().getBranch().getName(),
                                 pull,
                                 originOf(pullRepoOwner, pullRepository),
                                 strategy
