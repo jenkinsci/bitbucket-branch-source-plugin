@@ -37,6 +37,11 @@ public enum HookEventType {
     PUSH("repo:push", PushHookProcessor.class),
 
     /**
+    * See <a href="https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html">EventPayloads-Bitbucket-server-after-5.4-Push</a>
+    */
+    PUSH("repo:refs-changed", PushHookProcessor.class),
+    
+    /**
      * See <a href="https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Created.1">EventPayloads-Created</a>
      */
     PULL_REQUEST_CREATED("pullrequest:created", PullRequestHookProcessor.class),
