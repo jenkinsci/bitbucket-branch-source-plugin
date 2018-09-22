@@ -51,6 +51,7 @@ public class WebhookConfiguration {
      */
     private static final List<String> CLOUD_EVENTS = Collections.unmodifiableList(Arrays.asList(
             HookEventType.PUSH.getKey(),
+            HookEventType.REFS_CHANGED.getKey(),
             HookEventType.PULL_REQUEST_CREATED.getKey(),
             HookEventType.PULL_REQUEST_UPDATED.getKey(),
             HookEventType.PULL_REQUEST_MERGED.getKey(),
