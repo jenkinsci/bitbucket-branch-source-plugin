@@ -56,21 +56,25 @@
     <scm-api.version>2.2.0</scm-api.version>
     <git.version>3.6.0</git.version>
   </properties>
- 
- <developers>
-     <developer>
-       <id>amuniz</id>
-       <name>Antonio Muniz</name>
-     </developer>
-     <developer>
-       <id>rsandell</id>
-       <name>Bobby Sandell</name>
-     </developer>
-     <developer>
-       <id>vivek</id>
-       <name>Vivek Pandey</name>
-     </developer>
- </developers>
+
+  <developers>
+    <developer>
+      <id>amuniz</id>
+      <name>Antonio Muniz</name>
+    </developer>
+    <developer>
+      <id>rsandell</id>
+      <name>Bobby Sandell</name>
+    </developer>
+    <developer>
+      <id>vivek</id>
+      <name>Vivek Pandey</name>
+    </developer>
+    <developer>
+      <id>casz</id>
+      <name>Joseph Petersen</name>
+    </developer>
+  </developers>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/bitbucket-branch-source-plugin.git</connection>
