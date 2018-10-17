@@ -76,8 +76,8 @@ public class BitbucketBuildStatusNotifications {
      * @param url the URL of the build to check
      * @return the url if it is valid
      */
-    static String checkURL(String url) {
-        if (url == null || url.equals("http://unconfigured-jenkins-location/")) {
+    static String checkURL(@NonNull String url) {
+        if (url.equals("http://unconfigured-jenkins-location/")) {
             throw new IllegalStateException("Could not determine Jenkins URL.");
         }
         try {

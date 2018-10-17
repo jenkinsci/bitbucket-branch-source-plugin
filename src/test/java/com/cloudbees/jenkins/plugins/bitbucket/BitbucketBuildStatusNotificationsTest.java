@@ -17,11 +17,6 @@ public class BitbucketBuildStatusNotificationsTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void test_checkURL_null() {
-        checkURLReturnException(null);
-    }
-
-    @Test
     public void test_checkURL_localhost() {
         checkURLReturnException("http://localhost/build/sample");
     }
