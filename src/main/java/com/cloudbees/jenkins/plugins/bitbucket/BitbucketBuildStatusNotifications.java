@@ -38,6 +38,9 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.annotation.CheckForNull;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -63,14 +66,30 @@ public class BitbucketBuildStatusNotifications {
         }
 
         String url = DisplayURLProvider.get().getRunURL(build);
+        return checkURL(url);
+    }
 
-        if (url.startsWith("http://localhost")) {
-            throw new IllegalStateException("Jenkins URL cannot start with http://localhost");
+    /**
+     * Check if the build URL is compatible with Bitbucket API.
+     * For example, Bitbucket API doesn't accept simple hostnames as URLs host value
+     * Throws an IllegalStateException if it is not valid, or return the url otherwise
+     *
+     * @param url the URL of the build to check
+     * @return the url if it is valid
+     */
+    static String checkURL(String url) {
+        /*  */
+        try {
+            URL u = new URL(url);
+            if (!u.getHost().contains(".")) {
+                throw new IllegalStateException("Please use a fully qualified name or an IP address for Jenkins URL");
+            }
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException("Bad Jenkins URL");
         }
         if (url.equals("http://unconfigured-jenkins-location/")) {
             throw new IllegalStateException("Could not determine Jenkins URL.");
         }
-
         return url;
     }
 
