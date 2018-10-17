@@ -38,7 +38,6 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.annotation.CheckForNull;
@@ -78,7 +77,9 @@ public class BitbucketBuildStatusNotifications {
      * @return the url if it is valid
      */
     static String checkURL(String url) {
-        /*  */
+        if (url != null && url.equals("http://unconfigured-jenkins-location/")) {
+            throw new IllegalStateException("Could not determine Jenkins URL.");
+        }
         try {
             URL u = new URL(url);
             if (!u.getHost().contains(".")) {
@@ -86,9 +87,6 @@ public class BitbucketBuildStatusNotifications {
             }
         } catch (MalformedURLException e) {
             throw new IllegalStateException("Bad Jenkins URL");
-        }
-        if (url.equals("http://unconfigured-jenkins-location/")) {
-            throw new IllegalStateException("Could not determine Jenkins URL.");
         }
         return url;
     }
