@@ -27,6 +27,11 @@ public class BitbucketBuildStatusNotificationsTest {
     }
 
     @Test
+    public void test_checkURL_noJenkinsURL_BlueOceanCase() {
+        checkURLReturnException("http://unconfigured-jenkins-location/blue");
+    }
+
+    @Test
     public void test_checkURL_intranet() {
         checkURLReturnException("http://intranet/build/sample");
     }
