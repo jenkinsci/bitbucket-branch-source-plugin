@@ -170,6 +170,12 @@ public class BitbucketSCMSource extends SCMSource {
     private List<SCMSourceTrait> traits;
 
     /**
+     * Whether unstable Jenkins build shall be reported PASS or FAIL in Bitbucket
+     */
+    @NonNull
+    private boolean passUnstableBuilds = false;
+
+    /**
      * Credentials used to clone the repository/repositories.
      */
     @Deprecated
@@ -338,6 +344,16 @@ public class BitbucketSCMSource extends SCMSource {
     @DataBoundSetter
     public void setTraits(@CheckForNull List<SCMSourceTrait> traits) {
         this.traits = new ArrayList<>(Util.fixNull(traits));
+    }
+
+    @DataBoundSetter
+    public void setPassUnstableBuilds(boolean passUnstableBuilds) {
+        this.passUnstableBuilds = passUnstableBuilds;
+    }
+
+    @NonNull
+    public boolean getPassUnstableBuilds() {
+        return passUnstableBuilds;
     }
 
     @Deprecated

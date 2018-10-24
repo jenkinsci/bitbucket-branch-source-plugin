@@ -22,4 +22,7 @@
   <f:entry title="${%Behaviours}" field="traits">
     <scm:traits field="traits"/>
   </f:entry>
+  <f:entry title="${%PassUnstableBuilds}" field="passUnstableBuilds">
+    <f:checkbox/>
+  </f:entry>
 </j:jelly>

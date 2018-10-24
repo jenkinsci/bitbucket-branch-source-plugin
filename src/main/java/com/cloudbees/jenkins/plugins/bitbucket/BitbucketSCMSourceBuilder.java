@@ -54,24 +54,31 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
      */
     @NonNull
     private final String repoOwner;
+    /**
+     * Whether unstable Jenkins build shall be reported PASS or FAIL in Bitbucket
+     */
+    @NonNull
+    private final boolean passUnstableBuilds;
 
     /**
      * Constructor.
      *
-     * @param id            the {@link BitbucketSCMSource#getId()}
-     * @param serverUrl     the {@link BitbucketSCMSource#getServerUrl()}
-     * @param credentialsId the credentials id.
-     * @param repoOwner     the repository owner.
-     * @param repoName      the project name.
+     * @param id                    the {@link BitbucketSCMSource#getId()}
+     * @param serverUrl             the {@link BitbucketSCMSource#getServerUrl()}
+     * @param credentialsId         the credentials id.
+     * @param repoOwner             the repository owner.
+     * @param repoName              the project name.
+     * @param passUnstableBuilds    whether unstable Jenkins build shall be reported PASS or FAIL in Bitbucket
      */
     public BitbucketSCMSourceBuilder(@CheckForNull String id, @NonNull String serverUrl,
                                      @CheckForNull String credentialsId, @NonNull String repoOwner,
-                                     @NonNull String repoName) {
+                                     @NonNull String repoName, @NonNull boolean passUnstableBuilds) {
         super(BitbucketSCMSource.class, repoName);
         this.id = id;
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
         this.credentialsId = credentialsId;
         this.repoOwner = repoOwner;
+        this.passUnstableBuilds = passUnstableBuilds;
     }
 
     /**
@@ -115,6 +122,16 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
     }
 
     /**
+     * Whether an unstable Jenkins build shall be reported as PASS or FAILED in Bitbucket
+     *
+     * @return  whether an unstable Jenkins build shall be reported as PASS or FAILED in Bitbucket
+     */
+    @NonNull
+    public boolean passUnstableBuilds() {
+        return passUnstableBuilds;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @NonNull
@@ -125,6 +142,7 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
         result.setServerUrl(serverUrl());
         result.setCredentialsId(credentialsId());
         result.setTraits(traits());
+        result.setPassUnstableBuilds(passUnstableBuilds());
         return result;
     }
 }

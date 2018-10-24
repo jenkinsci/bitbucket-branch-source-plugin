@@ -92,7 +92,8 @@ public class BitbucketBuildStatusNotifications {
     }
 
     private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,
-                                     @NonNull BitbucketApi bitbucket, @NonNull String hash)
+                                     @NonNull BitbucketApi bitbucket, @NonNull String hash,
+                                     @NonNull Boolean passUnstableBuilds)
             throws IOException, InterruptedException {
 
         String url;
@@ -118,7 +119,11 @@ public class BitbucketBuildStatusNotifications {
             state = "SUCCESSFUL";
         } else if (Result.UNSTABLE.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
-            state = "FAILED";
+            if (passUnstableBuilds) {
+                state = "SUCCESSFUL";
+            } else {
+                state = "FAILED";
+            }
         } else if (Result.FAILURE.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "There was a failure building this commit.");
             state = "FAILED";
@@ -155,11 +160,11 @@ public class BitbucketBuildStatusNotifications {
         }
         if (r instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
-            createStatus(build, listener, source.buildBitbucketClient((PullRequestSCMHead) r.getHead()), hash);
+            createStatus(build, listener, source.buildBitbucketClient((PullRequestSCMHead) r.getHead()), hash, source.getPassUnstableBuilds());
 
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
-            createStatus(build, listener, source.buildBitbucketClient(), hash);
+            createStatus(build, listener, source.buildBitbucketClient(), hash, source.getPassUnstableBuilds());
         }
     }
 
