@@ -68,6 +68,7 @@ import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.traits.MercurialBrowserSCMSourceTrait;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
@@ -1269,33 +1270,33 @@ public class BitbucketSCMSource extends SCMSource {
                 List<? extends BitbucketRepository> repositories =
                         bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
                 if (repositories.isEmpty()) {
-                    throw new FillErrorResponse(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner), true);
+                    throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }
                 for (BitbucketRepository repo : repositories) {
                     result.add(repo.getRepositoryName());
                 }
                 return result;
-            } catch (FillErrorResponse | OutOfMemoryError e) {
+            } catch (FormFillFailure | OutOfMemoryError e) {
                 throw e;
             } catch (IOException e) {
                 if (e instanceof BitbucketRequestException) {
                     if (((BitbucketRequestException) e).getHttpCode() == 401) {
-                        throw new FillErrorResponse(credentials == null
+                        throw FormFillFailure.error(credentials == null
                                 ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
-                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner), true);
+                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
                     }
                 } else if (e.getCause() instanceof BitbucketRequestException) {
                     if (((BitbucketRequestException) e.getCause()).getHttpCode() == 401) {
-                        throw new FillErrorResponse(credentials == null
+                        throw FormFillFailure.error(credentials == null
                                 ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
-                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner), true);
+                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
                     }
                 }
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                throw new FillErrorResponse(e.getMessage(), false);
+                throw FormFillFailure.error(e.getMessage());
             } catch (Throwable e) {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                throw new FillErrorResponse(e.getMessage(), false);
+                throw FormFillFailure.error(e.getMessage());
             }
         }
 
