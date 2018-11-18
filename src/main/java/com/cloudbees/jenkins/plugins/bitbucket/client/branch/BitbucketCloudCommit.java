@@ -23,10 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.branch;
 
-import com.cloudbees.jenkins.plugins.bitbucket.JsonParser.BitbucketDateFormat;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.text.ParseException;
@@ -85,7 +85,7 @@ public class BitbucketCloudCommit implements BitbucketCommit {
     public long getDateMillis() {
         try {
             if (dateInMillis == 0 && date != null) {
-                dateInMillis = new BitbucketDateFormat().parse(date).getTime();
+                dateInMillis = new StdDateFormat().parse(date).getTime();
             }
         } catch (ParseException e) {
             dateInMillis = 0;

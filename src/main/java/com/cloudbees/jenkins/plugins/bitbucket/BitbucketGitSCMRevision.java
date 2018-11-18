@@ -23,8 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.JsonParser.BitbucketDateFormat;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.text.ParseException;
 import java.util.Date;
@@ -57,7 +57,7 @@ public class BitbucketGitSCMRevision extends SCMRevisionImpl {
         this.author = commit.getAuthor();
         Date commitDate;
         try {
-            commitDate = new BitbucketDateFormat().parse(commit.getDate());
+            commitDate = new StdDateFormat().parse(commit.getDate());
         } catch (ParseException e) {
             commitDate = null;
         }
