@@ -37,18 +37,21 @@ public class BitbucketCloudEndpointTest {
 
     @Test
     public void smokes() {
-        assertThat(new BitbucketCloudEndpoint(false, null).getDisplayName(), notNullValue());
-        assertThat(new BitbucketCloudEndpoint(false, null).getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, null);
+
+        assertThat(endpoint.getDisplayName(), notNullValue());
+        assertThat(endpoint.getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
     }
 
     @Test
     public void getRepositoryUrl() {
-        assertThat(new BitbucketCloudEndpoint(false, null).getRepositoryUrl("tester", "test-repo"),
-                is("https://bitbucket.org/tester/test-repo"));
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, null);
+
+        assertThat(endpoint.getRepositoryUrl("tester", "test-repo"), is("https://bitbucket.org/tester/test-repo"));
     }
 
     @Test
-    public void testRepositoryTemplate() {
+    public void repositoryTemplate() {
         String owner = "bob";
         String repositoryName = "yetAnotherRepo";
         UriTemplate template = UriTemplate
@@ -69,5 +72,4 @@ public class BitbucketCloudEndpointTest {
                 .expand();
         assertThat(url, is(betterUrl));
     }
-
 }

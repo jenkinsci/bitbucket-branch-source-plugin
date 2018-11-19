@@ -57,6 +57,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 public class BitbucketEndpointConfigurationTest {
+
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
 
