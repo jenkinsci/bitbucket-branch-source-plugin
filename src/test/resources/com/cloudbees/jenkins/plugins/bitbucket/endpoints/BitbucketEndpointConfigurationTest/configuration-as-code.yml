@@ -1,0 +1,19 @@
+---
+unclassified:
+  bitbucketendpointconfiguration:
+    endpoints:
+    - bitbucketCloudEndpoint:
+        credentialsId: "first"
+        manageHooks: true
+        enableCache: true
+        teamCacheDuration: 1
+        repositoriesCacheDuration: 2
+    - bitbucketServerEndpoint:
+        credentialsId: "second"
+        displayName: "Example Inc"
+        manageHooks: true
+        serverUrl: "https://bitbucket.example.com"
+        callCanMerge: false
+    - bitbucketServerEndpoint:
+        displayName: "Example Org"
+        serverUrl: "http://example.org:8080/bitbucket"

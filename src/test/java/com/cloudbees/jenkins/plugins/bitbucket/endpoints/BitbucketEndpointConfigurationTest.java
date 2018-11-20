@@ -33,6 +33,7 @@ import hudson.security.ACL;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.casc.ConfigurationAsCode;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -589,7 +590,7 @@ public class BitbucketEndpointConfigurationTest {
                 Arrays.asList(
                         new BitbucketCloudEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
-                        new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
+                        new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", false, null)
                 ));
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Arrays.<Credentials>asList(
@@ -600,20 +601,59 @@ public class BitbucketEndpointConfigurationTest {
                         new UsernamePasswordCredentialsImpl(
                                 CredentialsScope.SYSTEM, "third", null, "user3", "pass3")
                 )));
+
         j.configRoundtrip();
+
         assertThat(instance.getEndpoints(), hasSize(3));
-        assertThat(instance.getEndpoints().get(0).getDisplayName(), is(Messages.BitbucketCloudEndpoint_displayName()));
-        assertThat(instance.getEndpoints().get(0).getServerUrl(), is("https://bitbucket.org"));
-        assertThat(instance.getEndpoints().get(0).isManageHooks(), is(true));
-        assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
-        assertThat(instance.getEndpoints().get(1).getDisplayName(), is("Example Inc"));
-        assertThat(instance.getEndpoints().get(1).getServerUrl(), is("https://bitbucket.example.com"));
-        assertThat(instance.getEndpoints().get(1).isManageHooks(), is(true));
-        assertThat(instance.getEndpoints().get(1).getCredentialsId(), is("second"));
-        assertThat(instance.getEndpoints().get(2).getDisplayName(), is("Example Org"));
-        assertThat(instance.getEndpoints().get(2).getServerUrl(), is("http://example.org:8080/bitbucket"));
-        assertThat(instance.getEndpoints().get(2).isManageHooks(), is(true));
-        assertThat(instance.getEndpoints().get(2).getCredentialsId(), is("third"));
+
+        BitbucketCloudEndpoint endpoint1 = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
+        assertThat(endpoint1.getDisplayName(), is(Messages.BitbucketCloudEndpoint_displayName()));
+        assertThat(endpoint1.getServerUrl(), is("https://bitbucket.org"));
+        assertThat(endpoint1.isManageHooks(), is(true));
+        assertThat(endpoint1.getCredentialsId(), is("first"));
+
+        BitbucketServerEndpoint endpoint2 = (BitbucketServerEndpoint) instance.getEndpoints().get(1);
+        assertThat(endpoint2.getDisplayName(), is("Example Inc"));
+        assertThat(endpoint2.getServerUrl(), is("https://bitbucket.example.com"));
+        assertThat(endpoint2.isManageHooks(), is(true));
+        assertThat(endpoint2.getCredentialsId(), is("second"));
+
+        BitbucketServerEndpoint endpoint3 = (BitbucketServerEndpoint) instance.getEndpoints().get(2);
+        assertThat(endpoint3.getDisplayName(), is("Example Org"));
+        assertThat(endpoint3.getServerUrl(), is("http://example.org:8080/bitbucket"));
+        assertThat(endpoint3.isManageHooks(), is(false));
+        assertThat(endpoint3.getCredentialsId(), is(nullValue()));
     }
 
+    @Test
+    public void should_support_configuration_as_code() throws Exception {
+        ConfigurationAsCode.get().configure(getClass().getResource(getClass().getSimpleName() + "/configuration-as-code.yml").toString());
+
+        BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
+
+        assertThat(instance.getEndpoints(), hasSize(3));
+
+        BitbucketCloudEndpoint endpoint1 = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
+        assertThat(endpoint1.getDisplayName(), is(Messages.BitbucketCloudEndpoint_displayName()));
+        assertThat(endpoint1.getServerUrl(), is("https://bitbucket.org"));
+        assertThat(endpoint1.isManageHooks(), is(true));
+        assertThat(endpoint1.getCredentialsId(), is("first"));
+        assertThat(endpoint1.isEnableCache(), is(true));
+        assertThat(endpoint1.getTeamCacheDuration(), is(1));
+        assertThat(endpoint1.getRepositoriesCacheDuration(), is(2));
+
+        BitbucketServerEndpoint endpoint2 = (BitbucketServerEndpoint) instance.getEndpoints().get(1);
+        assertThat(endpoint2.getDisplayName(), is("Example Inc"));
+        assertThat(endpoint2.getServerUrl(), is("https://bitbucket.example.com"));
+        assertThat(endpoint2.isManageHooks(), is(true));
+        assertThat(endpoint2.getCredentialsId(), is("second"));
+        assertThat(endpoint2.isCallCanMerge(), is(false));
+
+        BitbucketServerEndpoint endpoint3 = (BitbucketServerEndpoint) instance.getEndpoints().get(2);
+        assertThat(endpoint3.getDisplayName(), is("Example Org"));
+        assertThat(endpoint3.getServerUrl(), is("http://example.org:8080/bitbucket"));
+        assertThat(endpoint3.isManageHooks(), is(false));
+        assertThat(endpoint3.getCredentialsId(), is(nullValue()));
+        assertThat(endpoint3.isCallCanMerge(), is(true));
+    }
 }
