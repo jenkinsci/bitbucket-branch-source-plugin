@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,27 +77,23 @@ public abstract class HookProcessor {
      * @param repository the repository name as configured in the SCMSource
      */
     protected void scmSourceReIndex(final String owner, final String repository) {
-        ACL.impersonate(ACL.SYSTEM, new Runnable() {
-            @Override
-            public void run() {
-                boolean reindexed = false;
-                for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
-                    List<SCMSource> sources = scmOwner.getSCMSources();
-                    for (SCMSource source : sources) {
-                        // Search for the correct SCM source
-                        if (source instanceof BitbucketSCMSource && ((BitbucketSCMSource) source).getRepoOwner().equalsIgnoreCase(owner)
-                                && ((BitbucketSCMSource) source).getRepository().equals(repository)) {
-                            LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
-                            scmOwner.onSCMSourceUpdated(source);
-                            reindexed = true;
-                        }
+        try (ACLContext context = ACL.as(ACL.SYSTEM)) {
+            boolean reindexed = false;
+            for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
+                List<SCMSource> sources = scmOwner.getSCMSources();
+                for (SCMSource source : sources) {
+                    // Search for the correct SCM source
+                    if (source instanceof BitbucketSCMSource && ((BitbucketSCMSource) source).getRepoOwner().equalsIgnoreCase(owner)
+                            && ((BitbucketSCMSource) source).getRepository().equals(repository)) {
+                        LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
+                        scmOwner.onSCMSourceUpdated(source);
+                        reindexed = true;
                     }
                 }
-                if (!reindexed) {
-                    LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
-                }
             }
-        });
+            if (!reindexed) {
+                LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
+            }
+        }
     }
-
 }
