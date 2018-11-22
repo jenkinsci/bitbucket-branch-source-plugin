@@ -690,12 +690,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                     }
                     pageNumber++;
                 } while (page.getNext() != null);
-                repositories.sort(new Comparator<BitbucketCloudRepository>() {
-                    @Override
-                    public int compare(BitbucketCloudRepository o1, BitbucketCloudRepository o2) {
-                        return o1.getRepositoryName().compareTo(o2.getRepositoryName());
-                    }
-                });
+                repositories.sort(Comparator.comparing(BitbucketCloudRepository::getRepositoryName));
                 return repositories;
             }
         };
