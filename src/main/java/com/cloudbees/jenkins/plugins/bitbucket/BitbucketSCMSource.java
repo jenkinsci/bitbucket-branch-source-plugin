@@ -683,7 +683,7 @@ public class BitbucketSCMSource extends SCMSource {
                                     return new BranchHeadCommit(pull.getSource().getBranch());
                                 }
                             },  //
-                            new BitbucketProbeFactory<BitbucketCommit>(pullBitbucket, request), //
+                            new BitbucketProbeFactory<>(pullBitbucket, request), //
                             new BitbucketRevisionFactory<BitbucketCommit>(pullBitbucket) {
                                 @NonNull
                                 @Override
@@ -760,8 +760,8 @@ public class BitbucketSCMSource extends SCMSource {
                             return new BranchHeadCommit(branch);
                         }
                     }, //
-                    new BitbucketProbeFactory<BitbucketCommit>(bitbucket, request), //
-                    new BitbucketRevisionFactory<BitbucketCommit>(bitbucket), //
+                    new BitbucketProbeFactory<>(bitbucket, request), //
+                    new BitbucketRevisionFactory<>(bitbucket), //
                     new CriteriaWitness(request))) {
                 request.listener().getLogger().format("%n  %d branches were processed (query completed)%n", count);
                 return;
@@ -793,8 +793,8 @@ public class BitbucketSCMSource extends SCMSource {
                             return tag.getRawNode();
                         }
                     }, //
-                    new BitbucketProbeFactory<String>(bitbucket, request), //
-                    new BitbucketRevisionFactory<String>(bitbucket), //
+                    new BitbucketProbeFactory<>(bitbucket, request), //
+                    new BitbucketRevisionFactory<>(bitbucket), //
                     new CriteriaWitness(request))) {
                 request.listener().getLogger().format("%n  %d tags were processed (query completed)%n", count);
                 return;
