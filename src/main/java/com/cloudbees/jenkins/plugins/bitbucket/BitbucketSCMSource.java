@@ -85,6 +85,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -1464,8 +1465,8 @@ public class BitbucketSCMSource extends SCMSource {
 
             MercurialRevision that = (MercurialRevision) o;
 
-            return StringUtils.equals(hash, that.hash) && getHead().equals(that.getHead());
-
+            return Objects.equals(hash, that.hash)
+                && Objects.equals(getHead(), that.getHead());
         }
 
         @Override
@@ -1657,7 +1658,6 @@ public class BitbucketSCMSource extends SCMSource {
         public long getDateMillis() {
             return branch.getDateMillis();
         }
-
     }
 
     private static class WrappedException extends RuntimeException {
@@ -1682,5 +1682,4 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
     }
-
 }

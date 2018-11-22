@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
+import java.util.Objects;
 import jenkins.model.Jenkins;
 import org.apache.commons.jelly.JellyContext;
 import org.jenkins.ui.icon.Icon;
@@ -75,17 +76,13 @@ public class BitbucketLink implements Action, IconSpec {
 
         BitbucketLink that = (BitbucketLink) o;
 
-        if (!iconClassName.equals(that.iconClassName)) {
-            return false;
-        }
-        return url.equals(that.url);
+        return Objects.equals(iconClassName, that.iconClassName)
+            && Objects.equals(url, that.url);
     }
 
     @Override
     public int hashCode() {
-        int result = iconClassName.hashCode();
-        result = 31 * result + url.hashCode();
-        return result;
+        return Objects.hash(iconClassName, url);
     }
 
     @Override
@@ -95,5 +92,4 @@ public class BitbucketLink implements Action, IconSpec {
                 ", url='" + url + '\'' +
                 '}';
     }
-
 }

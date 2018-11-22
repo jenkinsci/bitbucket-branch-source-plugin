@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Objects;
 import jenkins.scm.api.metadata.AvatarMetadataAction;
 
 /**
@@ -89,8 +90,7 @@ public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
 
         BitbucketRepoMetadataAction that = (BitbucketRepoMetadataAction) o;
 
-        return scm != null ? scm.equals(that.scm) : that.scm == null;
-
+        return Objects.equals(scm, that.scm);
     }
 
     /**
@@ -98,7 +98,7 @@ public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
      */
     @Override
     public int hashCode() {
-        return scm != null ? scm.hashCode() : 0;
+        return Objects.hashCode(scm);
     }
 
     /**
