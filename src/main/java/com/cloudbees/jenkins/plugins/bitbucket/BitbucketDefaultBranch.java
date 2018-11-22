@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.InvisibleAction;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Represents the default branch of a specific repository
@@ -72,21 +73,14 @@ public class BitbucketDefaultBranch extends InvisibleAction implements Serializa
 
         BitbucketDefaultBranch that = (BitbucketDefaultBranch) o;
 
-        if (!repoOwner.equals(that.repoOwner)) {
-            return false;
-        }
-        if (!repository.equals(that.repository)) {
-            return false;
-        }
-        return defaultBranch.equals(that.defaultBranch);
+        return Objects.equals(repoOwner, that.repoOwner)
+            && Objects.equals(repository, that.repository)
+            && Objects.equals(defaultBranch, that.defaultBranch);
     }
 
     @Override
     public int hashCode() {
-        int result = repoOwner.hashCode();
-        result = 31 * result + repository.hashCode();
-        result = 31 * result + defaultBranch.hashCode();
-        return result;
+        return Objects.hash(repoOwner, repository, defaultBranch);
     }
 
     @Override
@@ -97,6 +91,4 @@ public class BitbucketDefaultBranch extends InvisibleAction implements Serializa
                 ", defaultBranch='" + defaultBranch + '\'' +
                 '}';
     }
-
-
 }
