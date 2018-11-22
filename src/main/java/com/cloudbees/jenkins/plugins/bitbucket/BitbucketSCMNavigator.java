@@ -275,11 +275,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setAutoRegisterHooks(boolean autoRegisterHook) {
-        for (Iterator<SCMTrait<? extends SCMTrait<?>>> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof WebhookRegistrationTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof WebhookRegistrationTrait);
         traits.add(new WebhookRegistrationTrait(
                 autoRegisterHook ? WebhookRegistration.ITEM : WebhookRegistration.DISABLE
         ));
@@ -317,11 +313,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setCheckoutCredentialsId(String checkoutCredentialsId) {
-        for (Iterator<SCMTrait<? extends SCMTrait<?>>> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof SSHCheckoutTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof SSHCheckoutTrait);
         if (checkoutCredentialsId != null && !BitbucketSCMSource.DescriptorImpl.SAME.equals(checkoutCredentialsId)) {
             traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
         }

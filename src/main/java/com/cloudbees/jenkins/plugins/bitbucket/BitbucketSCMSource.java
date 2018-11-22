@@ -393,11 +393,7 @@ public class BitbucketSCMSource extends SCMSource {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setCheckoutCredentialsId(String checkoutCredentialsId) {
-        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof SSHCheckoutTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof SSHCheckoutTrait);
         if (checkoutCredentialsId != null && !DescriptorImpl.SAME.equals(checkoutCredentialsId)) {
             traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
         }
@@ -479,11 +475,7 @@ public class BitbucketSCMSource extends SCMSource {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setAutoRegisterHook(boolean autoRegisterHook) {
-        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof WebhookRegistrationTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof WebhookRegistrationTrait);
         traits.add(new WebhookRegistrationTrait(
                 autoRegisterHook ? WebhookRegistration.ITEM : WebhookRegistration.DISABLE
         ));
