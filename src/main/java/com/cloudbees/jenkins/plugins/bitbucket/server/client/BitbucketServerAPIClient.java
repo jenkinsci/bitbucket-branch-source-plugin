@@ -658,12 +658,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 page = JsonParser.toJava(response, BitbucketServerRepositories.class);
                 repositories.addAll(page.getValues());
             }
-            repositories.sort(new Comparator<BitbucketServerRepository>() {
-                @Override
-                public int compare(BitbucketServerRepository o1, BitbucketServerRepository o2) {
-                    return o1.getRepositoryName().compareTo(o2.getRepositoryName());
-                }
-            });
+            repositories.sort(Comparator.comparing(BitbucketServerRepository::getRepositoryName));
             return repositories;
         } catch (FileNotFoundException e) {
             return new ArrayList<>();
