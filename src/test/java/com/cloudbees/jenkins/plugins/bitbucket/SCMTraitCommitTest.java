@@ -61,7 +61,6 @@ import org.mockito.Mockito;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
 public class SCMTraitCommitTest {
