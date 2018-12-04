@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.TagDiscoveryTrait.TagSCMHeadAuthority;
+import java.util.Collections;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.trait.SCMHeadFilter;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
@@ -8,8 +9,6 @@ import org.hamcrest.Matcher;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Collections;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;

@@ -38,7 +38,7 @@ public enum BitbucketRepositoryProtocol {
      */
     HTTP("http");
 
-    private String type;
+    private final String type;
 
     BitbucketRepositoryProtocol(@NonNull String type) {
         this.type = type;

@@ -25,9 +25,12 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent.Reference;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent.Target;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPushEvent;
@@ -39,6 +42,7 @@ import hudson.scm.SCM;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,13 +166,31 @@ public class PushHookProcessor extends HookProcessor {
                                 if (change.isClosed()) {
                                     result.put(new BranchSCMHead(change.getOld().getName(), type), null);
                                 } else {
-                                    BranchSCMHead head = new BranchSCMHead(change.getNew().getName(), type);
+                                    // created is true
+                                    Reference newChange = change.getNew();
+                                    Target target = newChange.getTarget();
+
+                                    SCMHead head = null;
+
+                                    String eventType = newChange.getType();
+                                    if ("tag".equals(eventType)) {
+                                        // for BB Cloud date is valued only in case of annotated tag
+                                        Date tagDate = newChange.getDate() != null ? newChange.getDate() : target.getDate();
+                                        if (tagDate == null) {
+                                            // fall back to the jenkins time when the request is processed
+                                            tagDate = new Date();
+                                        }
+                                        head = new BitbucketTagSCMHead(newChange.getName(), tagDate.getTime(), type);
+                                    } else {
+                                        head = new BranchSCMHead(newChange.getName(), type);
+                                    }
+
                                     switch (type) {
                                         case GIT:
-                                            result.put(head, new AbstractGitSCMSource.SCMRevisionImpl(head, change.getNew().getTarget().getHash()));
+                                            result.put(head, new AbstractGitSCMSource.SCMRevisionImpl(head, target.getHash()));
                                             break;
                                         case MERCURIAL:
-                                            result.put(head, new BitbucketSCMSource.MercurialRevision(head, change.getNew().getTarget().getHash()));
+                                            result.put(head, new BitbucketSCMSource.MercurialRevision(head, target.getHash()));
                                             break;
                                         default:
                                             LOGGER.log(Level.INFO, "Received event for unknown repository type: {0}", type);

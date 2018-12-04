@@ -4,25 +4,24 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.*;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import jenkins.scm.api.SCMFile;
-
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Callable;
+import jenkins.scm.api.SCMFile;
 
 public class CachedBitbucketApi implements BitbucketApi {
     private final BitbucketServerAPIClient delegate;
     private final BitbucketApiKey key;
 
-    public CachedBitbucketApi(String serverUrl, String owner, String repository, StandardUsernamePasswordCredentials credentials) {BitbucketServerAPIClient delegate1;
+    public CachedBitbucketApi(String serverUrl, @Nullable BitbucketAuthenticator authenticator, String owner, String repository) {
 
         BitbucketCache instance = BitbucketCache.getInstance();
 
-        key = instance.getKey(serverUrl, owner, repository, credentials);
-        delegate = instance.getBitbucketServerAPIClient(serverUrl, owner, repository, credentials);
+        key = instance.getKey(serverUrl, owner, repository);
+        delegate = instance.getBitbucketServerAPIClient(serverUrl, owner, repository, authenticator);
     }
 
     @NonNull
@@ -38,9 +37,10 @@ public class CachedBitbucketApi implements BitbucketApi {
 
     @NonNull
     @Override
-    public String getRepositoryUri(@NonNull BitbucketRepositoryType type, @NonNull BitbucketRepositoryProtocol protocol, Integer protocolPortOverride, @NonNull String owner, @NonNull String repository) {
-        return delegate.getRepositoryUri(type, protocol, protocolPortOverride, owner, repository);
+    public String getRepositoryUri(@NonNull BitbucketRepositoryType type, @NonNull BitbucketRepositoryProtocol protocol, String cloneLink, @NonNull String owner, @NonNull String repository) {
+        return delegate.getRepositoryUri(type,protocol,cloneLink,owner,repository);
     }
+
 
     @NonNull
     @Override
@@ -155,6 +155,12 @@ public class CachedBitbucketApi implements BitbucketApi {
         } catch (Exception e) {
             throw  new IOException("Error resolveCommit "+hash,e);
         }
+    }
+
+    @NonNull
+    @Override
+    public BitbucketCommit resolveCommit(@NonNull BitbucketPullRequest pull) throws IOException, InterruptedException {
+        return delegate.resolveCommit(pull);
     }
 
     @NonNull

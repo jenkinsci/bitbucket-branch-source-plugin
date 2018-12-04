@@ -9,6 +9,7 @@
       <f:number default="180" />
     </f:entry>
     <f:validateButton title="${%Clear caches}" method="clear" />
+    <f:validateButton title="${%Show statistics}" method="showStats" />
   </f:optionalBlock>
   <f:invisibleEntry>
     <f:textbox field="serverUrl"/>

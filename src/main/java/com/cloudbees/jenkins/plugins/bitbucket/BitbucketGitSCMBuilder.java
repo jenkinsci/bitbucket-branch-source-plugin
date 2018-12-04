@@ -41,8 +41,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.BitbucketWeb;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -170,26 +168,9 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                         credentialsId(),
                         StandardCredentials.class
                 );
-        Integer protocolPortOverride = null;
         BitbucketRepositoryProtocol protocol = credentials instanceof SSHUserPrivateKey
                 ? BitbucketRepositoryProtocol.SSH
                 : BitbucketRepositoryProtocol.HTTP;
-        if (protocol == BitbucketRepositoryProtocol.SSH) {
-            for (BitbucketHref link : cloneLinks()) {
-                if ("ssh".equals(link.getName())) {
-                    // extract the port from this link and use that
-                    try {
-                        URI uri = new URI(link.getHref());
-                        if (uri.getPort() != -1) {
-                            protocolPortOverride = uri.getPort();
-                        }
-                    } catch (URISyntaxException e) {
-                        // ignore
-                    }
-                    break;
-                }
-            }
-        }
         SCMHead h = head();
         String repoOwner;
         String repository;
@@ -203,10 +184,18 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             repoOwner = scmSource.getRepoOwner();
             repository = scmSource.getRepository();
         }
+
+        String cloneLink = null;
+        for (BitbucketHref link : cloneLinks()) {
+            if (protocol.getType().equals(link.getName())) {
+                cloneLink = link.getHref();
+                break;
+            }
+        }
         withRemote(bitbucket.getRepositoryUri(
                 BitbucketRepositoryType.GIT,
                 protocol,
-                protocolPortOverride,
+                cloneLink,
                 repoOwner,
                 repository));
         AbstractBitbucketEndpoint endpoint =
@@ -233,7 +222,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                         bitbucket.getRepositoryUri(
                                 BitbucketRepositoryType.GIT,
                                 protocol,
-                                protocolPortOverride,
+                                cloneLink,
                                 scmSource().getRepoOwner(),
                                 scmSource().getRepository()),
                         "+refs/heads/" + name + ":refs/remotes/@{remote}/" + localName);

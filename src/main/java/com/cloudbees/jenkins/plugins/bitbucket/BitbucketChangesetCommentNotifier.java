@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 
@@ -34,7 +33,7 @@ import java.io.IOException;
  */
 public class BitbucketChangesetCommentNotifier extends BitbucketNotifier {
 
-    private BitbucketApi bitbucket;
+    private final BitbucketApi bitbucket;
 
     public BitbucketChangesetCommentNotifier(@NonNull BitbucketApi bitbucket) {
         this.bitbucket = bitbucket;

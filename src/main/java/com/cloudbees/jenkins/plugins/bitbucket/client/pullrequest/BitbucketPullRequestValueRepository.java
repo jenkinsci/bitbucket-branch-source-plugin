@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2017, CloudBees, Inc.
+ * Copyright (c) 2016-2017, CloudBees, Inc., Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,42 +28,64 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Date;
 
 public class BitbucketPullRequestValueRepository implements BitbucketPullRequestSource {
     private BitbucketCloudRepository repository;
     private BitbucketCloudBranch branch;
     private BitbucketCloudCommit commit;
 
+    @JsonCreator
+    public BitbucketPullRequestValueRepository(@NonNull @JsonProperty("repository") BitbucketCloudRepository repository,
+                                               @NonNull @JsonProperty("branch") BitbucketCloudBranch branch,
+                                               @NonNull @JsonProperty("commit") BitbucketCloudCommit commit) {
+        this.repository = repository;
+        this.branch = branch;
+        this.commit = commit;
+
+        // redound available the informations into impl objects
+        this.branch.setRawNode(commit.getHash());
+    }
+
     @Override
-    @JsonProperty("repository")
     public BitbucketCloudRepository getRepository() {
         return repository;
     }
 
-    @JsonProperty("repository")
     public void setRepository(BitbucketCloudRepository repository) {
         this.repository = repository;
     }
 
     @Override
-    @JsonProperty("branch")
     public BitbucketCloudBranch getBranch() {
         return branch;
     }
 
-    @JsonProperty("branch")
     public void setBranch(BitbucketCloudBranch branch) {
         this.branch = branch;
     }
 
     @Override
-    @JsonProperty("commit")
     public BitbucketCommit getCommit() {
+        if (branch != null && commit != null) {
+            // initialise commit value using branch closure if not already valued
+            if (commit.getAuthor() == null) {
+                commit.setAuthor(branch.getAuthor());
+            }
+            if (commit.getMessage() == null) {
+                commit.setMessage(branch.getMessage());
+            }
+            if (commit.getDateMillis() == 0) {
+                commit.setDate(new StdDateFormat().format(new Date(branch.getDateMillis())));
+            }
+        }
         return commit;
     }
 
-    @JsonProperty("commit")
     public void setCommit(BitbucketCloudCommit commit) {
         this.commit = commit;
     }

@@ -26,10 +26,11 @@ package com.cloudbees.jenkins.plugins.bitbucket.client.events;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 public class BitbucketCloudPushEvent implements BitbucketPushEvent {
 
@@ -38,6 +39,7 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
     @JsonProperty
     private Push push;
 
+    @Override
     public BitbucketRepository getRepository() {
         return repository;
     }
@@ -70,6 +72,7 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
         private boolean created;
         private boolean closed;
 
+        @Override
         public ReferenceImpl getNew() {
             return newRef;
         }
@@ -78,6 +81,7 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
             this.newRef = newRef;
         }
 
+        @Override
         public ReferenceImpl getOld() {
             return oldRef;
         }
@@ -107,6 +111,7 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
     }
 
     public static class ReferenceImpl implements Reference {
+        private Date date;
         private String type;
         private String name;
         private TargetImpl target;
@@ -137,11 +142,20 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
         public void setTarget(TargetImpl target) {
             this.target = target;
         }
+
+        @Override
+        public Date getDate() {
+            return date != null ? (Date) date.clone() : null;
+        }
+
+        public void setDate(Date date) {
+            this.date = (date != null ? (Date) date.clone() : null);
+        }
     }
 
     public static class TargetImpl implements Target {
-
         private String hash;
+        private Date date;
 
         @Override
         public String getHash() {
@@ -150,6 +164,15 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
 
         public void setHash(String hash) {
             this.hash = hash;
+        }
+
+        @Override
+        public Date getDate() {
+            return date != null ? (Date) date.clone() : null;
+        }
+
+        public void setDate(Date date) {
+            this.date = (date != null ? (Date) date.clone() : null);
         }
     }
 

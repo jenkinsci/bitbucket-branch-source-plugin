@@ -1,0 +1,35 @@
+{
+  "slug": "test-repos",
+  "id": 1,
+  "name": "test-repos",
+  "scmId": "git",
+  "state": "AVAILABLE",
+  "statusMessage": "Available",
+  "forkable": false,
+  "project": {
+    "key": "AMUNIZ",
+    "id": 1,
+    "name": "prj",
+    "description": "This is a test repo",
+    "public": true,
+    "type": "NORMAL",
+    "links": {
+      "self": [{
+        "href": "http://localhost:7990/projects/AMUNIZ"
+      }]
+    }
+  },
+  "public": false,
+  "links": {
+    "clone": [{
+      "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+      "name": "ssh"
+    }, {
+      "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+      "name": "http"
+    }],
+    "self": [{
+      "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+    }]
+  }
+}

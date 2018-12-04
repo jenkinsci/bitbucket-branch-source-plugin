@@ -27,7 +27,7 @@ import java.io.IOException;
 
 public class BitbucketRequestException extends IOException {
 
-    private int httpCode;
+    private final int httpCode;
 
     public BitbucketRequestException(int httpCode, String message) {
         super(message);

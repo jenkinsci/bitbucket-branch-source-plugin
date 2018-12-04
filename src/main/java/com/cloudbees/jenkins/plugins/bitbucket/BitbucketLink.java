@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
-import java.net.URL;
 import jenkins.model.Jenkins;
 import org.apache.commons.jelly.JellyContext;
 import org.jenkins.ui.icon.Icon;

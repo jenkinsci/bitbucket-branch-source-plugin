@@ -46,6 +46,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -136,7 +137,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());
@@ -211,7 +212,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());
@@ -278,7 +279,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());
@@ -349,7 +350,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());

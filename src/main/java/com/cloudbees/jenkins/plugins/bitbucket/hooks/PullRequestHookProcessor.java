@@ -28,12 +28,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
@@ -187,6 +185,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                             if (strategies.size() > 1) {
                                 branchName = branchName + "-" + strategy.name().toLowerCase(Locale.ENGLISH);
                             }
+                            String originalBranchName = pull.getSource().getBranch().getName();
                             PullRequestSCMHead head;
                             if (instanceType == BitbucketType.CLOUD) {
                                 head = new PullRequestSCMHead(
@@ -194,7 +193,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                                         pullRepoOwner,
                                         pullRepository,
                                         type,
-                                        pull.getSource().getBranch().getName(),
+                                        originalBranchName,
                                         pull,
                                         headOrigin,
                                         strategy
@@ -205,7 +204,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                                         src.getRepoOwner(),
                                         src.getRepository(),
                                         type,
-                                        branchName,
+                                        originalBranchName,
                                         pull,
                                         headOrigin,
                                         strategy

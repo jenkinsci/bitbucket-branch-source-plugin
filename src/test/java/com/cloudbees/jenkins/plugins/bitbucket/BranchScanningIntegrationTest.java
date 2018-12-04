@@ -171,18 +171,18 @@ public class BranchScanningIntegrationTest {
             return new BranchProjectFactoryImpl();
         }
 
-        @Override 
+        @Override
         public SCMSourceCriteria getSCMSourceCriteria(SCMSource source) {
             return CRITERIA;
         }
-        
+
         @Override
         public List<SCMSource> getSCMSources() {
             if (getSourcesList() == null) {
                 // test code is generating a NullPointer when calling it from an ItemListener on the SCMSourceOwner
                 // It seems that the object is not fully initialized when the ItemListener uses it.
                 // Perhaps it needs to be reproduced and investigated in a branch-api test.
-                return new ArrayList<SCMSource>();
+                return new ArrayList<>();
             }
             return super.getSCMSources();
         }
@@ -225,12 +225,12 @@ public class BranchScanningIntegrationTest {
         @Extension
         public static class DescriptorImpl extends MultiBranchProjectDescriptor {
 
-            @Override 
+            @Override
             public String getDisplayName() {
                 return "Test Multibranch";
             }
 
-            @Override 
+            @Override
             public TopLevelItem newInstance(ItemGroup parent, String name) {
                 return new MultiBranchProjectImpl(parent, name);
             }

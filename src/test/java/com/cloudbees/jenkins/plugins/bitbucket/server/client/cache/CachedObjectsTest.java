@@ -1,8 +1,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.cache;
 
-import junit.framework.TestCase;
 
 import java.util.concurrent.Callable;
+import junit.framework.TestCase;
+
 
 public class CachedObjectsTest extends TestCase {
 

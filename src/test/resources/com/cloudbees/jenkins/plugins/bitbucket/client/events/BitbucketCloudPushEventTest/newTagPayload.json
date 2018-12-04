@@ -1,0 +1,162 @@
+{
+  "push": {
+    "changes": [
+      {
+        "forced": false,
+        "old": null,
+        "links": {
+          "commits": {
+            "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commits?include=fee1dcdb330d1318502f303ccd4792531c28dc8e"
+          }
+        },
+        "truncated": false,
+        "created": true,
+        "closed": false,
+        "new": {
+          "name": "test",
+          "links": {
+            "commits": {
+              "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commits/test"
+            },
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/refs/tags/test"
+            },
+            "html": {
+              "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/commits/tag/test"
+            }
+          },
+          "tagger": {},
+          "date": "2018-04-27T09:04:24+00:00",
+          "message": "test\n",
+          "type": "tag",
+          "target": {
+            "hash": "fee1dcdb330d1318502f303ccd4792531c28dc8e",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commit/fee1dcdb330d1318502f303ccd4792531c28dc8e"
+              },
+              "html": {
+                "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/commits/fee1dcdb330d1318502f303ccd4792531c28dc8e"
+              }
+            },
+            "author": {
+              "raw": "Nikolas Falco <nikolas.falco@acme.com>",
+              "type": "author",
+              "user": {
+                "username": "nfalco79",
+                "type": "user",
+                "display_name": "Nikolas Falco",
+                "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/nfalco79"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/nfalco79/"
+                  },
+                  "avatar": {
+                    "href": "https://bitbucket.org/account/nfalco79/avatar/32/"
+                  }
+                }
+              }
+            },
+            "summary": {
+              "raw": "Defect RCBA-13 Maven plugin permits uppercase letters in addUniqueConstraint\n\nUse a better log message in case of violation of changeset.\n",
+              "markup": "markdown",
+              "html": "<p>Defect RCBA-13 Maven plugin permits uppercase letters in addUniqueConstraint</p>\n<p>Use a better log message in case of violation of changeset.</p>",
+              "type": "rendered"
+            },
+            "parents": [
+              {
+                "type": "commit",
+                "hash": "e307a7d996212a537b0648b15d0d59fe3c98c963",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commit/e307a7d996212a537b0648b15d0d59fe3c98c963"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/commits/e307a7d996212a537b0648b15d0d59fe3c98c963"
+                  }
+                }
+              }
+            ],
+            "date": "2018-04-06T14:47:43+00:00",
+            "message": "Defect RCBA-13 Maven plugin permits uppercase letters in addUniqueConstraint\n\nUse a better log message in case of violation of changeset.\n",
+            "type": "commit"
+          }
+        }
+      }
+    ]
+  },
+  "repository": {
+    "scm": "git",
+    "website": "",
+    "name": "tds.cm.maven.plugins-java",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java"
+      },
+      "html": {
+        "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/avatar/32/"
+      }
+    },
+    "project": {
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/teams/acme/projects/THIRDPL"
+        },
+        "html": {
+          "href": "https://bitbucket.org/account/user/acme/projects/THIRDPL"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/user/acme/projects/THIRDPL/avatar/32"
+        }
+      },
+      "type": "project",
+      "uuid": "{645d71c9-e01c-40ab-976c-3992b9b695a4}",
+      "key": "THIRDPL",
+      "name": "3rd Party Libraries"
+    },
+    "full_name": "acme/tds.cm.maven.plugins-java",
+    "owner": {
+      "username": "acme",
+      "type": "team",
+      "display_name": "ACME",
+      "uuid": "{7f41da2d-686c-4187-9b70-9eb5f71368a6}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/teams/acme"
+        },
+        "html": {
+          "href": "https://bitbucket.org/acme/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/acme/avatar/32/"
+        }
+      }
+    },
+    "type": "repository",
+    "is_private": true,
+    "uuid": "{ff487924-8721-4ab7-8d5c-e482d4b0eb13}"
+  },
+  "actor": {
+    "username": "nfalco79",
+    "type": "user",
+    "display_name": "Nikolas Falco",
+    "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/nfalco79"
+      },
+      "html": {
+        "href": "https://bitbucket.org/nfalco79/"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/account/nfalco79/avatar/32/"
+      }
+    }
+  }
+}

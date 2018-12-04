@@ -45,4 +45,22 @@ public interface BitbucketBranch {
      */
     long getDateMillis();
 
+    /**
+     * Returns the head commit message for this branch.
+     *
+     * @return the head commit message of this branch
+     * @author Nikolas Falco
+     * @since 2.2.14
+     */
+    String getMessage();
+
+    /**
+     * Returns the head commit author for this branch.
+     *
+     * @return the head commit author of this branch
+     * @author Nikolas Falco
+     * @since 2.2.14
+     */
+    String getAuthor();
+
 }

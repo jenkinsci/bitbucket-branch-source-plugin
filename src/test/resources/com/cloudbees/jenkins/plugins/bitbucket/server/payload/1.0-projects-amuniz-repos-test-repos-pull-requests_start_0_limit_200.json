@@ -1,0 +1,292 @@
+{
+  "size": 2,
+  "limit": 100,
+  "isLastPage": true,
+  "values": [{
+    "id": 2,
+    "version": 0,
+    "title": "Add one message more",
+    "description": "test from forked repo",
+    "state": "OPEN",
+    "open": true,
+    "closed": false,
+    "createdDate": 1541687143031,
+    "updatedDate": 1541687143031,
+    "fromRef": {
+      "id": "refs/heads/feature/BB-2",
+      "displayId": "feature/BB-2",
+      "latestCommit": "046d9a3c1532acf4cf08fe93235c00e4d673c1d2",
+      "repository": {
+        "slug": "test-repos-fork",
+        "id": 12,
+        "name": "test-repos-fork",
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "statusMessage": "Available",
+        "forkable": true,
+        "origin": {
+          "slug": "test-repos",
+          "id": 1,
+          "name": "test-repos",
+          "scmId": "git",
+          "state": "AVAILABLE",
+          "statusMessage": "Available",
+          "forkable": true,
+          "project": {
+            "key": "AMUNIZ",
+            "id": 1,
+            "name": "prj",
+            "description": "This is a test repo",
+            "public": true,
+            "type": "NORMAL",
+            "links": {
+              "self": [{
+                "href": "http://localhost:7990/projects/AMUNIZ"
+              }]
+            }
+          },
+          "public": false,
+          "links": {
+            "clone": [{
+              "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+              "name": "ssh"
+            }, {
+              "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+              "name": "http"
+            }],
+            "self": [{
+              "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+            }]
+          }
+        },
+        "project": {
+          "key": "AMUNIZ",
+          "id": 1,
+          "name": "prj",
+          "description": "This is a test repo",
+          "public": true,
+          "type": "NORMAL",
+          "links": {
+            "self": [{
+              "href": "http://localhost:7990/projects/AMUNIZ"
+            }]
+          }
+        },
+        "public": false,
+        "links": {
+          "clone": [{
+            "href": "http://localhost:7990/scm/amuniz/test-repos-fork.git",
+            "name": "http"
+          }, {
+            "href": "ssh://git@localhost:7999/amuniz/test-repos-fork.git",
+            "name": "ssh"
+          }],
+          "self": [{
+            "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos-fork/browse"
+          }]
+        }
+      }
+    },
+    "toRef": {
+      "id": "refs/heads/master",
+      "displayId": "master",
+      "latestCommit": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+      "repository": {
+        "slug": "test-repos",
+        "id": 1,
+        "name": "test-repos",
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "statusMessage": "Available",
+        "forkable": true,
+        "project": {
+          "key": "AMUNIZ",
+          "id": 1,
+          "name": "prj",
+          "description": "This is a test repo",
+          "public": true,
+          "type": "NORMAL",
+          "links": {
+            "self": [{
+              "href": "http://localhost:7990/projects/AMUNIZ"
+            }]
+          }
+        },
+        "public": false,
+        "links": {
+          "clone": [{
+            "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+            "name": "ssh"
+          }, {
+            "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+            "name": "http"
+          }],
+          "self": [{
+            "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+          }]
+        }
+      }
+    },
+    "locked": false,
+    "author": {
+      "user": {
+        "name": "admin",
+        "emailAddress": "kaxixus@cmail.club",
+        "id": 1,
+        "displayName": "admin",
+        "active": true,
+        "slug": "admin",
+        "type": "NORMAL",
+        "links": {
+          "self": [{
+            "href": "http://localhost:7990/users/admin"
+          }]
+        }
+      },
+      "role": "AUTHOR",
+      "approved": false,
+      "status": "UNAPPROVED"
+    },
+    "reviewers": [],
+    "participants": [],
+    "properties": {
+      "mergeResult": {
+        "outcome": "CLEAN",
+        "current": true
+      },
+      "resolvedTaskCount": 0,
+      "openTaskCount": 0
+    },
+    "links": {
+      "self": [{
+        "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/pull-requests/2"
+      }]
+    }
+  }, {
+    "id": 1,
+    "version": 0,
+    "title": "Release/release 1",
+    "description": "* Add license\r\n* [CI] Release version 1.0.0",
+    "state": "OPEN",
+    "open": true,
+    "closed": false,
+    "createdDate": 1537885911512,
+    "updatedDate": 1537885911512,
+    "fromRef": {
+      "id": "refs/heads/release/release-1",
+      "displayId": "release/release-1",
+      "latestCommit": "bf0e8b7962c024026ad01ae09d3a11732e26c0d4",
+      "repository": {
+        "slug": "test-repos",
+        "id": 1,
+        "name": "test-repos",
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "statusMessage": "Available",
+        "forkable": true,
+        "project": {
+          "key": "AMUNIZ",
+          "id": 1,
+          "name": "prj",
+          "description": "This is a test repo",
+          "public": true,
+          "type": "NORMAL",
+          "links": {
+            "self": [{
+              "href": "http://localhost:7990/projects/AMUNIZ"
+            }]
+          }
+        },
+        "public": false,
+        "links": {
+          "clone": [{
+            "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+            "name": "ssh"
+          }, {
+            "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+            "name": "http"
+          }],
+          "self": [{
+            "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+          }]
+        }
+      }
+    },
+    "toRef": {
+      "id": "refs/heads/master",
+      "displayId": "master",
+      "latestCommit": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+      "repository": {
+        "slug": "test-repos",
+        "id": 1,
+        "name": "test-repos",
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "statusMessage": "Available",
+        "forkable": true,
+        "project": {
+          "key": "AMUNIZ",
+          "id": 1,
+          "name": "prj",
+          "description": "This is a test repo",
+          "public": true,
+          "type": "NORMAL",
+          "links": {
+            "self": [{
+              "href": "http://localhost:7990/projects/AMUNIZ"
+            }]
+          }
+        },
+        "public": false,
+        "links": {
+          "clone": [{
+            "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+            "name": "ssh"
+          }, {
+            "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+            "name": "http"
+          }],
+          "self": [{
+            "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+          }]
+        }
+      }
+    },
+    "locked": false,
+    "author": {
+      "user": {
+        "name": "amuniz",
+        "emailAddress": "amuniz@acme.com",
+        "id": 2,
+        "displayName": "Antonio Muniz",
+        "active": true,
+        "slug": "amuniz",
+        "type": "NORMAL",
+        "links": {
+          "self": [{
+            "href": "http://localhost:7990/users/amuniz"
+          }]
+        }
+      },
+      "role": "AUTHOR",
+      "approved": false,
+      "status": "UNAPPROVED"
+    },
+    "reviewers": [],
+    "participants": [],
+    "properties": {
+      "mergeResult": {
+        "outcome": "CLEAN",
+        "current": true
+      },
+      "resolvedTaskCount": 0,
+      "openTaskCount": 0
+    },
+    "links": {
+      "self": [{
+        "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/pull-requests/1"
+      }]
+    }
+  }],
+  "start": 0
+}

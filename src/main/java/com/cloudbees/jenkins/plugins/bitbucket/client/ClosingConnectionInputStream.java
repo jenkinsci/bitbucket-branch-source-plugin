@@ -1,12 +1,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
+import java.io.IOException;
+import java.io.InputStream;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 public class ClosingConnectionInputStream extends InputStream {
 

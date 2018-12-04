@@ -23,8 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
@@ -47,7 +47,7 @@ public class BitbucketBuildStatus {
     private String state;
 
     /**
-     * The URL to liunk from the status details
+     * The URL to link from the status details
      */
     private String url;
 

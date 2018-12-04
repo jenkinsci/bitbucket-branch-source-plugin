@@ -60,7 +60,7 @@ public abstract class BitbucketNotifier {
      * and repository name.
      *
      * @param hash commit hash
-     * @param content notification content 
+     * @param content notification content
      * @throws IOException if there was a communication error during notification.
      * @throws InterruptedException if interrupted during notification.
      */

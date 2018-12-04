@@ -30,93 +30,91 @@ import java.io.IOException;
 import java.io.InputStream;
 import jenkins.scm.api.SCMFile;
 
-
 public class BitbucketSCMFile  extends SCMFile {
 
-	private final BitbucketApi api;
-	private  String ref;
-	private final String hash;
-	
-	public String getRef() {
-		return ref;
-	}
+    private final BitbucketApi api;
+    private  String ref;
+    private final String hash;
 
-	public void setRef(String ref) {
-		this.ref = ref;
-	}
-
-	@Deprecated
-	public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
-							BitbucketApi api,
-							String ref) {
-		this(bitBucketSCMFileSystem, api, ref, null);
-	}
-
-	public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
-							BitbucketApi api,
-							String ref, String hash) {
-		super();
-		type(Type.DIRECTORY);
-		this.api = api;
-		this.ref = ref;
-		this.hash = hash;
-	}
-
-	@Deprecated
-	public BitbucketSCMFile(@NonNull BitbucketSCMFile parent, String name, Type type) {
-		this(parent, name, type, null);
-	}
-
-	public BitbucketSCMFile(@NonNull BitbucketSCMFile parent, String name, Type type, String hash) {
-    	super(parent, name);
-    	this.api = parent.api;
-    	this.ref = parent.ref;
-    	this.hash = hash;
-    	type(type);
+    public String getRef() {
+        return ref;
     }
 
-	public String getHash() {
-		return hash;
-	}
+    public void setRef(String ref) {
+        this.ref = ref;
+    }
 
-	@Override
-	@NonNull
-	public Iterable<SCMFile> children() throws IOException,
-			InterruptedException {
+    @Deprecated
+    public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
+                            BitbucketApi api,
+                            String ref) {
+        this(bitBucketSCMFileSystem, api, ref, null);
+    }
+
+    public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
+                            BitbucketApi api,
+                            String ref, String hash) {
+        super();
+        type(Type.DIRECTORY);
+        this.api = api;
+        this.ref = ref;
+        this.hash = hash;
+    }
+
+    @Deprecated
+    public BitbucketSCMFile(@NonNull BitbucketSCMFile parent, String name, Type type) {
+        this(parent, name, type, null);
+    }
+
+    public BitbucketSCMFile(@NonNull BitbucketSCMFile parent, String name, Type type, String hash) {
+        super(parent, name);
+        this.api = parent.api;
+        this.ref = parent.ref;
+        this.hash = hash;
+        type(type);
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    @Override
+    @NonNull
+    public Iterable<SCMFile> children() throws IOException,
+            InterruptedException {
         if (this.isDirectory()) {
             return api.getDirectoryContent(this);
         } else {
             throw new IOException("Cannot get children from a regular file");
         }
-	}
+    }
 
-	@Override
-	@NonNull
-	public InputStream content() throws IOException, InterruptedException {
+    @Override
+    @NonNull
+    public InputStream content() throws IOException, InterruptedException {
         if (this.isDirectory()) {
             throw new IOException("Cannot get raw content from a directory");
         } else {
-        	return api.getFileContent(this);
+            return api.getFileContent(this);
         }
-	}
+    }
 
-	@Override
-	public long lastModified() throws IOException, InterruptedException {
-		// TODO: Return valid value when Tag support is implemented
-		return 0;
-	}
+    @Override
+    public long lastModified() throws IOException, InterruptedException {
+        // TODO: Return valid value when Tag support is implemented
+        return 0;
+    }
 
-	@Override
-	@NonNull
-	protected SCMFile newChild(String name, boolean assumeIsDirectory) {
-		return new BitbucketSCMFile(this, name, assumeIsDirectory?Type.DIRECTORY:Type.REGULAR_FILE, hash);
+    @Override
+    @NonNull
+    protected SCMFile newChild(String name, boolean assumeIsDirectory) {
+        return new BitbucketSCMFile(this, name, assumeIsDirectory?Type.DIRECTORY:Type.REGULAR_FILE, hash);
+    }
 
-	}
-
-	@Override
-	@NonNull
-	protected Type type() throws IOException, InterruptedException {
-		return this.getType();
-	}
+    @Override
+    @NonNull
+    protected Type type() throws IOException, InterruptedException {
+        return this.getType();
+    }
 
 }

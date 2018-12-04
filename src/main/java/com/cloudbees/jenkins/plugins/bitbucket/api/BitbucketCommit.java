@@ -29,6 +29,15 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 public interface BitbucketCommit {
 
     /**
+     * Returns the head commit author for this branch.
+     *
+     * @return the head commit author of this branch
+     * @author Nikolas Falco
+     * @since 2.2.14
+     */
+    String getAuthor();
+
+    /**
      * @return commit message
      */
     String getMessage();

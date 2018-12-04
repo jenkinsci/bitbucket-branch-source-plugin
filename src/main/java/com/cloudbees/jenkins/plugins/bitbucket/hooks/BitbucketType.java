@@ -8,7 +8,7 @@ public enum BitbucketType {
 
     SERVER("server");
 
-    private String key;
+    private final String key;
 
     BitbucketType(String key) {
         this.key = key;

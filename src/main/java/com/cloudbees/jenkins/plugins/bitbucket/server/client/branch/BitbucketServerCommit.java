@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc., Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +24,16 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.text.MessageFormat;
+import java.util.Date;
 
 public class BitbucketServerCommit implements BitbucketCommit {
+    private static final String GIT_COMMIT_AUTHOR = "{0} <{1}>";
 
     private String message;
 
@@ -34,17 +41,25 @@ public class BitbucketServerCommit implements BitbucketCommit {
 
     private String hash;
 
-    @JsonProperty("authorTimestamp")
     private long dateMillis;
 
-    public BitbucketServerCommit() {
+    private String author;
+
+    @JsonCreator
+    public BitbucketServerCommit(@NonNull @JsonProperty("message") String message, //
+                                 @NonNull @JsonProperty("id") String hash, //
+                                 @NonNull @JsonProperty("authorTimestamp") long dateMillis, //
+                                 @Nullable @JsonProperty("author") BitbucketServerAuthor author) {
+        // date it is not in the payload
+        this(message, hash, dateMillis, author != null ? MessageFormat.format(GIT_COMMIT_AUTHOR, author.getName(), author.getEmail()) : null);
     }
 
-    public BitbucketServerCommit(String message, String date, String hash, long dateMillis) {
+    public BitbucketServerCommit(String message, String hash, long dateMillis, String author) {
         this.message = message;
-        this.date = date;
         this.hash = hash;
         this.dateMillis = dateMillis;
+        this.date = new StdDateFormat().format(new Date(dateMillis));
+        this.author = author;
     }
 
     public BitbucketServerCommit(String hash) {
@@ -85,6 +100,15 @@ public class BitbucketServerCommit implements BitbucketCommit {
 
     public void setDateMillis(long dateMillis) {
         this.dateMillis = dateMillis;
+    }
+
+    @Override
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
 }

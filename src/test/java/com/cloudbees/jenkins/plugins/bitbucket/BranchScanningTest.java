@@ -204,7 +204,7 @@ public class BranchScanningTest {
 
     public final class SCMHeadObserverImpl extends SCMHeadObserver {
 
-        public List<String> branches = new ArrayList<String>();
+        public List<String> branches = new ArrayList<>();
 
         public void observe(@NonNull SCMHead head, @NonNull SCMRevision revision) {
             branches.add(head.getName());

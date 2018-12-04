@@ -23,14 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -57,9 +57,9 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
         result.includeMatchingAs(
                 ACL.SYSTEM,
                 jenkins,
-                StandardUsernameCredentials.class,
+                StandardCredentials.class,
                 URIRequirementBuilder.fromUri(serverUrl).build(),
-                CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class)
+                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
         );
         return result;
     }

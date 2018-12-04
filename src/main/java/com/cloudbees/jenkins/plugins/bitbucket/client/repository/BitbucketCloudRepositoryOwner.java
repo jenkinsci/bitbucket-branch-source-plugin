@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryOwner;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BitbucketCloudRepositoryOwner implements BitbucketRepositoryOwner {
 

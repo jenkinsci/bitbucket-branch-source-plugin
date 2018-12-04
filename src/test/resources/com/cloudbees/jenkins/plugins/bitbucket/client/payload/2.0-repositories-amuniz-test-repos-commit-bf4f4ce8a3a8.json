@@ -1,0 +1,68 @@
+{
+  "hash": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+  "repository": {
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/test-repos"
+      },
+      "avatar": {
+        "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
+      }
+    },
+    "type": "repository",
+    "name": "test-repos",
+    "full_name": "amuniz/test-repos",
+    "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+    },
+    "comments": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf/comments"
+    },
+    "patch": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+    },
+    "html": {
+      "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+    },
+    "diff": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+    },
+    "approve": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf/approve"
+    },
+    "statuses": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf/statuses"
+    }
+  },
+  "author": {
+    "raw": "Antonio Muniz <amuniz@example.com>"
+  },
+  "summary": {
+    "raw": "Add sample script hello world",
+    "markup": "markdown",
+    "html": "<p>Add sample script hello world</p>",
+    "type": "rendered"
+  },
+  "participants": [],
+  "parents": [{
+    "hash": "8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1",
+    "type": "commit",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/test-repos/commits/8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1"
+      }
+    }
+  }],
+  "date": "2018-09-21T14:07:25+00:00",
+  "message": "Add sample script hello world",
+  "type": "commit"
+}

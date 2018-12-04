@@ -65,12 +65,12 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      * Set of {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
     @NonNull
-    private Set<ChangeRequestCheckoutStrategy> originPRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
+    private final Set<ChangeRequestCheckoutStrategy> originPRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
     /**
      * Set of {@link ChangeRequestCheckoutStrategy} to create for each fork pull request.
      */
     @NonNull
-    private Set<ChangeRequestCheckoutStrategy> forkPRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
+    private final Set<ChangeRequestCheckoutStrategy> forkPRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
     /**
      * The {@link WebhookRegistration} to use in this context.
      */

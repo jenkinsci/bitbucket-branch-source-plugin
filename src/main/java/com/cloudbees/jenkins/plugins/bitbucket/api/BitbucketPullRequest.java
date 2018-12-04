@@ -53,4 +53,6 @@ public interface BitbucketPullRequest {
 
     String getAuthorLogin();
 
+    String getAuthorEmail();
+
 }

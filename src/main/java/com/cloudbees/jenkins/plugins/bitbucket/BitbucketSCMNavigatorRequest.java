@@ -23,7 +23,12 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMSourceObserver;
 import jenkins.scm.api.trait.SCMNavigatorRequest;
@@ -34,6 +39,12 @@ import jenkins.scm.api.trait.SCMNavigatorRequest;
  * @since 2.2.0
  */
 public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
+
+    /**
+     * Map of all repositories found by this request
+     */
+    private final Map<String, BitbucketRepository> repositoryMap = new TreeMap<>();
+
     /**
      * Constructor.
      *
@@ -46,4 +57,20 @@ public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
                                            @NonNull SCMSourceObserver observer) {
         super(source, context, observer);
     }
+
+    public void withRepositories(List<? extends BitbucketRepository> repositories) {
+        this.repositoryMap.clear();
+        for (BitbucketRepository repository : repositories) {
+            this.repositoryMap.put(repository.getRepositoryName(), repository);
+        }
+    }
+
+    public Collection<BitbucketRepository> repositories() {
+        return this.repositoryMap.values();
+    }
+
+    public BitbucketRepository getBitbucketRepository(String repositoryName) {
+        return this.repositoryMap.get(repositoryName);
+    }
+
 }

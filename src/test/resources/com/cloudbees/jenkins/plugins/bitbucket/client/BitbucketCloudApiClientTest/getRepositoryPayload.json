@@ -1,0 +1,104 @@
+{
+	"scm": "git",
+	"website": "",
+	"has_wiki": false,
+	"uuid": "{ff487924-8721-4ab7-8d5c-e482d4b0eb13}",
+	"links": {
+		"watchers": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/watchers"
+		},
+		"branches": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/refs/branches"
+		},
+		"tags": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/refs/tags"
+		},
+		"commits": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commits"
+		},
+		"clone": [
+			{
+				"href": "https://nfalco79@bitbucket.org/acme/tds.cm.maven.plugins-java.git",
+				"name": "https"
+			},
+			{
+				"href": "git@bitbucket.org:acme/tds.cm.maven.plugins-java.git",
+				"name": "ssh"
+			}
+		],
+		"self": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java"
+		},
+		"source": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/src"
+		},
+		"html": {
+			"href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java"
+		},
+		"avatar": {
+			"href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/avatar/32/"
+		},
+		"hooks": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/hooks"
+		},
+		"forks": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/forks"
+		},
+		"downloads": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/downloads"
+		},
+		"pullrequests": {
+			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/pullrequests"
+		}
+	},
+	"fork_policy": "no_forks",
+	"name": "tds.cm.maven.plugins-java",
+	"project": {
+		"key": "THIRDPL",
+		"type": "project",
+		"uuid": "{645d71c9-e01c-40ab-976c-3992b9b695a4}",
+		"links": {
+			"self": {
+				"href": "https://api.bitbucket.org/2.0/teams/acme/projects/THIRDPL"
+			},
+			"html": {
+				"href": "https://bitbucket.org/account/user/acme/projects/THIRDPL"
+			},
+			"avatar": {
+				"href": "https://bitbucket.org/account/user/acme/projects/THIRDPL/avatar/32"
+			}
+		},
+		"name": "3rd Party Libraries"
+	},
+	"language": "java",
+	"created_on": "2016-08-17T11:00:23.063614+00:00",
+	"mainbranch": {
+		"type": "branch",
+		"name": "master"
+	},
+	"full_name": "acme/tds.cm.maven.plugins-java",
+	"has_issues": false,
+	"owner": {
+		"username": "acme",
+		"display_name": "ACME",
+		"type": "team",
+		"uuid": "{7f41da2d-686c-4187-9b70-9eb5f71368a6}",
+		"links": {
+			"self": {
+				"href": "https://api.bitbucket.org/2.0/teams/acme"
+			},
+			"html": {
+				"href": "https://bitbucket.org/acme/"
+			},
+			"avatar": {
+				"href": "https://bitbucket.org/account/acme/avatar/32/"
+			}
+		}
+	},
+	"updated_on": "2018-04-27T15:32:08.356155+00:00",
+	"size": 136381135,
+	"type": "repository",
+	"slug": "tds.cm.maven.plugins-java",
+	"is_private": true,
+	"description": "The acme maven plugins for build system"
+}

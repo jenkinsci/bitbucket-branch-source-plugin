@@ -1,11 +1,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.cache;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.*;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,16 +33,16 @@ public class BitbucketCache {
         return instance;
     }
 
-    public BitbucketApiKey getKey(String serverUrl, String owner, String repository, StandardUsernamePasswordCredentials credentials) {
-        return new BitbucketApiKey(serverUrl, owner, repository, credentials);
+    public BitbucketApiKey getKey(String serverUrl, String owner, String repository) {
+        return new BitbucketApiKey(serverUrl, owner, repository);
     }
 
-    public BitbucketServerAPIClient getBitbucketServerAPIClient(String serverUrl, String owner, String repository, StandardUsernamePasswordCredentials credentials) {
-        BitbucketApiKey key = getKey(serverUrl, owner, repository, credentials);
+    public BitbucketServerAPIClient getBitbucketServerAPIClient(String serverUrl, String owner, String repository, BitbucketAuthenticator authenticator) {
+        BitbucketApiKey key = getKey(serverUrl, owner, repository);
         synchronized (instance) {
             BitbucketServerAPIClient delegate = instance.bitbucketApiMap.get(key);
             if (delegate == null ) {
-                delegate = new BitbucketServerAPIClient(serverUrl, owner, repository, credentials, false);
+                delegate = new BitbucketServerAPIClient(serverUrl, owner, repository, authenticator, false);
                 instance.bitbucketApiMap.put(key,delegate);
             }
             return delegate;

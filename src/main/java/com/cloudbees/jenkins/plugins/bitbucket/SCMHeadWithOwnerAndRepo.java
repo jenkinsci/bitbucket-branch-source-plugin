@@ -109,7 +109,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
         try {
             final BitbucketApi bitbucket = BitbucketApiFactory.newInstance(
                     source.getServerUrl(),
-                    source.credentials(),
+                    source.authenticator(),
                     source.getRepoOwner(),
                     source.getRepository()
             );
@@ -121,7 +121,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
             LOGGER.log(Level.FINE, "Cannot resolve pull request targets", e);
         }
         synchronized (cache) {
-            cache.put(source, new SoftReference<Map<String, String>>(targets));
+            cache.put(source, new SoftReference<>(targets));
         }
         return targets;
     }
@@ -165,7 +165,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                     head,
                     // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
                     // so we can leave it null as a placeholder
-                    new BitbucketSCMSource.MercurialRevision(head.getTarget(), null),
+                    new BitbucketSCMSource.MercurialRevision(head.getTarget(), (String) null),
                     new BitbucketSCMSource.MercurialRevision(head, revision.getHash())
             ) : null;
         }

@@ -41,7 +41,7 @@ public enum UserRoleInRepository {
     CONTRIBUTOR("contributor"),
     MEMBER("member");
 
-    private String id;
+    private final String id;
 
     private UserRoleInRepository(String id) {
         this.id = id;

@@ -44,8 +44,6 @@ import hudson.plugins.mercurial.MercurialSCMBuilder;
 import hudson.plugins.mercurial.MercurialSCMSource;
 import hudson.plugins.mercurial.browser.BitBucket;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -161,26 +159,9 @@ public class BitbucketHgSCMBuilder extends MercurialSCMBuilder<BitbucketHgSCMBui
                         credentialsId(),
                         StandardCredentials.class
                 );
-        Integer protocolPortOverride = null;
         BitbucketRepositoryProtocol protocol = credentials instanceof SSHUserPrivateKey
                 ? BitbucketRepositoryProtocol.SSH
                 : BitbucketRepositoryProtocol.HTTP;
-        if (protocol == BitbucketRepositoryProtocol.SSH) {
-            for (BitbucketHref link : cloneLinks()) {
-                if ("ssh".equals(link.getName())) {
-                    // extract the port from this link and use that
-                    try {
-                        URI uri = new URI(link.getHref());
-                        if (uri.getPort() != -1) {
-                            protocolPortOverride = uri.getPort();
-                        }
-                    } catch (URISyntaxException e) {
-                        // ignore
-                    }
-                    break;
-                }
-            }
-        }
         SCMHead h = head();
         String repoOwner;
         String repository;
@@ -194,10 +175,18 @@ public class BitbucketHgSCMBuilder extends MercurialSCMBuilder<BitbucketHgSCMBui
             repoOwner = scmSource.getRepoOwner();
             repository = scmSource.getRepository();
         }
+
+        String cloneLink = null;
+        for (BitbucketHref link : cloneLinks()) {
+            if (protocol.getType().equals(link.getName())) {
+                cloneLink = link.getHref();
+                break;
+            }
+        }
         withSource(bitbucket.getRepositoryUri(
                 BitbucketRepositoryType.MERCURIAL,
                 protocol,
-                protocolPortOverride,
+                cloneLink,
                 repoOwner,
                 repository));
         AbstractBitbucketEndpoint endpoint =

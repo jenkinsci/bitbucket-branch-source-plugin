@@ -38,7 +38,7 @@ public enum BitbucketRepositoryType {
      */
     MERCURIAL("hg");
 
-    private String type;
+    private final String type;
 
     BitbucketRepositoryType(@NonNull String type) {
         this.type = type;

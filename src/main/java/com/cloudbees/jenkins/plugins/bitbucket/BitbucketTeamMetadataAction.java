@@ -25,9 +25,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.metadata.AvatarMetadataAction;
-import org.kohsuke.stapler.Stapler;
 
 /**
  * Invisible property that retains information about Bitbucket team.

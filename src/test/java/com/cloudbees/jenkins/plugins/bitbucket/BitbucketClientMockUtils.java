@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
@@ -38,28 +39,24 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudT
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import hudson.model.TaskListener;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import jenkins.model.Jenkins;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class BitbucketClientMockUtils {
 
     public static BitbucketCloudApiClient getAPIClientMock(BitbucketRepositoryType type, boolean includePullRequests,
             boolean includeWebHooks) throws IOException, InterruptedException {
         BitbucketCloudApiClient bitbucket = mock(BitbucketCloudApiClient.class);
-        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), any(Integer.class), anyString(), anyString())).thenCallRealMethod();
+        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), anyString(), anyString(), anyString())).thenCallRealMethod();
         // mock branch list
-        List<BitbucketCloudBranch> branches = new ArrayList<BitbucketCloudBranch>();
+        List<BitbucketCloudBranch> branches = new ArrayList<>();
         branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
         branches.add(getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f"));
         // add branches
@@ -76,6 +73,13 @@ public class BitbucketClientMockUtils {
                     .thenReturn(true);
             when(bitbucket.resolveSourceFullHash(any(BitbucketPullRequestValue.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
+
+            BitbucketCloudAuthor author = new BitbucketCloudAuthor();
+            author.setRaw("amuniz <amuniz@mail.com");
+            when(bitbucket.resolveCommit("e851558f77c098d21af6bb8cc54a423f7cf12147"))
+                .thenReturn(new BitbucketCloudCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", author));
+            when(bitbucket.resolveCommit("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"))
+                .thenReturn(new BitbucketCloudCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", author));
         }
 
         // mock file exists
@@ -176,28 +180,21 @@ public class BitbucketClientMockUtils {
 
     private static BitbucketPullRequestValue getPullRequest() {
         BitbucketPullRequestValue pr = new BitbucketPullRequestValue();
-        BitbucketPullRequestValueRepository source = new BitbucketPullRequestValueRepository();
 
         BitbucketCloudBranch branch = new BitbucketCloudBranch("my-feature-branch", null, 0);
-        source.setBranch(branch);
-
-        BitbucketCloudCommit commit = new BitbucketCloudCommit();
-        commit.setHash("e851558f77c098d21af6bb8cc54a423f7cf12147");
-        source.setCommit(commit);
-
+        BitbucketCloudAuthor author = new BitbucketCloudAuthor();
+        author.setRaw("amuniz <amuniz@mail.com>");
+        BitbucketCloudCommit commit = new BitbucketCloudCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", author);
         BitbucketCloudRepository repository = new BitbucketCloudRepository();
         repository.setFullName("otheruser/test-repos");
-        source.setRepository(repository);
 
-        pr.setSource(source);
+        pr.setSource(new BitbucketPullRequestValueRepository(repository, branch, commit));
 
-        BitbucketPullRequestValueDestination destination = new BitbucketPullRequestValueDestination();
+        commit = new BitbucketCloudCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", author);
         branch = new BitbucketCloudBranch("branch1", null, 0);
-        destination.setBranch(branch);
         repository = new BitbucketCloudRepository();
         repository.setFullName("amuniz/test-repos");
-        destination.setRepository(repository);
-        pr.setDestination(destination);
+        pr.setDestination(new BitbucketPullRequestValueDestination(repository, branch, commit));
 
         pr.setId("23");
         pr.setAuthor(new BitbucketPullRequestValue.Author("amuniz"));

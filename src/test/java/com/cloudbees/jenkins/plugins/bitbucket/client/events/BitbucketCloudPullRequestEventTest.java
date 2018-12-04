@@ -88,7 +88,7 @@ public class BitbucketCloudPullRequestEventTest {
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
-        assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(), 
+        assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
                 anyOf(is("f612156eff2c"), is("f612156eff2c958f52f8e6e20c71f396aeaeaff4")));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getCommit().getHash(),

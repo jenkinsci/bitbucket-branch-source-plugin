@@ -23,11 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * Bitbucket paginated resource

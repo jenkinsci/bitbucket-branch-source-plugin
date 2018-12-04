@@ -74,25 +74,25 @@ public class SCMNavigatorIntegrationTest {
         @DataBoundConstructor
         public MultiBranchProjectFactoryImpl() {}
 
-        @Override 
+        @Override
         protected SCMSourceCriteria getSCMSourceCriteria(SCMSource source) {
             return BranchScanningIntegrationTest.MultiBranchProjectImpl.CRITERIA;
         }
 
-        @Override 
+        @Override
         protected MultiBranchProject<?,?> doCreateProject(ItemGroup<?> parent, String name, Map<String,Object> attributes) {
             return new BranchScanningIntegrationTest.MultiBranchProjectImpl(parent, name);
         }
 
-        @TestExtension 
+        @TestExtension
         public static class DescriptorImpl extends MultiBranchProjectFactoryDescriptor {
 
-            @Override 
+            @Override
             public MultiBranchProjectFactory newInstance() {
                 return new MultiBranchProjectFactoryImpl();
             }
 
-            @Override 
+            @Override
             public String getDisplayName() {
                 return "Test multibranch factory";
             }

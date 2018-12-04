@@ -2,10 +2,10 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -20,7 +20,7 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
 
     @NonNull
     @Override
-    protected BitbucketApi create(@Nullable String serverUrl, @Nullable StandardUsernamePasswordCredentials credentials,
+    protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
                                   @NonNull String owner, @CheckForNull String repository) {
         AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(BitbucketCloudEndpoint.SERVER_URL);
         boolean enableCache = false;
@@ -33,6 +33,6 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
         }
         return new BitbucketCloudApiClient(
                 enableCache, teamCacheDuration, repositoriesCacheDuration,
-                owner, repository, credentials);
+                owner, repository, authenticator);
     }
 }

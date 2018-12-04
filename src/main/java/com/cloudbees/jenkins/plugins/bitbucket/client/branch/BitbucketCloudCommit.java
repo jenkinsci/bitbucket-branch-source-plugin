@@ -23,18 +23,34 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.branch;
 
+import com.cloudbees.jenkins.plugins.bitbucket.JsonParser.BitbucketDateFormat;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 
 public class BitbucketCloudCommit implements BitbucketCommit {
 
     private String message;
-
     private String date;
-
+    private transient long dateInMillis;
     private String hash;
+    private String author;
+
+    @JsonCreator
+    public BitbucketCloudCommit(@Nullable @JsonProperty("message") String message,
+                                @Nullable @JsonProperty("date") String date,
+                                @NonNull @JsonProperty("hash") String hash,
+                                @Nullable @JsonProperty("author") BitbucketCloudAuthor author) {
+        this.message = message;
+        this.date = date;
+        this.hash = hash;
+        if (author != null) {
+            this.author = author.getRaw();
+        }
+    }
 
     @Override
     public String getMessage() {
@@ -57,6 +73,8 @@ public class BitbucketCloudCommit implements BitbucketCommit {
 
     public void setDate(String date) {
         this.date = date;
+        // calculated on demand
+        this.dateInMillis = 0;
     }
 
     public void setHash(String hash) {
@@ -65,14 +83,23 @@ public class BitbucketCloudCommit implements BitbucketCommit {
 
     @Override
     public long getDateMillis() {
-        // 2013-10-21T07:21:51+00:00
-        final SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        dateParser.setTimeZone(TimeZone.getTimeZone("GMT"));
         try {
-            return dateParser.parse(date).getTime();
+            if (dateInMillis == 0 && date != null) {
+                dateInMillis = new BitbucketDateFormat().parse(date).getTime();
+            }
         } catch (ParseException e) {
-            return 0;
+            dateInMillis = 0;
         }
+        return dateInMillis;
+    }
+
+    @Override
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
 }

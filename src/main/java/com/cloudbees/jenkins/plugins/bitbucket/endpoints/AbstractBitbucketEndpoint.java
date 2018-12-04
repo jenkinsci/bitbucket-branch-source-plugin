@@ -23,14 +23,17 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.AbstractDescribableImpl;
 import hudson.security.ACL;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
@@ -47,7 +50,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     private final boolean manageHooks;
 
     /**
-     * The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management of hooks.
+     * The {@link StandardCredentials#getId()} of the credentials to use for auto-management of hooks.
      */
     @CheckForNull
     private final String credentialsId;
@@ -56,7 +59,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * Constructor.
      *
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
+     * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
      */
     AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
@@ -112,21 +115,34 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     }
 
     /**
-     * Looks up the {@link StandardUsernamePasswordCredentials} to use for auto-management of hooks.
+     * Looks up the {@link StandardCredentials} to use for auto-management of hooks.
      *
      * @return the credentials or {@code null}.
      */
     @CheckForNull
-    public StandardUsernamePasswordCredentials credentials() {
+    public StandardCredentials credentials() {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
                 CredentialsProvider.lookupCredentials(
-                        StandardUsernamePasswordCredentials.class,
+                        StandardCredentials.class,
                         Jenkins.getActiveInstance(),
                         ACL.SYSTEM,
                         URIRequirementBuilder.fromUri(getServerUrl()).build()
                 ),
-                CredentialsMatchers.withId(credentialsId)
+                CredentialsMatchers.allOf(
+                        CredentialsMatchers.withId(credentialsId),
+                        AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(getServerUrl()))
+                )
         );
+    }
+
+    /**
+     * Retrieves the {@link BitbucketAuthenticator} to use for auto-management of hooks.
+     *
+     * @return the authenticator or {@code null}.
+     */
+    @CheckForNull
+    public BitbucketAuthenticator authenticator() {
+        return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerUrl()), credentials());
     }
 
     /**

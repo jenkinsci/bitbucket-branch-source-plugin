@@ -28,11 +28,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import hudson.Extension;
 import hudson.model.Item;
 import hudson.model.listeners.ItemListener;
@@ -41,11 +38,7 @@ import hudson.util.DaemonThreadFactory;
 import hudson.util.NamingThreadFactory;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -229,7 +222,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                         ? null
                         : BitbucketApiFactory.newInstance(
                                 endpoint.getServerUrl(),
-                                endpoint.credentials(),
+                                endpoint.authenticator(),
                                 source.getRepoOwner(),
                                 source.getRepository()
                         );
@@ -257,7 +250,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
     }
 
     private List<BitbucketSCMSource> getBitbucketSCMSources(SCMSourceOwner owner) {
-        List<BitbucketSCMSource> sources = new ArrayList<BitbucketSCMSource>();
+        List<BitbucketSCMSource> sources = new ArrayList<>();
         for (SCMSource source : owner.getSCMSources()) {
             if (source instanceof BitbucketSCMSource) {
                 sources.add((BitbucketSCMSource) source);

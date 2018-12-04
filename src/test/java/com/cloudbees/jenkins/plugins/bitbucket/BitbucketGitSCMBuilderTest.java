@@ -560,6 +560,67 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
+    public void given__server_branch_rev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+        source.setServerUrl("https://www.bitbucket.test/web");
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT);
+        AbstractGitSCMSource.SCMRevisionImpl revision =
+                new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
+                head, revision, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
+                instance.remote(), is("https://www.bitbucket.test/web"));
+        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
+        assertThat(instance.browser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://tester@web.bitbucket.test/scm/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git")
+        ));
+        assertThat(instance.remote(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+
+        GitSCM actual = instance.build();
+        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
+        assertThat(actual.getBrowser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+        assertThat(actual.getGitTool(), nullValue());
+        assertThat(actual.getUserRemoteConfigs(), hasSize(1));
+        UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
+        assertThat(config.getName(), is("origin"));
+        assertThat(config.getRefspec(), is("+refs/heads/test-branch:refs/remotes/origin/test-branch"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        RemoteConfig origin = actual.getRepositoryByName("origin");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/heads/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        assertThat(actual.getExtensions(), containsInAnyOrder(
+                instanceOf(GitSCMSourceDefaults.class),
+                instanceOf(BuildChooserSetting.class)
+        ));
+        BuildChooserSetting chooser = getExtension(actual, BuildChooserSetting.class);
+        assertThat(chooser.getBuildChooser(), instanceOf(AbstractGitSCMSource.SpecificRevisionBuildChooser.class));
+        AbstractGitSCMSource.SpecificRevisionBuildChooser revChooser =
+                (AbstractGitSCMSource.SpecificRevisionBuildChooser) chooser.getBuildChooser();
+        Collection<Revision> revisions = revChooser
+                .getCandidateRevisions(false, "test-branch", Mockito.mock(GitClient.class), new LogTaskListener(
+                        Logger.getAnonymousLogger(), Level.FINEST), null, null);
+        assertThat(revisions, hasSize(1));
+        assertThat(revisions.iterator().next().getSha1String(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
     public void given__server_branch_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT);
@@ -694,6 +755,52 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(actual.getExtensions(), contains(instanceOf(GitSCMSourceDefaults.class)));
     }
 
+    @Test
+    public void given__server_branch_norev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+        source.setServerUrl("https://www.bitbucket.test/web");
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT);
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
+                head, null, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is(nullValue()));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
+                instance.remote(), is("https://www.bitbucket.test/web"));
+        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
+        assertThat(instance.browser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://tester@www.bitbucket.test/scm/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git")
+        ));
+        assertThat(instance.remote(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+
+        GitSCM actual = instance.build();
+        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
+        assertThat(actual.getBrowser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+        assertThat(actual.getGitTool(), nullValue());
+        assertThat(actual.getUserRemoteConfigs(), hasSize(1));
+        UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
+        assertThat(config.getName(), is("origin"));
+        assertThat(config.getRefspec(), is("+refs/heads/test-branch:refs/remotes/origin/test-branch"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        RemoteConfig origin = actual.getRepositoryByName("origin");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/heads/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        assertThat(actual.getExtensions(), contains(instanceOf(GitSCMSourceDefaults.class)));
+    }
 
     @Test
     public void given__cloud_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
@@ -1210,6 +1317,70 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
+    public void given__server_pullHead_rev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+        source.setServerUrl("https://www.bitbucket.test/web");
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+                new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
+                ChangeRequestCheckoutStrategy.HEAD);
+        PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
+                new PullRequestSCMRevision<>(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
+                        "deadbeefcafebabedeadbeefcafebabedeadbeef"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
+                head, revision, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
+                instance.remote(), is("https://www.bitbucket.test/web"));
+        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
+        assertThat(instance.browser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://tester@www.bitbucket.test/scm/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git")
+        ));
+        assertThat(instance.remote(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+
+        GitSCM actual = instance.build();
+        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
+        assertThat(actual.getBrowser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+        assertThat(actual.getGitTool(), nullValue());
+        assertThat(actual.getUserRemoteConfigs(), hasSize(1));
+        UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
+        assertThat(config.getName(), is("origin"));
+        assertThat(config.getRefspec(), is("+refs/pull-requests/1/from:refs/remotes/origin/PR-1"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        RemoteConfig origin = actual.getRepositoryByName("origin");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/pull-requests/1/from"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/PR-1"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        assertThat(actual.getExtensions(), containsInAnyOrder(
+                instanceOf(BuildChooserSetting.class),
+                instanceOf(GitSCMSourceDefaults.class))
+        );
+        BuildChooserSetting chooser = getExtension(actual, BuildChooserSetting.class);
+        assertThat(chooser.getBuildChooser(), instanceOf(AbstractGitSCMSource.SpecificRevisionBuildChooser.class));
+        AbstractGitSCMSource.SpecificRevisionBuildChooser revChooser =
+                (AbstractGitSCMSource.SpecificRevisionBuildChooser) chooser.getBuildChooser();
+        Collection<Revision> revisions = revChooser
+                .getCandidateRevisions(false, "qa-branch", Mockito.mock(GitClient.class), new LogTaskListener(
+                        Logger.getAnonymousLogger(), Level.FINEST), null, null);
+        assertThat(revisions, hasSize(1));
+        assertThat(revisions.iterator().next().getSha1String(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+    @Test
     public void given__server_pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
@@ -1350,6 +1521,54 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(actual.getExtensions(), contains(instanceOf(GitSCMSourceDefaults.class)));
     }
 
+    @Test
+    public void given__server_pullHead_norev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
+        source.setServerUrl("https://www.bitbucket.test/web");
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+                new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
+                ChangeRequestCheckoutStrategy.HEAD);
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
+                head, null, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is(nullValue()));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
+                instance.remote(), is("https://www.bitbucket.test/web"));
+        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
+        assertThat(instance.browser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://tester@www.bitbucket.test/scm/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git")
+        ));
+        assertThat(instance.remote(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+
+        GitSCM actual = instance.build();
+        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
+        assertThat(actual.getBrowser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+        assertThat(actual.getGitTool(), nullValue());
+        assertThat(actual.getUserRemoteConfigs(), hasSize(1));
+        UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
+        assertThat(config.getName(), is("origin"));
+        assertThat(config.getRefspec(), is("+refs/pull-requests/1/from:refs/remotes/origin/PR-1"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        RemoteConfig origin = actual.getRepositoryByName("origin");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/pull-requests/1/from"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/PR-1"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        assertThat(actual.getExtensions(), contains(instanceOf(GitSCMSourceDefaults.class)));
+    }
 
     @Test
     public void given__cloud_pullMerge_rev_anon__when__build__then__scmBuilt() throws Exception {
@@ -2046,6 +2265,91 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
+    public void given__server_pullMerge_rev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
+        source.setServerUrl("https://www.bitbucket.test/web");
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+                new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
+                ChangeRequestCheckoutStrategy.MERGE);
+        PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
+                new PullRequestSCMRevision<>(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
+                        "deadbeefcafebabedeadbeefcafebabedeadbeef"),
+                        new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
+                head, revision, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
+                instance.remote(), is("https://www.bitbucket.test/web"));
+        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
+        assertThat(instance.browser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://tester@www.bitbucket.test/scm/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git")
+        ));
+        assertThat(instance.remote(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+
+        GitSCM actual = instance.build();
+        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
+        assertThat(actual.getBrowser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+        assertThat(actual.getGitTool(), nullValue());
+        assertThat(actual.getUserRemoteConfigs(), hasSize(2));
+        UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
+        assertThat(config.getName(), is("origin"));
+        assertThat(config.getRefspec(), is("+refs/pull-requests/1/from:refs/remotes/origin/PR-1"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        config = actual.getUserRemoteConfigs().get(1);
+        assertThat(config.getName(), is("upstream"));
+        assertThat(config.getRefspec(), is("+refs/heads/test-branch:refs/remotes/upstream/test-branch"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        RemoteConfig origin = actual.getRepositoryByName("origin");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/pull-requests/1/from"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/PR-1"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        origin = actual.getRepositoryByName("upstream");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/heads/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/upstream/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        assertThat(actual.getExtensions(), containsInAnyOrder(
+                instanceOf(MergeWithGitSCMExtension.class),
+                instanceOf(BuildChooserSetting.class),
+                instanceOf(GitSCMSourceDefaults.class))
+        );
+        BuildChooserSetting chooser = getExtension(actual, BuildChooserSetting.class);
+        assertThat(chooser, notNullValue());
+        assertThat(chooser.getBuildChooser(), instanceOf(AbstractGitSCMSource.SpecificRevisionBuildChooser.class));
+        AbstractGitSCMSource.SpecificRevisionBuildChooser revChooser =
+                (AbstractGitSCMSource.SpecificRevisionBuildChooser) chooser.getBuildChooser();
+        Collection<Revision> revisions = revChooser
+                .getCandidateRevisions(false, "test-branch", Mockito.mock(GitClient.class), new LogTaskListener(
+                        Logger.getAnonymousLogger(), Level.FINEST), null, null);
+        assertThat(revisions, hasSize(1));
+        assertThat(revisions.iterator().next().getSha1String(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+        MergeWithGitSCMExtension merge = getExtension(actual, MergeWithGitSCMExtension.class);
+        assertThat(merge, notNullValue());
+        assertThat(merge.getBaseName(), is("remotes/upstream/test-branch"));
+        assertThat(merge.getBaseHash(), is("deadbeefcafebabedeadbeefcafebabedeadbeef"));
+    }
+
+    @Test
     public void given__server_pullMerge_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
@@ -2234,6 +2538,76 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(origin, notNullValue());
         assertThat(origin.getURIs(), hasSize(1));
         assertThat(origin.getURIs().get(0).toString(), is("ssh://git@bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/heads/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/upstream/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        assertThat(actual.getExtensions(), containsInAnyOrder(
+                instanceOf(MergeWithGitSCMExtension.class),
+                instanceOf(GitSCMSourceDefaults.class))
+        );
+        MergeWithGitSCMExtension merge = getExtension(actual, MergeWithGitSCMExtension.class);
+        assertThat(merge, notNullValue());
+        assertThat(merge.getBaseName(), is("remotes/upstream/test-branch"));
+        assertThat(merge.getBaseHash(), is(nullValue()));
+    }
+
+    @Test
+    public void given__server_pullMerge_norev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+        source.setServerUrl("https://www.bitbucket.test/web");
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+                new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
+                ChangeRequestCheckoutStrategy.MERGE);
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
+                head, null, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is(nullValue()));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
+                instance.remote(), is("https://www.bitbucket.test/web"));
+        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
+        assertThat(instance.browser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://tester@www.bitbucket.test/scm/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git")
+        ));
+        assertThat(instance.remote(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+
+        GitSCM actual = instance.build();
+        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
+        assertThat(actual.getBrowser().getRepoUrl(),
+                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+        assertThat(actual.getGitTool(), nullValue());
+        assertThat(actual.getUserRemoteConfigs(), hasSize(2));
+        UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
+        assertThat(config.getName(), is("origin"));
+        assertThat(config.getRefspec(), is("+refs/pull-requests/1/from:refs/remotes/origin/PR-1"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        config = actual.getUserRemoteConfigs().get(1);
+        assertThat(config.getName(), is("upstream"));
+        assertThat(config.getRefspec(), is("+refs/heads/test-branch:refs/remotes/upstream/test-branch"));
+        assertThat(config.getUrl(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is("user-key"));
+        RemoteConfig origin = actual.getRepositoryByName("origin");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(1));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/pull-requests/1/from"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/PR-1"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        origin = actual.getRepositoryByName("upstream");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("ssh://git@ssh.bitbucket.test:7999/tester/test-repo.git"));
         assertThat(origin.getFetchRefSpecs(), hasSize(1));
         assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/heads/test-branch"));
         assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/upstream/test-branch"));

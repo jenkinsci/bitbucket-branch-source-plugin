@@ -1,0 +1,34 @@
+{
+  "id": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+  "displayId": "fb522a6f08c",
+  "author": {
+    "name": "Antonio Muniz",
+    "emailAddress": "amuniz@example.com"
+  },
+  "authorTimestamp": 1537538991000,
+  "committer": {
+    "name": "Antonio Muniz",
+    "emailAddress": "amuniz@example.com"
+  },
+  "committerTimestamp": 1537538991000,
+  "message": "Suppress echo command part",
+  "parents": [{
+    "id": "ae995d7a37069d0988462a9c92828971e8a42b5d",
+    "displayId": "ae995d7a370",
+    "author": {
+      "name": "Antonio Muniz",
+      "emailAddress": "amuniz@example.com"
+    },
+    "authorTimestamp": 1537538960000,
+    "committer": {
+      "name": "Antonio Muniz",
+      "emailAddress": "amuniz@example.com"
+    },
+    "committerTimestamp": 1537538960000,
+    "message": "Support also windows environments",
+    "parents": [{
+      "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+      "displayId": "bf4f4ce8a3a"
+    }]
+  }]
+}

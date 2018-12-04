@@ -23,12 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class BitbucketServerRepositories {
-    
+
     private List<BitbucketServerRepository> values;
 
     private Integer size;

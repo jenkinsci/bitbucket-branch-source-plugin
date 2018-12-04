@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.cache;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -14,20 +13,11 @@ public class BitbucketApiKey {
     private final String serverUrl;
     private final String ownerName;
     private final String repositoryName;
-    private final String username;
-    private final String password;
 
-    public BitbucketApiKey(String serverUrl, String owner, String repository, StandardUsernamePasswordCredentials credentials) {
+    public BitbucketApiKey(String serverUrl, String owner, String repository) {
         this.serverUrl = serverUrl;
         this.ownerName = owner;
         this.repositoryName = repository;
-        if (credentials != null) {
-            this.username = credentials.getUsername();
-            this.password = credentials.getPassword().getEncryptedValue();
-        } else {
-            username = null;
-            password = null;
-        }
     }
 
     @Override
@@ -37,14 +27,12 @@ public class BitbucketApiKey {
         BitbucketApiKey that = (BitbucketApiKey) o;
         return Objects.equals(serverUrl, that.serverUrl) &&
                 Objects.equals(ownerName, that.ownerName) &&
-                Objects.equals(repositoryName, that.repositoryName) &&
-                Objects.equals(username, that.username) &&
-                Objects.equals(password, that.password);
+                Objects.equals(repositoryName, that.repositoryName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(serverUrl, ownerName, repositoryName, username, password);
+        return Objects.hash(serverUrl, ownerName, repositoryName);
     }
 
     public boolean equalsRepository(BitbucketRepository repository) {

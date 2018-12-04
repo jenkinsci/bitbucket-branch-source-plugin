@@ -60,7 +60,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      *     <dd>Build branches that are filed as a PR</dd>
      * </dl>
      */
-    private int strategyId;
+    private final int strategyId;
 
     /**
      * Constructor for stapler.

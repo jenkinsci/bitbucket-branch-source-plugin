@@ -41,6 +41,12 @@ public interface BitbucketRepository {
      */
     String getFullName();
 
+
+    /**
+     * @return the project containing the repository
+     */
+    BitbucketProject getProject();
+
     /**
      * @return repository owner (could be a user, a team or a project)
      */

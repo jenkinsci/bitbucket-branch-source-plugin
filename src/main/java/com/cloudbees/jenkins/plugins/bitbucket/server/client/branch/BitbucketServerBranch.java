@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,14 +32,18 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 public class BitbucketServerBranch implements BitbucketBranch {
-    private static Logger LOGGER = Logger.getLogger(BitbucketServerBranch.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(BitbucketServerBranch.class.getName());
 
     private String displayId;
 
     private String latestCommit;
 
+    // initialised by callable
+    private String message;
+    private String author;
     private Long timestamp;
-    private Callable<Long> timestampClosure;
+    private Callable<BitbucketCommit> commitClosure;
+    private boolean callableInitialised = false;
 
     public BitbucketServerBranch() {
     }
@@ -88,24 +93,61 @@ public class BitbucketServerBranch implements BitbucketBranch {
     }
 
     @Restricted(NoExternalUse.class)
-    public void setTimestampClosure(Callable<Long> timestampClosure) {
-        this.timestampClosure = timestampClosure;
+    public void setCommitClosure(Callable<BitbucketCommit> commitClosure) {
+        this.commitClosure = commitClosure;
     }
 
     private long timestamp() {
         if (timestamp == null) {
-            if (timestampClosure == null) {
+            if (commitClosure == null) {
                 timestamp = 0L;
             } else {
-                try {
-                    timestamp = timestampClosure.call();
-                } catch (Exception e) {
-                    LOGGER.log(Level.FINER, "Could not determine timestamp", e);
-                    timestamp = 0L;
-                }
+                initHeadCommitInfo();
             }
         }
         return timestamp;
     }
 
+    @Override
+    public String getMessage() {
+        if (message == null) {
+            initHeadCommitInfo();
+        }
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    @Override
+    public String getAuthor() {
+        if (author == null) {
+            initHeadCommitInfo();
+        }
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    private void initHeadCommitInfo() {
+        if (callableInitialised || commitClosure == null) {
+            return;
+        }
+
+        callableInitialised = true;
+        try {
+            BitbucketCommit commit = commitClosure.call();
+
+            this.timestamp = commit.getDateMillis();
+            this.message = commit.getMessage();
+            this.author = commit.getAuthor();
+        } catch (Exception e) {
+            LOGGER.log(Level.FINER, "Could not determine head commit details", e);
+            // fallback on default values
+            this.timestamp = 0L;
+        }
+    }
 }

@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
@@ -38,6 +39,8 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.annotation.CheckForNull;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -45,6 +48,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
@@ -54,42 +58,83 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
  */
 public class BitbucketBuildStatusNotifications {
 
+    private static String getRootURL(@NonNull Run<?, ?> build) {
+        JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
+
+        if (cfg == null || cfg.getUrl() == null) {
+            throw new IllegalStateException("Could not determine Jenkins URL.");
+        }
+
+        String url = DisplayURLProvider.get().getRunURL(build);
+        return checkURL(url);
+    }
+
+    /**
+     * Check if the build URL is compatible with Bitbucket API.
+     * For example, Bitbucket API doesn't accept simple hostnames as URLs host value
+     * Throws an IllegalStateException if it is not valid, or return the url otherwise
+     *
+     * @param url the URL of the build to check
+     * @return the url if it is valid
+     */
+    static String checkURL(@NonNull String url) {
+        if (url.startsWith("http://unconfigured-jenkins-location/")) {
+            throw new IllegalStateException("Could not determine Jenkins URL.");
+        }
+        try {
+            URL u = new URL(url);
+            if (!u.getHost().contains(".")) {
+                throw new IllegalStateException("Please use a fully qualified name or an IP address for Jenkins URL");
+            }
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException("Bad Jenkins URL");
+        }
+        return url;
+    }
+
     private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,
                                      @NonNull BitbucketApi bitbucket, @NonNull String hash)
             throws IOException, InterruptedException {
-        JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
-        if (cfg == null || cfg.getUrl() == null) {
-            listener.getLogger().println(
-                    "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
-                            + " configured in Jenkins global configuration.");
-            return;
-        }
+
         String url;
         try {
-            url = DisplayURLProvider.get().getRunURL(build);
+            url = getRootURL(build);
         } catch (IllegalStateException e) {
-            listener.getLogger().println(
-                    "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
-                            + " configured in Jenkins global configuration.");
+            listener.getLogger().println("Can not determine Jenkins root URL " +
+                    "or Jenkins URL is not a valid URL regarding Bitbucket API. " +
+                    "Commit status notifications are disabled until a root URL is " +
+                    "configured in Jenkins global configuration.");
             return;
         }
+
         String key = build.getParent().getFullName(); // use the job full name as the key for the status
         String name = build.getFullDisplayName(); // use the build number as the display name of the status
         BitbucketBuildStatus status;
         Result result = build.getResult();
+        String buildDescription = build.getDescription();
+        String statusDescription;
+        String state;
         if (Result.SUCCESS.equals(result)) {
-            status = new BitbucketBuildStatus(hash, "This commit looks good", "SUCCESSFUL", url, key, name);
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit looks good.");
+            state = "SUCCESSFUL";
         } else if (Result.UNSTABLE.equals(result)) {
-            status = new BitbucketBuildStatus(hash, "This commit has test failures", "FAILED", url, key, name);
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
+            state = "FAILED";
         } else if (Result.FAILURE.equals(result)) {
-            status = new BitbucketBuildStatus(hash, "There was a failure building this commit", "FAILED", url, key,
-                    name);
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "There was a failure building this commit.");
+            state = "FAILED";
+        } else if (Result.NOT_BUILT.equals(result)) {
+            // Bitbucket Cloud and Server support different build states.
+            state = (bitbucket instanceof BitbucketCloudApiClient) ? "STOPPED" : "SUCCESSFUL";
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
         } else if (result != null) { // ABORTED etc.
-            status = new BitbucketBuildStatus(hash, "Something is wrong with the build of this commit", "FAILED", url,
-                    key, name);
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
+            state = "FAILED";
         } else {
-            status = new BitbucketBuildStatus(hash, "The tests have started...", "INPROGRESS", url, key, name);
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "The build is in progress...");
+            state = "INPROGRESS";
         }
+        status = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name);
         new BitbucketChangesetCommentNotifier(bitbucket).buildStatus(status);
         if (result != null) {
             listener.getLogger().println("[Bitbucket] Build result notified");
@@ -108,7 +153,7 @@ public class BitbucketBuildStatusNotifications {
                 .notificationsDisabled()) {
             return;
         }
-        SCMRevision r = SCMRevisionAction.getRevision(build);  // TODO JENKINS-44648 getRevision(s, build)
+        SCMRevision r = SCMRevisionAction.getRevision(s, build);
         String hash = getHash(r);
         if (hash == null) {
             return;
@@ -129,7 +174,9 @@ public class BitbucketBuildStatusNotifications {
             // unwrap
             revision = ((PullRequestSCMRevision) revision).getPull();
         }
-        if (revision instanceof MercurialSCMSource.MercurialRevision) {
+        if (revision instanceof BitbucketSCMSource.MercurialRevision) {
+            return ((BitbucketSCMSource.MercurialRevision) revision).getHash();
+        } else if (revision instanceof MercurialSCMSource.MercurialRevision) {
             return ((MercurialSCMSource.MercurialRevision) revision).getHash();
         } else if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
             return ((AbstractGitSCMSource.SCMRevisionImpl) revision).getHash();
@@ -146,10 +193,18 @@ public class BitbucketBuildStatusNotifications {
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
                                SCMRevisionState pollingBaseline) throws Exception {
-            try {
-                sendNotifications(build, listener);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace(listener.error("Could not send notifications"));
+
+            boolean hasCompletedCheckoutBefore =
+                build.getAction(FirstCheckoutCompletedInvisibleAction.class) != null;
+
+            if (!hasCompletedCheckoutBefore) {
+                build.addAction(new FirstCheckoutCompletedInvisibleAction());
+
+                try {
+                    sendNotifications(build, listener);
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace(listener.error("Could not send notifications"));
+                }
             }
         }
     }

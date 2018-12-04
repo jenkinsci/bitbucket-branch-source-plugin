@@ -114,7 +114,7 @@ public class WebhooksAutoregisterTest {
                 limit++;
             }
         }
-        Assert.assertTrue("Expected log not found: " + string, false);
+        Assert.fail("Expected log not found: " + string);
     }
 
     private RingBufferLogHandler createJULTestHandler() throws SecurityException, IOException {

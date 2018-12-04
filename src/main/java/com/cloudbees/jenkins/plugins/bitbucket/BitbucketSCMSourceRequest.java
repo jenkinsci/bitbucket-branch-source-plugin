@@ -29,15 +29,14 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.TaskListener;
-import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.SCMHeadOrigin;
-import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import jenkins.scm.api.mixin.TagSCMHead;
-import jenkins.scm.api.trait.SCMSourceRequest;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadOrigin;
+import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import jenkins.scm.api.trait.SCMSourceRequest;
+
 
 /**
  * The {@link SCMSourceRequest} for bitbucket.
@@ -160,7 +159,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
                     if (((PullRequestSCMHead) h).getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
                         branchNames.add(((PullRequestSCMHead) h).getTarget().getName());
                     }
-                } else if (h instanceof TagSCMHead) { // TODO replace with concrete class when tag support added
+                } else if (h instanceof BitbucketTagSCMHead) {
                     tagNames.add(h.getName());
                 }
             }

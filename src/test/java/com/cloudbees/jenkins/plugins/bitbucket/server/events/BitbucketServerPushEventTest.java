@@ -33,9 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -68,9 +66,9 @@ public class BitbucketServerPushEventTest {
         assertThat(event.getRepository().getLinks().get("self"), notNullValue());
         assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
-        assertThat(event.getChanges(), not(containsInAnyOrder()));
+        assertThat(event.getChanges().size(), is(1));
     }
-    
+
     @Test
     public void legacyPayload() throws Exception {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
@@ -82,6 +80,6 @@ public class BitbucketServerPushEventTest {
         assertThat(event.getRepository().getRepositoryName(), is("rep_1"));
         assertThat(event.getRepository().isPrivate(), is(true));
         assertThat(event.getRepository().getLinks(), nullValue());
-        assertThat(event.getChanges(), containsInAnyOrder());
+        assertThat(event.getChanges().size(), is(0));
     }
 }

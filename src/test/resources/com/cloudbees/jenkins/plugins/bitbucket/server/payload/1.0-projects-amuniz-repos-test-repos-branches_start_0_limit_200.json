@@ -1,0 +1,35 @@
+{
+  "size": 4,
+  "limit": 200,
+  "isLastPage": true,
+  "values": [{
+    "id": "refs/heads/release/release-1",
+    "displayId": "release/release-1",
+    "type": "BRANCH",
+    "latestCommit": "bf0e8b7962c024026ad01ae09d3a11732e26c0d4",
+    "latestChangeset": "bf0e8b7962c024026ad01ae09d3a11732e26c0d4",
+    "isDefault": false
+  }, {
+    "id": "refs/heads/feature/BB-2",
+    "displayId": "feature/BB-2",
+    "type": "BRANCH",
+    "latestCommit": "046d9a3c1532acf4cf08fe93235c00e4d673c1d2",
+    "latestChangeset": "046d9a3c1532acf4cf08fe93235c00e4d673c1d2",
+    "isDefault": false
+  }, {
+    "id": "refs/heads/feature/BB-1",
+    "displayId": "feature/BB-1",
+    "type": "BRANCH",
+    "latestCommit": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+    "latestChangeset": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+    "isDefault": false
+  }, {
+    "id": "refs/heads/master",
+    "displayId": "master",
+    "type": "BRANCH",
+    "latestCommit": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+    "latestChangeset": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+    "isDefault": true
+  }],
+  "start": 0
+}

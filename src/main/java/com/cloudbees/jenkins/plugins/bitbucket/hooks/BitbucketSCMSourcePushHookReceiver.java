@@ -23,32 +23,21 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import hudson.Extension;
+import hudson.model.UnprotectedRootAction;
+import hudson.security.csrf.CrumbExclusion;
+import hudson.util.HttpResponses;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import hudson.security.csrf.CrumbExclusion;
-
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import jenkins.scm.api.SCMEvent;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
-
-import hudson.Extension;
-import hudson.model.UnprotectedRootAction;
-import hudson.util.HttpResponses;
-import org.apache.commons.io.IOUtils;
-import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.logging.Logger;
 
 /**
  * Process Bitbucket push and pull requests creations/updates hooks.

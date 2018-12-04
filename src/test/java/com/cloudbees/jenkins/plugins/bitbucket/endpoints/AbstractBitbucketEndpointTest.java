@@ -30,7 +30,6 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Util;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;

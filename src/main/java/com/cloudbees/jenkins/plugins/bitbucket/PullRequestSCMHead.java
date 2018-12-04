@@ -220,6 +220,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
      *
      * @deprecated used for data migration.
      */
+    @Deprecated
     @Restricted(NoExternalUse.class)
     @Extension
     public static class FixLegacyMigration1 extends
@@ -261,6 +262,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
      *
      * @deprecated used for data migration.
      */
+    @Deprecated
     @Restricted(NoExternalUse.class)
     @Extension
     public static class FixLegacyMigration2 extends
@@ -291,7 +293,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                     head,
                     // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
                     // so we can leave it null as a placeholder
-                    new BitbucketSCMSource.MercurialRevision(head.getTarget(), null),
+                    new BitbucketSCMSource.MercurialRevision(head.getTarget(), (String) null),
                     new BitbucketSCMSource.MercurialRevision(head, revision.getHash())
             ) : null;
         }

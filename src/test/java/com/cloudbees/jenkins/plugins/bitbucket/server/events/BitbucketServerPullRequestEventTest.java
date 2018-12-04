@@ -27,14 +27,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
+import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -74,7 +73,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(event.getPullRequest().getAuthorLogin(), is("User"));
         assertThat(event.getPullRequest().getLink(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/pull-requests/1"));
-        
+
         assertThat(event.getPullRequest().getDestination(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getRepository().getScm(), is("git"));

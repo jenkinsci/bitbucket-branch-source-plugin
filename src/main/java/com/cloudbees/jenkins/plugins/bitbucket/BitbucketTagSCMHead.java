@@ -29,8 +29,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.TagSCMHead;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.DoNotUse;
 
 /**
  * {@link SCMHead} for a BitBucket tags.

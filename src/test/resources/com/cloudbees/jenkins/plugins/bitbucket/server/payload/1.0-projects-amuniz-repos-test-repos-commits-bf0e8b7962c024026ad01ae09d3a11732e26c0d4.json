@@ -1,0 +1,34 @@
+{
+  "id": "bf0e8b7962c024026ad01ae09d3a11732e26c0d4",
+  "displayId": "bf0e8b7962c",
+  "author": {
+    "name": "Builder",
+    "emailAddress": "no-reply@acme.com"
+  },
+  "authorTimestamp": 1537541592000,
+  "committer": {
+    "name": "Builder",
+    "emailAddress": "no-reply@acme.com"
+  },
+  "committerTimestamp": 1537541592000,
+  "message": "[CI] Release version 1.0.0",
+  "parents": [{
+    "id": "4bec6858eade48522da1d2f295a9d1b2360982ba",
+    "displayId": "4bec6858ead",
+    "author": {
+      "name": "Nikolas Falco",
+      "emailAddress": "nfalco79@acme.com"
+    },
+    "authorTimestamp": 1537541543000,
+    "committer": {
+      "name": "Nikolas Falco",
+      "emailAddress": "nfalco79@acme.com"
+    },
+    "committerTimestamp": 1537541543000,
+    "message": "Add license",
+    "parents": [{
+      "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+      "displayId": "bf4f4ce8a3a"
+    }]
+  }]
+}

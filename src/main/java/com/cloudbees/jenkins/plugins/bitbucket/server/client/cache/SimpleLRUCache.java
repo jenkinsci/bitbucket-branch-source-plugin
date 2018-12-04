@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.cache;
 
-import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public final class SimpleLRUCache<K,V> extends LinkedHashMap<K,V> {
     private int maxSize;
