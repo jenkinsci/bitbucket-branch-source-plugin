@@ -394,7 +394,13 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 .set("path", path)
                 .expand();
         int status = headRequestStatus(url);
-        return status == HttpStatus.SC_OK;
+        if (HttpStatus.SC_OK == status) {
+            return true;
+        } else if (HttpStatus.SC_NOT_FOUND == status) {
+            return false;
+        } else {
+            throw new IOException("Communication error for url: " + path + " status code: " + status);
+        }
     }
 
     /**

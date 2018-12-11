@@ -450,7 +450,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 .set("at", branchOrHash)
                 .expand();
         int status = getRequestStatus(url);
-        return HttpStatus.SC_OK == status;
+        if (HttpStatus.SC_OK == status) {
+            return true;
+        } else if (HttpStatus.SC_NOT_FOUND == status) {
+            return false;
+        } else {
+            throw new IOException("Communication error for url: " + path + " status code: " + status);
+        }
     }
 
     @CheckForNull
