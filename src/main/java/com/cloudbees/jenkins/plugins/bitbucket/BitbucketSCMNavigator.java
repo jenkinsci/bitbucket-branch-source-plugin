@@ -715,7 +715,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     return MercurialSCM.class.isAssignableFrom(d.getScmClass());
                 }
             }, true, result);
-            NamedArrayList.select(all, "Additional", null, true, result, insertionPoint);
+            NamedArrayList.select(all, "General", null, true, result, insertionPoint);
             return result;
         }
 
