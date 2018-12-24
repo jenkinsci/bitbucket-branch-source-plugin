@@ -1453,7 +1453,7 @@ public class BitbucketSCMSource extends SCMSource {
 
         @Override
         public int hashCode() {
-            return hash != null ? hash.hashCode() : 0;
+            return Objects.hashCode(hash);
         }
 
         @Override
