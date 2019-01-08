@@ -335,6 +335,15 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @NonNull
+    public String getBitbucketJenkinsRootUrl() {
+        // If this instance of Bitbucket connection has a custom root URL
+        // configured to have this Jenkins server known by (e.g. when a
+        // private network has different names preferable for different
+        // clients), return this custom string. Otherwise use global one.
+        return Jenkins.getActiveInstance().getRootUrl();
+    }
+
+    @NonNull
     public List<SCMSourceTrait> getTraits() {
         return Collections.unmodifiableList(traits);
     }

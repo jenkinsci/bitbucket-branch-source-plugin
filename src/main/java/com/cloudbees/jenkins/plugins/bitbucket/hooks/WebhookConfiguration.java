@@ -125,7 +125,7 @@ public class WebhookConfiguration {
             boolean updated = false;
 
             NativeBitbucketServerWebhook serverHook = (NativeBitbucketServerWebhook) hook;
-            String url = getNativeServerWebhookUrl(owner.getServerUrl());
+            String url = getNativeServerWebhookUrl(owner.getServerUrl(), owner.getBitbucketJenkinsRootUrl());
 
             if (!url.equals(serverHook.getUrl())) {
                 serverHook.setUrl(url);
@@ -151,12 +151,13 @@ public class WebhookConfiguration {
 
     public BitbucketWebHook getHook(BitbucketSCMSource owner) {
         final String serverUrl = owner.getServerUrl();
+        final String rootUrl = owner.getBitbucketJenkinsRootUrl();
         if (BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
             BitbucketRepositoryHook hook = new BitbucketRepositoryHook();
             hook.setEvents(CLOUD_EVENTS);
             hook.setActive(true);
             hook.setDescription(description);
-            hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+            hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
             return hook;
         }
 
@@ -166,7 +167,7 @@ public class WebhookConfiguration {
                 hook.setActive(true);
                 hook.setEvents(NATIVE_SERVER_EVENTS);
                 hook.setDescription(description);
-                hook.setUrl(getNativeServerWebhookUrl(serverUrl));
+                hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
                 return hook;
             }
 
@@ -175,15 +176,15 @@ public class WebhookConfiguration {
                 BitbucketServerWebhook hook = new BitbucketServerWebhook();
                 hook.setActive(true);
                 hook.setDescription(description);
-                hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+                hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
                 hook.setCommittersToIgnore(committersToIgnore);
                 return hook;
             }
         }
     }
 
-    private static String getNativeServerWebhookUrl(String serverUrl) {
-        return UriTemplate.buildFromTemplate(Jenkins.getActiveInstance().getRootUrl())
+    private static String getNativeServerWebhookUrl(String serverUrl, String rootUrl) {
+        return UriTemplate.buildFromTemplate(rootUrl)
             .template(BitbucketSCMSourcePushHookReceiver.FULL_PATH)
             .query("server_url")
             .build()
