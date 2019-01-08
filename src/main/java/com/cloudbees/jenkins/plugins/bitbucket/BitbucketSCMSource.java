@@ -89,6 +89,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
@@ -213,6 +214,16 @@ public class BitbucketSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("2.2.0")
     private transient String bitbucketServerUrl;
+
+    /**
+     * Jenkins Server Root URL to be used by that Bitbucket server.
+     * The global setting from Jenkins.getActiveInstance().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     */
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    @RestrictedSince("2.2.0")
+    private transient String bitbucketJenkinsRootUrl;
 
     /**
      * The cache of the repository type.
@@ -340,7 +351,26 @@ public class BitbucketSCMSource extends SCMSource {
         // configured to have this Jenkins server known by (e.g. when a
         // private network has different names preferable for different
         // clients), return this custom string. Otherwise use global one.
-        return Jenkins.getActiveInstance().getRootUrl();
+        // Note: do not pre-initialize to the global value, so it can be
+        // reconfigured on the fly.
+        if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
+            return Jenkins.getActiveInstance().getRootUrl();
+        }
+        return bitbucketJenkinsRootUrl;
+    }
+
+    @DataBoundSetter
+    public void setBitbucketJenkinsRootUrl(String rootUrl) {
+        if (rootUrl == null || rootUrl.equals("")) {
+            // The getter will return the current value of global
+            // Jenkins Root URL config every time it is called
+            this.bitbucketJenkinsRootUrl = null;
+            return;
+        }
+
+        // This routine is not really BitbucketEndpointConfiguration
+        // specific, it just works on strings with some defaults:
+        this.bitbucketJenkinsRootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
     }
 
     @NonNull
@@ -1220,6 +1250,21 @@ public class BitbucketSCMSource extends SCMSource {
             }
             try {
                 new URL(bitbucketServerUrl);
+            } catch (MalformedURLException e) {
+                return FormValidation.error("Invalid URL: " +  e.getMessage());
+            }
+            return FormValidation.ok();
+        }
+
+        @Restricted(NoExternalUse.class)
+        @Deprecated
+        public static FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String bitbucketJenkinsRootUrl) {
+            String url = Util.fixEmpty(bitbucketJenkinsRootUrl);
+            if (url == null) {
+                return FormValidation.ok();
+            }
+            try {
+                new URL(bitbucketJenkinsRootUrl);
             } catch (MalformedURLException e) {
                 return FormValidation.error("Invalid URL: " +  e.getMessage());
             }

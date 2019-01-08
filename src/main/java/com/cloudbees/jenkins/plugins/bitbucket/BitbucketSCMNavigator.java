@@ -145,6 +145,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("2.2.0")
     private transient String bitbucketServerUrl;
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    @RestrictedSince("2.2.0")
+    private transient String bitbucketJenkinsRootUrl;
 
 
     @DataBoundConstructor
@@ -365,6 +369,34 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return null;
         }
         return serverUrl;
+    }
+
+    @Deprecated
+    @Restricted(DoNotUse.class)
+    @RestrictedSince("2.2.0")
+    @DataBoundSetter
+    public void setBitbucketJenkinsRootUrl(String rootUrl) {
+        if (rootUrl == null || rootUrl.equals("")) {
+            // The getter will return the current value of global
+            // Jenkins Root URL config every time it is called
+            this.bitbucketJenkinsRootUrl = null;
+            return;
+        }
+
+        // This routine is not really BitbucketEndpointConfiguration
+        // specific, it just works on strings with some defaults:
+        this.bitbucketJenkinsRootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+    }
+
+    @Deprecated
+    @Restricted(DoNotUse.class)
+    @RestrictedSince("2.2.0")
+    @CheckForNull
+    public String getBitbucketJenkinsRootUrl() {
+        if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
+            return Jenkins.getActiveInstance().getRootUrl();
+        }
+        return bitbucketJenkinsRootUrl;
     }
 
     @Deprecated
@@ -643,6 +675,12 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         @Deprecated
         public FormValidation doCheckBitbucketServerUrl(@QueryParameter String bitbucketServerUrl) {
             return BitbucketSCMSource.DescriptorImpl.doCheckBitbucketServerUrl(bitbucketServerUrl);
+        }
+
+        @Restricted(DoNotUse.class)
+        @Deprecated
+        public FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String bitbucketJenkinsRootUrl) {
+            return BitbucketSCMSource.DescriptorImpl.doCheckBitbucketJenkinsRootUrl(bitbucketJenkinsRootUrl);
         }
 
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {

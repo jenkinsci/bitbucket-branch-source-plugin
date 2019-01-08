@@ -56,6 +56,14 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     private final String credentialsId;
 
     /**
+     * Jenkins Server Root URL to be used by that Bitbucket endpoint.
+     * The global setting from Jenkins.getActiveInstance().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     */
+    private transient String bitbucketJenkinsRootUrl;
+
+
+    /**
      * Constructor.
      *
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -82,6 +90,34 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @NonNull
     public abstract String getServerUrl();
+
+    /**
+     * Jenkins Server Root URL to be used by this Bitbucket endpoint.
+     * The global setting from Jenkins.getActiveInstance().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     */
+    @NonNull
+    public String getBitbucketJenkinsRootUrl() {
+        // In the AbstractBitbucketEndpoint return the value "as is"
+        // for proper Web-GUI config management
+        if (bitbucketJenkinsRootUrl == null) {
+            return "";
+        }
+        return bitbucketJenkinsRootUrl;
+    }
+
+    public void setBitbucketJenkinsRootUrl(String rootUrl) {
+        if (rootUrl == null || rootUrl.equals("")) {
+            // The getter will return the current value of global
+            // Jenkins Root URL config every time it is called
+            this.bitbucketJenkinsRootUrl = "";
+            return;
+        }
+
+        // This routine is not really BitbucketEndpointConfiguration
+        // specific, it just works on strings with some defaults:
+        this.bitbucketJenkinsRootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+    }
 
     /**
      * The user facing URL of the specified repository.
