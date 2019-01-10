@@ -354,13 +354,18 @@ public class BitbucketSCMSource extends SCMSource {
         // Note: do not pre-initialize to the global value, so it can be
         // reconfigured on the fly.
         if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
+            LOGGER.log(Level.SEVERE, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : empty : {0}", bitbucketJenkinsRootUrl != null ? "''" : "<null>");
             return Jenkins.getActiveInstance().getRootUrl();
         }
-        return bitbucketJenkinsRootUrl;
+        String rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(bitbucketJenkinsRootUrl);
+        LOGGER.log(Level.SEVERE, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : original:   '{0}'", bitbucketJenkinsRootUrl );
+        LOGGER.log(Level.SEVERE, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized: '{0}'", rootUrl );
+        return rootUrl;
     }
 
     @DataBoundSetter
     public void setBitbucketJenkinsRootUrl(String rootUrl) {
+        LOGGER.log(Level.SEVERE, "BitbucketSCMSource::setBitbucketJenkinsRootUrl : '{0}'", rootUrl != null ? rootUrl : "<null>");
         if (rootUrl == null || rootUrl.equals("")) {
             // The getter will return the current value of global
             // Jenkins Root URL config every time it is called
@@ -370,7 +375,9 @@ public class BitbucketSCMSource extends SCMSource {
 
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
-        this.bitbucketJenkinsRootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+        rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+        LOGGER.log(Level.SEVERE, "BitbucketSCMSource::setBitbucketJenkinsRootUrl normalized into : '{0}'", rootUrl != null ? rootUrl : "<null>");
+        this.bitbucketJenkinsRootUrl = rootUrl;
     }
 
     @NonNull

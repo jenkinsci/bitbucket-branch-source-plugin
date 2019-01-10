@@ -37,12 +37,17 @@ import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Represents a {@link BitbucketCloudEndpoint} or a {@link BitbucketServerEndpoint}.
  *
  * @since 2.2.0
  */
 public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<AbstractBitbucketEndpoint> {
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractBitbucketEndpoint.class.getName());
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -73,7 +78,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? credentialsId : null;
-        this.setBitbucketJenkinsRootUrl(bitbucketJenkinsRootUrl);
+        this.bitbucketJenkinsRootUrl = manageHooks ? bitbucketJenkinsRootUrl : "";
     }
 
     /**
@@ -102,12 +107,15 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         // In the AbstractBitbucketEndpoint return the value "as is"
         // for proper Web-GUI config management
         if (bitbucketJenkinsRootUrl == null) {
+            LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : <null>");
             return "";
         }
+        LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : '{0}'", bitbucketJenkinsRootUrl);
         return bitbucketJenkinsRootUrl;
     }
 
     public void setBitbucketJenkinsRootUrl(String rootUrl) {
+        LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::setBitbucketJenkinsRootUrl : '{0}'", rootUrl != null ? rootUrl : "<null>");
         if (rootUrl == null || rootUrl.equals("")) {
             // The getter will return the current value of global
             // Jenkins Root URL config every time it is called
@@ -117,7 +125,9 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
-        this.bitbucketJenkinsRootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+        rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+        LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::setBitbucketJenkinsRootUrl normalized into : '{0}'", rootUrl != null ? rootUrl : "<null>");
+        this.bitbucketJenkinsRootUrl = rootUrl;
     }
 
     /**
