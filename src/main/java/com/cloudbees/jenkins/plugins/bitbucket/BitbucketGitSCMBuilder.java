@@ -109,7 +109,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         AbstractBitbucketEndpoint endpoint =
                 BitbucketEndpointConfiguration.get().findEndpoint(scmSource.getServerUrl());
         if (endpoint == null) {
-            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null);
+            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null, "");
         }
         withBrowser(new BitbucketWeb(endpoint.getRepositoryUrl(
                 scmSource.getRepoOwner(),
@@ -201,7 +201,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         AbstractBitbucketEndpoint endpoint =
                 BitbucketEndpointConfiguration.get().findEndpoint(scmSource.getServerUrl());
         if (endpoint == null) {
-            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null);
+            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null, "");
         }
         withBrowser(new BitbucketWeb(
                 endpoint.getRepositoryUrl(

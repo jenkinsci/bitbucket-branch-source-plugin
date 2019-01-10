@@ -63,7 +63,7 @@ public class AbstractBitbucketEndpointDescriptorTest {
                 Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
         ListBoxModel result =
-                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems("http://bitbucket.example.com");
+                new Dummy(true, "dummy", "").getDescriptor().doFillCredentialsIdItems("http://bitbucket.example.com");
         assertThat(result, Matchers.hasSize(0));
     }
 
@@ -75,14 +75,14 @@ public class AbstractBitbucketEndpointDescriptorTest {
                 Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
         ListBoxModel result =
-                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems("http://bitbucket.org");
+                new Dummy(true, "dummy", "").getDescriptor().doFillCredentialsIdItems("http://bitbucket.org");
         assertThat(result, Matchers.hasSize(1));
     }
 
     public static class Dummy extends AbstractBitbucketEndpoint {
 
-        Dummy(boolean manageHooks, String credentialsId) {
-            super(manageHooks, credentialsId);
+        Dummy(boolean manageHooks, String credentialsId, String bitbucketJenkinsRootUrl) {
+            super(manageHooks, credentialsId, bitbucketJenkinsRootUrl);
         }
 
         @Override
@@ -96,6 +96,11 @@ public class AbstractBitbucketEndpointDescriptorTest {
             return "http://dummy.example.com";
         }
 
+        @NonNull
+        @Override
+        public String getBitbucketJenkinsRootUrl() {
+            return "http://master.example.com";
+        }
 
         @NonNull
         @Override

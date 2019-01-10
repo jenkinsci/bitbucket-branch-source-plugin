@@ -95,9 +95,9 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             if (BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)
                     || BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverUrl)) {
                 // exception case
-                addEndpoint(new BitbucketCloudEndpoint(false, null));
+                addEndpoint(new BitbucketCloudEndpoint(false, null, ""));
             } else {
-                addEndpoint(new BitbucketServerEndpoint(null, serverUrl, false, null));
+                addEndpoint(new BitbucketServerEndpoint(null, serverUrl, false, null, ""));
             }
         }
         return endpoint == null ? serverUrl : endpoint.getServerUrl();
@@ -144,7 +144,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     @NonNull
     public synchronized List<AbstractBitbucketEndpoint> getEndpoints() {
         return endpoints == null || endpoints.isEmpty()
-                ? Collections.<AbstractBitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(false, null))
+                ? Collections.<AbstractBitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(false, null, ""))
                 : Collections.unmodifiableList(endpoints);
     }
 
@@ -167,12 +167,12 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             } else if (!(endpoint instanceof BitbucketCloudEndpoint)
                     && BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
                 // fix type for the special case
-                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId()));
+                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId(), endpoint.getBitbucketJenkinsRootUrl()));
             }
             serverUrls.add(serverUrl);
         }
         if (eps.isEmpty()) {
-            eps.add(new BitbucketCloudEndpoint(false, null));
+            eps.add(new BitbucketCloudEndpoint(false, null, ""));
         }
         this.endpoints = eps;
         save();

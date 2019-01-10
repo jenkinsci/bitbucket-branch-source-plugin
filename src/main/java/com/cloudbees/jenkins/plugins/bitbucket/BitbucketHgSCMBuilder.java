@@ -96,7 +96,7 @@ public class BitbucketHgSCMBuilder extends MercurialSCMBuilder<BitbucketHgSCMBui
         AbstractBitbucketEndpoint endpoint =
                 BitbucketEndpointConfiguration.get().findEndpoint(scmSource.getServerUrl());
         if (endpoint == null) {
-            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null);
+            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null, "");
         }
         try {
             withBrowser(new BitBucket(endpoint.getRepositoryUrl(
@@ -192,7 +192,7 @@ public class BitbucketHgSCMBuilder extends MercurialSCMBuilder<BitbucketHgSCMBui
         AbstractBitbucketEndpoint endpoint =
                 BitbucketEndpointConfiguration.get().findEndpoint(scmSource.getServerUrl());
         if (endpoint == null) {
-            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null);
+            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null, "");
         }
         try {
             withBrowser(new BitBucket(endpoint.getRepositoryUrl(

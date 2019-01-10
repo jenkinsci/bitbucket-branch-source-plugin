@@ -70,9 +70,10 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
      */
-    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
+    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? credentialsId : null;
+        this.setBitbucketJenkinsRootUrl(bitbucketJenkinsRootUrl);
     }
 
     /**

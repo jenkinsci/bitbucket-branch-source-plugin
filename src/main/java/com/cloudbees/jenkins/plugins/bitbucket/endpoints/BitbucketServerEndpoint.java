@@ -94,8 +94,8 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      */
     @DataBoundConstructor
     public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
-                                   @CheckForNull String credentialsId) {
-        super(manageHooks, credentialsId);
+                                   @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
+        super(manageHooks, credentialsId, bitbucketJenkinsRootUrl);
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)

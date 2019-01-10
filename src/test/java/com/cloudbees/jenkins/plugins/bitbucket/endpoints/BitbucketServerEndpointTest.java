@@ -27,6 +27,7 @@ import hudson.util.FormValidation;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class BitbucketServerEndpointTest {
@@ -34,18 +35,22 @@ public class BitbucketServerEndpointTest {
 
     @Test
     public void smokes() {
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null).getDisplayName(),
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getDisplayName(),
                 is("Dummy"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null).getServerUrl(), is(
-                "http://dummy.example.com"));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getServerUrl(),
+                is("http://dummy.example.com"));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getBitbucketJenkinsRootUrl(), notNullValue());
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins"));
     }
 
     @Test
     public void getRepositoryUrl() {
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null)
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "")
                         .getRepositoryUrl("TST", "test-repo"),
                 is("http://dummy.example.com/projects/TST/repos/test-repo"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null)
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "")
                         .getRepositoryUrl("~tester", "test-repo"),
                 is("http://dummy.example.com/users/tester/repos/test-repo"));
     }

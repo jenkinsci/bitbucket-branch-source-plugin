@@ -37,13 +37,17 @@ public class BitbucketCloudEndpointTest {
 
     @Test
     public void smokes() {
-        assertThat(new BitbucketCloudEndpoint(false, null).getDisplayName(), notNullValue());
-        assertThat(new BitbucketCloudEndpoint(false, null).getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+        assertThat(new BitbucketCloudEndpoint(false, null, "").getDisplayName(), notNullValue());
+        assertThat(new BitbucketCloudEndpoint(false, null, "").getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+        assertThat(new BitbucketCloudEndpoint(false, null, "").getBitbucketJenkinsRootUrl(), notNullValue());
+        assertThat(new BitbucketCloudEndpoint(false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
+        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
+        assertThat(new BitbucketCloudEndpoint(true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins"));
     }
 
     @Test
     public void getRepositoryUrl() {
-        assertThat(new BitbucketCloudEndpoint(false, null).getRepositoryUrl("tester", "test-repo"),
+        assertThat(new BitbucketCloudEndpoint(false, null, "").getRepositoryUrl("tester", "test-repo"),
                 is("https://bitbucket.org/tester/test-repo"));
     }
 

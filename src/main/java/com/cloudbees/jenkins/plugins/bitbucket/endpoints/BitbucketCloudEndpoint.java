@@ -64,8 +64,8 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      */
     private final int repositoriesCacheDuration;
 
-    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
-        this(false, 0, 0, manageHooks, credentialsId);
+    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
+        this(false, 0, 0, manageHooks, credentialsId, bitbucketJenkinsRootUrl);
     }
 
     /**
@@ -79,8 +79,8 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      *                      auto-management of hooks.
      */
     @DataBoundConstructor
-    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId) {
-        super(manageHooks, credentialsId);
+    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
+        super(manageHooks, credentialsId, bitbucketJenkinsRootUrl);
         this.enableCache = enableCache;
         this.teamCacheDuration = teamCacheDuration;
         this.repositoriesCacheDuration = repositoriesCacheDuration;
