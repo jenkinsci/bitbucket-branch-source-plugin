@@ -39,10 +39,11 @@ public class BitbucketServerEndpointTest {
                 is("Dummy"));
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getServerUrl(),
                 is("http://dummy.example.com"));
+        /* The endpoints should set (literally, not normalized) and return the bitbucketJenkinsRootUrl if the management of hooks is enabled */
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getBitbucketJenkinsRootUrl(), notNullValue());
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins"));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins:443/"));
     }
 
     @Test

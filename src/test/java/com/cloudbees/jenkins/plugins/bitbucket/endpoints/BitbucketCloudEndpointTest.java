@@ -39,10 +39,11 @@ public class BitbucketCloudEndpointTest {
     public void smokes() {
         assertThat(new BitbucketCloudEndpoint(false, null, "").getDisplayName(), notNullValue());
         assertThat(new BitbucketCloudEndpoint(false, null, "").getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+        /* The endpoints should set (literally, not normalized) and return the bitbucketJenkinsRootUrl if the management of hooks is enabled */
         assertThat(new BitbucketCloudEndpoint(false, null, "").getBitbucketJenkinsRootUrl(), notNullValue());
         assertThat(new BitbucketCloudEndpoint(false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
         assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
-        assertThat(new BitbucketCloudEndpoint(true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins"));
+        assertThat(new BitbucketCloudEndpoint(true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins:443/"));
     }
 
     @Test
