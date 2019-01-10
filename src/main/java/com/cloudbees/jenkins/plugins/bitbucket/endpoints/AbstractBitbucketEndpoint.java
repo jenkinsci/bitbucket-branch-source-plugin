@@ -65,7 +65,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * The global setting from Jenkins.getActiveInstance().getRootUrl()
      * will be used if this field is null or equals an empty string.
      */
-    private transient String bitbucketJenkinsRootUrl;
+    private final String bitbucketJenkinsRootUrl;
 
 
     /**
@@ -112,22 +112,6 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         }
         LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : '{0}'", bitbucketJenkinsRootUrl);
         return bitbucketJenkinsRootUrl;
-    }
-
-    public void setBitbucketJenkinsRootUrl(String rootUrl) {
-        LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::setBitbucketJenkinsRootUrl : '{0}'", rootUrl != null ? rootUrl : "<null>");
-        if (rootUrl == null || rootUrl.equals("")) {
-            // The getter will return the current value of global
-            // Jenkins Root URL config every time it is called
-            this.bitbucketJenkinsRootUrl = "";
-            return;
-        }
-
-        // This routine is not really BitbucketEndpointConfiguration
-        // specific, it just works on strings with some defaults:
-        rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
-        LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::setBitbucketJenkinsRootUrl normalized into : '{0}'", rootUrl != null ? rootUrl : "<null>");
-        this.bitbucketJenkinsRootUrl = rootUrl;
     }
 
     /**
