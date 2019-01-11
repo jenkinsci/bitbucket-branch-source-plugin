@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration plugin="cloudbees-bitbucket-branch-source@2.2.15">
+  <endpoints>
+    <com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+      <manageHooks>true</manageHooks>
+      <credentialsId>jenkins@bitbucket</credentialsId>
+      <displayName>Bitbucket Server</displayName>
+      <serverUrl>https://bitbucket.test</serverUrl>
+      <bitbucketJenkinsRootUrl>https://jenkins.test/jenkins/</bitbucketJenkinsRootUrl>
+      <callCanMerge>true</callCanMerge>
+    </com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+  </endpoints>
+</com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration>

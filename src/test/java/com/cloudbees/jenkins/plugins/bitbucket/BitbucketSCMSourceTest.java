@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+
 import java.util.Arrays;
 import java.util.Collections;
 import jenkins.model.Jenkins;
@@ -35,6 +37,17 @@ public class BitbucketSCMSourceTest {
     private BitbucketSCMSource load(String dataSet) {
         return (BitbucketSCMSource) Jenkins.XSTREAM2.fromXML(
                 getClass().getResource(getClass().getSimpleName() + "/" + dataSet + ".xml"));
+    }
+
+    // Also initialize the external endpoint configuration storage for some
+    // tests. Relevant XMLs are in a subdir of this class' fixtures.
+    private BitbucketEndpointConfiguration loadBEC() {
+        return loadBEC(currentTestName.getMethodName());
+    }
+
+    private BitbucketEndpointConfiguration loadBEC(String dataSet) {
+        return (BitbucketEndpointConfiguration) Jenkins.XSTREAM2.fromXML(
+                (new BitbucketEndpointConfiguration()).getClass().getResource(getClass().getSimpleName() + "/" + (new BitbucketEndpointConfiguration()).getClass().getSimpleName() + "/" + dataSet + ".xml"));
     }
 
     @Test
@@ -929,24 +942,28 @@ public class BitbucketSCMSourceTest {
 
     @Test
     public void bitbucketJenkinsRootUrl_emptyDefaulted() throws Exception {
+        BitbucketEndpointConfiguration bec = loadBEC();
         BitbucketSCMSource instance = load();
         assertThat(instance.getBitbucketJenkinsRootUrl(), is(Jenkins.getActiveInstance().getRootUrl()));
     }
 
     @Test
     public void bitbucketJenkinsRootUrl_goodAsIs() throws Exception {
+        BitbucketEndpointConfiguration bec = loadBEC();
         BitbucketSCMSource instance = load();
         assertThat(instance.getBitbucketJenkinsRootUrl(), is("http://jenkins.test:8080/"));
     }
 
     @Test
     public void bitbucketJenkinsRootUrl_normalized() throws Exception {
+        BitbucketEndpointConfiguration bec = loadBEC();
         BitbucketSCMSource instance = load();
         assertThat(instance.getBitbucketJenkinsRootUrl(), is("https://jenkins.test/"));
     }
 
     @Test
     public void bitbucketJenkinsRootUrl_slashed() throws Exception {
+        BitbucketEndpointConfiguration bec = loadBEC();
         BitbucketSCMSource instance = load();
         assertThat(instance.getBitbucketJenkinsRootUrl(), is("https://jenkins.test/jenkins/"));
     }

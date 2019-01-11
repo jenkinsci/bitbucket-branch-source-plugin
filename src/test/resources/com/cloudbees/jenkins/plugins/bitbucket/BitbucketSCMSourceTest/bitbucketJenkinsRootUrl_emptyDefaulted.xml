@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
 <com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
   <id>com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator::https://bitbucket.test::DUB::stunning-adventure</id>
   <credentialsId>bb-beescloud</credentialsId>
@@ -8,7 +9,6 @@
   <excludes></excludes>
   <autoRegisterHook>true</autoRegisterHook>
   <bitbucketServerUrl>https://bitbucket.test</bitbucketServerUrl>
-  <bitbucketJenkinsRootUrl/>
   <sshPort>7999</sshPort>
   <repositoryType>GIT</repositoryType>
 </com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
