@@ -380,6 +380,9 @@ public class BitbucketSCMSource extends SCMSource {
             } // else fall through
         }
         String rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(bitbucketJenkinsRootUrl);
+        if ( !rootUrl.endsWith("/") ) {
+            rootUrl += "/";
+        }
         LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : original:   '{0}'", bitbucketJenkinsRootUrl );
         LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized: '{0}'", rootUrl );
         return rootUrl;
@@ -398,6 +401,9 @@ public class BitbucketSCMSource extends SCMSource {
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
         rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+        if ( !rootUrl.endsWith("/") ) {
+            rootUrl += "/";
+        }
         LOGGER.log(Level.FINEST, "BitbucketSCMSource::setBitbucketJenkinsRootUrl normalized into : '{0}'", rootUrl != null ? rootUrl : "<null>");
         this.bitbucketJenkinsRootUrl = rootUrl;
     }
