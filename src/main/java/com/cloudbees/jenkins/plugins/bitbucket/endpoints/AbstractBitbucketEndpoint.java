@@ -107,10 +107,10 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         // In the AbstractBitbucketEndpoint return the value "as is"
         // for proper Web-GUI config management
         if (bitbucketJenkinsRootUrl == null) {
-            LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : <null>");
+            LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : <null>");
             return "";
         }
-        LOGGER.log(Level.SEVERE, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : '{0}'", bitbucketJenkinsRootUrl);
+        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : '{0}'", bitbucketJenkinsRootUrl);
         return bitbucketJenkinsRootUrl;
     }
 
