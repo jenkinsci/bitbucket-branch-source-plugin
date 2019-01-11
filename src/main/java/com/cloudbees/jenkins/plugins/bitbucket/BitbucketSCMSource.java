@@ -307,7 +307,9 @@ public class BitbucketSCMSource extends SCMSource {
         if (serverUrl == null) {
             LOGGER.log(Level.WARNING, "BitbucketSCMSource::readResolve : serverUrl is still empty");
         } else {
-            updateBitbucketJenkinsRootUrl(serverUrl);
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::readResolve : current bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl == null ? "<null>" : "'" + bitbucketJenkinsRootUrl + "'" );
+            this.updateBitbucketJenkinsRootUrl(serverUrl);
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::readResolve : updated bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl == null ? "<null>" : "'" + bitbucketJenkinsRootUrl + "'" );
         }
         if (traits == null) {
             traits = new ArrayList<>();
@@ -338,6 +340,7 @@ public class BitbucketSCMSource extends SCMSource {
      * the cached value as needed (was not set or did change).
      */
     private void updateBitbucketJenkinsRootUrl(String serverUrl) {
+        LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : finding endpoint for serverUrl={0}", serverUrl != null ? "'" + serverUrl + "'" : "<null>" );
         AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
         String endpointcfgJRU = null;
         if (endpoint != null) {
@@ -346,15 +349,32 @@ public class BitbucketSCMSource extends SCMSource {
             // Otherwise we leave the value as null which hints to
             // try re-evaluating it upon subsequent requests.
             endpointcfgJRU = endpoint.getBitbucketJenkinsRootUrl();
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint not null : endpointcfgJRU={0}", endpointcfgJRU != null ? "'" + endpointcfgJRU + "'" : "<null>" );
         }
         if (bitbucketJenkinsRootUrl == null || endpointcfgJenkinsRootUrl == null || !endpointcfgJenkinsRootUrl.equals(endpointcfgJRU == null ? "" : endpointcfgJRU)) {
             // We had no bitbucketJenkinsRootUrl value set,
             // or endpointcfgJenkinsRootUrl changed since
             // we last cached it. Re-evaluate the setting.
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : update needed : " +
+                "cached endpointcfgJenkinsRootUrl={0}", endpointcfgJenkinsRootUrl != null ? "'" + endpointcfgJenkinsRootUrl + "'" : "<null>" );
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : update needed : " +
+                "previous bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl != null ? "'" + bitbucketJenkinsRootUrl + "'" : "<null>" );
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : update needed : " +
+                "current endpointcfgJRU={0}", endpointcfgJRU != null ? "'" + endpointcfgJRU + "'" : "<null>" );
             setBitbucketJenkinsRootUrl(endpointcfgJRU);
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : updated : " +
+                "newly set bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl != null ? "'" + bitbucketJenkinsRootUrl + "'" : "<null>" );
+        } else {
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : already good : " +
+                "newly set bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl != null ? "'" + bitbucketJenkinsRootUrl + "'" : "<null>" );
         }
-        if (!endpointcfgJenkinsRootUrl.equals(endpointcfgJRU == null ? "" : endpointcfgJRU)) {
-            endpointcfgJenkinsRootUrl = endpointcfgJRU;
+        if (endpointcfgJenkinsRootUrl == null || !endpointcfgJenkinsRootUrl.equals(endpointcfgJRU == null ? "" : endpointcfgJRU)) {
+            this.endpointcfgJenkinsRootUrl = endpointcfgJRU;
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : updated : " +
+                "endpointcfgJenkinsRootUrl={0}", endpointcfgJenkinsRootUrl != null ? "'" + endpointcfgJenkinsRootUrl + "'" : "<null>" );
+        } else {
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : already good : " +
+                "endpointcfgJenkinsRootUrl={0}", endpointcfgJenkinsRootUrl != null ? "'" + endpointcfgJenkinsRootUrl + "'" : "<null>" );
         }
     }
 
@@ -399,7 +419,7 @@ public class BitbucketSCMSource extends SCMSource {
 
         // Initialize or refresh the string from endpoint configuration
         // (if any changes need to be applied; otherwise quick no-op)
-        updateBitbucketJenkinsRootUrl(getServerUrl());
+        this.updateBitbucketJenkinsRootUrl(getServerUrl());
 
         if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
             LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : empty : {0}", bitbucketJenkinsRootUrl != null ? "''" : "<null>" );
@@ -407,13 +427,13 @@ public class BitbucketSCMSource extends SCMSource {
             if ( !rootUrl.endsWith("/") ) {
                 rootUrl += "/";
             }
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized global value: {0}", bitbucketJenkinsRootUrl );
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
             return rootUrl;
         }
 
         // The non-null not-empty bitbucketJenkinsRootUrl after the update
         // above is an already processed and normalized string
-        LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : original: {0}", bitbucketJenkinsRootUrl );
+        LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : original: {0}", "'" + bitbucketJenkinsRootUrl + "'" );
         return bitbucketJenkinsRootUrl;
     }
 
@@ -436,7 +456,7 @@ public class BitbucketSCMSource extends SCMSource {
         if ( !rootUrl.endsWith("/") ) {
             rootUrl += "/";
         }
-        LOGGER.log(Level.FINEST, "BitbucketSCMSource::setBitbucketJenkinsRootUrl : normalized into : {0}", rootUrl);
+        LOGGER.log(Level.FINEST, "BitbucketSCMSource::setBitbucketJenkinsRootUrl : normalized into : {0}", "'" + rootUrl + "'");
         this.bitbucketJenkinsRootUrl = rootUrl;
     }
 
