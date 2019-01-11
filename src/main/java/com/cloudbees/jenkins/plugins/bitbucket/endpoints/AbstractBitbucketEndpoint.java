@@ -110,7 +110,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
             LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : <null>");
             return "";
         }
-        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : '{0}'", bitbucketJenkinsRootUrl);
+        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : {0}", bitbucketJenkinsRootUrl);
         return bitbucketJenkinsRootUrl;
     }
 

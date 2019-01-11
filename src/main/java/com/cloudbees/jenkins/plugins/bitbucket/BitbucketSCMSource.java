@@ -407,13 +407,13 @@ public class BitbucketSCMSource extends SCMSource {
             if ( !rootUrl.endsWith("/") ) {
                 rootUrl += "/";
             }
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized global value: '{0}'", bitbucketJenkinsRootUrl );
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized global value: {0}", bitbucketJenkinsRootUrl );
             return rootUrl;
         }
 
         // The non-null not-empty bitbucketJenkinsRootUrl after the update
         // above is an already processed and normalized string
-        LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : original: '{0}'", bitbucketJenkinsRootUrl );
+        LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : original: {0}", bitbucketJenkinsRootUrl );
         return bitbucketJenkinsRootUrl;
     }
 
@@ -436,7 +436,7 @@ public class BitbucketSCMSource extends SCMSource {
         if ( !rootUrl.endsWith("/") ) {
             rootUrl += "/";
         }
-        LOGGER.log(Level.FINEST, "BitbucketSCMSource::setBitbucketJenkinsRootUrl : normalized into : '{0}'", rootUrl);
+        LOGGER.log(Level.FINEST, "BitbucketSCMSource::setBitbucketJenkinsRootUrl : normalized into : {0}", rootUrl);
         this.bitbucketJenkinsRootUrl = rootUrl;
     }
 
