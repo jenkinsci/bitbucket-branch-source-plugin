@@ -95,7 +95,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? credentialsId : null;
-        this.bitbucketJenkinsRootUrl = manageHooks ? bitbucketJenkinsRootUrl : "";
+        this.bitbucketJenkinsRootUrl = this.manageHooks ? bitbucketJenkinsRootUrl : "";
         this.setEndpointJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
     }
 
@@ -114,6 +114,20 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @NonNull
     public abstract String getServerUrl();
+
+    /**
+     * A Jenkins Server Root URL should end with a slash to use with webhooks.
+     */
+    @NonNull
+    public static String normalizeJenkinsRootUrl(String rootUrl) {
+        // This routine is not really BitbucketEndpointConfiguration
+        // specific, it just works on strings with some defaults:
+        rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
+        if ( !rootUrl.endsWith("/") ) {
+            rootUrl += "/";
+        }
+        return rootUrl;
+    }
 
     /**
      * Jenkins Server Root URL to be used by this Bitbucket endpoint.
@@ -143,10 +157,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
         if (endpointJenkinsRootUrl == null || endpointJenkinsRootUrl.equals("")) {
             LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : empty : {0}", endpointJenkinsRootUrl != null ? "''" : "<null>" );
-            String rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(Jenkins.getActiveInstance().getRootUrl());
-            if ( !rootUrl.endsWith("/") ) {
-                rootUrl += "/";
-            }
+            String rootUrl = normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl());
             LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
             return rootUrl;
         }
@@ -171,10 +182,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
-        rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
-        if ( !rootUrl.endsWith("/") ) {
-            rootUrl += "/";
-        }
+        rootUrl = normalizeJenkinsRootUrl(rootUrl);
         LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::setEndpointJenkinsRootUrl : normalized into : {0}", "'" + rootUrl + "'");
         this.endpointJenkinsRootUrl = rootUrl;
     }

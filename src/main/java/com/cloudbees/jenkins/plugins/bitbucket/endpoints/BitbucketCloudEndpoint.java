@@ -77,7 +77,9 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
-     */
+     * @param bitbucketJenkinsRootUrl The custom (or empty for global setting) Jenkins Root URL
+     *                      auto-management of hooks.
+      */
     @DataBoundConstructor
     public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
         super(manageHooks, credentialsId, bitbucketJenkinsRootUrl);

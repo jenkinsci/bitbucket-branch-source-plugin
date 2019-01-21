@@ -91,7 +91,9 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
-     */
+     * @param bitbucketJenkinsRootUrl The custom (or empty for global setting) Jenkins Root URL
+     *                      auto-management of hooks.
+      */
     @DataBoundConstructor
     public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
                                    @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {

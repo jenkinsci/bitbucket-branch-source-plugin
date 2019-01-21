@@ -9,6 +9,7 @@
   <excludes></excludes>
   <autoRegisterHook>true</autoRegisterHook>
   <bitbucketServerUrl>https://bitbucket.test</bitbucketServerUrl>
+  <bitbucketJenkinsRootUrl>http://jenkins.test:8080/</bitbucketJenkinsRootUrl>
   <sshPort>7999</sshPort>
   <repositoryType>GIT</repositoryType>
 </com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
