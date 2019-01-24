@@ -229,7 +229,9 @@ public class BitbucketSCMSource extends SCMSource {
      * Cached value of getBitbucketJenkinsRootUrl() from the endpoint
      * configuration which is processed into bitbucketJenkinsRootUrl.
      * Since processing takes some cycles, we don't repeat it if the
-     * configuration did not change.
+     * configuration did not change. Note that endpoint configuration
+     * changes can result in replacement of the object in the list of
+     * known endpoints with new data placed into it by its constructor.
      */
     @Deprecated
     @Restricted(NoExternalUse.class)

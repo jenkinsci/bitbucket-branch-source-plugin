@@ -94,8 +94,13 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
-        this.credentialsId = manageHooks ? credentialsId : null;
-        this.bitbucketJenkinsRootUrl = this.manageHooks ? bitbucketJenkinsRootUrl : "";
+        if (this.manageHooks) {
+            this.credentialsId = credentialsId;
+            this.bitbucketJenkinsRootUrl = bitbucketJenkinsRootUrl ;
+        } else {
+            this.credentialsId = null;
+            this.bitbucketJenkinsRootUrl = "";
+        }
         this.setEndpointJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
     }
 
@@ -154,6 +159,14 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         // clients), return this custom string. Otherwise use global one.
         // Note: do not pre-initialize to the global value, so it can be
         // reconfigured on the fly.
+
+        if ((endpointJenkinsRootUrl == null || endpointJenkinsRootUrl.equals(""))
+                && !(bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals(""))) {
+            // If this class was loaded (e.g. from config or test fixture)
+            // it might forgo the normal constructor above. So make sure
+            // we have a real URL (or really don't).
+            this.setEndpointJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
+        }
 
         if (endpointJenkinsRootUrl == null || endpointJenkinsRootUrl.equals("")) {
             LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : empty : {0}", endpointJenkinsRootUrl != null ? "''" : "<null>" );

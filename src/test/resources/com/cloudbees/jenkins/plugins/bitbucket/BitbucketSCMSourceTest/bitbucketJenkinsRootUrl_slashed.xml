@@ -8,7 +8,8 @@
   <includes>*</includes>
   <excludes></excludes>
   <autoRegisterHook>true</autoRegisterHook>
-  <bitbucketServerUrl>https://bitbucket.test</bitbucketServerUrl>
+  <manageHooks>true</manageHooks>
+  <bitbucketServerUrl>https://bitbucket-hook-5.test</bitbucketServerUrl>
   <bitbucketJenkinsRootUrl>https://jenkins.test/jenkins/</bitbucketJenkinsRootUrl>
   <sshPort>7999</sshPort>
   <repositoryType>GIT</repositoryType>

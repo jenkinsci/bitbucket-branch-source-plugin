@@ -39,11 +39,23 @@ public class BitbucketCloudEndpointTest {
     public void smokes() {
         assertThat(new BitbucketCloudEndpoint(false, null, "").getDisplayName(), notNullValue());
         assertThat(new BitbucketCloudEndpoint(false, null, "").getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
-        /* The endpoints should set (literally, not normalized) and return the bitbucketJenkinsRootUrl if the management of hooks is enabled */
+
+        /* The endpoints should set (literally, not normalized) and return
+         * the bitbucketJenkinsRootUrl if the management of hooks is enabled */
         assertThat(new BitbucketCloudEndpoint(false, null, "").getBitbucketJenkinsRootUrl(), notNullValue());
         assertThat(new BitbucketCloudEndpoint(false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
-        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
-        assertThat(new BitbucketCloudEndpoint(true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins:443/"));
+        // No credentials - webhook still not managed, even with a checkbox
+        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
+
+
+        // With flag and with credentials, the hook is managed.
+        // getBitbucketJenkinsRootUrl() is verbatim what we set
+        // getEndpointJenkinsRootUrl() is normalized and ends with a slash
+        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
+        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "http://jenkins:8080").getEndpointJenkinsRootUrl(), is("http://jenkins:8080/"));
+
+        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins:443/"));
+        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getEndpointJenkinsRootUrl(), is("https://jenkins/"));
     }
 
     @Test

@@ -30,6 +30,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+
 public class BitbucketServerEndpointTest {
 
 
@@ -39,11 +41,35 @@ public class BitbucketServerEndpointTest {
                 is("Dummy"));
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getServerUrl(),
                 is("http://dummy.example.com"));
-        /* The endpoints should set (literally, not normalized) and return the bitbucketJenkinsRootUrl if the management of hooks is enabled */
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getBitbucketJenkinsRootUrl(), notNullValue());
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true,  null, "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins:443/"));
+
+        /* The endpoints should set (literally, not normalized) and return
+         * the bitbucketJenkinsRootUrl if the management of hooks is enabled */
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                false, null, "").getBitbucketJenkinsRootUrl(), notNullValue());
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
+                is(""));
+        // No credentials - webhook still not managed, even with a checkbox
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
+                is(""));
+
+        // With flag and with credentials, the hook is managed.
+        // getBitbucketJenkinsRootUrl() is verbatim what we set
+        // getEndpointJenkinsRootUrl() is normalized and ends with a slash
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, "{credid}", "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
+                is("http://jenkins:8080"));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, "{credid}", "http://jenkins:8080").getEndpointJenkinsRootUrl(),
+                is("http://jenkins:8080/"));
+
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, "{credid}", "https://jenkins:443/").getBitbucketJenkinsRootUrl(),
+                is("https://jenkins:443/"));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, "{credid}", "https://jenkins:443/").getEndpointJenkinsRootUrl(),
+                is("https://jenkins/"));
     }
 
     @Test
