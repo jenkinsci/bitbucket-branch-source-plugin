@@ -68,6 +68,7 @@ import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.traits.MercurialBrowserSCMSourceTrait;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
@@ -84,6 +85,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -544,11 +546,7 @@ public class BitbucketSCMSource extends SCMSource {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setCheckoutCredentialsId(String checkoutCredentialsId) {
-        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof SSHCheckoutTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof SSHCheckoutTrait);
         if (checkoutCredentialsId != null && !DescriptorImpl.SAME.equals(checkoutCredentialsId)) {
             traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
         }
@@ -630,11 +628,7 @@ public class BitbucketSCMSource extends SCMSource {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setAutoRegisterHook(boolean autoRegisterHook) {
-        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof WebhookRegistrationTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof WebhookRegistrationTrait);
         traits.add(new WebhookRegistrationTrait(
                 autoRegisterHook ? WebhookRegistration.ITEM : WebhookRegistration.DISABLE
         ));
@@ -839,7 +833,7 @@ public class BitbucketSCMSource extends SCMSource {
                                     return new BranchHeadCommit(pull.getSource().getBranch());
                                 }
                             },  //
-                            new BitbucketProbeFactory<BitbucketCommit>(pullBitbucket, request), //
+                            new BitbucketProbeFactory<>(pullBitbucket, request), //
                             new BitbucketRevisionFactory<BitbucketCommit>(pullBitbucket) {
                                 @NonNull
                                 @Override
@@ -916,8 +910,8 @@ public class BitbucketSCMSource extends SCMSource {
                             return new BranchHeadCommit(branch);
                         }
                     }, //
-                    new BitbucketProbeFactory<BitbucketCommit>(bitbucket, request), //
-                    new BitbucketRevisionFactory<BitbucketCommit>(bitbucket), //
+                    new BitbucketProbeFactory<>(bitbucket, request), //
+                    new BitbucketRevisionFactory<>(bitbucket), //
                     new CriteriaWitness(request))) {
                 request.listener().getLogger().format("%n  %d branches were processed (query completed)%n", count);
                 return;
@@ -949,8 +943,8 @@ public class BitbucketSCMSource extends SCMSource {
                             return tag.getRawNode();
                         }
                     }, //
-                    new BitbucketProbeFactory<String>(bitbucket, request), //
-                    new BitbucketRevisionFactory<String>(bitbucket), //
+                    new BitbucketProbeFactory<>(bitbucket, request), //
+                    new BitbucketRevisionFactory<>(bitbucket), //
                     new CriteriaWitness(request))) {
                 request.listener().getLogger().format("%n  %d tags were processed (query completed)%n", count);
                 return;
@@ -1432,33 +1426,33 @@ public class BitbucketSCMSource extends SCMSource {
                 List<? extends BitbucketRepository> repositories =
                         bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
                 if (repositories.isEmpty()) {
-                    throw new FillErrorResponse(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner), true);
+                    throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }
                 for (BitbucketRepository repo : repositories) {
                     result.add(repo.getRepositoryName());
                 }
                 return result;
-            } catch (FillErrorResponse | OutOfMemoryError e) {
+            } catch (FormFillFailure | OutOfMemoryError e) {
                 throw e;
             } catch (IOException e) {
                 if (e instanceof BitbucketRequestException) {
                     if (((BitbucketRequestException) e).getHttpCode() == 401) {
-                        throw new FillErrorResponse(credentials == null
+                        throw FormFillFailure.error(credentials == null
                                 ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
-                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner), true);
+                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
                     }
                 } else if (e.getCause() instanceof BitbucketRequestException) {
                     if (((BitbucketRequestException) e.getCause()).getHttpCode() == 401) {
-                        throw new FillErrorResponse(credentials == null
+                        throw FormFillFailure.error(credentials == null
                                 ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
-                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner), true);
+                                : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
                     }
                 }
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                throw new FillErrorResponse(e.getMessage(), false);
+                throw FormFillFailure.error(e.getMessage());
             } catch (Throwable e) {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                throw new FillErrorResponse(e.getMessage(), false);
+                throw FormFillFailure.error(e.getMessage());
             }
         }
 
@@ -1517,18 +1511,8 @@ public class BitbucketSCMSource extends SCMSource {
                                     NamedArrayList.withAnnotation(Selection.class)),
                     true, result);
             int insertionPoint = result.size();
-            NamedArrayList.select(all, "Git", new NamedArrayList.Predicate<SCMSourceTraitDescriptor>() {
-                @Override
-                public boolean test(SCMSourceTraitDescriptor d) {
-                    return GitSCM.class.isAssignableFrom(d.getScmClass());
-                }
-            }, true, result);
-            NamedArrayList.select(all, "Mercurial", new NamedArrayList.Predicate<SCMSourceTraitDescriptor>() {
-                @Override
-                public boolean test(SCMSourceTraitDescriptor d) {
-                    return MercurialSCM.class.isAssignableFrom(d.getScmClass());
-                }
-            }, true, result);
+            NamedArrayList.select(all, "Git", it -> GitSCM.class.isAssignableFrom(it.getScmClass()), true, result);
+            NamedArrayList.select(all, "Mercurial", it -> MercurialSCM.class.isAssignableFrom(it.getScmClass()), true, result);
             NamedArrayList.select(all, "General", null, true, result, insertionPoint);
             return result;
         }
@@ -1626,13 +1610,13 @@ public class BitbucketSCMSource extends SCMSource {
 
             MercurialRevision that = (MercurialRevision) o;
 
-            return StringUtils.equals(hash, that.hash) && getHead().equals(that.getHead());
-
+            return Objects.equals(hash, that.hash)
+                && Objects.equals(getHead(), that.getHead());
         }
 
         @Override
         public int hashCode() {
-            return hash != null ? hash.hashCode() : 0;
+            return Objects.hashCode(hash);
         }
 
         @Override
@@ -1819,7 +1803,6 @@ public class BitbucketSCMSource extends SCMSource {
         public long getDateMillis() {
             return branch.getDateMillis();
         }
-
     }
 
     private static class WrappedException extends RuntimeException {
@@ -1844,5 +1827,4 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
     }
-
 }

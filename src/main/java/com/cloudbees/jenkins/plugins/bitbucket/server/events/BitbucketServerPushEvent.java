@@ -57,7 +57,7 @@ public class BitbucketServerPushEvent implements BitbucketPushEvent{
 
     public void setChanges(List<ChangeImpl> changes) {
         this.push = new Push();
-        this.push.changes = changes != null ? new ArrayList<>(changes) : new ArrayList<ChangeImpl>();
+        this.push.changes = changes != null ? new ArrayList<>(changes) : new ArrayList<>();
     }
 
     public static class Push {

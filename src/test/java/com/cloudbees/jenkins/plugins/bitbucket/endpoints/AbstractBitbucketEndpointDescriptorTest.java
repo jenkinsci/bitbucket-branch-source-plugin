@@ -117,6 +117,4 @@ public class AbstractBitbucketEndpointDescriptorTest {
 
         }
     }
-
-
 }

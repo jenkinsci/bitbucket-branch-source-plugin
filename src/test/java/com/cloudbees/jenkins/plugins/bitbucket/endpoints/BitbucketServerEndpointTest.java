@@ -34,13 +34,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 
 public class BitbucketServerEndpointTest {
 
-
     @Test
     public void smokes() {
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getDisplayName(),
-                is("Dummy"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "").getServerUrl(),
-                is("http://dummy.example.com"));
+        BitbucketServerEndpoint endpoint1 =
+                new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "");
+
+        assertThat(endpoint1.getDisplayName(), is("Dummy"));
+        assertThat(endpoint1.getServerUrl(), is( "http://dummy.example.com"));
 
         /* The endpoints should set (literally, not normalized) and return
          * the bitbucketJenkinsRootUrl if the management of hooks is enabled */
@@ -57,13 +57,13 @@ public class BitbucketServerEndpointTest {
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
         // getEndpointJenkinsRootUrl() is normalized and ends with a slash
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, "{credid}", "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
-                is("http://jenkins:8080"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, "{credid}", "http://jenkins:8080").getEndpointJenkinsRootUrl(),
-                is("http://jenkins:8080/"));
+        BitbucketServerEndpoint endpoint2 =
+                new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, "{credid}", "http://jenkins:8080");
+        assertThat(endpoint2.getBitbucketJenkinsRootUrl(), is("http://jenkins:8080"));
+        assertThat(endpoint2.getEndpointJenkinsRootUrl(),  is("http://jenkins:8080/"));
 
+        // Make sure several invokations with same arguments do not conflict:
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
                 true, "{credid}", "https://jenkins:443/").getBitbucketJenkinsRootUrl(),
                 is("https://jenkins:443/"));
@@ -74,24 +74,19 @@ public class BitbucketServerEndpointTest {
 
     @Test
     public void getRepositoryUrl() {
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "")
-                        .getRepositoryUrl("TST", "test-repo"),
-                is("http://dummy.example.com/projects/TST/repos/test-repo"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "")
-                        .getRepositoryUrl("~tester", "test-repo"),
-                is("http://dummy.example.com/users/tester/repos/test-repo"));
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, "");
+
+        assertThat(endpoint.getRepositoryUrl("TST", "test-repo"), is("http://dummy.example.com/projects/TST/repos/test-repo"));
+        assertThat(endpoint.getRepositoryUrl("~tester", "test-repo"), is("http://dummy.example.com/users/tester/repos/test-repo"));
     }
 
     @Test
     public void given__badUrl__when__check__then__fail() {
-        BitbucketServerEndpoint.DescriptorImpl descriptor = new BitbucketServerEndpoint.DescriptorImpl();
         assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("").kind, is(FormValidation.Kind.ERROR));
     }
 
     @Test
     public void given__goodUrl__when__check__then__ok() {
-        BitbucketServerEndpoint.DescriptorImpl descriptor = new BitbucketServerEndpoint.DescriptorImpl();
-        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("http://bitbucket.example.com").kind,
-                is(FormValidation.Kind.OK));
+        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("http://dummy.example.com").kind, is(FormValidation.Kind.OK));
     }
 }

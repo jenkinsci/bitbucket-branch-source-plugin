@@ -1,6 +1,6 @@
 <?jelly escape-by-default='true'?>
 <div>
-  Allows to use Bitbucket Cloud as a source for multi-branch projects. It also
-  provides the required connectors for Bitbucket Cloud Team Folder (also known as
-  repositories auto-discovering).
+  Allows to use Bitbucket Cloud and Bitbucket Server as sources for multi-branch
+  projects. It also provides the required connectors for Bitbucket Cloud Team and
+  Bitbucket Server Project folder (also known as repositories auto-discovering).
 </div>

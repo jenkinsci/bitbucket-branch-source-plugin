@@ -23,14 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.JsonParser.BitbucketDateFormat;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Objects;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.scm.api.SCMHead;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Represents a specific revision of a bitbucket {@link SCMHead}.
@@ -57,7 +57,7 @@ public class BitbucketGitSCMRevision extends SCMRevisionImpl {
         this.author = commit.getAuthor();
         Date commitDate;
         try {
-            commitDate = new BitbucketDateFormat().parse(commit.getDate());
+            commitDate = new StdDateFormat().parse(commit.getDate());
         } catch (ParseException e) {
             commitDate = null;
         }
@@ -96,18 +96,18 @@ public class BitbucketGitSCMRevision extends SCMRevisionImpl {
         if (this == o) {
             return true;
         }
-        if (o == null || !(o instanceof SCMRevisionImpl)) {
+        if (!(o instanceof SCMRevisionImpl)) {
             return false;
         }
 
         SCMRevisionImpl that = (SCMRevisionImpl) o;
 
-        return StringUtils.equals(getHash(), that.getHash()) && getHead().equals(that.getHead());
+        return Objects.equals(getHash(), that.getHash())
+            && Objects.equals(getHead(), that.getHead());
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(getHash(), getHead());
     }
-
 }

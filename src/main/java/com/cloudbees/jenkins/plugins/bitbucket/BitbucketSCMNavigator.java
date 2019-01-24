@@ -363,11 +363,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setAutoRegisterHooks(boolean autoRegisterHook) {
-        for (Iterator<SCMTrait<? extends SCMTrait<?>>> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof WebhookRegistrationTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof WebhookRegistrationTrait);
         traits.add(new WebhookRegistrationTrait(
                 autoRegisterHook ? WebhookRegistration.ITEM : WebhookRegistration.DISABLE
         ));
@@ -405,11 +401,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setCheckoutCredentialsId(String checkoutCredentialsId) {
-        for (Iterator<SCMTrait<? extends SCMTrait<?>>> iterator = traits.iterator(); iterator.hasNext(); ) {
-            if (iterator.next() instanceof SSHCheckoutTrait) {
-                iterator.remove();
-            }
-        }
+        traits.removeIf(trait -> trait instanceof SSHCheckoutTrait);
         if (checkoutCredentialsId != null && !BitbucketSCMSource.DescriptorImpl.SAME.equals(checkoutCredentialsId)) {
             traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
         }
@@ -817,30 +809,14 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                 }
             }
             List<NamedArrayList<? extends SCMTraitDescriptor<?>>> result = new ArrayList<>();
-            NamedArrayList.select(all, "Repositories", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
-                        @Override
-                        public boolean test(SCMTraitDescriptor<?> scmTraitDescriptor) {
-                            return scmTraitDescriptor instanceof SCMNavigatorTraitDescriptor;
-                        }
-                    },
-                    true, result);
+            NamedArrayList.select(all, "Repositories", it -> it instanceof SCMNavigatorTraitDescriptor, true, result);
             NamedArrayList.select(all, "Within repository", NamedArrayList
                             .anyOf(NamedArrayList.withAnnotation(Discovery.class),
                                     NamedArrayList.withAnnotation(Selection.class)),
                     true, result);
             int insertionPoint = result.size();
-            NamedArrayList.select(all, "Git", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
-                @Override
-                public boolean test(SCMTraitDescriptor<?> d) {
-                    return GitSCM.class.isAssignableFrom(d.getScmClass());
-                }
-            }, true, result);
-            NamedArrayList.select(all, "Mercurial", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
-                @Override
-                public boolean test(SCMTraitDescriptor<?> d) {
-                    return MercurialSCM.class.isAssignableFrom(d.getScmClass());
-                }
-            }, true, result);
+            NamedArrayList.select(all, "Git", it -> GitSCM.class.isAssignableFrom(it.getScmClass()), true, result);
+            NamedArrayList.select(all, "Mercurial", it -> MercurialSCM.class.isAssignableFrom(it.getScmClass()), true, result);
             NamedArrayList.select(all, "General", null, true, result, insertionPoint);
             return result;
         }

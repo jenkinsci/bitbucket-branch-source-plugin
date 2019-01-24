@@ -38,7 +38,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 public class BitbucketCloudBranch implements BitbucketBranch {
-    private static Logger LOGGER = Logger.getLogger(BitbucketCloudBranch.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(BitbucketCloudBranch.class.getName());
 
     private final String name;
     private final boolean isActive;
