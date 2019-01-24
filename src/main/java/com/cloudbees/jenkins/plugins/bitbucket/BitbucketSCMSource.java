@@ -343,6 +343,8 @@ public class BitbucketSCMSource extends SCMSource {
      * or if the cached endpointcfgJenkinsRootUrl changed. Also updates
      * this cached value as needed (was not set or did change).
      */
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Only non-null after we set them here!")
     private void updateBitbucketJenkinsRootUrl(String serverUrl) {
         LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : finding endpoint for serverUrl={0}", serverUrl != null ? "'" + serverUrl + "'" : "<null>" );
         AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
@@ -370,8 +372,8 @@ public class BitbucketSCMSource extends SCMSource {
             // try re-evaluating it upon subsequent requests.
             endpointcfgBJRU = endpoint.getBitbucketJenkinsRootUrl();
             endpointcfgEJRU = endpoint.getEndpointJenkinsRootUrl();
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint not null : endpointcfgBJRU={0}", endpointcfgBJRU != null ? "'" + endpointcfgBJRU + "'" : "<null>" );
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint not null : endpointcfgEJRU={0}", endpointcfgEJRU != null ? "'" + endpointcfgEJRU + "'" : "<null>" );
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint not null : endpointcfgBJRU={0}", "'" + endpointcfgBJRU + "'" );
+            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint not null : endpointcfgEJRU={0}", "'" + endpointcfgEJRU + "'" );
         }
 
         if (bitbucketJenkinsRootUrl == null || endpointcfgJenkinsRootUrl == null || !endpointcfgJenkinsRootUrl.equals(endpointcfgBJRU == null ? "" : endpointcfgBJRU)) {

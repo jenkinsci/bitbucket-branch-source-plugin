@@ -122,6 +122,9 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
     /**
      * A Jenkins Server Root URL should end with a slash to use with webhooks.
+     *
+     * @param rootUrl the original value of an URL which would be normalized
+     * @return the normalized URL ending with a slash
      */
     @NonNull
     public static String normalizeJenkinsRootUrl(String rootUrl) {
@@ -138,6 +141,8 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * Jenkins Server Root URL to be used by this Bitbucket endpoint.
      * The global setting from Jenkins.getActiveInstance().getRootUrl()
      * will be used if this field is null or equals an empty string.
+     *
+     * @return the verbatim setting provided by endpoint configuration
      */
     @NonNull
     public String getBitbucketJenkinsRootUrl() {
@@ -151,6 +156,15 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         return bitbucketJenkinsRootUrl;
     }
 
+    /**
+     * Jenkins Server Root URL to be used by this Bitbucket endpoint.
+     * The global setting from Jenkins.getActiveInstance().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     *
+     * @return the normalized value from setting provided by endpoint
+     *      configuration (if not empty), or the global setting of
+     *      the Jenkins Root URL
+     */
     @NonNull
     public String getEndpointJenkinsRootUrl() {
         // If this instance of Bitbucket connection has a custom root URL
@@ -181,6 +195,11 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         return endpointJenkinsRootUrl;
     }
 
+    /**
+     * Assign a normalized version of the custom Jenkins Server Root URL value.
+     *
+     * @param rootUrl the original value of an URL which would be normalized
+     */
     private void setEndpointJenkinsRootUrl(String rootUrl) {
         LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::setEndpointJenkinsRootUrl : got : {0}", rootUrl == null ? "<null>" : "'" + rootUrl + "'" );
         if (rootUrl == null || rootUrl.equals("")) {
