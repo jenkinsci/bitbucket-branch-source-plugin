@@ -46,8 +46,6 @@ public class BitbucketSCMSourceTest {
 
     // Also initialize the external endpoint configuration storage for some
     // tests. Relevant XMLs are in a subdir of this class' fixtures.
-    // Generated with shell: for F in bitbucketJenkinsRootUrl_*.xml ; do sed -e 's,  <bitbucketJenkinsRootUrl>http://localhost:8080</bitbucketJenkinsRootUrl>,'"`grep bitbucketJenkinsRootUrl $F`", -e 's,  <serverUrl>http://localhost:7990</serverUrl>,'"`grep erverUrl $F | sed s,bitbucketServerUrl,serverUrl,g`", < ../endpoints/config-without-webhook-impl.xml > BitbucketEndpointConfiguration/$F ; done
-
     private void loadBEC() {
         BitbucketEndpointConfiguration bec = loadBEC(currentTestName.getMethodName());
         for (AbstractBitbucketEndpoint abe : bec.getEndpoints()) {
@@ -59,7 +57,9 @@ public class BitbucketSCMSourceTest {
 
     private BitbucketEndpointConfiguration loadBEC(String dataSet) {
         // Note to use original BitbucketSCMSourceTest::getClass() here to get proper paths
-        String path = getClass().getSimpleName() + "/BitbucketEndpointConfiguration/" + dataSet + ".xml";
+        String path = getClass().getSimpleName() + "/" +
+                BitbucketEndpointConfiguration.class.getSimpleName() +
+                "/" + dataSet + ".xml";
         URL url = getClass().getResource(path);
         BitbucketEndpointConfiguration bec =
                 (BitbucketEndpointConfiguration) Jenkins.XSTREAM2.fromXML(url);

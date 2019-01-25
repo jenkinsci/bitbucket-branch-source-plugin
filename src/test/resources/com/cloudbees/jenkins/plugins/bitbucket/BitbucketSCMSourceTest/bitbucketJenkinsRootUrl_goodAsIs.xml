@@ -10,7 +10,6 @@
   <autoRegisterHook>true</autoRegisterHook>
   <manageHooks>true</manageHooks>
   <bitbucketServerUrl>https://bitbucket-hook-2.test</bitbucketServerUrl>
-  <bitbucketJenkinsRootUrl>http://jenkins.test:8080/</bitbucketJenkinsRootUrl>
   <sshPort>7999</sshPort>
   <repositoryType>GIT</repositoryType>
 </com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>

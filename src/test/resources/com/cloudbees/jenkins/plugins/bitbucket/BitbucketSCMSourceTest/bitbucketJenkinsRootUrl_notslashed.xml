@@ -10,7 +10,6 @@
   <autoRegisterHook>true</autoRegisterHook>
   <manageHooks>true</manageHooks>
   <bitbucketServerUrl>https://bitbucket-hook-4.test</bitbucketServerUrl>
-  <bitbucketJenkinsRootUrl>https://jenkins.test:443/jenkins</bitbucketJenkinsRootUrl>
   <sshPort>7999</sshPort>
   <repositoryType>GIT</repositoryType>
 </com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
