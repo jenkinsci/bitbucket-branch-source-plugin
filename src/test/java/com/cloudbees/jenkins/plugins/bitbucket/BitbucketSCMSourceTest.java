@@ -42,8 +42,6 @@ public class BitbucketSCMSourceTest {
         BitbucketSCMSource bss =
                 (BitbucketSCMSource) Jenkins.XSTREAM2.fromXML(url);
         return bss;
-//        return (BitbucketSCMSource) Jenkins.XSTREAM2.fromXML(
-//                getClass().getResource(getClass().getSimpleName() + "/" + dataSet + ".xml"));
     }
 
     // Also initialize the external endpoint configuration storage for some
