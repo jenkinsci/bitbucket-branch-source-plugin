@@ -145,14 +145,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("2.2.0")
     private transient String bitbucketServerUrl;
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    private transient String bitbucketJenkinsRootUrl;
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    private transient String endpointcfgJenkinsRootUrl;
 
 
     @DataBoundConstructor
@@ -190,10 +182,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
         if (serverUrl == null) {
             LOGGER.log(Level.WARNING, "BitbucketSCMNavigator::readResolve : serverUrl is still empty");
-        } else {
-            LOGGER.log(Level.FINEST, "BitbucketSCMNavigator::readResolve : current bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl == null ? "<null>" : "'" + bitbucketJenkinsRootUrl + "'" );
-            this.updateBitbucketJenkinsRootUrl(serverUrl);
-            LOGGER.log(Level.FINEST, "BitbucketSCMNavigator::readResolve : updated bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl == null ? "<null>" : "'" + bitbucketJenkinsRootUrl + "'" );
         }
         if (traits == null) {
             // legacy instance, reconstruct traits to reflect legacy behaviour
@@ -223,81 +211,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             }
         }
         return this;
-    }
-
-    /*
-     * Optionally update bitbucketJenkinsRootUrl if it was not set
-     * before (which causes normalization of the URL string value),
-     * or if the cached endpointcfgJenkinsRootUrl changed. Also updates
-     * this cached value as needed (was not set or did change).
-     */
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Only non-null after we set them here!")
-    private void updateBitbucketJenkinsRootUrl(String serverUrl) {
-        LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : finding endpoint for serverUrl={0}", serverUrl != null ? "'" + serverUrl + "'" : "<null>" );
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        String endpointcfgBJRU = null; // The setting user types (or empty)
-        String endpointcfgEJRU = null; // The normalized value of BJRU
-            // (or global default) that is actually used as the webhook
-            // Jenkins URL for the Stash endpoint of this BranchSource
-        if (endpoint == null) {
-            // No registered endpoint has this server URL
-            // This may happen in tests or if users are reconfiguring stuff
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint is null (no match for serverUrl={0})", serverUrl != null ? "'" + serverUrl + "'" : "<null>" );
-            this.endpointcfgJenkinsRootUrl = null;
-            // If there is a value (e.g. set directly through class methods,
-            // loaded from test resources), make sure it is normalized well.
-            if (this.bitbucketJenkinsRootUrl != null && !this.bitbucketJenkinsRootUrl.equals("")) {
-                this.bitbucketJenkinsRootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
-            }
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : normalized : " +
-                "previously set bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl != null ? "'" + bitbucketJenkinsRootUrl + "'" : "<null>" );
-            return;
-        } else {
-            // This returns a non-null string; an empty value ("")
-            // means to use global config dynamically for every request.
-            // Otherwise we leave the value as null which hints to
-            // try re-evaluating it upon subsequent requests.
-            endpointcfgBJRU = endpoint.getBitbucketJenkinsRootUrl();
-            endpointcfgEJRU = endpoint.getEndpointJenkinsRootUrl();
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint not null : endpointcfgBJRU={0}", "'" + endpointcfgBJRU + "'" );
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : endpoint not null : endpointcfgEJRU={0}", "'" + endpointcfgEJRU + "'" );
-        }
-
-        if (bitbucketJenkinsRootUrl == null || endpointcfgJenkinsRootUrl == null || !endpointcfgJenkinsRootUrl.equals(endpointcfgBJRU == null ? "" : endpointcfgBJRU)) {
-            // We had no bitbucketJenkinsRootUrl value set, or the
-            // cached endpointcfgJenkinsRootUrl value changed since
-            // we last cached it. Re-evaluate the setting.
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : update needed : " +
-                "cached endpointcfgJenkinsRootUrl={0}", endpointcfgJenkinsRootUrl != null ? "'" + endpointcfgJenkinsRootUrl + "'" : "<null>" );
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : update needed : " +
-                "previous bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl != null ? "'" + bitbucketJenkinsRootUrl + "'" : "<null>" );
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : update needed : " +
-                "current endpointcfgBJRU={0}", endpointcfgBJRU != null ? "'" + endpointcfgBJRU + "'" : "<null>" );
-            if (endpointcfgBJRU == null || endpointcfgBJRU.equals("")) {
-                // Leave the config value dynamic
-                setBitbucketJenkinsRootUrl(endpointcfgBJRU);
-            } else {
-                // Update with normalized value, save cycles:
-                // normalize once in endpoint class
-                setBitbucketJenkinsRootUrl(endpointcfgEJRU);
-            }
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : updated : " +
-                "newly set bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl != null ? "'" + bitbucketJenkinsRootUrl + "'" : "<null>" );
-        } else {
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : already good : " +
-                "newly set bitbucketJenkinsRootUrl={0}", bitbucketJenkinsRootUrl != null ? "'" + bitbucketJenkinsRootUrl + "'" : "<null>" );
-        }
-
-        if (endpointcfgJenkinsRootUrl == null || !endpointcfgJenkinsRootUrl.equals(endpointcfgBJRU == null ? "" : endpointcfgBJRU)) {
-            // Update cached user-entered value to detect changes later
-            this.endpointcfgJenkinsRootUrl = endpointcfgBJRU;
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : updated : " +
-                "endpointcfgJenkinsRootUrl={0}", endpointcfgJenkinsRootUrl != null ? "'" + endpointcfgJenkinsRootUrl + "'" : "<null>" );
-        } else {
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::updateBitbucketJenkinsRootUrl : already good : " +
-                "endpointcfgJenkinsRootUrl={0}", endpointcfgJenkinsRootUrl != null ? "'" + endpointcfgJenkinsRootUrl + "'" : "<null>" );
-        }
     }
 
     @CheckForNull
@@ -452,34 +365,25 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @Deprecated
     @Restricted(DoNotUse.class)
     @RestrictedSince("2.2.0")
-    @DataBoundSetter
-    public void setBitbucketJenkinsRootUrl(String rootUrl) {
-        if (rootUrl == null || rootUrl.equals("")) {
-            // The getter will return the current value of global
-            // Jenkins Root URL config every time it is called
-            this.bitbucketJenkinsRootUrl = null;
-            return;
-        }
-
-        // This routine is not really BitbucketEndpointConfiguration
-        // specific, it just works on strings with some defaults:
-        this.bitbucketJenkinsRootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
-    }
-
-    @Deprecated
-    @Restricted(DoNotUse.class)
-    @RestrictedSince("2.2.0")
     @CheckForNull
     public String getBitbucketJenkinsRootUrl() {
         // Initialize or refresh the string from endpoint configuration
         // (if any changes need to be applied; otherwise quick no-op)
-        this.updateBitbucketJenkinsRootUrl(getServerUrl());
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
+        String endpointcfgEJRU = null; // The normalized value of what the user
+            // typed (or global default) that is actually used as the webhook
+            // Jenkins URL for the Stash endpoint of this BranchSource
+        if (endpoint != null) {
+            endpointcfgEJRU = endpoint.getEndpointJenkinsRootUrl();
+        }
 
-        if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
+        if (Util.fixEmptyAndTrim(endpointcfgEJRU) == null) {
+            // Most probably no custom root URL was configured for this
+            // endpoint, or no endpoint was associated to serverUrl at all.
             String rootUrl;
             try {
                 rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
-                if (rootUrl != null && !rootUrl.equals("")) {
+                if (Util.fixEmptyAndTrim(rootUrl) != null) {
                     rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
                 } else {
                     LOGGER.log(Level.INFO, "BitbucketSCMNavigator::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
@@ -492,7 +396,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             }
             return rootUrl;
         }
-        return bitbucketJenkinsRootUrl;
+        return endpointcfgEJRU;
     }
 
     @Deprecated
@@ -771,12 +675,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         @Deprecated
         public FormValidation doCheckBitbucketServerUrl(@QueryParameter String bitbucketServerUrl) {
             return BitbucketSCMSource.DescriptorImpl.doCheckBitbucketServerUrl(bitbucketServerUrl);
-        }
-
-        @Restricted(DoNotUse.class)
-        @Deprecated
-        public FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String bitbucketJenkinsRootUrl) {
-            return BitbucketSCMSource.DescriptorImpl.doCheckBitbucketJenkinsRootUrl(bitbucketJenkinsRootUrl);
         }
 
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {
