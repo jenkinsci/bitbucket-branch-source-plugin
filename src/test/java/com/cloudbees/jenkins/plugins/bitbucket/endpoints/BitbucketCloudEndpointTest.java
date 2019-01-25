@@ -24,9 +24,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.damnhandy.uri.template.UriTemplate;
-import org.junit.Test;
 import jenkins.model.Jenkins;
 import org.junit.ClassRule;
+import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.is;

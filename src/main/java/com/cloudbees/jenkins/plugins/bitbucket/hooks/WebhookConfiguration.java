@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import jenkins.model.Jenkins;
 
 /**
  * Contains the webhook configuration
