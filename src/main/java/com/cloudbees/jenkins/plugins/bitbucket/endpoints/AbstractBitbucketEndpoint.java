@@ -184,7 +184,20 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
         if (endpointJenkinsRootUrl == null || endpointJenkinsRootUrl.equals("")) {
             LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : empty : {0}", endpointJenkinsRootUrl != null ? "''" : "<null>" );
-            String rootUrl = normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl());
+            String rootUrl;
+            try {
+                rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
+                if (rootUrl != null && !rootUrl.equals("")) {
+                    rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
+                } else {
+                    LOGGER.log(Level.INFO, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
+                    rootUrl = "";
+                }
+            } catch (IllegalStateException e) {
+                // java.lang.IllegalStateException: Jenkins has not been started, or was already shut down
+                LOGGER.log(Level.INFO, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl() : threw {0}", e.toString() );
+                rootUrl = "";
+            }
             LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
             return rootUrl;
         }

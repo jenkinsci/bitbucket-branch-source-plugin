@@ -476,7 +476,21 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         this.updateBitbucketJenkinsRootUrl(getServerUrl());
 
         if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
-            return Jenkins.getActiveInstance().getRootUrl();
+            String rootUrl;
+            try {
+                rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
+                if (rootUrl != null && !rootUrl.equals("")) {
+                    rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
+                } else {
+                    LOGGER.log(Level.INFO, "BitbucketSCMNavigator::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
+                    rootUrl = "";
+                }
+            } catch (IllegalStateException e) {
+                // java.lang.IllegalStateException: Jenkins has not been started, or was already shut down
+                LOGGER.log(Level.INFO, "BitbucketSCMNavigator::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl() : threw {0}", e.toString() );
+                rootUrl = "";
+            }
+            return rootUrl;
         }
         return bitbucketJenkinsRootUrl;
     }

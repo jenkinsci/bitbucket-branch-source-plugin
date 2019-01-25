@@ -458,7 +458,20 @@ public class BitbucketSCMSource extends SCMSource {
         if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
             // Most probably no endpoint was associated to serverUrl
             LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : empty : {0}", bitbucketJenkinsRootUrl != null ? "''" : "<null>" );
-            String rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl());
+            String rootUrl;
+            try {
+                rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
+                if (rootUrl != null && !rootUrl.equals("")) {
+                    rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
+                } else {
+                    LOGGER.log(Level.INFO, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
+                    rootUrl = "";
+                }
+            } catch (IllegalStateException e) {
+                // java.lang.IllegalStateException: Jenkins has not been started, or was already shut down
+                LOGGER.log(Level.INFO, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl() : threw {0}", e.toString() );
+                rootUrl = "";
+            }
             LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
             return rootUrl;
         }
