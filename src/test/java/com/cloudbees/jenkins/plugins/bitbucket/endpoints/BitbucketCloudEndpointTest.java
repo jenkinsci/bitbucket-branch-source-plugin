@@ -26,12 +26,17 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 import com.damnhandy.uri.template.UriTemplate;
 import org.junit.Test;
 import jenkins.model.Jenkins;
+import org.junit.ClassRule;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class BitbucketCloudEndpointTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
     private static final String V2_TEAMS_API_BASE_URL = "https://api.bitbucket.org/2.0/teams/";
@@ -49,8 +54,6 @@ public class BitbucketCloudEndpointTest {
         assertThat(new BitbucketCloudEndpoint(false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
         // No credentials - webhook still not managed, even with a checkbox
         assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
-        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
@@ -62,6 +65,14 @@ public class BitbucketCloudEndpointTest {
         // Make sure several invokations with same arguments do not conflict:
         assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins:443/"));
         assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getEndpointJenkinsRootUrl(), is("https://jenkins/"));
+    }
+
+    @Test
+    public void getUnmanagedDefaultRootUrl() {
+        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
+        assertThat(new BitbucketCloudEndpoint(false, "{cred}", "http://jenkins:8080").getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
     }
 
     @Test

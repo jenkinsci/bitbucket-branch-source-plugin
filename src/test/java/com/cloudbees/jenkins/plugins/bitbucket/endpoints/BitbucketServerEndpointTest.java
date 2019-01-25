@@ -26,6 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 import hudson.util.FormValidation;
 import org.junit.Test;
 import jenkins.model.Jenkins;
+import org.junit.ClassRule;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -34,6 +36,9 @@ import static org.junit.Assert.assertThat;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 
 public class BitbucketServerEndpointTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     @Test
     public void smokes() {
@@ -54,9 +59,6 @@ public class BitbucketServerEndpointTest {
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
                 true, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
                 is(""));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, null, "http://jenkins:8080").getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
@@ -74,6 +76,16 @@ public class BitbucketServerEndpointTest {
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
                 true, "{credid}", "https://jenkins:443/").getEndpointJenkinsRootUrl(),
                 is("https://jenkins/"));
+    }
+
+    @Test
+    public void getUnmanagedDefaultRootUrl() {
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, null, "http://jenkins:8080").getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                false, "{cred}", "http://jenkins:8080").getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
     }
 
     @Test
