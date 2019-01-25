@@ -174,20 +174,20 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         // Note: do not pre-initialize to the global value, so it can be
         // reconfigured on the fly.
 
-        if ((endpointJenkinsRootUrl == null || endpointJenkinsRootUrl.equals(""))
-                && !(bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals(""))) {
+        if ( Util.fixEmptyAndTrim(endpointJenkinsRootUrl) == null
+                && Util.fixEmptyAndTrim(bitbucketJenkinsRootUrl) != null ) {
             // If this class was loaded (e.g. from config or test fixture)
             // it might forgo the normal constructor above. So make sure
             // we have a real URL (or really don't).
             this.setEndpointJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
         }
 
-        if (endpointJenkinsRootUrl == null || endpointJenkinsRootUrl.equals("")) {
+        if (Util.fixEmptyAndTrim(endpointJenkinsRootUrl) == null) {
             LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : empty : {0}", endpointJenkinsRootUrl != null ? "''" : "<null>" );
             String rootUrl;
             try {
                 rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
-                if (rootUrl != null && !rootUrl.equals("")) {
+                if (Util.fixEmptyAndTrim(rootUrl) != null) {
                     rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
                 } else {
                     LOGGER.log(Level.INFO, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
@@ -215,7 +215,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     private void setEndpointJenkinsRootUrl(String rootUrl) {
         LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::setEndpointJenkinsRootUrl : got : {0}", rootUrl == null ? "<null>" : "'" + rootUrl + "'" );
-        if (rootUrl == null || rootUrl.equals("")) {
+        if (Util.fixEmptyAndTrim(rootUrl) == null) {
             // The getter will return the current value of global
             // Jenkins Root URL config every time it is called.
             // A null (not empty-string "") value would also cause
