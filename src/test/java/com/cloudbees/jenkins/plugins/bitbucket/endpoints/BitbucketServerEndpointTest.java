@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import hudson.util.FormValidation;
 import org.junit.Test;
+import jenkins.model.Jenkins;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -53,6 +54,9 @@ public class BitbucketServerEndpointTest {
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
                 true, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
                 is(""));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
+                true, null, "http://jenkins:8080").getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set

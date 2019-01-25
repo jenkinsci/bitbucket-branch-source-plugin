@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.damnhandy.uri.template.UriTemplate;
 import org.junit.Test;
+import jenkins.model.Jenkins;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -48,6 +49,8 @@ public class BitbucketCloudEndpointTest {
         assertThat(new BitbucketCloudEndpoint(false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
         // No credentials - webhook still not managed, even with a checkbox
         assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), is(""));
+        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl())));
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
