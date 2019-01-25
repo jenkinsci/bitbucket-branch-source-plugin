@@ -369,8 +369,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @NonNull
     public String getEndpointJenkinsRootUrl() {
         String rootUrl = AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
-        if (rootUrl == null)
+        if (Util.fixEmptyAndTrim(rootUrl) == null) {
             return "";
+        }
         return rootUrl;
     }
 
