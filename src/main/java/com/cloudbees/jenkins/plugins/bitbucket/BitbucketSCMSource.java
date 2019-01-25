@@ -458,10 +458,7 @@ public class BitbucketSCMSource extends SCMSource {
         if (bitbucketJenkinsRootUrl == null || bitbucketJenkinsRootUrl.equals("")) {
             // Most probably no endpoint was associated to serverUrl
             LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : empty : {0}", bitbucketJenkinsRootUrl != null ? "''" : "<null>" );
-            String rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(Jenkins.getActiveInstance().getRootUrl());
-            if ( !rootUrl.endsWith("/") ) {
-                rootUrl += "/";
-            }
+            String rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getActiveInstance().getRootUrl());
             LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
             return rootUrl;
         }
