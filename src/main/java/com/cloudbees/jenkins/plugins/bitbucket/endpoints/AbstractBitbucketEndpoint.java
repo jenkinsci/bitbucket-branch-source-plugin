@@ -318,7 +318,6 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     }
 
     @Restricted(NoExternalUse.class)
-    @Deprecated
     public static FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String bitbucketJenkinsRootUrl) {
         String url = Util.fixEmpty(bitbucketJenkinsRootUrl);
         if (url == null) {
