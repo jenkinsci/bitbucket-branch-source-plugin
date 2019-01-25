@@ -966,34 +966,34 @@ public class BitbucketSCMSourceTest {
     public void bitbucketJenkinsRootUrl_emptyDefaulted() throws Exception {
         loadBEC();
         BitbucketSCMSource instance = load();
-        assertThat(instance.getBitbucketJenkinsRootUrl(), is(Jenkins.getActiveInstance().getRootUrl()));
+        assertThat(instance.getEndpointJenkinsRootUrl(), is(Jenkins.getActiveInstance().getRootUrl()));
     }
 
     @Test
     public void bitbucketJenkinsRootUrl_goodAsIs() throws Exception {
         loadBEC();
         BitbucketSCMSource instance = load();
-        assertThat(instance.getBitbucketJenkinsRootUrl(), is("http://jenkins.test:8080/"));
+        assertThat(instance.getEndpointJenkinsRootUrl(), is("http://jenkins.test:8080/"));
     }
 
     @Test
     public void bitbucketJenkinsRootUrl_normalized() throws Exception {
         loadBEC();
         BitbucketSCMSource instance = load();
-        assertThat(instance.getBitbucketJenkinsRootUrl(), is("https://jenkins.test/"));
+        assertThat(instance.getEndpointJenkinsRootUrl(), is("https://jenkins.test/"));
     }
 
     @Test
     public void bitbucketJenkinsRootUrl_slashed() throws Exception {
         loadBEC();
         BitbucketSCMSource instance = load();
-        assertThat(instance.getBitbucketJenkinsRootUrl(), is("https://jenkins.test/jenkins/"));
+        assertThat(instance.getEndpointJenkinsRootUrl(), is("https://jenkins.test/jenkins/"));
     }
 
     @Test
     public void bitbucketJenkinsRootUrl_notslashed() throws Exception {
         loadBEC();
         BitbucketSCMSource instance = load();
-        assertThat(instance.getBitbucketJenkinsRootUrl(), is("https://jenkins.test/jenkins/"));
+        assertThat(instance.getEndpointJenkinsRootUrl(), is("https://jenkins.test/jenkins/"));
     }
 }

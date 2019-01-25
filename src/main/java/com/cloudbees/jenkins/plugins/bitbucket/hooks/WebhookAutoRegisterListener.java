@@ -129,7 +129,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             return;
         }
         for (BitbucketSCMSource source : sources) {
-            String rootUrl = source.getBitbucketJenkinsRootUrl();
+            String rootUrl = source.getEndpointJenkinsRootUrl();
             if (rootUrl != null && !rootUrl.startsWith("http://localhost")) {
                 registerHook(source);
             } else {
@@ -163,7 +163,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
 
         BitbucketWebHook existingHook = null;
         String hookReceiverUrl =
-                source.getBitbucketJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
+                source.getEndpointJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
         Iterator<? extends BitbucketWebHook> existingHooks = bitbucket.getWebHooks().iterator();
         // Check for all hooks pointing to us
         while (existingHooks.hasNext()) {
@@ -197,7 +197,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 BitbucketWebHook hook = null;
                 for (BitbucketWebHook h : existent) {
                     // Check if there is a hook pointing to us
-                    if (h.getUrl().startsWith(source.getBitbucketJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
+                    if (h.getUrl().startsWith(source.getEndpointJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
                         hook = h;
                         break;
                     }

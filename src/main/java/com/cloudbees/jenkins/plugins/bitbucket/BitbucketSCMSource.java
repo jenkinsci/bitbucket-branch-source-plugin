@@ -91,7 +91,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
-import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
@@ -343,48 +342,11 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @NonNull
-    public String getBitbucketJenkinsRootUrl() {
-        // If this instance of Bitbucket connection has a custom root URL
-        // configured to have this Jenkins server known by (e.g. when a
-        // private network has different names preferable for different
-        // clients), return this custom string. Otherwise use global one.
-        // Note: do not pre-initialize to the global value, so it can be
-        // reconfigured on the fly.
-
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        String endpointcfgEJRU = null; // The normalized value of what the user
-            // typed (or global default) that is actually used as the webhook
-            // Jenkins URL for the Stash endpoint of this BranchSource
-        if (endpoint != null) {
-            endpointcfgEJRU = endpoint.getEndpointJenkinsRootUrl();
-        }
-
-        if (Util.fixEmptyAndTrim(endpointcfgEJRU) == null) {
-            // Most probably no custom root URL was configured for this
-            // endpoint, or no endpoint was associated to serverUrl at all.
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : empty : {0}", bitbucketJenkinsRootUrl != null ? "''" : "<null>" );
-            String rootUrl;
-            try {
-                rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
-                if (Util.fixEmptyAndTrim(rootUrl) != null) {
-                    rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
-                } else {
-                    LOGGER.log(Level.INFO, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
-                    rootUrl = "";
-                }
-            } catch (IllegalStateException e) {
-                // java.lang.IllegalStateException: Jenkins has not been started, or was already shut down
-                LOGGER.log(Level.INFO, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl() : threw {0}", e.toString() );
-                rootUrl = "";
-            }
-            LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
-            return rootUrl;
-        }
-
-        // The non-null not-empty bitbucketJenkinsRootUrl after the update
-        // above is an already processed and normalized string
-        LOGGER.log(Level.FINEST, "BitbucketSCMSource::getBitbucketJenkinsRootUrl : original: {0}", "'" + endpointcfgEJRU + "'" );
-        return endpointcfgEJRU;
+    public String getEndpointJenkinsRootUrl() {
+        String rootUrl = AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
+        if (rootUrl == null)
+            return "";
+        return rootUrl;
     }
 
     @NonNull

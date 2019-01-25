@@ -366,37 +366,12 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @Restricted(DoNotUse.class)
     @RestrictedSince("2.2.0")
     @CheckForNull
-    public String getBitbucketJenkinsRootUrl() {
-        // Initialize or refresh the string from endpoint configuration
-        // (if any changes need to be applied; otherwise quick no-op)
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        String endpointcfgEJRU = null; // The normalized value of what the user
-            // typed (or global default) that is actually used as the webhook
-            // Jenkins URL for the Stash endpoint of this BranchSource
-        if (endpoint != null) {
-            endpointcfgEJRU = endpoint.getEndpointJenkinsRootUrl();
-        }
-
-        if (Util.fixEmptyAndTrim(endpointcfgEJRU) == null) {
-            // Most probably no custom root URL was configured for this
-            // endpoint, or no endpoint was associated to serverUrl at all.
-            String rootUrl;
-            try {
-                rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
-                if (Util.fixEmptyAndTrim(rootUrl) != null) {
-                    rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
-                } else {
-                    LOGGER.log(Level.INFO, "BitbucketSCMNavigator::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
-                    rootUrl = "";
-                }
-            } catch (IllegalStateException e) {
-                // java.lang.IllegalStateException: Jenkins has not been started, or was already shut down
-                LOGGER.log(Level.INFO, "BitbucketSCMNavigator::getBitbucketJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl() : threw {0}", e.toString() );
-                rootUrl = "";
-            }
-            return rootUrl;
-        }
-        return endpointcfgEJRU;
+    @NonNull
+    public String getEndpointJenkinsRootUrl() {
+        String rootUrl = AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
+        if (rootUrl == null)
+            return "";
+        return rootUrl;
     }
 
     @Deprecated
