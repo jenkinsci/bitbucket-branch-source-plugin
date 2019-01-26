@@ -362,8 +362,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         return serverUrl;
     }
 
-    @Restricted(DoNotUse.class)
-    @RestrictedSince("2.2.0")
     @NonNull
     public String getEndpointJenkinsRootUrl() {
         return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
