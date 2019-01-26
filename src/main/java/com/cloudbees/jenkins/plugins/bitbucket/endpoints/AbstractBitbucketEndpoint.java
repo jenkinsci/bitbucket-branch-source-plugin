@@ -68,14 +68,6 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     private String bitbucketJenkinsRootUrl;
 
     /**
-     * Value of not-empty bitbucketJenkinsRootUrl normalized for end-users
-     * and saved, to avoid recalculating it over and over; an empty or null
-     * value still causes evaluation of current global setting every time.
-     */
-    private transient String endpointJenkinsRootUrl;
-
-
-    /**
      * Constructor.
      *
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -110,7 +102,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @return the normalized URL ending with a slash
      */
     @NonNull
-    public static String normalizeJenkinsRootUrl(String rootUrl) {
+    static String normalizeJenkinsRootUrl(String rootUrl) {
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
         return Util.ensureEndsWith(
@@ -135,11 +127,9 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
             this.bitbucketJenkinsRootUrl = Util.fixEmptyAndTrim(bitbucketJenkinsRootUrl);
             if (this.bitbucketJenkinsRootUrl != null) {
                 this.bitbucketJenkinsRootUrl = normalizeJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
-                this.endpointJenkinsRootUrl = this.bitbucketJenkinsRootUrl;
             }
         } else {
             this.bitbucketJenkinsRootUrl = null;
-            this.endpointJenkinsRootUrl = normalizeJenkinsRootUrl(ClassicDisplayURLProvider.get().getRoot());
         }
     }
 
@@ -154,26 +144,10 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        // if bitbucketJenkinsRootUrl is set and endpointJenkinsRootUrl is already calculated
-        // Just return the calculated value
-        if (StringUtils.isNotBlank(endpointJenkinsRootUrl) && StringUtils.isNotBlank(bitbucketJenkinsRootUrl)) {
-            return endpointJenkinsRootUrl;
-        }
-        String rootUrl;
-        // if bitbucketJenkinsRootUrl is blank than we only care about Jenkins root URL
-        if (StringUtils.isBlank(bitbucketJenkinsRootUrl)) {
-            // Use ClassicDisplayURLProvider's getRoot since it is non null
-            // Since Jenkins' getRoot is nullable.
-            rootUrl = ClassicDisplayURLProvider.get().getRoot();
-            // Check if root url has been changed
-            if (StringUtils.isNotBlank(endpointJenkinsRootUrl) && StringUtils.equalsIgnoreCase(endpointJenkinsRootUrl, rootUrl)) {
-                return endpointJenkinsRootUrl;
-            }
-        } else {
-            rootUrl = bitbucketJenkinsRootUrl;
-        }
-        endpointJenkinsRootUrl = normalizeJenkinsRootUrl(rootUrl);
-        return endpointJenkinsRootUrl;
+        if (StringUtils.isBlank(bitbucketJenkinsRootUrl))
+            return ClassicDisplayURLProvider.get().getRoot();
+        else
+            return bitbucketJenkinsRootUrl;
     }
 
     /**

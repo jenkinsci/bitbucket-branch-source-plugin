@@ -165,4 +165,11 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
             return FormValidation.ok("done");
         }
     }
+
+    private Object readResolve() {
+        if (getBitbucketJenkinsRootUrl() != null) {
+            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
+        }
+        return this;
+    }
 }

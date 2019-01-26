@@ -10,7 +10,7 @@ import jenkins.model.Jenkins;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.hamcrest.Matchers;
-import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
+import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -967,7 +967,7 @@ public class BitbucketSCMSourceTest {
     public void bitbucketJenkinsRootUrl_emptyDefaulted() throws Exception {
         loadBEC();
         BitbucketSCMSource instance = load();
-        assertThat(instance.getEndpointJenkinsRootUrl(), is(DisplayURLProvider.get().getRoot()));
+        assertThat(instance.getEndpointJenkinsRootUrl(), is(ClassicDisplayURLProvider.get().getRoot()));
     }
 
     @Test
