@@ -343,11 +343,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        String rootUrl = AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
-        if (Util.fixEmptyAndTrim(rootUrl) == null) {
-            return "";
-        }
-        return rootUrl;
+        return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
     }
 
     @NonNull

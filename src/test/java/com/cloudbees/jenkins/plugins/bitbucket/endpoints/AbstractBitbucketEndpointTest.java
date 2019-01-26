@@ -55,27 +55,27 @@ public class AbstractBitbucketEndpointTest {
 
     @Test
     public void given__manage_true__when__noCredentials__then__manage_false() {
-        assertThat(new Dummy(true, null, "").isManageHooks(), is(false));
+        assertThat(new Dummy(true, null).isManageHooks(), is(false));
     }
 
     @Test
     public void given__manage_false__when__credentials__then__manage_false() {
-        assertThat(new Dummy(false, "dummy", "").isManageHooks(), is(false));
+        assertThat(new Dummy(false, "dummy").isManageHooks(), is(false));
     }
 
     @Test
     public void given__manage_false__when__credentials__then__credentials_null() {
-        assertThat(new Dummy(false, "dummy", "").getCredentialsId(), is(nullValue()));
+        assertThat(new Dummy(false, "dummy").getCredentialsId(), is(nullValue()));
     }
 
     @Test
     public void given__manage_true__when__credentials__then__manage_true() {
-        assertThat(new Dummy(true, "dummy", "").isManageHooks(), is(true));
+        assertThat(new Dummy(true, "dummy").isManageHooks(), is(true));
     }
 
     @Test
     public void given__manage_true__when__credentials__then__credentialsSet() {
-        assertThat(new Dummy(true, "dummy", "").getCredentialsId(), is("dummy"));
+        assertThat(new Dummy(true, "dummy").getCredentialsId(), is("dummy"));
     }
 
     @Test
@@ -83,7 +83,7 @@ public class AbstractBitbucketEndpointTest {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
                 Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
-        assertThat(new Dummy(true, "dummy", "").credentials(), notNullValue());
+        assertThat(new Dummy(true, "dummy").credentials(), notNullValue());
     }
 
     @Test
@@ -91,18 +91,18 @@ public class AbstractBitbucketEndpointTest {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
                 Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.GLOBAL, "dummy", "dummy", "user", "pass"))));
-        assertThat(new Dummy(true, "dummy", "").credentials(), notNullValue());
+        assertThat(new Dummy(true, "dummy").credentials(), notNullValue());
     }
 
     @Test
     public void given__mange__when__noCredentials__then__credentials_none() {
-        assertThat(new Dummy(true, "dummy", "").credentials(), nullValue());
+        assertThat(new Dummy(true, "dummy").credentials(), nullValue());
     }
 
     private static class Dummy extends AbstractBitbucketEndpoint {
 
-        Dummy(boolean manageHooks, String credentialsId, String bitbucketJenkinsRootUrl) {
-            super(manageHooks, credentialsId, bitbucketJenkinsRootUrl);
+        Dummy(boolean manageHooks, String credentialsId) {
+            super(manageHooks, credentialsId);
         }
 
         @Override

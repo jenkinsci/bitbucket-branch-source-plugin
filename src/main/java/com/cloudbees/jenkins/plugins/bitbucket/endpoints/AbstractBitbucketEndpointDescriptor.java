@@ -27,9 +27,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.net.MalformedURLException;
+import java.net.URL;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
@@ -62,5 +66,20 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
                 AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
         );
         return result;
+    }
+
+    @Restricted(NoExternalUse.class)
+    @SuppressWarnings("unused") // stapler
+    public static FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String value) {
+        String url = Util.fixEmptyAndTrim(value);
+        if (url == null) {
+            return FormValidation.ok();
+        }
+        try {
+            new URL(url);
+        } catch (MalformedURLException e) {
+            return FormValidation.error("Invalid URL: " +  e.getMessage());
+        }
+        return FormValidation.ok();
     }
 }

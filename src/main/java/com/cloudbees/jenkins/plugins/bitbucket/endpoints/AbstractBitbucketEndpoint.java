@@ -34,17 +34,11 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.security.ACL;
-import hudson.util.FormValidation;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.QueryParameter;
+import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Represents a {@link BitbucketCloudEndpoint} or a {@link BitbucketServerEndpoint}.
@@ -52,8 +46,6 @@ import org.kohsuke.stapler.QueryParameter;
  * @since 2.2.0
  */
 public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<AbstractBitbucketEndpoint> {
-
-    private static final Logger LOGGER = Logger.getLogger(AbstractBitbucketEndpoint.class.getName());
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -68,12 +60,12 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
     /**
      * Jenkins Server Root URL to be used by that Bitbucket endpoint.
-     * The global setting from Jenkins.getActiveInstance().getRootUrl()
+     * The global setting from Jenkins.getInstance().getRootUrl()
      * will be used if this field is null or equals an empty string.
      * This variable is bound to the UI, so an empty value is saved
      * and returned by getter as such.
      */
-    private final String bitbucketJenkinsRootUrl;
+    private String bitbucketJenkinsRootUrl;
 
     /**
      * Value of not-empty bitbucketJenkinsRootUrl normalized for end-users
@@ -89,19 +81,10 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
-     * @param bitbucketJenkinsRootUrl The custom (or empty for global setting) Jenkins Root URL
-     *                      auto-management of hooks.
      */
-    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
+    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
-        if (this.manageHooks) {
-            this.credentialsId = credentialsId;
-            this.bitbucketJenkinsRootUrl = bitbucketJenkinsRootUrl ;
-        } else {
-            this.credentialsId = null;
-            this.bitbucketJenkinsRootUrl = "";
-        }
-        this.setEndpointJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
+        this.credentialsId = manageHooks ? credentialsId : null;
     }
 
     /**
@@ -130,11 +113,8 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     public static String normalizeJenkinsRootUrl(String rootUrl) {
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
-        rootUrl = BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl);
-        if ( !rootUrl.endsWith("/") ) {
-            rootUrl += "/";
-        }
-        return rootUrl;
+        return Util.ensureEndsWith(
+            BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl),"/");
     }
 
     /**
@@ -144,16 +124,23 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      *
      * @return the verbatim setting provided by endpoint configuration
      */
-    @NonNull
+    @CheckForNull
     public String getBitbucketJenkinsRootUrl() {
-        // In the AbstractBitbucketEndpoint return the value "as is"
-        // even if empty for proper Web-GUI config management
-        if (bitbucketJenkinsRootUrl == null) {
-            LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : <null>");
-            return "";
-        }
-        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getBitbucketJenkinsRootUrl : {0}", bitbucketJenkinsRootUrl);
         return bitbucketJenkinsRootUrl;
+    }
+
+    @DataBoundSetter
+    public void setBitbucketJenkinsRootUrl(String bitbucketJenkinsRootUrl) {
+        if (manageHooks) {
+            this.bitbucketJenkinsRootUrl = Util.fixEmptyAndTrim(bitbucketJenkinsRootUrl);
+            if (this.bitbucketJenkinsRootUrl != null) {
+                this.bitbucketJenkinsRootUrl = normalizeJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
+                this.endpointJenkinsRootUrl = this.bitbucketJenkinsRootUrl;
+            }
+        } else {
+            this.bitbucketJenkinsRootUrl = null;
+            this.endpointJenkinsRootUrl = normalizeJenkinsRootUrl(ClassicDisplayURLProvider.get().getRoot());
+        }
     }
 
     /**
@@ -167,97 +154,27 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        // If this instance of Bitbucket connection has a custom root URL
-        // configured to have this Jenkins server known by (e.g. when a
-        // private network has different names preferable for different
-        // clients), return this custom string. Otherwise use global one.
-        // Note: do not pre-initialize to the global value, so it can be
-        // reconfigured on the fly.
-
-        if ( Util.fixEmptyAndTrim(endpointJenkinsRootUrl) == null
-                && Util.fixEmptyAndTrim(bitbucketJenkinsRootUrl) != null ) {
-            // If this class was loaded (e.g. from config or test fixture)
-            // it might forgo the normal constructor above. So make sure
-            // we have a real URL (or really don't).
-            this.setEndpointJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
+        // if bitbucketJenkinsRootUrl is set and endpointJenkinsRootUrl is already calculated
+        // Just return the calculated value
+        if (StringUtils.isNotBlank(endpointJenkinsRootUrl) && StringUtils.isNotBlank(bitbucketJenkinsRootUrl)) {
+            return endpointJenkinsRootUrl;
         }
-
-        if (Util.fixEmptyAndTrim(endpointJenkinsRootUrl) == null) {
-            LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : empty : {0}", endpointJenkinsRootUrl != null ? "''" : "<null>" );
-            String rootUrl;
-            try {
-                rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
-                if (Util.fixEmptyAndTrim(rootUrl) != null) {
-                    rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
-                } else {
-                    LOGGER.log(Level.INFO, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
-                    rootUrl = "";
-                }
-            } catch (IllegalStateException e) {
-                // java.lang.IllegalStateException: Jenkins has not been started, or was already shut down
-                LOGGER.log(Level.INFO, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl() : threw {0}", e.toString() );
-                rootUrl = "";
+        String rootUrl;
+        // if bitbucketJenkinsRootUrl is blank than we only care about Jenkins root URL
+        if (StringUtils.isBlank(bitbucketJenkinsRootUrl)) {
+            // Use ClassicDisplayURLProvider's getRoot since it is non null
+            // Since Jenkins' getRoot is nullable.
+            rootUrl = ClassicDisplayURLProvider.get().getRoot();
+            // Check if root url has been changed
+            if (StringUtils.isNotBlank(endpointJenkinsRootUrl) && StringUtils.equalsIgnoreCase(endpointJenkinsRootUrl, rootUrl)) {
+                return endpointJenkinsRootUrl;
             }
-            LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
-            return rootUrl;
+        } else {
+            rootUrl = bitbucketJenkinsRootUrl;
         }
-
-        // The non-null not-empty endpointJenkinsRootUrl after the setter
-        // below is an already processed and normalized string
-        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : original: {0}", "'" + endpointJenkinsRootUrl + "'" );
+        endpointJenkinsRootUrl = normalizeJenkinsRootUrl(rootUrl);
         return endpointJenkinsRootUrl;
     }
-
-    /**
-     * Assign a normalized version of the custom Jenkins Server Root URL value.
-     *
-     * @param rootUrl the original value of an URL which would be normalized
-     */
-    private void setEndpointJenkinsRootUrl(String rootUrl) {
-        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::setEndpointJenkinsRootUrl : got : {0}", rootUrl == null ? "<null>" : "'" + rootUrl + "'" );
-        if (Util.fixEmptyAndTrim(rootUrl) == null) {
-            // The getter will return the current value of global
-            // Jenkins Root URL config every time it is called.
-            // A null (not empty-string "") value would also cause
-            // the setting to be re-evaluated in subsequent calls
-            // to updateBitbucketJenkinsRootUrl().
-            this.endpointJenkinsRootUrl = rootUrl;
-            return;
-        }
-
-        // This routine is not really BitbucketEndpointConfiguration
-        // specific, it just works on strings with some defaults:
-        rootUrl = normalizeJenkinsRootUrl(rootUrl);
-        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::setEndpointJenkinsRootUrl : normalized into : {0}", "'" + rootUrl + "'");
-        this.endpointJenkinsRootUrl = rootUrl;
-    }
-
-    /**
-     * Look up in the current endpoint configurations if one exists for the
-     * serverUrl, and return its bitbucketJenkinsRootUrl value (whatever the
-     * user had set, verbatim) or null if nothing was found.
-     *
-     * @param serverUrl Bitbucket Server URL for the endpoint config
-     *
-     * @return null if there is no endpoint for serverUrl, otherwise
-     * the configured custom Jenkins Root URL value (if any; may be empty)
-     */
-    public static String getBitbucketJenkinsRootUrl(String serverUrl) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        if (endpoint == null) {
-            return null;
-        }
-
-        // The verbatim value of what the user typed in saved config
-        String endpointcfgBJRU = endpoint.getBitbucketJenkinsRootUrl();
-        if (Util.fixEmptyAndTrim(endpointcfgBJRU) == null) {
-            // Endpoint exists, but no non-empty custom value there
-            return "";
-        }
-
-        return endpointcfgBJRU;
-    }
-
 
     /**
      * Look up in the current endpoint configurations if one exists for the
@@ -282,53 +199,10 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         // reconfigured on the fly.
 
         AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        String endpointcfgEJRU = null; // The normalized value of what the user
-            // typed (or global default) that is actually used as the webhook
-            // Jenkins URL for the Stash endpoint of this BranchSource
         if (endpoint != null) {
-            endpointcfgEJRU = endpoint.getEndpointJenkinsRootUrl();
+            return endpoint.getEndpointJenkinsRootUrl();
         }
-
-        if (Util.fixEmptyAndTrim(endpointcfgEJRU) == null) {
-            // Most probably no custom root URL was configured for this
-            // endpoint, or no endpoint was associated to serverUrl at all.
-            LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : empty : {0}", endpointcfgEJRU != null ? "''" : "<null>" );
-            String rootUrl;
-            try {
-                rootUrl = Jenkins.getActiveInstance().getRootUrl(); // Can throw if core is not started, e.g. in some tests
-                if (Util.fixEmptyAndTrim(rootUrl) != null) {
-                    rootUrl = AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(rootUrl);
-                } else {
-                    LOGGER.log(Level.INFO, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl()");
-                    rootUrl = "";
-                }
-            } catch (IllegalStateException e) {
-                // java.lang.IllegalStateException: Jenkins has not been started, or was already shut down
-                LOGGER.log(Level.INFO, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : got nothing from Jenkins.getActiveInstance().getRootUrl() : threw {0}", e.toString() );
-                rootUrl = "";
-            }
-            LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : normalized global value: {0}", "'" + rootUrl + "'" );
-            return rootUrl;
-        }
-
-        // The non-null not-empty bitbucketJenkinsRootUrl after the update
-        // above is an already processed and normalized string
-        LOGGER.log(Level.FINEST, "AbstractBitbucketEndpoint::getEndpointJenkinsRootUrl : original: {0}", "'" + endpointcfgEJRU + "'" );
-        return endpointcfgEJRU;
-    }
-
-    @Restricted(NoExternalUse.class)
-    public static FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String bitbucketJenkinsRootUrl) {
-        String url = Util.fixEmpty(bitbucketJenkinsRootUrl);
-        if (url == null) {
-            return FormValidation.ok();
-        }
-        try {
-            new URL(bitbucketJenkinsRootUrl);
-        } catch (MalformedURLException e) {
-            return FormValidation.error("Invalid URL: " +  e.getMessage());
-        }
-        return FormValidation.ok();
+        return ClassicDisplayURLProvider.get().getRoot();
     }
 
     /**

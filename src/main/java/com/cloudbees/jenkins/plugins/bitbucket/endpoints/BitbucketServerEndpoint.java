@@ -91,17 +91,22 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
-     * @param bitbucketJenkinsRootUrl The custom (or empty for global setting) Jenkins Root URL
-     *                      auto-management of hooks.
-      */
+     */
     @DataBoundConstructor
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
-                                   @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
-        super(manageHooks, credentialsId, bitbucketJenkinsRootUrl);
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+        boolean manageHooks, @CheckForNull String credentialsId) {
+        super(manageHooks, credentialsId);
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName.trim();
+    }
+
+    @Restricted(NoExternalUse.class) // Used for testing
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+        boolean manageHooks, @CheckForNull String credentialsId, String endpointUrl) {
+        this(displayName, serverUrl, manageHooks, credentialsId);
+        setBitbucketJenkinsRootUrl(endpointUrl);
     }
 
     @NonNull

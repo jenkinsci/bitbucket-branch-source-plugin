@@ -6,7 +6,7 @@
     <f:entry field="credentialsId" title="${%Credentials}">
       <c:select context="${app}"/>
     </f:entry>
-    <f:entry title="${%Jenkins Root URL for this endpoint}" field="bitbucketJenkinsRootUrl">
+    <f:entry title="${%Custom Jenkins Root URL}" field="bitbucketJenkinsRootUrl">
       <f:textbox/>
     </f:entry>
     <st:include class="${descriptor.clazz}" page="manage-hooks-detail.jelly" optional="true"/>

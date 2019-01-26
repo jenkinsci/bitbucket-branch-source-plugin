@@ -130,7 +130,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
         for (BitbucketSCMSource source : sources) {
             String rootUrl = source.getEndpointJenkinsRootUrl();
-            if (rootUrl != null && !rootUrl.startsWith("http://localhost")) {
+            if (!rootUrl.startsWith("http://localhost") && !rootUrl.startsWith("http://unconfigured-jenkins-location")) {
                 registerHook(source);
             } else {
                 // only complain about being unable to register the hook if someone wants the hook registered.

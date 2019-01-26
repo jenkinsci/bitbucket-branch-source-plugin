@@ -31,6 +31,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import java.util.List;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -64,8 +66,14 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      */
     private final int repositoriesCacheDuration;
 
-    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
-        this(false, 0, 0, manageHooks, credentialsId, bitbucketJenkinsRootUrl);
+    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
+        this(false, 0, 0, manageHooks, credentialsId);
+    }
+
+    @Restricted(NoExternalUse.class) // Used for testing
+    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId, String endPointURL) {
+        this(manageHooks, credentialsId);
+        setBitbucketJenkinsRootUrl(endPointURL);
     }
 
     /**
@@ -77,12 +85,11 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
-     * @param bitbucketJenkinsRootUrl The custom (or empty for global setting) Jenkins Root URL
-     *                      auto-management of hooks.
-      */
+     */
     @DataBoundConstructor
-    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId, @CheckForNull String bitbucketJenkinsRootUrl) {
-        super(manageHooks, credentialsId, bitbucketJenkinsRootUrl);
+    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration,
+        int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId) {
+        super(manageHooks, credentialsId);
         this.enableCache = enableCache;
         this.teamCacheDuration = teamCacheDuration;
         this.repositoriesCacheDuration = repositoriesCacheDuration;
