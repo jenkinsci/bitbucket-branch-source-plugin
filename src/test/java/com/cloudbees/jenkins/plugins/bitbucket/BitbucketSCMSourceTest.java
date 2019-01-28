@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.hamcrest.Matchers;
@@ -968,6 +969,15 @@ public class BitbucketSCMSourceTest {
         loadBEC();
         BitbucketSCMSource instance = load();
         assertThat(instance.getEndpointJenkinsRootUrl(), is(ClassicDisplayURLProvider.get().getRoot()));
+
+        // Verify that an empty custom URL keeps returning the
+        // current global root URL (ending with a slash),
+        // meaning "current value at the moment when we ask".
+        JenkinsLocationConfiguration.get().setUrl("http://localjenkins:80");
+        assertThat(instance.getEndpointJenkinsRootUrl(), is("http://localjenkins:80/"));
+
+        JenkinsLocationConfiguration.get().setUrl("https://ourjenkins.master:8443/ci");
+        assertThat(instance.getEndpointJenkinsRootUrl(), is("https://ourjenkins.master:8443/ci/"));
     }
 
     @Test
