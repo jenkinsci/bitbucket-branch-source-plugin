@@ -43,7 +43,7 @@ public enum UserRoleInRepository {
 
     private final String id;
 
-    private UserRoleInRepository(String id) {
+    UserRoleInRepository(String id) {
         this.id = id;
     }
 
