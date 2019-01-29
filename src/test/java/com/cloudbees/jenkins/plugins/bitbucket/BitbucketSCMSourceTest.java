@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import java.net.URL;
-
 import java.util.Arrays;
 import java.util.Collections;
 import jenkins.model.Jenkins;

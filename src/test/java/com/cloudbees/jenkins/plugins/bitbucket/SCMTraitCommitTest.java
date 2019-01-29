@@ -59,8 +59,10 @@ import org.junit.runners.Parameterized.Parameters;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class SCMTraitCommitTest {

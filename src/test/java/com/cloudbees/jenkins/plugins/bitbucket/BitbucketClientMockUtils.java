@@ -47,7 +47,10 @@ import java.util.HashMap;
 import java.util.List;
 import jenkins.model.Jenkins;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BitbucketClientMockUtils {
 
