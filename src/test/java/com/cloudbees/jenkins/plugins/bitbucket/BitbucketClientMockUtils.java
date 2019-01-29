@@ -111,7 +111,7 @@ public class BitbucketClientMockUtils {
 
     private static List<BitbucketRepositoryHook> getWebHooks() {
         BitbucketRepositoryHook hook = new BitbucketRepositoryHook();
-        hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+        hook.setUrl(Jenkins.getInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
         return Arrays.asList(hook);
     }
 
