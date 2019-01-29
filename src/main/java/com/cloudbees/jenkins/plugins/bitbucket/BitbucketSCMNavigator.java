@@ -34,13 +34,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -50,13 +45,10 @@ import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
 import hudson.model.Action;
-import hudson.model.Queue;
 import hudson.model.TaskListener;
-import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.traits.MercurialBrowserSCMSourceTrait;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
@@ -610,41 +602,22 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return instance;
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public boolean isServerUrlSelectable() {
             return BitbucketEndpointConfiguration.get().isEndpointSelectable();
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillServerUrlItems() {
             return BitbucketEndpointConfiguration.get().getEndpointItems();
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl, @QueryParameter String value) {
-            if (!value.isEmpty()) {
-                if (CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
-                                StandardCertificateCredentials.class,
-                                context,
-                                context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
-                                URIRequirementBuilder.fromUri(serverUrl).build()),
-                        CredentialsMatchers.allOf(
-                                CredentialsMatchers.withId(value),
-                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
-                        )
-                ) != null) {
-                       return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
-                }
-                return FormValidation.ok();
-            } else {
-                return FormValidation.warning("Credentials are required for build notifications");
-            }
+            return BitbucketCredentials.checkCredentialsId(context, value, serverUrl);
         }
 
-        @Restricted(DoNotUse.class)
-        @Deprecated
-        public FormValidation doCheckBitbucketServerUrl(@QueryParameter String bitbucketServerUrl) {
-            return BitbucketSCMSource.DescriptorImpl.doCheckBitbucketServerUrl(bitbucketServerUrl);
-        }
-
+        @SuppressWarnings("unused") // used By stapler
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {
             if (BitbucketEndpointConfiguration.get().findEndpoint(value) == null) {
                 return FormValidation.error("Unregistered Server: " + value);
@@ -652,21 +625,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return FormValidation.ok();
         }
 
-
+        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter String serverUrl) {
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.withEmptySelection();
-            result.includeMatchingAs(
-                    context instanceof Queue.Task
-                            ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
-                    context,
-                    StandardCredentials.class,
-                    URIRequirementBuilder.fromUri(serverUrl).build(),
-                    AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
-            );
-            return result;
+            return BitbucketCredentials.fillCredentialsIdItems(context, serverUrl);
         }
 
         public List<NamedArrayList<? extends SCMTraitDescriptor<?>>> getTraitsDescriptorLists() {
@@ -711,26 +673,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                             new ForkPullRequestDiscoveryTrait.TrustTeamForks())
             );
         }
-
-        @Restricted(DoNotUse.class)
-        @Deprecated
-        public ListBoxModel doFillCheckoutCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
-                                                             @QueryParameter String bitbucketServerUrl) {
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.add("- same as scan credentials -", BitbucketSCMSource.DescriptorImpl.SAME);
-            result.add("- anonymous -", BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
-            result.includeMatchingAs(
-                    context instanceof Queue.Task
-                            ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
-                    context,
-                    StandardCredentials.class,
-                    URIRequirementBuilder.fromUri(bitbucketServerUrl).build(),
-                    AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(bitbucketServerUrl))
-            );
-            return result;
-        }
-
 
         @NonNull
         @Override

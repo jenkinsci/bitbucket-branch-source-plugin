@@ -23,17 +23,25 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Utility class for common code accessing credentials
@@ -67,4 +75,44 @@ class BitbucketCredentials {
         return null;
     }
 
+    static ListBoxModel fillCredentialsIdItems(
+        @AncestorInPath SCMSourceOwner context,
+        @QueryParameter String serverUrl) {
+        StandardListBoxModel result = new StandardListBoxModel();
+        result.includeEmptyValue();
+        result.includeMatchingAs(
+                context instanceof Queue.Task
+                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                        : ACL.SYSTEM,
+                context,
+                StandardCredentials.class,
+                URIRequirementBuilder.fromUri(serverUrl).build(),
+                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+        );
+        return result;
+    }
+
+    static FormValidation checkCredentialsId(
+        @AncestorInPath @CheckForNull SCMSourceOwner context,
+        @QueryParameter String value,
+        @QueryParameter String serverUrl) {
+        if (!value.isEmpty()) {
+            if (CredentialsMatchers.firstOrNull(
+                    CredentialsProvider.lookupCredentials(
+                            StandardCertificateCredentials.class,
+                            context,
+                            context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(serverUrl).build()),
+                    CredentialsMatchers.allOf(
+                            CredentialsMatchers.withId(value),
+                            AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+                    )
+            ) != null) {
+                return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
+            }
+            return FormValidation.ok();
+        } else {
+            return FormValidation.warning("Credentials are required for build notifications");
+        }
+    }
 }

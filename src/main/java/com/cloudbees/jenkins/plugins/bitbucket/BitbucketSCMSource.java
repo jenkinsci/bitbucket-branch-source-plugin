@@ -40,13 +40,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -60,21 +55,16 @@ import hudson.console.HyperlinkNote;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
-import hudson.model.Queue;
 import hudson.model.TaskListener;
-import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.traits.MercurialBrowserSCMSourceTrait;
 import hudson.scm.SCM;
-import hudson.security.ACL;
 import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -124,7 +114,6 @@ import org.apache.commons.lang.WordUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -1183,44 +1172,14 @@ public class BitbucketSCMSource extends SCMSource {
             return "Bitbucket";
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
                                                    @QueryParameter String serverUrl) {
-            if (!value.isEmpty()) {
-                if (CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
-                                StandardCertificateCredentials.class,
-                                context,
-                                context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
-                                URIRequirementBuilder.fromUri(serverUrl).build()),
-                        CredentialsMatchers.allOf(
-                                CredentialsMatchers.withId(value),
-                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
-                        )
-                ) != null) {
-                    return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
-                }
-                return FormValidation.ok();
-            } else {
-                return FormValidation.warning("Credentials are required for notifications");
-            }
+            return BitbucketCredentials.checkCredentialsId(context, value, serverUrl);
         }
 
-        @Restricted(NoExternalUse.class)
-        @Deprecated
-        public static FormValidation doCheckBitbucketServerUrl(@QueryParameter String bitbucketServerUrl) {
-            String url = Util.fixEmpty(bitbucketServerUrl);
-            if (url == null) {
-                return FormValidation.ok();
-            }
-            try {
-                new URL(bitbucketServerUrl);
-            } catch (MalformedURLException e) {
-                return FormValidation.error("Invalid URL: " +  e.getMessage());
-            }
-            return FormValidation.ok();
-        }
-
+        @SuppressWarnings("unused") // used By stapler
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {
             if (BitbucketEndpointConfiguration.get().findEndpoint(value) == null) {
                 return FormValidation.error("Unregistered Server: " + value);
@@ -1228,29 +1187,22 @@ public class BitbucketSCMSource extends SCMSource {
             return FormValidation.ok();
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public boolean isServerUrlSelectable() {
             return BitbucketEndpointConfiguration.get().isEndpointSelectable();
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillServerUrlItems() {
             return BitbucketEndpointConfiguration.get().getEndpointItems();
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.includeEmptyValue();
-            result.includeMatchingAs(
-                    context instanceof Queue.Task
-                            ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
-                    context,
-                    StandardCredentials.class,
-                    URIRequirementBuilder.fromUri(serverUrl).build(),
-                    AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
-            );
-            return result;
+            return BitbucketCredentials.fillCredentialsIdItems(context, serverUrl);
         }
 
+        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
                                                   @QueryParameter String credentialsId,
@@ -1306,26 +1258,6 @@ public class BitbucketSCMSource extends SCMSource {
                 throw FormFillFailure.error(e.getMessage());
             }
         }
-
-        @Deprecated
-        @Restricted(DoNotUse.class)
-        @RestrictedSince("2.2.0")
-        public ListBoxModel doFillCheckoutCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String bitbucketServerUrl) {
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.add("- same as scan credentials -", SAME);
-            result.add("- anonymous -", ANONYMOUS);
-            result.includeMatchingAs(
-                    context instanceof Queue.Task
-                            ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
-                    context,
-                    StandardCredentials.class,
-                    URIRequirementBuilder.fromUri(bitbucketServerUrl).build(),
-                    AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(bitbucketServerUrl))
-            );
-            return result;
-        }
-
         @NonNull
         @Override
         protected SCMHeadCategory[] createCategories() {
