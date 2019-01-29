@@ -55,6 +55,7 @@
     <java.level>8</java.level>
     <scm-api.version>2.2.7</scm-api.version>
     <git.version>3.6.0</git.version>
+    <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
   </properties>
 
   <developers>
@@ -264,20 +265,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.jenkins-ci.tools</groupId>
-        <artifactId>maven-hpi-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generate-taglib-interface</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <compatibleSinceVersion>2.0.0</compatibleSinceVersion>
-        </configuration>
       </plugin>
       <plugin> <!-- TODO scm-api gratuitously restricts deprecated APIs, preventing us from compiling even deprecated classes in *this* plugin -->
         <groupId>org.kohsuke</groupId>
