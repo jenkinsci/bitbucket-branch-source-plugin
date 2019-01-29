@@ -100,6 +100,7 @@ import jenkins.scm.api.metadata.ObjectMetadataAction;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceRequest;
+import jenkins.scm.api.trait.SCMSourceRequest.IntermediateLambda;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
@@ -671,14 +672,10 @@ public class BitbucketSCMSource extends SCMSource {
                                 strategy);
                     }
                     if (request.process(head, //
-                            new SCMSourceRequest.IntermediateLambda<BitbucketCommit>() {
-                                @Nullable
-                                @Override
-                                public BitbucketCommit create() throws IOException, InterruptedException {
-                                    // use branch instead of commit to postpone closure initialisation
-                                    return new BranchHeadCommit(pull.getSource().getBranch());
-                                }
-                            },  //
+                        () -> {
+                            // use branch instead of commit to postpone closure initialisation
+                            return new BranchHeadCommit(pull.getSource().getBranch());
+                        },  //
                             new BitbucketProbeFactory<>(pullBitbucket, request), //
                             new BitbucketRevisionFactory<BitbucketCommit>(pullBitbucket) {
                                 @NonNull
@@ -749,13 +746,7 @@ public class BitbucketSCMSource extends SCMSource {
             count++;
             if (request.process( //
                     new BranchSCMHead(branch.getName(), repositoryType), //
-                    new SCMSourceRequest.IntermediateLambda<BitbucketCommit>() {
-                        @Nullable
-                        @Override
-                        public BitbucketCommit create() {
-                            return new BranchHeadCommit(branch);
-                        }
-                    }, //
+                (IntermediateLambda<BitbucketCommit>) () -> new BranchHeadCommit(branch), //
                     new BitbucketProbeFactory<>(bitbucket, request), //
                     new BitbucketRevisionFactory<>(bitbucket), //
                     new CriteriaWitness(request))) {
@@ -782,13 +773,7 @@ public class BitbucketSCMSource extends SCMSource {
             request.listener().getLogger().println("Checking tag " + tag.getName() + " from " + fullName);
             count++;
             if (request.process(new BitbucketTagSCMHead(tag.getName(), tag.getDateMillis(), repositoryType), //
-                    new SCMSourceRequest.IntermediateLambda<String>() {
-                        @Nullable
-                        @Override
-                        public String create() {
-                            return tag.getRawNode();
-                        }
-                    }, //
+                tag::getRawNode, //
                     new BitbucketProbeFactory<>(bitbucket, request), //
                     new BitbucketRevisionFactory<>(bitbucket), //
                     new CriteriaWitness(request))) {
