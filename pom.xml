@@ -228,27 +228,42 @@
   </pluginRepositories>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.0.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>8.17</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
-         <artifactId>maven-checkstyle-plugin</artifactId>
-         <version>3.0.0</version>
-         <configuration>
-           <configLocation>${basedir}/checkstyle.xml</configLocation>
-           <includeTestSourceDirectory>true</includeTestSourceDirectory>
-           <sourceDirectories>
-             <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
-           </sourceDirectories>
-           <testSourceDirectories>
-             <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
-           </testSourceDirectories>
-         </configuration>
-         <executions>
-           <execution>
-             <goals>
-               <goal>check</goal>
-             </goals>
-           </execution>
-         </executions>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <configLocation>${basedir}/checkstyle.xml</configLocation>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+          </sourceDirectories>
+          <testSourceDirectories>
+            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+          </testSourceDirectories>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.jenkins-ci.tools</groupId>
