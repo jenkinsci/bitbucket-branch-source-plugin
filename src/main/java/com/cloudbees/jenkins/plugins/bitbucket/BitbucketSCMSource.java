@@ -279,7 +279,7 @@ public class BitbucketSCMSource extends SCMSource {
      * @return {@code this}
      * @throws ObjectStreamException if things go wrong.
      */
-    @SuppressWarnings("ConstantConditions")
+    @SuppressWarnings({"ConstantConditions", "deprecation"})
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
                         justification = "Only non-null after we set them here!")
     private Object readResolve() throws ObjectStreamException {
