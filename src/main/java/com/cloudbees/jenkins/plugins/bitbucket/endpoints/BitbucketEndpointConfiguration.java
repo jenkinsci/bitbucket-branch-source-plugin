@@ -167,7 +167,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             } else if (!(endpoint instanceof BitbucketCloudEndpoint)
                     && BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
                 // fix type for the special case
-                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId()));
+                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId(), endpoint.getBitbucketJenkinsRootUrl()));
             }
             serverUrls.add(serverUrl);
         }

@@ -93,13 +93,20 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      *                      auto-management of hooks.
      */
     @DataBoundConstructor
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
-                                   @CheckForNull String credentialsId) {
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+        boolean manageHooks, @CheckForNull String credentialsId) {
         super(manageHooks, credentialsId);
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName.trim();
+    }
+
+    @Restricted(NoExternalUse.class) // Used for testing
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+        boolean manageHooks, @CheckForNull String credentialsId, String endpointUrl) {
+        this(displayName, serverUrl, manageHooks, credentialsId);
+        setBitbucketJenkinsRootUrl(endpointUrl);
     }
 
     @NonNull
@@ -156,6 +163,9 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     private Object readResolve() {
         if (webhookImplementation == null) {
             webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+        }
+        if (getBitbucketJenkinsRootUrl() != null) {
+            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
         }
         return this;
     }

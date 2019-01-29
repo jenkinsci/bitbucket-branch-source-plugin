@@ -5,6 +5,7 @@
   <pattern>.*</pattern>
   <autoRegisterHooks>true</autoRegisterHooks>
   <bitbucketServerUrl>https://bitbucket.test</bitbucketServerUrl>
+  <bitbucketJenkinsRootUrl/>
   <includes>*</includes>
   <excludes></excludes>
   <sshPort>7999</sshPort>

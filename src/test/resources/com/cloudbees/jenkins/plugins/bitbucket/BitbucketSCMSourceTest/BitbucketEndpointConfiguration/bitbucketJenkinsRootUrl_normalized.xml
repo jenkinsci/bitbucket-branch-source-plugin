@@ -5,8 +5,8 @@
       <manageHooks>true</manageHooks>
       <credentialsId>jenkins@bitbucket</credentialsId>
       <displayName>Bitbucket Server</displayName>
-      <serverUrl>http://localhost:7990</serverUrl>
-      <bitbucketJenkinsRootUrl>http://localhost:8080</bitbucketJenkinsRootUrl>
+      <serverUrl>https://bitbucket-hook-3.test</serverUrl>
+      <bitbucketJenkinsRootUrl>https://jenkins.test:443/</bitbucketJenkinsRootUrl>
       <callCanMerge>true</callCanMerge>
     </com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
   </endpoints>

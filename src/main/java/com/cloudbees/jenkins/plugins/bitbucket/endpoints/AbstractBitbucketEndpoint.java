@@ -31,11 +31,14 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.security.ACL;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Represents a {@link BitbucketCloudEndpoint} or a {@link BitbucketServerEndpoint}.
@@ -54,6 +57,15 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @CheckForNull
     private final String credentialsId;
+
+    /**
+     * Jenkins Server Root URL to be used by that Bitbucket endpoint.
+     * The global setting from Jenkins.getInstance().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     * This variable is bound to the UI, so an empty value is saved
+     * and returned by getter as such.
+     */
+    private String bitbucketJenkinsRootUrl;
 
     /**
      * Constructor.
@@ -82,6 +94,90 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @NonNull
     public abstract String getServerUrl();
+
+    /**
+     * A Jenkins Server Root URL should end with a slash to use with webhooks.
+     *
+     * @param rootUrl the original value of an URL which would be normalized
+     * @return the normalized URL ending with a slash
+     */
+    @NonNull
+    static String normalizeJenkinsRootUrl(String rootUrl) {
+        // This routine is not really BitbucketEndpointConfiguration
+        // specific, it just works on strings with some defaults:
+        return Util.ensureEndsWith(
+            BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl),"/");
+    }
+
+    /**
+     * Jenkins Server Root URL to be used by this Bitbucket endpoint.
+     * The global setting from Jenkins.getActiveInstance().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     *
+     * @return the verbatim setting provided by endpoint configuration
+     */
+    @CheckForNull
+    public String getBitbucketJenkinsRootUrl() {
+        return bitbucketJenkinsRootUrl;
+    }
+
+    @DataBoundSetter
+    public void setBitbucketJenkinsRootUrl(String bitbucketJenkinsRootUrl) {
+        if (manageHooks) {
+            this.bitbucketJenkinsRootUrl = Util.fixEmptyAndTrim(bitbucketJenkinsRootUrl);
+            if (this.bitbucketJenkinsRootUrl != null) {
+                this.bitbucketJenkinsRootUrl = normalizeJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
+            }
+        } else {
+            this.bitbucketJenkinsRootUrl = null;
+        }
+    }
+
+    /**
+     * Jenkins Server Root URL to be used by this Bitbucket endpoint.
+     * The global setting from Jenkins.getActiveInstance().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     *
+     * @return the normalized value from setting provided by endpoint
+     *      configuration (if not empty), or the global setting of
+     *      the Jenkins Root URL
+     */
+    @NonNull
+    public String getEndpointJenkinsRootUrl() {
+        if (StringUtils.isBlank(bitbucketJenkinsRootUrl))
+            return ClassicDisplayURLProvider.get().getRoot();
+        else
+            return bitbucketJenkinsRootUrl;
+    }
+
+    /**
+     * Look up in the current endpoint configurations if one exists for the
+     * serverUrl, and return its normalized endpointJenkinsRootUrl value,
+     * or the normalized global default Jenkins Root URL if nothing was found
+     * or if the setting is an empty string; empty string if there was an error
+     * finding the global default Jenkins Root URL value (e.g. core not started).
+     * This is the routine intended for external consumption when one needs a
+     * Jenkins Root URL to use for webhook configuration.
+     *
+     * @param serverUrl Bitbucket Server URL for the endpoint config
+     *
+     * @return the normalized custom or default Jenkins Root URL value
+     */
+    @NonNull
+    public static String getEndpointJenkinsRootUrl(String serverUrl) {
+        // If this instance of Bitbucket connection has a custom root URL
+        // configured to have this Jenkins server known by (e.g. when a
+        // private network has different names preferable for different
+        // clients), return this custom string. Otherwise use global one.
+        // Note: do not pre-initialize to the global value, so it can be
+        // reconfigured on the fly.
+
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
+        if (endpoint != null) {
+            return endpoint.getEndpointJenkinsRootUrl();
+        }
+        return ClassicDisplayURLProvider.get().getRoot();
+    }
 
     /**
      * The user facing URL of the specified repository.

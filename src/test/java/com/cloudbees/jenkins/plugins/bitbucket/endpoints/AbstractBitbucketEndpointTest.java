@@ -118,6 +118,12 @@ public class AbstractBitbucketEndpointTest {
 
         @NonNull
         @Override
+        public String getBitbucketJenkinsRootUrl() {
+            return "http://master.example.com";
+        }
+
+        @NonNull
+        @Override
         public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
             return UriTemplate
                     .fromTemplate("http://dummy.example.com{/owner,repo}")

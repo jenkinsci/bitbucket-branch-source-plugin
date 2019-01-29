@@ -31,6 +31,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import java.util.List;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -68,6 +70,12 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
         this(false, 0, 0, manageHooks, credentialsId);
     }
 
+    @Restricted(NoExternalUse.class) // Used for testing
+    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId, String endPointURL) {
+        this(manageHooks, credentialsId);
+        setBitbucketJenkinsRootUrl(endPointURL);
+    }
+
     /**
      * Constructor.
      *
@@ -79,7 +87,8 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      *                      auto-management of hooks.
      */
     @DataBoundConstructor
-    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId) {
+    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration,
+        int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId) {
         super(manageHooks, credentialsId);
         this.enableCache = enableCache;
         this.teamCacheDuration = teamCacheDuration;
@@ -155,5 +164,12 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
             BitbucketCloudApiClient.clearCaches();
             return FormValidation.ok("done");
         }
+    }
+
+    private Object readResolve() {
+        if (getBitbucketJenkinsRootUrl() != null) {
+            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
+        }
+        return this;
     }
 }

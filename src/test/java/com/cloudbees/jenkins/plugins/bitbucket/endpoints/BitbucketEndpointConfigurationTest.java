@@ -101,8 +101,10 @@ public class BitbucketEndpointConfigurationTest {
     public void given__newInstance__when__configuredWithMultipleCloud__then__onlyFirstCloudPresent() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeThat(instance.getEndpoints().get(0).getCredentialsId(), not(is("first")));
-        instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(new BitbucketCloudEndpoint(true, "first"),
-                new BitbucketCloudEndpoint(true, "second"), new BitbucketCloudEndpoint(true, "third")));
+        instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(
+                new BitbucketCloudEndpoint(true, "first"),
+                new BitbucketCloudEndpoint(true, "second"),
+                new BitbucketCloudEndpoint(true, "third")));
         assertThat(instance.getEndpoints(), contains(instanceOf(BitbucketCloudEndpoint.class)));
         assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
     }
@@ -112,8 +114,10 @@ public class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         j.jenkins.setAuthorizationStrategy(new FullControlOnceLoggedInAuthorizationStrategy());
         try (ACLContext context = ACL.as(Jenkins.ANONYMOUS)) {
-            instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(new BitbucketCloudEndpoint(true, "first"),
-                    new BitbucketCloudEndpoint(true, "second"), new BitbucketCloudEndpoint(true, "third")));
+            instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(
+                    new BitbucketCloudEndpoint(true, "first"),
+                    new BitbucketCloudEndpoint(true, "second"),
+                    new BitbucketCloudEndpoint(true, "third")));
             assertThat(instance.getEndpoints(), contains(instanceOf(BitbucketCloudEndpoint.class)));
             assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
         } finally {
@@ -127,7 +131,8 @@ public class BitbucketEndpointConfigurationTest {
         assumeThat(instance.getEndpoints().get(0).getCredentialsId(), not(is("dummy")));
         instance.setEndpoints(Arrays.asList(
                 new BitbucketServerEndpoint("I am silly", BitbucketCloudEndpoint.SERVER_URL, true, "dummy"),
-                new BitbucketCloudEndpoint(true, "second"), new BitbucketCloudEndpoint(true, "third")));
+                new BitbucketCloudEndpoint(true, "second"),
+                new BitbucketCloudEndpoint(true, "third")));
         assertThat(instance.getEndpoints(), contains(instanceOf(BitbucketCloudEndpoint.class)));
         assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("dummy"));
     }

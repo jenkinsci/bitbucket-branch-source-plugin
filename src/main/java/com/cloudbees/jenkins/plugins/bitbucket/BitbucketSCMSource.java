@@ -187,6 +187,8 @@ public class BitbucketSCMSource extends SCMSource {
     /**
      * Bitbucket Server URL.
      * An specific HTTP client is used if this field is not null.
+     * This value (or serverUrl if this is null) is used in particular
+     * to find the current endpoint configuration for this server.
      */
     @Deprecated
     @Restricted(NoExternalUse.class)
@@ -261,6 +263,9 @@ public class BitbucketSCMSource extends SCMSource {
         if (serverUrl == null) {
             serverUrl = BitbucketEndpointConfiguration.get().readResolveServerUrl(bitbucketServerUrl);
         }
+        if (serverUrl == null) {
+            LOGGER.log(Level.WARNING, "BitbucketSCMSource::readResolve : serverUrl is still empty");
+        }
         if (traits == null) {
             traits = new ArrayList<>();
             if (!"*".equals(includes) || !"".equals(excludes)) {
@@ -311,6 +316,11 @@ public class BitbucketSCMSource extends SCMSource {
     @DataBoundSetter
     public void setServerUrl(@CheckForNull String serverUrl) {
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+    }
+
+    @NonNull
+    public String getEndpointJenkinsRootUrl() {
+        return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
     }
 
     @NonNull

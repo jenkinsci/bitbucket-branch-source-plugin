@@ -96,6 +96,11 @@ public class AbstractBitbucketEndpointDescriptorTest {
             return "http://dummy.example.com";
         }
 
+        @NonNull
+        @Override
+        public String getBitbucketJenkinsRootUrl() {
+            return "http://master.example.com";
+        }
 
         @NonNull
         @Override

@@ -180,6 +180,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         if (serverUrl == null) {
             serverUrl = BitbucketEndpointConfiguration.get().readResolveServerUrl(bitbucketServerUrl);
         }
+        if (serverUrl == null) {
+            LOGGER.log(Level.WARNING, "BitbucketSCMNavigator::readResolve : serverUrl is still empty");
+        }
         if (traits == null) {
             // legacy instance, reconstruct traits to reflect legacy behaviour
             traits = new ArrayList<>();
@@ -357,6 +360,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return null;
         }
         return serverUrl;
+    }
+
+    @NonNull
+    public String getEndpointJenkinsRootUrl() {
+        return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
     }
 
     @Deprecated

@@ -44,7 +44,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
@@ -124,37 +123,34 @@ public class WebhookAutoRegisterListener extends ItemListener {
 
     // synchronized just to avoid duplicated webhooks in case SCMSourceOwner is updated repeatedly and quickly
     private synchronized void registerHooks(SCMSourceOwner owner) throws IOException, InterruptedException {
-        String rootUrl = Jenkins.getActiveInstance().getRootUrl();
         List<BitbucketSCMSource> sources = getBitbucketSCMSources(owner);
         if (sources.isEmpty()) {
             // don't spam logs if we are irrelevant
             return;
         }
-        if (rootUrl != null && !rootUrl.startsWith("http://localhost")) {
-            for (BitbucketSCMSource source : sources) {
+        for (BitbucketSCMSource source : sources) {
+            String rootUrl = source.getEndpointJenkinsRootUrl();
+            if (!rootUrl.startsWith("http://localhost") && !rootUrl.startsWith("http://unconfigured-jenkins-location")) {
                 registerHook(source);
-            }
-        } else {
-            // only complain about being unable to register the hook if someone wants the hook registered.
-            SOURCES:
-            for (BitbucketSCMSource source : sources) {
+            } else {
+                // only complain about being unable to register the hook if someone wants the hook registered.
                 switch (new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
                         .withTraits(source.getTraits())
                         .webhookRegistration()) {
                     case DISABLE:
-                        continue SOURCES;
+                        continue;
                     case SYSTEM:
                         AbstractBitbucketEndpoint endpoint =
                                 BitbucketEndpointConfiguration.get().findEndpoint(source.getServerUrl());
                         if (endpoint == null || !endpoint.isManageHooks()) {
-                            continue SOURCES;
+                            continue;
                         }
                         break;
                     case ITEM:
                         break;
                 }
                 LOGGER.log(Level.WARNING, "Can not register hook. Jenkins root URL is not valid: {0}", rootUrl);
-                return;
+                // go on to try next source and its rootUrl
             }
         }
     }
@@ -167,7 +163,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
 
         BitbucketWebHook existingHook = null;
         String hookReceiverUrl =
-                Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
+                source.getEndpointJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
         Iterator<? extends BitbucketWebHook> existingHooks = bitbucket.getWebHooks().iterator();
         // Check for all hooks pointing to us
         while (existingHooks.hasNext()) {
@@ -201,7 +197,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 BitbucketWebHook hook = null;
                 for (BitbucketWebHook h : existent) {
                     // Check if there is a hook pointing to us
-                    if (h.getUrl().startsWith(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
+                    if (h.getUrl().startsWith(source.getEndpointJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
                         hook = h;
                         break;
                     }
