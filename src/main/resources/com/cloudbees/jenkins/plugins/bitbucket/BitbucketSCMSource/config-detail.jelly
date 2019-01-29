@@ -1,7 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core"
-         xmlns:f="/lib/form" xmlns:c="/lib/credentials" xmlns:scm="/jenkins/scm/api/form"
-         xmlns:f2="/com/cloudbees/jenkins/plugins/bitbucket/form">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:c="/lib/credentials" xmlns:scm="/jenkins/scm/api/form">
   <j:choose>
     <j:when test="${descriptor.serverUrlSelectable}">
       <f:entry title="${%Server}" field="serverUrl">
@@ -21,8 +19,7 @@
     <f:textbox/>
   </f:entry>
   <f:entry title="${%Repository Name}" field="repository">
-    <!-- TODO switch back to f:select once Jenkins core has JENKINS-42443 -->
-    <f2:select/>
+    <f:select/>
   </f:entry>
   <f:entry title="${%Behaviours}" field="traits">
     <scm:traits field="traits"/>

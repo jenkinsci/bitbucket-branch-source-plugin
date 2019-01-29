@@ -6,5 +6,6 @@
     <f:entry field="credentialsId" title="${%Credentials}">
       <c:select context="${app}"/>
     </f:entry>
+    <st:include class="${descriptor.clazz}" page="manage-hooks-detail.jelly" optional="true"/>
   </f:optionalBlock>
 </j:jelly>

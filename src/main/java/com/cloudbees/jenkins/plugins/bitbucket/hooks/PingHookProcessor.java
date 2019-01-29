@@ -1,7 +1,7 @@
-/*
+/**
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2018, Yieldlab AG
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
+package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.PagedApiResponse;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class BitbucketServerRepositories extends PagedApiResponse<BitbucketServerRepository> {
+public class PingHookProcessor extends HookProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(PingHookProcessor.class.getName());
+
+    @Override
+    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
+        LOGGER.log(Level.INFO, "Received webhook ping event from {0}", origin);
+    }
+
 }

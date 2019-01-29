@@ -37,6 +37,8 @@ import java.util.Map;
 
 public class BitbucketServerRepository implements BitbucketRepository {
 
+    private Long id;
+
     @JsonProperty("scmId")
     private String scm;
 
@@ -53,6 +55,10 @@ public class BitbucketServerRepository implements BitbucketRepository {
     private Map<String, List<BitbucketHref>> links;
 
     public BitbucketServerRepository() {
+    }
+
+    public Long getId() {
+        return id;
     }
 
     @Override

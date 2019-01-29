@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import hudson.model.Item;
 import hudson.model.User;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.SecurityRealm;
 import hudson.util.ListBoxModel;
@@ -87,47 +88,35 @@ public class SSHCheckoutTraitTest {
             mockStrategy.grant(Item.CONFIGURE).onItems(dummy).to("bob");
             mockStrategy.grant(Item.EXTENDED_READ).onItems(dummy).to("jim");
             j.jenkins.setAuthorizationStrategy(mockStrategy);
-            ACL.impersonate(User.get("admin").impersonate(), new Runnable() {
-                @Override
-                public void run() {
-                    ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                    assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
-                    assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
-                            is("does-not-exist"));
-                    rsp = d.doFillCredentialsIdItems(null, "", "does-not-exist");
-                    assertThat("Expecting just the empty entry", rsp, hasSize(1));
-                    assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
-                }
-            });
-            ACL.impersonate(User.get("bob").impersonate(), new Runnable() {
-                @Override
-                public void run() {
-                    ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                    assertThat("Expecting just the empty entry", rsp, hasSize(1));
-                    assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
-                    rsp = d.doFillCredentialsIdItems(null, "", "does-not-exist");
-                    assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
-                    assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
-                            is("does-not-exist"));
-                }
-            });
-            ACL.impersonate(User.get("jim").impersonate(), new Runnable() {
-                @Override
-                public void run() {
-                    ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                    assertThat("Expecting just the empty entry", rsp, hasSize(1));
-                    assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
-                }
-            });
-            ACL.impersonate(User.get("sue").impersonate(), new Runnable() {
-                @Override
-                public void run() {
-                    ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                    assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
-                    assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
-                            is("does-not-exist"));
-                }
-            });
+            try (ACLContext context = ACL.as(User.get("admin"))) {
+                ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
+                assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
+                assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
+                        is("does-not-exist"));
+                rsp = d.doFillCredentialsIdItems(null, "", "does-not-exist");
+                assertThat("Expecting just the empty entry", rsp, hasSize(1));
+                assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
+            }
+            try (ACLContext context = ACL.as(User.get("bob"))) {
+                ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
+                assertThat("Expecting just the empty entry", rsp, hasSize(1));
+                assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
+                rsp = d.doFillCredentialsIdItems(null, "", "does-not-exist");
+                assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
+                assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
+                        is("does-not-exist"));
+            }
+            try (ACLContext context = ACL.as(User.get("jim"))) {
+                ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
+                assertThat("Expecting just the empty entry", rsp, hasSize(1));
+                assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
+            }
+            try (ACLContext context = ACL.as(User.get("sue"))) {
+                ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
+                assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
+                assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
+                        is("does-not-exist"));
+            }
         } finally {
             j.jenkins.setSecurityRealm(realm);
             j.jenkins.setAuthorizationStrategy(strategy);

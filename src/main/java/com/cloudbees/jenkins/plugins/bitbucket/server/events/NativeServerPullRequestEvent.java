@@ -1,7 +1,7 @@
-/*
+/**
  * The MIT License
  *
- * Copyright (c) 2018, Nikolas Falco
+ * Copyright (c) 2016-2018, Yieldlab AG
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,25 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.server.events;
 
-import com.cloudbees.jenkins.plugins.bitbucket.JsonParser.BitbucketDateFormat;
-import com.cloudbees.jenkins.plugins.bitbucket.client.DateUtils;
-import org.junit.Test;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+public class NativeServerPullRequestEvent {
 
-// TODO remove this class after update to jackson2 (api-plugin) version 2.9.2
-public class BitbucketDateFormatTest {
+    private BitbucketServerPullRequest pullRequest;
 
-    @Test
-    public void test_custom_bitbucket_ISO8601_date_format() throws Exception {
-        BitbucketDateFormat bdf = new BitbucketDateFormat();
-
-        assertThat(bdf.parse("2018-09-12T14:56:34.008922+00:00"), is(DateUtils.getDate(2018, 9, 12, 14, 56, 34, 8)));
-        assertThat(bdf.parse("2018-09-12T14:56:34.008922-00:00"), is(DateUtils.getDate(2018, 9, 12, 14, 56, 34, 8)));
-        assertThat(bdf.parse("2018-09-12T14:56:34.008922Z"), is(DateUtils.getDate(2018, 9, 12, 14, 56, 34, 8)));
+    public BitbucketServerPullRequest getPullRequest() {
+        return pullRequest;
     }
 
 }

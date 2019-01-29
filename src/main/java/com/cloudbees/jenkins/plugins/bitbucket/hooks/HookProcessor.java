@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,33 +71,42 @@ public abstract class HookProcessor {
     public abstract void process(HookEventType type, String payload, BitbucketType instanceType, String origin);
 
     /**
+     * See <a href="https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html">Event Payloads</a> for more
+     * information about the payload parameter format.
+     * @param type the type of hook.
+     * @param payload the hook payload
+     * @param instanceType the Bitbucket type that called the hook
+     * @param origin the origin of the event.
+     * @param serverUrl special value for native Bitbucket Server hooks which don't expose the server URL in the payload.
+     */
+    public void process(HookEventType type, String payload, BitbucketType instanceType, String origin, String serverUrl) {
+        process(type, payload, instanceType, origin);
+    }
+
+    /**
      * To be called by implementations once the owner and the repository have been extracted from the payload.
      *
      * @param owner the repository owner as configured in the SCMSource
      * @param repository the repository name as configured in the SCMSource
      */
     protected void scmSourceReIndex(final String owner, final String repository) {
-        ACL.impersonate(ACL.SYSTEM, new Runnable() {
-            @Override
-            public void run() {
-                boolean reindexed = false;
-                for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
-                    List<SCMSource> sources = scmOwner.getSCMSources();
-                    for (SCMSource source : sources) {
-                        // Search for the correct SCM source
-                        if (source instanceof BitbucketSCMSource && ((BitbucketSCMSource) source).getRepoOwner().equalsIgnoreCase(owner)
-                                && ((BitbucketSCMSource) source).getRepository().equals(repository)) {
-                            LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
-                            scmOwner.onSCMSourceUpdated(source);
-                            reindexed = true;
-                        }
+        try (ACLContext context = ACL.as(ACL.SYSTEM)) {
+            boolean reindexed = false;
+            for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
+                List<SCMSource> sources = scmOwner.getSCMSources();
+                for (SCMSource source : sources) {
+                    // Search for the correct SCM source
+                    if (source instanceof BitbucketSCMSource && ((BitbucketSCMSource) source).getRepoOwner().equalsIgnoreCase(owner)
+                            && ((BitbucketSCMSource) source).getRepository().equals(repository)) {
+                        LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
+                        scmOwner.onSCMSourceUpdated(source);
+                        reindexed = true;
                     }
                 }
-                if (!reindexed) {
-                    LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
-                }
             }
-        });
+            if (!reindexed) {
+                LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
+            }
+        }
     }
-
 }

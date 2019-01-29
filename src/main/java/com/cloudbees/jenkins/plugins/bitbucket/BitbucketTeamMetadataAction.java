@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import java.util.Objects;
 import jenkins.scm.api.metadata.AvatarMetadataAction;
 
 /**
@@ -80,11 +81,7 @@ public class BitbucketTeamMetadataAction extends AvatarMetadataAction {
 
         BitbucketTeamMetadataAction that = (BitbucketTeamMetadataAction) o;
 
-        if (avatarUrl != null ? !avatarUrl.equals(that.avatarUrl) : that.avatarUrl != null) {
-            return false;
-        }
-        return true;
-
+        return Objects.equals(avatarUrl, that.avatarUrl);
     }
 
     /**
@@ -92,7 +89,7 @@ public class BitbucketTeamMetadataAction extends AvatarMetadataAction {
      */
     @Override
     public int hashCode() {
-        return (avatarUrl != null ? avatarUrl.hashCode() : 0);
+        return Objects.hashCode(avatarUrl);
     }
 
     /**

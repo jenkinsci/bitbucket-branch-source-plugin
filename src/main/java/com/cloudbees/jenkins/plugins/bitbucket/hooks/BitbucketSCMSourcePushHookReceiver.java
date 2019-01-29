@@ -89,17 +89,20 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
         }
 
         String bitbucketKey = req.getHeader("X-Bitbucket-Type");
+        String serverUrl = req.getParameter("server_url");
         BitbucketType instanceType = null;
         if (bitbucketKey != null) {
             instanceType = BitbucketType.fromString(bitbucketKey);
         }
-        if(instanceType == null){
-            LOGGER.log(Level.FINE, "X-Bitbucket-Type header not found. Bitbucket Cloud webhook incoming.");
-            instanceType = BitbucketType.CLOUD;
+        if (instanceType == null && serverUrl != null) {
+            LOGGER.log(Level.FINE, "server_url request parameter found. Bitbucket Native Server webhook incoming.");
+            instanceType = BitbucketType.SERVER;
+        } else {
+            LOGGER.log(Level.FINE, "X-Bitbucket-Type header / server_url request parameter not found. Bitbucket Cloud webhook incoming.");
         }
 
         try {
-            type.getProcessor().process(type, body, instanceType, origin);
+            type.getProcessor().process(type, body, instanceType, origin, serverUrl);
         } catch (AbstractMethodError e) {
             type.getProcessor().process(body, instanceType);
         }

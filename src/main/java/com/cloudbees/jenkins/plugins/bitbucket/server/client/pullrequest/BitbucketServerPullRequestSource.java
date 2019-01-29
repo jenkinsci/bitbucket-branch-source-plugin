@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -34,6 +33,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BitbucketServerPullRequestSource implements BitbucketPullRequestSource {
 
+    @JsonProperty("id")
+    private String refId;
     @JsonProperty("displayId")
     private String branchName;
     @JsonProperty
@@ -43,8 +44,16 @@ public class BitbucketServerPullRequestSource implements BitbucketPullRequestSou
     private BitbucketServerBranch branch;
     private BitbucketServerRepository repository;
 
+    public String getRefId() {
+        return refId;
+    }
+
+    public void setRefId(String refId) {
+        this.refId = refId;
+    }
+
     @Override
-    public BitbucketRepository getRepository() {
+    public BitbucketServerRepository getRepository() {
         return repository;
     }
 
