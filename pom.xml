@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.23</version>
+    <version>3.36</version>
     <relativePath />
   </parent>
 
@@ -55,6 +55,7 @@
     <java.level>8</java.level>
     <scm-api.version>2.2.7</scm-api.version>
     <git.version>3.6.0</git.version>
+    <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
   </properties>
 
   <developers>
@@ -228,41 +229,42 @@
   </pluginRepositories>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.0.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>8.17</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
-         <artifactId>maven-checkstyle-plugin</artifactId>
-         <version>3.0.0</version>
-         <configuration>
-           <configLocation>${basedir}/checkstyle.xml</configLocation>
-           <includeTestSourceDirectory>true</includeTestSourceDirectory>
-           <sourceDirectories>
-             <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
-           </sourceDirectories>
-           <testSourceDirectories>
-             <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
-           </testSourceDirectories>
-         </configuration>
-         <executions>
-           <execution>
-             <goals>
-               <goal>check</goal>
-             </goals>
-           </execution>
-         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.jenkins-ci.tools</groupId>
-        <artifactId>maven-hpi-plugin</artifactId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <configLocation>${basedir}/checkstyle.xml</configLocation>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+          </sourceDirectories>
+          <testSourceDirectories>
+            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+          </testSourceDirectories>
+        </configuration>
         <executions>
           <execution>
             <goals>
-              <goal>generate-taglib-interface</goal>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <compatibleSinceVersion>2.0.0</compatibleSinceVersion>
-        </configuration>
       </plugin>
       <plugin> <!-- TODO scm-api gratuitously restricts deprecated APIs, preventing us from compiling even deprecated classes in *this* plugin -->
         <groupId>org.kohsuke</groupId>

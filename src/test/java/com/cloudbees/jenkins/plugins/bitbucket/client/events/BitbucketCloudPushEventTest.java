@@ -26,11 +26,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.client.events;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.client.DateUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;

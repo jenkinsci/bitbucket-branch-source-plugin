@@ -127,6 +127,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                 ChangeRequestCheckoutStrategy.HEAD);
     }
 
+    @SuppressWarnings("deprecation")
     @SuppressFBWarnings("SE_PRIVATE_READ_RESOLVE_NOT_INHERITED") // because JENKINS-41313
     private Object readResolve() throws ObjectStreamException {
         if ("\u0000".equals(getTarget().getName())) {

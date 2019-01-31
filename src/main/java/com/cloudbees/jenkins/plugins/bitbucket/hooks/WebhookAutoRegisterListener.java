@@ -38,7 +38,6 @@ import hudson.util.DaemonThreadFactory;
 import hudson.util.NamingThreadFactory;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -161,18 +160,13 @@ public class WebhookAutoRegisterListener extends ItemListener {
             return;
         }
 
-        BitbucketWebHook existingHook = null;
+        BitbucketWebHook existingHook;
         String hookReceiverUrl =
                 source.getEndpointJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
-        Iterator<? extends BitbucketWebHook> existingHooks = bitbucket.getWebHooks().iterator();
         // Check for all hooks pointing to us
-        while (existingHooks.hasNext()) {
-            BitbucketWebHook hook = existingHooks.next();
-            if (hook.getUrl() != null && hook.getUrl().startsWith(hookReceiverUrl)) {
-                existingHook = hook;
-                break;
-            }
-        }
+        existingHook = bitbucket.getWebHooks().stream()
+            .filter(hook -> hook.getUrl() != null && hook.getUrl().startsWith(hookReceiverUrl))
+            .findFirst().orElse(null);
 
         WebhookConfiguration hookConfig = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
             .withTraits(source.getTraits())

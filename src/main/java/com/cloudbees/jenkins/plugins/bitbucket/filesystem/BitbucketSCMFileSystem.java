@@ -35,6 +35,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -111,7 +112,8 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                                 context,
                                 context instanceof Queue.Task
                                         ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                                        : ACL.SYSTEM
+                                        : ACL.SYSTEM,
+                                URIRequirementBuilder.fromUri(serverUrl).build()
                         ),
                         CredentialsMatchers.allOf(
                                 CredentialsMatchers.withId(scanCredentialsId),

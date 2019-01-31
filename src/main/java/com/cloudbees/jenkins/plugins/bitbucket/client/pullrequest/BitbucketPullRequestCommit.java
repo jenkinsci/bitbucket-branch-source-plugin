@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
-
 import java.util.Date;
 
 public class BitbucketPullRequestCommit implements BitbucketCommit {

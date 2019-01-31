@@ -630,17 +630,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 .set("owner", owner)
                 .expand();
 
-        Callable<BitbucketTeam> request = new Callable<BitbucketTeam>() {
-            @Override
-            public BitbucketTeam call() throws Exception {
-                try {
-                    String response = getRequest(url);
-                    return JsonParser.toJava(response, BitbucketCloudTeam.class);
-                } catch (FileNotFoundException e) {
-                    return null;
-                } catch (IOException e) {
-                    throw new IOException("I/O error when parsing response from URL: " + url, e);
-                }
+        Callable<BitbucketTeam> request = () -> {
+            try {
+                String response = getRequest(url);
+                return JsonParser.toJava(response, BitbucketCloudTeam.class);
+            } catch (FileNotFoundException e) {
+                return null;
+            } catch (IOException e) {
+                throw new IOException("I/O error when parsing response from URL: " + url, e);
             }
         };
 
@@ -679,26 +676,23 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             template.set("role", role.getId());
             cacheKey.append("::").append(role.getId());
         }
-        Callable<List<BitbucketCloudRepository>> request = new Callable<List<BitbucketCloudRepository>>() {
-            @Override
-            public List<BitbucketCloudRepository> call() throws Exception {
-                List<BitbucketCloudRepository> repositories = new ArrayList<>();
-                Integer pageNumber = 1;
-                String url, response;
-                PaginatedBitbucketRepository page;
-                do {
-                    response = getRequest(url = template.set("page", pageNumber).expand());
-                    try {
-                        page = JsonParser.toJava(response, PaginatedBitbucketRepository.class);
-                        repositories.addAll(page.getValues());
-                    } catch (IOException e) {
-                        throw new IOException("I/O error when parsing response from URL: " + url, e);
-                    }
-                    pageNumber++;
-                } while (page.getNext() != null);
-                repositories.sort(Comparator.comparing(BitbucketCloudRepository::getRepositoryName));
-                return repositories;
-            }
+        Callable<List<BitbucketCloudRepository>> request = () -> {
+            List<BitbucketCloudRepository> repositories = new ArrayList<>();
+            Integer pageNumber = 1;
+            String url, response;
+            PaginatedBitbucketRepository page;
+            do {
+                response = getRequest(url = template.set("page", pageNumber).expand());
+                try {
+                    page = JsonParser.toJava(response, PaginatedBitbucketRepository.class);
+                    repositories.addAll(page.getValues());
+                } catch (IOException e) {
+                    throw new IOException("I/O error when parsing response from URL: " + url, e);
+                }
+                pageNumber++;
+            } while (page.getNext() != null);
+            repositories.sort(Comparator.comparing(BitbucketCloudRepository::getRepositoryName));
+            return repositories;
         };
         try {
             if (enableCache) {

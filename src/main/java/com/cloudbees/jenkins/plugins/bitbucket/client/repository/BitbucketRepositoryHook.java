@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-
 import java.util.List;
 
 public class BitbucketRepositoryHook implements BitbucketWebHook {
