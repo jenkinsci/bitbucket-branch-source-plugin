@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,40 +23,40 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Represents a pull request in Bitbucket.
- * Only the source repository is necessary, the destination repo is inferred.
- */
-public interface BitbucketPullRequest {
+public class BitbucketReviewer {
+    private User user;
+    private boolean approved;
 
-    /**
-     * @return the source repository of this pull request
-     */
-    BitbucketPullRequestSource getSource();
+    public boolean getApproved() {
+        return approved;
+    }
 
-    /**
-     * @return the target repository of this pull request
-     */
-    BitbucketPullRequestDestination getDestination();
+    public void setApproved(boolean approved) {
+        this.approved = approved;
+    }
 
-    /**
-     * @return pull request ID as provided by Bitbucket. It can be used for notifications.
-     */
-    @NonNull
-    String getId();
+    public User getUser() {
+        return user;
+    }
 
-    String getTitle();
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    String getLink();
+    public static class User {
+        @JsonProperty("account_id")
+        private String identifier;
 
-    String getAuthorLogin();
+        @JsonAlias("name")
+        public void setIdentifier(String identifier) {
+            this.identifier = identifier;
+        }
 
-    String getAuthorEmail();
-
-    String getAuthorIdentifier();
-
-    List<BitbucketReviewer> getReviewers();
+        public String getIdentifier() {
+            return identifier;
+        }
+    }
 }

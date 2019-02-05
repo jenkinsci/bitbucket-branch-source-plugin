@@ -24,8 +24,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketReviewer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
 public class BitbucketPullRequestValue implements BitbucketPullRequest {
     private BitbucketPullRequestValueDestination destination;
@@ -36,6 +39,10 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
     private Links links;
 
     private Author author;
+
+    //Bitbucket cloud seems to have all the same information in the participant field plus more.
+    @JsonProperty("participants")
+    private List<BitbucketReviewer> reviewers;
 
     public BitbucketPullRequestValueRepository getSource() {
         return source;
@@ -83,6 +90,11 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
         return null;
     }
 
+    @Override
+    public String getAuthorIdentifier() {
+        return author.identifier;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
@@ -97,6 +109,16 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
     public String getAuthorDisplayName() {
         return author.displayName;
+    }
+
+    @Override
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public List<BitbucketReviewer> getReviewers() {
+        return reviewers;
+    }
+
+    public void setReviewers(List<BitbucketReviewer> reviewers) {
+        this.reviewers = reviewers;
     }
 
     public static class Links {
@@ -131,6 +153,8 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
     }
 
     public static class Author {
+        @JsonProperty("account_id")
+        private String identifier;
         private String username;
         @JsonProperty("display_name")
         private String displayName;
@@ -145,6 +169,14 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
         public void setUsername(String username) {
             this.username = username;
+        }
+
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public void setIndentifier(String identifier) {
+            this.identifier = identifier;
         }
 
         @JsonIgnore
