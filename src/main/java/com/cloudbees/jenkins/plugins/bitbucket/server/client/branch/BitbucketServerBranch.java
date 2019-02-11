@@ -105,7 +105,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
                 initHeadCommitInfo();
             }
         }
-        return timestamp;
+        return timestamp == null ? 0L : timestamp;
     }
 
     @Override
@@ -132,12 +132,10 @@ public class BitbucketServerBranch implements BitbucketBranch {
         this.author = author;
     }
 
-    private void initHeadCommitInfo() {
+    private synchronized void initHeadCommitInfo() {
         if (callableInitialised || commitClosure == null) {
             return;
         }
-
-        callableInitialised = true;
         try {
             BitbucketCommit commit = commitClosure.call();
 
@@ -148,6 +146,9 @@ public class BitbucketServerBranch implements BitbucketBranch {
             LOGGER.log(Level.FINER, "Could not determine head commit details", e);
             // fallback on default values
             this.timestamp = 0L;
+            this.message = "Unknown";
+            this.author = "Unknown";
         }
+        callableInitialised = true;
     }
 }
