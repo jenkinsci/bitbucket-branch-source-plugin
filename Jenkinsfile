@@ -1,3 +1,3 @@
 #!groovy
 
-buildPlugin(checkstyle: [run:true, archive:true, unstableTotalAll: '1'])
+buildPlugin(checkstyle: [run:true, archive:true, unstableTotalAll: '0'])
