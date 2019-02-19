@@ -76,6 +76,13 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     private List<BitbucketHref> cloneLinks = Collections.emptyList();
 
     /**
+     * The {@link BitbucketRepositoryProtocol} that should be used.
+     * Enables support for blank SSH credentials.
+     */
+    @NonNull
+    private BitbucketRepositoryProtocol protocol = BitbucketRepositoryProtocol.HTTP;
+
+    /**
      * Constructor.
      *
      * @param scmSource     the {@link BitbucketSCMSource}.
@@ -115,6 +122,10 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                 scmSource.getRepoOwner(),
                 scmSource.getRepository()
         )));
+
+        // Test for protocol
+        withCredentials(credentialsId, null);
+
     }
 
     /**
@@ -150,6 +161,43 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     }
 
     /**
+     * Configures the {@link IdCredentials#getId()} of the {@link Credentials} to use when connecting to the
+     * {@link #remote()}
+     *
+     * @param credentialsId the {@link IdCredentials#getId()} of the {@link Credentials} to use when connecting to
+     *                      the {@link #remote()} or {@code null} to let the git client choose between providing its own
+     *                      credentials or connecting anonymously.
+     * @param protocol the {@link BitbucketRepositoryProtocol} of the {@link Credentials} to use or {@code null}
+     *                 to detect the the protocol based on the credentialsId. Defaults to HTTP if credentials are
+     *                 {@code null}.  Enables support for blank SSH credentials.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public BitbucketGitSCMBuilder withCredentials(String credentialsId, BitbucketRepositoryProtocol protocol) {
+        if (StringUtils.isNotBlank(credentialsId)) {
+            StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
+                scmSource.getServerUrl(),
+                scmSource.getOwner(),
+                credentialsId,
+                StandardCredentials.class
+            );
+
+            if (protocol == null) {
+                protocol = credentials instanceof SSHUserPrivateKey
+                    ? BitbucketRepositoryProtocol.SSH
+                    : BitbucketRepositoryProtocol.HTTP;
+            }
+        } else if (protocol == null) {
+            // If we set credentials to empty reset the type to HTTP.
+            // To set the build to use empty SSH credentials, call withProtocol after setting credentials
+            protocol = BitbucketRepositoryProtocol.HTTP;
+        }
+
+        this.protocol = protocol;
+        return withCredentials(credentialsId);
+    }
+
+    /**
      * Updates the {@link GitSCMBuilder#withRemote(String)} based on the current {@link #head()} and
      * {@link #revision()}.
      * Will be called automatically by {@link #build()} but exposed in case the correct remote is required after
@@ -159,18 +207,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
      */
     @NonNull
     public BitbucketGitSCMBuilder withBitbucketRemote() {
-        // Apply clone links and credentials
-        StandardCredentials credentials = StringUtils.isBlank(credentialsId())
-                ? null
-                : BitbucketCredentials.lookupCredentials(
-                        scmSource().getServerUrl(),
-                        scmSource().getOwner(),
-                        credentialsId(),
-                        StandardCredentials.class
-                );
-        BitbucketRepositoryProtocol protocol = credentials instanceof SSHUserPrivateKey
-                ? BitbucketRepositoryProtocol.SSH
-                : BitbucketRepositoryProtocol.HTTP;
         SCMHead h = head();
         String repoOwner;
         String repository;
@@ -261,5 +297,4 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             withRevision(r);
         }
     }
-
 }

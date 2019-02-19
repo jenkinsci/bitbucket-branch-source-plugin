@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -105,9 +106,11 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
     @Override
     protected void decorateBuilder(SCMBuilder<?, ?> builder) {
         if (builder instanceof GitSCMBuilder) {
-            ((GitSCMBuilder) builder).withCredentials(credentialsId);
+            ((BitbucketGitSCMBuilder) builder)
+                .withCredentials(credentialsId, BitbucketRepositoryProtocol.SSH);
         } else if (builder instanceof MercurialSCMBuilder) {
-            ((MercurialSCMBuilder) builder).withCredentialsId(credentialsId);
+            ((BitbucketHgSCMBuilder) builder)
+                .withCredentialsId(credentialsId, BitbucketRepositoryProtocol.SSH);
         }
     }
 

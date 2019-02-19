@@ -43,11 +43,11 @@ public class BitbucketHgSCMBuilderTest {
         source = new BitbucketSCMSource("tester", "test-repo");
         owner.setSourcesList(Collections.singletonList(new BranchSource(source)));
         source.setOwner(owner);
+        Credentials userPasswordCredential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "user-pass", null, "git-user", "git-secret");
+        Credentials sshPrivateKeyCredential = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "user-key", "git",
+                new BasicSSHUserPrivateKey.UsersPrivateKeySource(), null, null);
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
-                Arrays.<Credentials>asList(
-                        new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "user-pass", null, "git-user",
-                                "git-secret"), new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "user-key", "git",
-                                new BasicSSHUserPrivateKey.UsersPrivateKeySource(), null, null))));
+                Arrays.<Credentials>asList(userPasswordCredential, sshPrivateKeyCredential)));
     }
 
     @After
@@ -260,6 +260,234 @@ public class BitbucketHgSCMBuilderTest {
         assertThat(actual.getBrowser(), instanceOf(BitBucket.class));
         assertThat(actual.getBrowser().getUrl().toString(), is("https://bitbucket.org/qa/qa-repo/"));
         assertThat(actual.getSource(), is("ssh://hg@bitbucket.org/qa/qa-repo"));
+        assertThat(actual.getRevisionType(), is(MercurialSCM.RevisionType.CHANGESET));
+        assertThat(actual.getRevision(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
+    public void given__branch_rev_anon_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL);
+        BitbucketSCMSource.MercurialRevision revision =
+                new BitbucketSCMSource.MercurialRevision(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketHgSCMBuilder instance = new BitbucketHgSCMBuilder(source,
+                head, revision, null);
+        assertThat(instance.credentialsId(), is(nullValue()));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketSource called",
+                instance.source(), is("https://bitbucket.org"));
+        assertThat(instance.browser(), instanceOf(BitBucket.class));
+        assertThat(instance.browser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
+        ));
+        assertThat(instance.source(), is("https://bitbucket.org/tester/test-repo"));
+
+        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait(null);
+        sshTrait.decorateBuilder(instance);
+
+        MercurialSCM actual = instance.build();
+        assertThat(instance.credentialsId(), is(nullValue()));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        assertThat(actual.getCredentialsId(), is(nullValue()));
+        assertThat(actual.getBrowser(), instanceOf(BitBucket.class));
+        assertThat(actual.getBrowser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+        assertThat(actual.getSource(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+        assertThat(actual.getRevisionType(), is(MercurialSCM.RevisionType.CHANGESET));
+        assertThat(actual.getRevision(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
+    public void given__branch_rev_userpass_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL);
+        BitbucketSCMSource.MercurialRevision revision =
+                new BitbucketSCMSource.MercurialRevision(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketHgSCMBuilder instance = new BitbucketHgSCMBuilder(source,
+                head, revision, "user-pass");
+        assertThat(instance.credentialsId(), is("user-pass"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketSource called",
+                instance.source(), is("https://bitbucket.org"));
+        assertThat(instance.browser(), instanceOf(BitBucket.class));
+        assertThat(instance.browser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
+        ));
+        assertThat(instance.source(), is("https://bitbucket.org/tester/test-repo"));
+
+        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait(null);
+        sshTrait.decorateBuilder(instance);
+
+        MercurialSCM actual = instance.build();
+        assertThat(instance.credentialsId(), is(nullValue()));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        assertThat(actual.getCredentialsId(), is(nullValue()));
+        assertThat(actual.getBrowser(), instanceOf(BitBucket.class));
+        assertThat(actual.getBrowser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+        assertThat(actual.getSource(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+        assertThat(actual.getRevisionType(), is(MercurialSCM.RevisionType.CHANGESET));
+        assertThat(actual.getRevision(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
+    public void given__branch_rev_userkey_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL);
+        BitbucketSCMSource.MercurialRevision revision =
+                new BitbucketSCMSource.MercurialRevision(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketHgSCMBuilder instance = new BitbucketHgSCMBuilder(source,
+                head, revision, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketSource called",
+                instance.source(), is("https://bitbucket.org"));
+        assertThat(instance.browser(), instanceOf(BitBucket.class));
+        assertThat(instance.browser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
+        ));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait(null);
+        sshTrait.decorateBuilder(instance);
+
+        MercurialSCM actual = instance.build();
+        assertThat(instance.credentialsId(), is(nullValue()));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        assertThat(actual.getCredentialsId(), is(nullValue()));
+        assertThat(actual.getBrowser(), instanceOf(BitBucket.class));
+        assertThat(actual.getBrowser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+        assertThat(actual.getSource(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+        assertThat(actual.getRevisionType(), is(MercurialSCM.RevisionType.CHANGESET));
+        assertThat(actual.getRevision(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
+    public void given__branch_rev_anon_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL);
+        BitbucketSCMSource.MercurialRevision revision =
+                new BitbucketSCMSource.MercurialRevision(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketHgSCMBuilder instance = new BitbucketHgSCMBuilder(source,
+                head, revision, null);
+        assertThat(instance.credentialsId(), is(nullValue()));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketSource called",
+                instance.source(), is("https://bitbucket.org"));
+        assertThat(instance.browser(), instanceOf(BitBucket.class));
+        assertThat(instance.browser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
+        ));
+        assertThat(instance.source(), is("https://bitbucket.org/tester/test-repo"));
+
+        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait("user-key");
+        sshTrait.decorateBuilder(instance);
+
+        MercurialSCM actual = instance.build();
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        assertThat(actual.getCredentialsId(), is("user-key"));
+        assertThat(actual.getBrowser(), instanceOf(BitBucket.class));
+        assertThat(actual.getBrowser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+        assertThat(actual.getSource(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+        assertThat(actual.getRevisionType(), is(MercurialSCM.RevisionType.CHANGESET));
+        assertThat(actual.getRevision(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
+    public void given__branch_rev_userpass_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL);
+        BitbucketSCMSource.MercurialRevision revision =
+                new BitbucketSCMSource.MercurialRevision(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketHgSCMBuilder instance = new BitbucketHgSCMBuilder(source,
+                head, revision, "user-pass");
+        assertThat(instance.credentialsId(), is("user-pass"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketSource called",
+                instance.source(), is("https://bitbucket.org"));
+        assertThat(instance.browser(), instanceOf(BitBucket.class));
+        assertThat(instance.browser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
+        ));
+        assertThat(instance.source(), is("https://bitbucket.org/tester/test-repo"));
+
+        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait("user-key");
+        sshTrait.decorateBuilder(instance);
+
+        MercurialSCM actual = instance.build();
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        assertThat(actual.getCredentialsId(), is("user-key"));
+        assertThat(actual.getBrowser(), instanceOf(BitBucket.class));
+        assertThat(actual.getBrowser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+        assertThat(actual.getSource(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+        assertThat(actual.getRevisionType(), is(MercurialSCM.RevisionType.CHANGESET));
+        assertThat(actual.getRevision(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
+    public void given__branch_rev_userkey_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
+        BranchSCMHead head = new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL);
+        BitbucketSCMSource.MercurialRevision revision =
+                new BitbucketSCMSource.MercurialRevision(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketHgSCMBuilder instance = new BitbucketHgSCMBuilder(source,
+                head, revision, "user-key");
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat(instance.cloneLinks(), is(Collections.<BitbucketHref>emptyList()));
+        assertThat("expecting dummy value until clone links provided or withBitbucketSource called",
+                instance.source(), is("https://bitbucket.org"));
+        assertThat(instance.browser(), instanceOf(BitBucket.class));
+        assertThat(instance.browser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+
+        instance.withCloneLinks(Arrays.asList(
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
+        ));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait("user-key");
+        sshTrait.decorateBuilder(instance);
+
+        MercurialSCM actual = instance.build();
+        assertThat(instance.credentialsId(), is("user-key"));
+        assertThat(instance.source(), is("ssh://hg@bitbucket.org/tester/test-repo"));
+
+        assertThat(actual.getCredentialsId(), is("user-key"));
+        assertThat(actual.getBrowser(), instanceOf(BitBucket.class));
+        assertThat(actual.getBrowser().getUrl().toString(), is("https://bitbucket.org/tester/test-repo/"));
+        assertThat(actual.getSource(), is("ssh://hg@bitbucket.org/tester/test-repo"));
         assertThat(actual.getRevisionType(), is(MercurialSCM.RevisionType.CHANGESET));
         assertThat(actual.getRevision(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
     }
