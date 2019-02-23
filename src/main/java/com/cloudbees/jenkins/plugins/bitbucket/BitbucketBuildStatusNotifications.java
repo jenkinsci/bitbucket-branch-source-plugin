@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
@@ -39,15 +41,18 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.annotation.CheckForNull;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.trait.SCMHeadFilter;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
@@ -107,7 +112,7 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
 
-        String key = build.getParent().getFullName(); // use the job full name as the key for the status
+        String key = getBuildKey(build);
         String name = build.getFullDisplayName(); // use the build number as the display name of the status
         BitbucketBuildStatus status;
         Result result = build.getResult();
@@ -182,6 +187,44 @@ public class BitbucketBuildStatusNotifications {
             return ((AbstractGitSCMSource.SCMRevisionImpl) revision).getHash();
         }
         return null;
+    }
+
+    private static String getBuildKey(@NonNull Run<?, ?> build) {
+        final SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
+
+        BitbucketSCMSource source = (BitbucketSCMSource) s;
+        List<SCMHeadFilter> filters = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits(source.getTraits())
+                .filters();
+
+        boolean shareBuildKeyBetweenBranchAndPR = false;
+        for (SCMHeadFilter filter : filters) {
+            if (filter instanceof BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter) {
+                shareBuildKeyBetweenBranchAndPR = true;
+            }
+        }
+
+        // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
+        // build status key to be the same between the branch project and the PR project.
+        // This is to avoid having two build statuses when a branch goes into PR and
+        // it was already built at least once as a branch.
+        // So the key we use is the branch name.
+        String key;
+        if (shareBuildKeyBetweenBranchAndPR) {
+            SCMRevision revision = SCMRevisionAction.getRevision(source, build);
+            SCMHead head = revision.getHead();
+            String folderName = build.getParent().getParent().getFullName();
+            if (head instanceof PullRequestSCMHead) {
+                PullRequestSCMHead pr = (PullRequestSCMHead) head;
+                key = String.format("%s/%s", folderName, pr.getOriginName());
+            } else {
+                key = String.format("%s/%s", folderName, head.getName());
+            }
+        } else {
+            key = build.getParent().getFullName(); // use the job full name as the key for the status
+        }
+
+        return key;
     }
 
     /**
