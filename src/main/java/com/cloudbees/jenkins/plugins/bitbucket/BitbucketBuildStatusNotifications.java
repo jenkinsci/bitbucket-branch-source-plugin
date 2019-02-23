@@ -23,8 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
@@ -41,7 +40,6 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.annotation.CheckForNull;
@@ -52,7 +50,6 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
-import jenkins.scm.api.trait.SCMHeadFilter;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
@@ -98,7 +95,7 @@ public class BitbucketBuildStatusNotifications {
     }
 
     private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,
-                                     @NonNull BitbucketApi bitbucket, @NonNull String hash)
+        @NonNull BitbucketApi bitbucket, @NonNull String key, @NonNull String hash)
             throws IOException, InterruptedException {
 
         String url;
@@ -112,7 +109,6 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
 
-        String key = getBuildKey(build);
         String name = build.getFullDisplayName(); // use the build number as the display name of the status
         BitbucketBuildStatus status;
         Result result = build.getResult();
@@ -153,24 +149,30 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
         BitbucketSCMSource source = (BitbucketSCMSource) s;
-        if (new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(source.getTraits())
+        BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null,
+            SCMHeadObserver.none());
+        if (sourceContext.withTraits(source.getTraits())
                 .notificationsDisabled()) {
             return;
         }
         SCMRevision r = SCMRevisionAction.getRevision(s, build);
+        if (r == null) {
+            return;
+        }
         String hash = getHash(r);
         if (hash == null) {
             return;
         }
+        String key = getBuildKey(build, source, sourceContext, r);
+        BitbucketApi bitbucket;
         if (r instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
-            createStatus(build, listener, source.buildBitbucketClient((PullRequestSCMHead) r.getHead()), hash);
-
+            bitbucket = source.buildBitbucketClient((PullRequestSCMHead) r.getHead());
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
-            createStatus(build, listener, source.buildBitbucketClient(), hash);
+            bitbucket = source.buildBitbucketClient();
         }
+        createStatus(build, listener, bitbucket, key, hash);
     }
 
     @CheckForNull
@@ -189,20 +191,14 @@ public class BitbucketBuildStatusNotifications {
         return null;
     }
 
-    private static String getBuildKey(@NonNull Run<?, ?> build) {
-        final SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
+    private static String getBuildKey(@NonNull Run<?, ?> build,
+        @NonNull BitbucketSCMSource source, @NonNull BitbucketSCMSourceContext sourceContext,
+        @NonNull SCMRevision r) {
 
-        BitbucketSCMSource source = (BitbucketSCMSource) s;
-        List<SCMHeadFilter> filters = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(source.getTraits())
-                .filters();
-
-        boolean shareBuildKeyBetweenBranchAndPR = false;
-        for (SCMHeadFilter filter : filters) {
-            if (filter instanceof BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter) {
-                shareBuildKeyBetweenBranchAndPR = true;
-            }
-        }
+        boolean shareBuildKeyBetweenBranchAndPR = sourceContext
+            .withTraits(source.getTraits())
+            .filters().stream()
+            .anyMatch(filter -> filter instanceof ExcludeOriginPRBranchesSCMHeadFilter);
 
         // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
         // build status key to be the same between the branch project and the PR project.
@@ -211,8 +207,7 @@ public class BitbucketBuildStatusNotifications {
         // So the key we use is the branch name.
         String key;
         if (shareBuildKeyBetweenBranchAndPR) {
-            SCMRevision revision = SCMRevisionAction.getRevision(source, build);
-            SCMHead head = revision.getHead();
+            SCMHead head = r.getHead();
             String folderName = build.getParent().getParent().getFullName();
             if (head instanceof PullRequestSCMHead) {
                 PullRequestSCMHead pr = (PullRequestSCMHead) head;
