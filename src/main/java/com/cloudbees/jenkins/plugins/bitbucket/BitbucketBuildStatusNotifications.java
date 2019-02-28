@@ -40,6 +40,7 @@ import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import javax.annotation.CheckForNull;
 import jenkins.model.JenkinsLocationConfiguration;
@@ -81,14 +82,21 @@ public class BitbucketBuildStatusNotifications {
         if (url.startsWith("http://unconfigured-jenkins-location/")) {
             throw new IllegalStateException("Could not determine Jenkins URL.");
         }
+
+        URL u = null;
+
         try {
-            URL u = new URL(url);
-            if (!u.getHost().contains(".")) {
-                throw new IllegalStateException("Please use a fully qualified name or an IP address for Jenkins URL");
-            }
+            u = new URL(url);
         } catch (MalformedURLException e) {
             throw new IllegalStateException("Bad Jenkins URL");
         }
+
+        try {
+            u.toURI();
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("Bad Jenkins URL");
+        }
+
         return url;
     }
 
