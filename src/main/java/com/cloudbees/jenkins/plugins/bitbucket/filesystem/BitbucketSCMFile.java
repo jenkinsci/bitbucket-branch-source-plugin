@@ -25,19 +25,17 @@
 package com.cloudbees.jenkins.plugins.bitbucket.filesystem;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
-import java.util.Map;
-
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.io.InputStream;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 
-public class BitbucketSCMFile  extends SCMFile {
+import java.io.IOException;
+import java.io.InputStream;
+
+public class BitbucketSCMFile extends SCMFile {
 
     private final BitbucketApi api;
     private SCMHead head;
@@ -118,8 +116,7 @@ public class BitbucketSCMFile  extends SCMFile {
         }
         try {
             return api.getFileContent(this);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             // TODO: Disable light-weight fallback to full checkout on merge conflicts
             throw e;
         }
@@ -134,7 +131,7 @@ public class BitbucketSCMFile  extends SCMFile {
     @Override
     @NonNull
     protected SCMFile newChild(String name, boolean assumeIsDirectory) {
-        return new BitbucketSCMFile(this, name, assumeIsDirectory?Type.DIRECTORY:Type.REGULAR_FILE, hash);
+        return new BitbucketSCMFile(this, name, assumeIsDirectory ? Type.DIRECTORY : Type.REGULAR_FILE, hash);
     }
 
     @Override
