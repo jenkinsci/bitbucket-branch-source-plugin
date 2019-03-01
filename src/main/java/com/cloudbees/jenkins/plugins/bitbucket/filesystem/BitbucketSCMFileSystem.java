@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -56,12 +57,12 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 
 public class BitbucketSCMFileSystem extends SCMFileSystem {
 
-    private final SCMHead head;
+    private final String ref;
     private final BitbucketApi api;
 
-    protected BitbucketSCMFileSystem(BitbucketApi api, SCMHead head, SCMRevision rev) throws IOException {
+    protected BitbucketSCMFileSystem(BitbucketApi api, String ref, SCMRevision rev) throws IOException {
         super(rev);
-        this.head = head;
+        this.ref = ref;
         this.api = api;
     }
 
@@ -80,7 +81,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
     @Override
     public SCMFile getRoot() {
         SCMRevision revision = getRevision();
-        return new BitbucketSCMFile(this, api, head, revision == null ? null : revision.toString());
+        return new BitbucketSCMFile(this, api, ref, revision == null ? null : revision.toString());
     }
 
     @Extension
@@ -139,12 +140,38 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
             BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, authenticator, owner, repository);
+            String ref = null;
 
-            if ((!(head instanceof BranchSCMHead) && !(head instanceof PullRequestSCMHead))) {
-                return null;  // not supported branch head
+            if (head instanceof BranchSCMHead) {
+                ref = head.getName();
+            }
+            if (head instanceof PullRequestSCMHead) {
+                // working on a pull request - can be either "HEAD" or "MERGE"
+                PullRequestSCMHead pr = (PullRequestSCMHead) head;
+                if (pr.getRepository() == null) { // not clear when this happens
+                    return null;
+                }
+
+                if (apiClient instanceof BitbucketCloudApiClient) {
+                    if (pr.getCheckoutStrategy() != ChangeRequestCheckoutStrategy.MERGE) {
+                        return new BitbucketSCMFileSystem(apiClient, pr.getOriginName(), rev);
+                    }
+                    return null; // TODO support merge revisions somehow for cloud
+
+                }
+                // else build the bitbucket API compatible ref spec:
+                if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
+                    ref = "pull-requests/" + pr.getId() + "/from";
+                } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
+                    ref = "pull-requests/" + pr.getId() + "/merge";
+                }
+            } else if (head instanceof BitbucketTagSCMHead) {
+                ref = "tags/" + head.getName();
+            } else {
+                return null;
             }
 
-            return new BitbucketSCMFileSystem(apiClient, head, rev);
+            return new BitbucketSCMFileSystem(apiClient, ref, rev);
         }
     }
 }

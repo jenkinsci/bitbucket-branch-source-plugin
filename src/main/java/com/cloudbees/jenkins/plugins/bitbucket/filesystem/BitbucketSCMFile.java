@@ -24,61 +24,40 @@
 
 package com.cloudbees.jenkins.plugins.bitbucket.filesystem;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
-import java.util.Map;
-
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import jenkins.scm.api.SCMFile;
-import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 
 public class BitbucketSCMFile  extends SCMFile {
 
     private final BitbucketApi api;
-    private SCMHead head;
+    private  String ref;
     private final String hash;
 
     public String getRef() {
-        if (head instanceof BranchSCMHead) {
-            return head.getName();
-        }
-        if (head instanceof PullRequestSCMHead) {
-            // working on a pull request - can be either "HEAD" or "MERGE"
-            PullRequestSCMHead pr = (PullRequestSCMHead) head;
-            if (pr.getRepository() == null) { // not clear when this happens
-                return null;
-            }
+        return ref;
+    }
 
-            // else build the bitbucket API compatible ref spec:
-            if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
-                return "pull-requests/" + pr.getId() + "/from";
-            } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-                return "pull-requests/" + pr.getId() + "/merge";
-            }
-        }
-        return null;
-
+    public void setRef(String ref) {
+        this.ref = ref;
     }
 
     @Deprecated
     public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
                             BitbucketApi api,
-                            SCMHead head) {
-        this(bitBucketSCMFileSystem, api, head, null);
+                            String ref) {
+        this(bitBucketSCMFileSystem, api, ref, null);
     }
 
     public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
                             BitbucketApi api,
-                            SCMHead head, String hash) {
+                            String ref, String hash) {
         super();
         type(Type.DIRECTORY);
         this.api = api;
-        this.head = head;
+        this.ref = ref;
         this.hash = hash;
     }
 
@@ -90,7 +69,7 @@ public class BitbucketSCMFile  extends SCMFile {
     public BitbucketSCMFile(@NonNull BitbucketSCMFile parent, String name, Type type, String hash) {
         super(parent, name);
         this.api = parent.api;
-        this.head = parent.head;
+        this.ref = parent.ref;
         this.hash = hash;
         type(type);
     }
@@ -115,13 +94,8 @@ public class BitbucketSCMFile  extends SCMFile {
     public InputStream content() throws IOException, InterruptedException {
         if (this.isDirectory()) {
             throw new IOException("Cannot get raw content from a directory");
-        }
-        try {
+        } else {
             return api.getFileContent(this);
-        } catch (IOException e)
-        {
-            // TODO: Disable light-weight fallback to full checkout on merge conflicts
-            throw e;
         }
     }
 
