@@ -59,17 +59,12 @@ import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.ProxyConfiguration;
 import hudson.Util;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -79,7 +74,6 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -88,10 +82,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -103,9 +93,6 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -118,24 +105,6 @@ import static java.util.Objects.requireNonNull;
  * Developed and test with Bitbucket 4.3.2
  */
 public class BitbucketServerAPIClient extends AbstractBitbucketApi {
-
-    /**
-     * Make available commit informations in a lazy way.
-     *
-     * @author Nikolas Falco
-     */
-    private class CommitClosure implements Callable<BitbucketCommit> {
-        private final String hash;
-
-        public CommitClosure(@NonNull String hash) {
-            this.hash = hash;
-        }
-
-        @Override
-        public BitbucketCommit call() throws Exception {
-            return resolveCommit(hash);
-        }
-    }
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketServerAPIClient.class.getName());
     private static final String API_BASE_PATH = "/rest/api/1.0";
@@ -180,8 +149,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
      * Almost @NonNull (but null is accepted for anonymous access).
      */
     private final BitbucketAuthenticator authenticator;
-
-    private HttpClientContext context;
 
     private final String baseURL;
 
@@ -771,22 +738,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
 
         try(CloseableHttpClient client = getHttpClient(httpget);
                 CloseableHttpResponse response = client.execute(httpget, context)) {
-            String content;
-            long len = response.getEntity().getContentLength();
-            if (len == 0) {
-                content = "";
-            } else {
-                ByteArrayOutputStream buf;
-                if (len > 0 && len <= Integer.MAX_VALUE / 2) {
-                    buf = new ByteArrayOutputStream((int) len);
-                } else {
-                    buf = new ByteArrayOutputStream();
-                }
-                try (InputStream is = response.getEntity().getContent()) {
-                    IOUtils.copy(is, buf);
-                }
-                content = new String(buf.toByteArray(), StandardCharsets.UTF_8);
-            }
             EntityUtils.consume(response.getEntity());
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("URL: " + path);
@@ -796,7 +747,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
                         "HTTP request error. Status: " + response.getStatusLine().getStatusCode()
                                 + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
             }
-            return content;
+            return getResponseContent(response);
         } catch (BitbucketRequestException | FileNotFoundException e) {
             throw e;
         } catch (IOException e) {
@@ -833,41 +784,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
         setClientProxyParams(host, httpClientBuilder);
 
         return httpClientBuilder.build();
-    }
-
-    private void setClientProxyParams(String host, HttpClientBuilder builder) {
-        Jenkins jenkins = Jenkins.getInstance();
-        ProxyConfiguration proxyConfig = null;
-        if (jenkins != null) {
-            proxyConfig = jenkins.proxy;
-        }
-
-        final Proxy proxy;
-
-        if (proxyConfig != null) {
-            URI hostURI = URI.create(host);
-            proxy = proxyConfig.createProxy(hostURI.getHost());
-        } else {
-             proxy = Proxy.NO_PROXY;
-        }
-
-        if (proxy.type() != Proxy.Type.DIRECT) {
-            final InetSocketAddress proxyAddress = (InetSocketAddress)proxy.address();
-            LOGGER.log(Level.FINE, "Jenkins proxy: {0}", proxy.address());
-            builder.setProxy(new HttpHost(proxyAddress.getHostName(), proxyAddress.getPort()));
-            String username = proxyConfig.getUserName();
-            String password = proxyConfig.getPassword();
-            if (username != null && !"".equals(username.trim())) {
-                LOGGER.fine("Using proxy authentication (user=" + username + ")");
-                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
-                AuthCache authCache = new BasicAuthCache();
-                authCache.put(HttpHost.create(proxyAddress.getHostName()), new BasicScheme());
-                context = HttpClientContext.create();
-                context.setCredentialsProvider(credentialsProvider);
-                context.setAuthCache(authCache);
-            }
-        }
     }
 
     private int getRequestStatus(String path) throws IOException {
@@ -943,25 +859,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
                     }
                 }
             }
-            if (len == 0) {
-                content = "";
-            } else {
-                ByteArrayOutputStream buf;
-                if (len > 0 && len <= Integer.MAX_VALUE / 2) {
-                    buf = new ByteArrayOutputStream((int) len);
-                } else {
-                    buf = new ByteArrayOutputStream();
-                }
-                try (InputStream is = response.getEntity().getContent()) {
-                    IOUtils.copy(is, buf);
-                }
-                content = new String(buf.toByteArray(), StandardCharsets.UTF_8);
-            }
-            EntityUtils.consume(response.getEntity());
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
-                throw new BitbucketRequestException(response.getStatusLine().getStatusCode(), "HTTP request error. Status: " + response.getStatusLine().getStatusCode() + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
-            }
-            return content;
+            return getResponseContent(response);
         } finally {
             request.releaseConnection();
         }
@@ -978,18 +876,21 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
         return doRequest(request);
     }
 
+    private UriTemplate getSCMFileUriTemplate(BitbucketSCMFile scmFile) {
+        return UriTemplate
+            .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
+            .set("owner", getUserCentricOwner())
+            .set("repo", repositoryName)
+            .set("path", scmFile.getPath().split(Operator.PATH.getSeparator()))
+            .set("at", scmFile.getRef())
+            .set("start", 0)
+            .set("limit", 500);
+    }
+
     @Override
     public Iterable<SCMFile> getDirectoryContent(BitbucketSCMFile directory) throws IOException, InterruptedException {
         List<SCMFile> files = new ArrayList<>();
-        int start=0;
-        UriTemplate template = UriTemplate
-                .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
-                .set("owner", getUserCentricOwner())
-                .set("repo", repositoryName)
-                .set("path", directory.getPath().split(Operator.PATH.getSeparator()))
-                .set("at", directory.getRef())
-                .set("start", start)
-                .set("limit", 500);
+        UriTemplate template = getSCMFileUriTemplate(directory);
         String url = template.expand();
         String response = getRequest(url);
         Map<String,Object> content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
@@ -997,7 +898,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
         List<Map> values = (List<Map>) page.get("values");
         collectFileAndDirectories(directory, values, files);
         while (!(boolean)page.get("isLastPage")){
-            start += (int) content.get("size");
+            int start = (int) template.get("size") + (int) content.get("size");
             url = template
                     .set("start", start)
                     .expand();
@@ -1029,21 +930,13 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
     @Override
     public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
         List<String> lines = new ArrayList<>();
-        int start=0;
-        UriTemplate template = UriTemplate
-                .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
-                .set("owner", getUserCentricOwner())
-                .set("repo", repositoryName)
-                .set("path", file.getPath().split(Operator.PATH.getSeparator()))
-                .set("at", file.getRef())
-                .set("start", start)
-                .set("limit", 500);
+        UriTemplate template = getSCMFileUriTemplate(file);
         String url = template.expand();
         String response = getRequest(url);
         Map<String,Object> content = collectLines(response, lines);
 
         while(!(boolean)content.get("isLastPage")){
-            start += (int) content.get("size");
+            int start = (int) template.get("size") + (int) content.get("size");
             url = template
                     .set("start", start)
                     .expand();
@@ -1063,6 +956,24 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi {
             }
         }
         return content;
+    }
+
+    /**
+     * Make available commit informations in a lazy way.
+     *
+     * @author Nikolas Falco
+     */
+    private class CommitClosure implements Callable<BitbucketCommit> {
+        private final String hash;
+
+        public CommitClosure(@NonNull String hash) {
+            this.hash = hash;
+        }
+
+        @Override
+        public BitbucketCommit call() throws Exception {
+            return resolveCommit(hash);
+        }
     }
 
 }

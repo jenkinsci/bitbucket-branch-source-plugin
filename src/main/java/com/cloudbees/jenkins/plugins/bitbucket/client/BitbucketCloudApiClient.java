@@ -57,17 +57,12 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.ProxyConfiguration;
 import hudson.Util;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -76,17 +71,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -100,9 +90,6 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -140,7 +127,6 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi {
     private static final int API_RATE_LIMIT_CODE = 429;
     private static final PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
     private CloseableHttpClient client;
-    private HttpClientContext context;
     private final String owner;
     private final String repositoryName;
     private final boolean enableCache;
@@ -713,37 +699,6 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi {
         return getRepositories(null);
     }
 
-    private void setClientProxyParams(String host, HttpClientBuilder builder) {
-        Jenkins jenkins = Jenkins.getInstance();
-        ProxyConfiguration proxyConfig = null;
-        if (jenkins != null) {
-            proxyConfig = jenkins.proxy;
-        }
-
-        Proxy proxy = Proxy.NO_PROXY;
-        if (proxyConfig != null) {
-            proxy = proxyConfig.createProxy(host);
-        }
-
-        if (proxy.type() != Proxy.Type.DIRECT) {
-            final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-            LOGGER.fine("Jenkins proxy: " + proxy.address());
-            builder.setProxy(new HttpHost(proxyAddress.getHostName(), proxyAddress.getPort()));
-            String username = proxyConfig.getUserName();
-            String password = proxyConfig.getPassword();
-            if (username != null && !"".equals(username.trim())) {
-                LOGGER.fine("Using proxy authentication (user=" + username + ")");
-                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
-                AuthCache authCache = new BasicAuthCache();
-                authCache.put(HttpHost.create(proxyAddress.getHostName()), new BasicScheme());
-                context = HttpClientContext.create();
-                context.setCredentialsProvider(credentialsProvider);
-                context.setAuthCache(authCache);
-            }
-        }
-    }
-
     private CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws InterruptedException, IOException {
 
         if (authenticator != null) {
@@ -846,12 +801,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi {
                 // 204, no content
                 return "";
             }
-            String content = getResponseContent(response);
-            EntityUtils.consume(response.getEntity());
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
-                throw new BitbucketRequestException(response.getStatusLine().getStatusCode(), "HTTP request error. Status: " + response.getStatusLine().getStatusCode() + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
-            }
-            return content;
+            return getResponseContent(response);
         } catch (BitbucketRequestException e) {
             throw e;
         } catch (IOException e) {
@@ -868,26 +818,6 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi {
     private void release(HttpRequestBase method) {
         method.releaseConnection();
         connectionManager.closeExpiredConnections();
-    }
-
-    private String getResponseContent(CloseableHttpResponse response) throws IOException {
-        String content;
-        long len = response.getEntity().getContentLength();
-        if (len == 0) {
-            content = "";
-        } else {
-            ByteArrayOutputStream buf;
-            if (len > 0 && len <= Integer.MAX_VALUE / 2) {
-                buf = new ByteArrayOutputStream((int) len);
-            } else {
-                buf = new ByteArrayOutputStream();
-            }
-            try (InputStream is = response.getEntity().getContent()) {
-                IOUtils.copy(is, buf);
-            }
-            content = new String(buf.toByteArray(), StandardCharsets.UTF_8);
-        }
-        return content;
     }
 
     private String putRequest(String path, String content) throws IOException, InterruptedException  {
@@ -931,14 +861,19 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi {
         return activeBranches;
     }
 
+
+    private String getScmFilePath(BitbucketSCMFile file) {
+        return UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("branchOrHash", file.getHash())
+            .set("path", file.getPath())
+            .expand();
+    }
+
     @Override
     public Iterable<SCMFile> getDirectoryContent(final BitbucketSCMFile parent) throws IOException, InterruptedException {
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}")
-                .set("owner", owner)
-                .set("repo", repositoryName)
-                .set("branchOrHash", parent.getHash())
-                .set("path", parent.getPath())
-                .expand();
+        String url = getScmFilePath(parent);
         List<SCMFile> result = new ArrayList<>();
         String response = getRequest(url);
         BitbucketCloudPage<BitbucketRepositorySource> page = JsonParser.mapper.readValue(response,
@@ -961,12 +896,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi {
 
     @Override
     public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}")
-                .set("owner", owner)
-                .set("repo", repositoryName)
-                .set("branchOrHash", file.getHash())
-                .set("path", file.getPath())
-                .expand();
+        String url = getScmFilePath(file);
         return getRequestAsInputStream(url);
     }
 
