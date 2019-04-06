@@ -25,7 +25,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
@@ -66,6 +66,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,7 +112,7 @@ import org.apache.http.util.EntityUtils;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-public class BitbucketCloudApiClient implements BitbucketApi {
+public class BitbucketCloudApiClient extends AbstractBitbucketApi {
 
     /**
      * Make available commit informations in a lazy way.
@@ -967,5 +968,15 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 .set("path", file.getPath())
                 .expand();
         return getRequestAsInputStream(url);
+    }
+
+    @Override
+    public URL checkURL(String aURL) {
+        URL url = super.checkURL(aURL);
+        if (!url.getHost().contains(".")) {
+            throw new IllegalStateException(
+                "Please use a fully qualified name or an IP address for Jenkins URL, this is required by Bitbucket cloud");
+        }
+        return url;
     }
 }

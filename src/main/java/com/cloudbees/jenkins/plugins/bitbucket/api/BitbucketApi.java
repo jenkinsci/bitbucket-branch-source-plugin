@@ -29,6 +29,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 import jenkins.scm.api.SCMFile;
 import org.kohsuke.accmod.Restricted;
@@ -301,4 +302,14 @@ public interface BitbucketApi {
      */
     @Restricted(NoExternalUse.class)
     InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException;
+
+    /**
+     * Check if the build URL is compatible with Bitbucket API.
+     * For example, Bitbucket API doesn't accept simple hostnames as URLs host value
+     * Throws an IllegalStateException if it is not valid, or return the url otherwise
+     *
+     * @param url the URL of the build to check
+     * @return the url if it is valid
+     */
+    URL checkURL(String url);
 }

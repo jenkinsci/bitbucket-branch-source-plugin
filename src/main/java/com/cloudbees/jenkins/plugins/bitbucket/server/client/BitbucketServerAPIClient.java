@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
@@ -117,7 +117,7 @@ import static java.util.Objects.requireNonNull;
  * Bitbucket API client.
  * Developed and test with Bitbucket 4.3.2
  */
-public class BitbucketServerAPIClient implements BitbucketApi {
+public class BitbucketServerAPIClient extends AbstractBitbucketApi {
 
     /**
      * Make available commit informations in a lazy way.
