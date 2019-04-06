@@ -144,23 +144,22 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
 
             if (head instanceof BranchSCMHead) {
                 ref = head.getName();
-            }
-            if (head instanceof PullRequestSCMHead) {
+            } else if (head instanceof PullRequestSCMHead) {
                 // working on a pull request - can be either "HEAD" or "MERGE"
                 PullRequestSCMHead pr = (PullRequestSCMHead) head;
-                if (pr.getRepository() == null) { // not clear when this happens
+                if (pr.getRepository() == null) { // check access to repository (forked with no access)
                     return null;
                 }
 
                 if (apiClient instanceof BitbucketCloudApiClient) {
-                    if (pr.getCheckoutStrategy() != ChangeRequestCheckoutStrategy.MERGE) {
-                        return new BitbucketSCMFileSystem(apiClient, pr.getOriginName(), rev);
+                    // Bitbucket cloud does not support refs for pull requests
+                    // TODO waiting for cloud support: https://bitbucket.org/site/master/issues/5814/refify-pull-requests-by-making-them-a-ref
+                    if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
+                        return null;
+                    } else {
+                        ref = pr.getOriginName();
                     }
-                    return null; // TODO support merge revisions somehow for cloud
-
-                }
-                // else build the bitbucket API compatible ref spec:
-                if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
+                } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
                     ref = "pull-requests/" + pr.getId() + "/from";
                 } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
                     ref = "pull-requests/" + pr.getId() + "/merge";
