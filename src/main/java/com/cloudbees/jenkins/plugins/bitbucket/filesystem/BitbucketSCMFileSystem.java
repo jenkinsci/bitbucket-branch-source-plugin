@@ -147,7 +147,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             } else if (head instanceof PullRequestSCMHead) {
                 // working on a pull request - can be either "HEAD" or "MERGE"
                 PullRequestSCMHead pr = (PullRequestSCMHead) head;
-                if (pr.getRepository() == null) { // check access to repository (forked with no access)
+                if (pr.getRepository() == null) { // check access to repository (might be forked)
                     return null;
                 }
 
@@ -156,7 +156,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     // TODO waiting for cloud support: https://bitbucket.org/site/master/issues/5814/refify-pull-requests-by-making-them-a-ref
                     if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
                         return null;
-                    } else {
+                    } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
                         ref = pr.getOriginName();
                     }
                 } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
