@@ -1,0 +1,15 @@
+name-template: v$NEXT_MINOR_VERSION 🌈
+tag-template: cloudbees-bitbucket-branch-source-$NEXT_MINOR_VERSION
+categories:
+  - title: 🚀 Features
+    label: feature
+  - title: 🐛 Bug Fixes
+    label: fix
+  - title: 👻 Maintenance
+    label: chore
+  - title: 🚦 Tests
+    label: test
+
+template: |
+  ## Changes
+  $CHANGES
