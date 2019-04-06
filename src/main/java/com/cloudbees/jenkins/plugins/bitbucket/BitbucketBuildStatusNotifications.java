@@ -75,8 +75,9 @@ public class BitbucketBuildStatusNotifications {
      * @param url the URL of the build to check
      * @param bitbucket the bitbucket client we are facing.
      */
-    static void checkURL(@NonNull String url, BitbucketApi bitbucket) {
+    static String checkURL(@NonNull String url, BitbucketApi bitbucket) {
         bitbucket.checkURL(url);
+        return url;
     }
 
     private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,

@@ -16,6 +16,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(Parameterized.class)
 public class BitbucketCheckURLTest {
@@ -34,6 +35,12 @@ public class BitbucketCheckURLTest {
     private final String serverOrCloud;
     private static BitbucketApi bitbucketServer;
     private static BitbucketApi bitbucketCloud;
+
+    @ClassRule
+    public static JenkinsRule r = new JenkinsRule();
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     public BitbucketCheckURLTest(String jenkinsUrl,
         String expectedExceptionMsg,
@@ -58,15 +65,8 @@ public class BitbucketCheckURLTest {
         });
     }
 
-
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @BeforeClass
-    public static void setup() {
+    public static void setUp() {
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
         instance.setEndpoints(Arrays.asList(
             new BitbucketServerEndpoint(
@@ -91,8 +91,8 @@ public class BitbucketCheckURLTest {
 
     private void doubleTrouble(BitbucketApi bitbucketApi) {
         Arrays.asList("http://", "https://").forEach(
-            url -> BitbucketBuildStatusNotifications
-                .checkURL(url + jenkinsUrl + "/build/sample", bitbucketApi));
+            url -> assertNotNull(BitbucketBuildStatusNotifications
+                .checkURL(url + jenkinsUrl + "/build/sample", bitbucketApi)));
     }
 
     @Test
