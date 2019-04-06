@@ -152,12 +152,16 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                 }
 
                 if (apiClient instanceof BitbucketCloudApiClient) {
-                    // Bitbucket cloud does not support refs for pull requests
-                    // TODO waiting for cloud support: https://bitbucket.org/site/master/issues/5814/refify-pull-requests-by-making-them-a-ref
-                    if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-                        return null;
-                    } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
+                    // support lightweight checkout for branches with same owner and repository
+                    if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
+                        pr.getRepoOwner().equals(src.getRepoOwner()) &&
+                        pr.getRepository().equals(src.getRepository())) {
                         ref = pr.getOriginName();
+                    } else {
+                        // Bitbucket cloud does not support refs for pull requests
+                        // Makes lightweight checkout for forks and merge strategy improbable
+                        // TODO waiting for cloud support: https://bitbucket.org/site/master/issues/5814/refify-pull-requests-by-making-them-a-ref
+                        return null;
                     }
                 } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
                     ref = "pull-requests/" + pr.getId() + "/from";
