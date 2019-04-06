@@ -66,38 +66,35 @@ public class BitbucketBuildStatusNotifications {
             throw new IllegalStateException("Could not determine Jenkins URL.");
         }
 
-        String url = DisplayURLProvider.get().getRunURL(build);
-        return checkURL(url);
+        return DisplayURLProvider.get().getRunURL(build);
     }
 
     /**
      * Check if the build URL is compatible with Bitbucket API.
-     * For example, Bitbucket API doesn't accept simple hostnames as URLs host value
+     * For example, Bitbucket Cloud API requires fully qualified or IP
+     * Where we actively do not allow localhost
      * Throws an IllegalStateException if it is not valid, or return the url otherwise
      *
      * @param url the URL of the build to check
-     * @return the url if it is valid
+     * @param bitbucket the bitbucket client we are facing.
      */
-    static String checkURL(@NonNull String url) {
-        if (url.startsWith("http://unconfigured-jenkins-location/")) {
-            throw new IllegalStateException("Could not determine Jenkins URL.");
-        }
-
-        URL u = null;
-
+    static String checkURL(@NonNull String url, BitbucketApi bitbucket) {
         try {
-            u = new URL(url);
+            URL anURL = new URL(url);
+            if ("localhost".equals(anURL.getHost())) {
+                throw new IllegalStateException("Jenkins URL cannot start with http://localhost");
+            }
+            if ("unconfigured-jenkins-location".equals(anURL.getHost())) {
+                throw new IllegalStateException("Could not determine Jenkins URL.");
+            }
+            if (bitbucket instanceof BitbucketCloudApiClient && !anURL.getHost().contains(".")) {
+                throw new IllegalStateException(
+                    "Please use a fully qualified name or an IP address for Jenkins URL, this is required by Bitbucket cloud");
+            }
+            return url;
         } catch (MalformedURLException e) {
             throw new IllegalStateException("Bad Jenkins URL");
         }
-
-        try {
-            u.toURI();
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("Bad Jenkins URL");
-        }
-
-        return url;
     }
 
     private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,
@@ -107,6 +104,7 @@ public class BitbucketBuildStatusNotifications {
         String url;
         try {
             url = getRootURL(build);
+            checkURL(url, bitbucket);
         } catch (IllegalStateException e) {
             listener.getLogger().println("Can not determine Jenkins root URL " +
                     "or Jenkins URL is not a valid URL regarding Bitbucket API. " +

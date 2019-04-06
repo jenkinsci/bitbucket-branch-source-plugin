@@ -23,11 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -59,6 +57,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
+import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -188,10 +187,6 @@ public class SCMTraitCommitTest {
 
         // the head branch should observe only branches which head commit was not filtered out
         assertThat(observer.getRevisions().size(), equalTo(commitTrait.getMatches()));
-    }
-
-    private BitbucketApi getApiMockClient(String serverURL) {
-        return BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
     }
 
 }

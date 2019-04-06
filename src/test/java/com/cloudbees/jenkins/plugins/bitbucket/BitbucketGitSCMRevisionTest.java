@@ -23,8 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import hudson.Util;
 import hudson.model.TaskListener;
@@ -44,6 +42,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
+import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -109,10 +108,6 @@ public class BitbucketGitSCMRevisionTest {
         assertThat("commit message is not valued for revision " + revision.getHash(), Util.fixEmptyAndTrim(revision.getMessage()), notNullValue());
         assertThat("commit author is not valued for revision " + revision.getHash(), Util.fixEmptyAndTrim(revision.getAuthor()), notNullValue());
         assertThat("commit date is not valued for revision " + revision.getHash(), revision.getDate(), notNullValue());
-    }
-
-    private BitbucketApi getApiMockClient(String serverURL) {
-        return BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
     }
 
 }
