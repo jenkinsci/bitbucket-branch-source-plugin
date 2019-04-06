@@ -57,7 +57,6 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.annotations.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
