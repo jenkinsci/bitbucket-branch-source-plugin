@@ -40,7 +40,6 @@ import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import javax.annotation.CheckForNull;
 import jenkins.model.JenkinsLocationConfiguration;
