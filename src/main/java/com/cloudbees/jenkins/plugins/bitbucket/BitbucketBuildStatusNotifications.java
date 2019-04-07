@@ -45,7 +45,6 @@ import java.net.URL;
 import javax.annotation.CheckForNull;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
-import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
@@ -177,7 +176,7 @@ public class BitbucketBuildStatusNotifications {
             bitbucket = source.buildBitbucketClient(head);
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
-            key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);;
+            key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
             bitbucket = source.buildBitbucketClient();
         }
         createStatus(build, listener, bitbucket, key, hash);
