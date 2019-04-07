@@ -163,13 +163,21 @@ public class BitbucketBuildStatusNotifications {
         if (hash == null) {
             return;
         }
-        String key = getBuildKey(build, source, sourceContext, r);
+        boolean shareBuildKeyBetweenBranchAndPR = sourceContext
+            .withTraits(source.getTraits())
+            .filters().stream()
+            .anyMatch(filter -> filter instanceof ExcludeOriginPRBranchesSCMHeadFilter);
+
+        String key;
         BitbucketApi bitbucket;
         if (r instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
-            bitbucket = source.buildBitbucketClient((PullRequestSCMHead) r.getHead());
+            PullRequestSCMHead head = (PullRequestSCMHead) r.getHead();
+            key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
+            bitbucket = source.buildBitbucketClient(head);
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
+            key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);;
             bitbucket = source.buildBitbucketClient();
         }
         createStatus(build, listener, bitbucket, key, hash);
@@ -191,14 +199,8 @@ public class BitbucketBuildStatusNotifications {
         return null;
     }
 
-    private static String getBuildKey(@NonNull Run<?, ?> build,
-        @NonNull BitbucketSCMSource source, @NonNull BitbucketSCMSourceContext sourceContext,
-        @NonNull SCMRevision r) {
-
-        boolean shareBuildKeyBetweenBranchAndPR = sourceContext
-            .withTraits(source.getTraits())
-            .filters().stream()
-            .anyMatch(filter -> filter instanceof ExcludeOriginPRBranchesSCMHeadFilter);
+    private static String getBuildKey(@NonNull Run<?, ?> build, String branch,
+        boolean shareBuildKeyBetweenBranchAndPR) {
 
         // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
         // build status key to be the same between the branch project and the PR project.
@@ -207,14 +209,8 @@ public class BitbucketBuildStatusNotifications {
         // So the key we use is the branch name.
         String key;
         if (shareBuildKeyBetweenBranchAndPR) {
-            SCMHead head = r.getHead();
             String folderName = build.getParent().getParent().getFullName();
-            if (head instanceof PullRequestSCMHead) {
-                PullRequestSCMHead pr = (PullRequestSCMHead) head;
-                key = String.format("%s/%s", folderName, pr.getOriginName());
-            } else {
-                key = String.format("%s/%s", folderName, head.getName());
-            }
+            key = String.format("%s/%s", folderName, branch);
         } else {
             key = build.getParent().getFullName(); // use the job full name as the key for the status
         }
