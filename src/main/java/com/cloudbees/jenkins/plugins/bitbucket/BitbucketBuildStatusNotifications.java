@@ -149,9 +149,8 @@ public class BitbucketBuildStatusNotifications {
         }
         BitbucketSCMSource source = (BitbucketSCMSource) s;
         BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null,
-            SCMHeadObserver.none());
-        if (sourceContext.withTraits(source.getTraits())
-                .notificationsDisabled()) {
+            SCMHeadObserver.none()).withTraits(source.getTraits());
+        if (sourceContext.notificationsDisabled()) {
             return;
         }
         SCMRevision r = SCMRevisionAction.getRevision(s, build);
@@ -163,7 +162,6 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
         boolean shareBuildKeyBetweenBranchAndPR = sourceContext
-            .withTraits(source.getTraits())
             .filters().stream()
             .anyMatch(filter -> filter instanceof ExcludeOriginPRBranchesSCMHeadFilter);
 
