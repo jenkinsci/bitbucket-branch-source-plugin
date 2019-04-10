@@ -134,10 +134,9 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
     private static final HttpHost API_HOST = HttpHost.create("https://api.bitbucket.org");
-    private static final String V2_API_URL = "https://api.bitbucket.org/2.0/";
-    private static final String V2_API_USERS = V2_API_URL + "users";
-    private static final String V2_API_REPOS = V2_API_URL + "repositories";
-    private static final String V2_API_TEAMS = V2_API_URL + "teams";
+    private static final String V2_API_URL = "https://api.bitbucket.org/2.0";
+    private static final String V2_API_REPOS = V2_API_URL + "/repositories";
+    private static final String V2_API_TEAMS = V2_API_URL + "/teams";
     private static final String REPO_URL_TEMPLATE = V2_API_REPOS + "{/ownerId,repo}";
     private static final int API_RATE_LIMIT_CODE = 429;
     private static final PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
@@ -738,9 +737,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @CheckForNull
     private BitbucketCloudAccount getUser() throws IOException, InterruptedException {
-        String url = UriTemplate.fromTemplate(V2_API_USERS + "{/owner}")
-                .set("owner", owner)
-                .expand();
+        String url = V2_API_URL + "/user";
 
         try {
             String response = getRequest(url);
