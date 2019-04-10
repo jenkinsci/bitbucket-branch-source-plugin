@@ -6,16 +6,16 @@ import javax.annotation.Nonnull;
 /**
  * Class that represents a bitbucket cloud user account
  */
-public class BitbucketCloudAccount {
+public class BitbucketCloudUser {
     private final String uuid;
     private final String accountId;
     private final String displayName;
     private final String nickname;
 
-    public BitbucketCloudAccount(@Nonnull @JsonProperty("uuid") String uuid,
-                                 @Nonnull @JsonProperty("account_id") String accountId,
-                                 @Nonnull @JsonProperty("display_name") String displayName,
-                                 @Nonnull @JsonProperty("nickname") String nickname) {
+    public BitbucketCloudUser(@Nonnull @JsonProperty("uuid") String uuid,
+                              @Nonnull @JsonProperty("account_id") String accountId,
+                              @Nonnull @JsonProperty("display_name") String displayName,
+                              @Nonnull @JsonProperty("nickname") String nickname) {
         this.uuid = uuid;
         this.accountId = accountId;
         this.displayName = displayName;

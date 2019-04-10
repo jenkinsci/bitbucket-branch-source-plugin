@@ -207,7 +207,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             if (team != null) {
                 ownerId = team.getId();
             } else {
-                BitbucketCloudAccount user = getUser();
+                BitbucketCloudUser user = getUser();
                 ownerId = user.getId();
             }
         } catch (Exception e) {
@@ -736,12 +736,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      * @throws InterruptedException
      */
     @CheckForNull
-    private BitbucketCloudAccount getUser() throws IOException, InterruptedException {
+    private BitbucketCloudUser getUser() throws IOException, InterruptedException {
         String url = V2_API_URL + "/user";
 
         try {
             String response = getRequest(url);
-            return JsonParser.toJava(response, BitbucketCloudAccount.class);
+            return JsonParser.toJava(response, BitbucketCloudUser.class);
         } catch (IOException e) {
             throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
