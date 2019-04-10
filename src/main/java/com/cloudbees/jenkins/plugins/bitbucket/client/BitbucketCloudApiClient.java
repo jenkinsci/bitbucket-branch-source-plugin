@@ -114,24 +114,6 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class BitbucketCloudApiClient implements BitbucketApi {
 
-    /**
-     * Make available commit informations in a lazy way.
-     *
-     * @author Nikolas Falco
-     */
-    private class CommitClosure implements Callable<BitbucketCommit> {
-        private final String hash;
-
-        public CommitClosure(@NonNull String hash) {
-            this.hash = hash;
-        }
-
-        @Override
-        public BitbucketCommit call() throws Exception {
-            return resolveCommit(hash);
-        }
-    }
-
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
     private static final HttpHost API_HOST = HttpHost.create("https://api.bitbucket.org");
     private static final String V2_API_URL = "https://api.bitbucket.org/2.0";
@@ -156,6 +138,24 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Cache<String, List<BitbucketCloudRepository>> cachedRepositories = new Cache<>(3, HOURS);
     private transient BitbucketRepository cachedRepository;
     private transient String cachedDefaultBranch;
+
+    /**
+     * Make available commit informations in a lazy way.
+     *
+     * @author Nikolas Falco
+     */
+    private class CommitClosure implements Callable<BitbucketCommit> {
+        private final String hash;
+
+        public CommitClosure(@NonNull String hash) {
+            this.hash = hash;
+        }
+
+        @Override
+        public BitbucketCommit call() throws Exception {
+            return resolveCommit(hash);
+        }
+    }
 
     public static List<String> stats() {
         List<String> stats = new ArrayList<>();
@@ -202,16 +202,21 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         setClientProxyParams("bitbucket.org", httpClientBuilder);
 
         this.client = httpClientBuilder.build();
+
         try {
             BitbucketCloudTeam team = (BitbucketCloudTeam) getTeam();
             if (team != null) {
                 ownerId = team.getId();
             } else {
                 BitbucketCloudUser user = getUser();
-                ownerId = user.getId();
+                if (user != null) {
+                    ownerId = user.getId();
+                } else {
+                    throw new IllegalArgumentException(this.owner);
+                }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get Bitbucket Cloud account", e);
+            throw new IllegalArgumentException("Failed to get Bitbucket Cloud account", e);
         }
     }
 
