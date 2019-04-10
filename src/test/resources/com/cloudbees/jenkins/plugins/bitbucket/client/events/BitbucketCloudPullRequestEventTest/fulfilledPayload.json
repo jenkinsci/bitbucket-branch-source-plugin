@@ -82,7 +82,7 @@
       "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
       "links": {
         "self": {
-          "href": "https://api.bitbucket.org/2.0/users/stephenc"
+          "href": "https://api.bitbucket.org/2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
         },
         "html": {
           "href": "https://bitbucket.org/stephenc/"
@@ -135,7 +135,7 @@
       "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
       "links": {
         "self": {
-          "href": "https://api.bitbucket.org/2.0/users/stephenc"
+          "href": "https://api.bitbucket.org/2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
         },
         "html": {
           "href": "https://bitbucket.org/stephenc/"
@@ -155,7 +155,7 @@
     "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org/2.0/users/stephenc"
+        "href": "https://api.bitbucket.org/2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
       },
       "html": {
         "href": "https://bitbucket.org/stephenc/"

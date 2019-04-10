@@ -170,7 +170,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
+                is("https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
@@ -234,7 +234,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
+                is("https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
@@ -298,7 +298,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
+                is("https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
@@ -362,7 +362,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
+                is("https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
@@ -427,7 +427,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
         assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
+                is("https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
         assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));

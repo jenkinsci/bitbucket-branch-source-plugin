@@ -6,7 +6,7 @@
         "old": null,
         "links": {
           "commits": {
-            "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commits?include=fee1dcdb330d1318502f303ccd4792531c28dc8e"
+            "href": "https://api.bitbucket.org2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/commits?include=fee1dcdb330d1318502f303ccd4792531c28dc8e"
           }
         },
         "truncated": false,
@@ -16,10 +16,10 @@
           "name": "test",
           "links": {
             "commits": {
-              "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commits/test"
+              "href": "https://api.bitbucket.org2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/commits/test"
             },
             "self": {
-              "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/refs/tags/test"
+              "href": "https://api.bitbucket.org2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/refs/tags/test"
             },
             "html": {
               "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/commits/tag/test"
@@ -33,7 +33,7 @@
             "hash": "fee1dcdb330d1318502f303ccd4792531c28dc8e",
             "links": {
               "self": {
-                "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commit/fee1dcdb330d1318502f303ccd4792531c28dc8e"
+                "href": "https://api.bitbucket.org2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/commit/fee1dcdb330d1318502f303ccd4792531c28dc8e"
               },
               "html": {
                 "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/commits/fee1dcdb330d1318502f303ccd4792531c28dc8e"
@@ -49,7 +49,7 @@
                 "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}",
                 "links": {
                   "self": {
-                    "href": "https://api.bitbucket.org/2.0/users/nfalco79"
+                    "href": "https://api.bitbucket.org2.0/users/%7B644c7fc2-b15a-4445-9f89-35390694fac9%7D"
                   },
                   "html": {
                     "href": "https://bitbucket.org/nfalco79/"
@@ -72,7 +72,7 @@
                 "hash": "e307a7d996212a537b0648b15d0d59fe3c98c963",
                 "links": {
                   "self": {
-                    "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commit/e307a7d996212a537b0648b15d0d59fe3c98c963"
+                    "href": "https://api.bitbucket.org2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/commit/e307a7d996212a537b0648b15d0d59fe3c98c963"
                   },
                   "html": {
                     "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/commits/e307a7d996212a537b0648b15d0d59fe3c98c963"
@@ -94,7 +94,7 @@
     "name": "tds.cm.maven.plugins-java",
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java"
+        "href": "https://api.bitbucket.org2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java"
       },
       "html": {
         "href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java"
@@ -149,7 +149,7 @@
     "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}",
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org/2.0/users/nfalco79"
+        "href": "https://api.bitbucket.org2.0/users/%7B644c7fc2-b15a-4445-9f89-35390694fac9%7D"
       },
       "html": {
         "href": "https://bitbucket.org/nfalco79/"

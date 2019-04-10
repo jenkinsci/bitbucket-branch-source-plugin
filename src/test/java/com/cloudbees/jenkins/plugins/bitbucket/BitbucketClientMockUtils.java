@@ -121,7 +121,7 @@ public class BitbucketClientMockUtils {
         r1.setFullName("myteam/repo1");
         HashMap<String, List<BitbucketHref>> links = new HashMap<>();
         links.put("self", Collections.singletonList(
-                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/repo1")
+                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/repo1")
         ));
         links.put("clone", Arrays.asList(
                 new BitbucketHref("https","https://bitbucket.org/amuniz/repo1.git"),
@@ -132,7 +132,7 @@ public class BitbucketClientMockUtils {
         r2.setFullName("myteam/repo2");
         links = new HashMap<>();
         links.put("self", Collections.singletonList(
-                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/repo2")
+                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/repo2")
         ));
         links.put("clone", Arrays.asList(
                 new BitbucketHref("https", "https://bitbucket.org/amuniz/repo2.git"),
@@ -144,7 +144,7 @@ public class BitbucketClientMockUtils {
         r3.setFullName("amuniz/test-repos");
         links = new HashMap<>();
         links.put("self", Collections.singletonList(
-                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos")
+                new BitbucketHref("https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos")
         ));
         links.put("clone", Arrays.asList(
                 new BitbucketHref("https", "https://bitbucket.org/amuniz/test-repos.git"),

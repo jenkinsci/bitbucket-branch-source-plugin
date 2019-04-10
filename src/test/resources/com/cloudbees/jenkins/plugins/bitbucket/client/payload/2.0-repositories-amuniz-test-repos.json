@@ -5,16 +5,16 @@
   "name": "test-repos",
   "links": {
     "watchers": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/watchers"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/watchers"
     },
     "branches": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/refs/branches"
     },
     "tags": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/tags"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/refs/tags"
     },
     "commits": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commits"
     },
     "clone": [{
       "href": "https://amuniz@bitbucket.org/amuniz/test-repos.git",
@@ -24,10 +24,10 @@
       "name": "ssh"
     }],
     "self": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos"
     },
     "source": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/src"
     },
     "html": {
       "href": "https://bitbucket.org/amuniz/test-repos"
@@ -36,16 +36,16 @@
       "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
     },
     "hooks": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/hooks"
     },
     "forks": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/forks"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/forks"
     },
     "downloads": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/downloads"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/downloads"
     },
     "pullrequests": {
-      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests"
+      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests"
     }
   },
   "fork_policy": "allow_forks",
@@ -64,7 +64,7 @@
     "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org/2.0/users/amuniz"
+        "href": "https://api.bitbucket.org2.0/users/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D"
       },
       "html": {
         "href": "https://bitbucket.org/amuniz/"

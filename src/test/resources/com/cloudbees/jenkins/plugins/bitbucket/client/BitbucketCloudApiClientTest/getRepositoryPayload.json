@@ -5,16 +5,16 @@
 	"uuid": "{ff487924-8721-4ab7-8d5c-e482d4b0eb13}",
 	"links": {
 		"watchers": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/watchers"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/watchers"
 		},
 		"branches": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/refs/branches"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/refs/branches"
 		},
 		"tags": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/refs/tags"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/refs/tags"
 		},
 		"commits": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/commits"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/commits"
 		},
 		"clone": [
 			{
@@ -27,10 +27,10 @@
 			}
 		],
 		"self": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java"
 		},
 		"source": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/src"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/src"
 		},
 		"html": {
 			"href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java"
@@ -39,16 +39,16 @@
 			"href": "https://bitbucket.org/acme/tds.cm.maven.plugins-java/avatar/32/"
 		},
 		"hooks": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/hooks"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/hooks"
 		},
 		"forks": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/forks"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/forks"
 		},
 		"downloads": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/downloads"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/downloads"
 		},
 		"pullrequests": {
-			"href": "https://api.bitbucket.org/2.0/repositories/acme/tds.cm.maven.plugins-java/pullrequests"
+			"href": "https://api.bitbucket.org/2.0/repositories/%7B634ebf03-742b-458d-b0a0-76c4531efe3e%7D/tds.cm.maven.plugins-java/pullrequests"
 		}
 	},
 	"fork_policy": "no_forks",

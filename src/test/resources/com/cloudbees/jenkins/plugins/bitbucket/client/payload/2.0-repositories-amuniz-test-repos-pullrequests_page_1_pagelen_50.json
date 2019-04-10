@@ -4,34 +4,34 @@
     "description": "test from forked repo",
     "links": {
       "decline": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/decline"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/decline"
       },
       "commits": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/commits"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/commits"
       },
       "self": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2"
       },
       "comments": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/comments"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/comments"
       },
       "merge": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/merge"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/merge"
       },
       "html": {
         "href": "https://bitbucket.org/amuniz/test-repos/pull-requests/3"
       },
       "activity": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/activity"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/activity"
       },
       "diff": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/diff"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/diff"
       },
       "approve": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/approve"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/approve"
       },
       "statuses": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/2/statuses"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/2/statuses"
       }
     },
     "title": "Add one message more",
@@ -44,7 +44,7 @@
         "type": "commit",
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/bf4f4ce8a3a8"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8"
@@ -54,7 +54,7 @@
       "repository": {
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos"
@@ -85,7 +85,7 @@
         "type": "commit",
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos-fork/commit/046d9a3c1532"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos-fork/commit/046d9a3c1532"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos-fork/commits/046d9a3c1532"
@@ -95,7 +95,7 @@
       "repository": {
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos-fork"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos-fork"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos-fork"
@@ -124,7 +124,7 @@
       "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
       "links": {
         "self": {
-          "href": "https://api.bitbucket.org/2.0/users/amuniz"
+          "href": "https://api.bitbucket.org2.0/users/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D"
         },
         "html": {
           "href": "https://bitbucket.org/amuniz/"
@@ -143,34 +143,34 @@
     "description": "* Add license\r\n\r\n* [CI] Release version 1.0.0",
     "links": {
       "decline": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/decline"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/decline"
       },
       "commits": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/commits"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/commits"
       },
       "self": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1"
       },
       "comments": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/comments"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/comments"
       },
       "merge": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/merge"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/merge"
       },
       "html": {
         "href": "https://bitbucket.org/amuniz/test-repos/pull-requests/1"
       },
       "activity": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/activity"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/activity"
       },
       "diff": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/diff"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/diff"
       },
       "approve": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/approve"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/approve"
       },
       "statuses": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/1/statuses"
+        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/pullrequests/1/statuses"
       }
     },
     "title": "Release/release 1",
@@ -183,7 +183,7 @@
         "type": "commit",
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/bf4f4ce8a3a8"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8"
@@ -193,7 +193,7 @@
       "repository": {
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos"
@@ -224,7 +224,7 @@
         "type": "commit",
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf0e8b7962c0"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/bf0e8b7962c0"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos/commits/bf0e8b7962c0"
@@ -234,7 +234,7 @@
       "repository": {
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos"
           },
           "html": {
             "href": "https://bitbucket.org/amuniz/test-repos"
@@ -263,7 +263,7 @@
       "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
       "links": {
         "self": {
-          "href": "https://api.bitbucket.org/2.0/users/amuniz"
+          "href": "https://api.bitbucket.org2.0/users/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D"
         },
         "html": {
           "href": "https://bitbucket.org/amuniz/"

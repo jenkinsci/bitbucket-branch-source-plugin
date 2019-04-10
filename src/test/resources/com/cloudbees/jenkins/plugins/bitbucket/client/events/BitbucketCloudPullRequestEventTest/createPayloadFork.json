@@ -74,7 +74,7 @@
         "hash": "1c48041a96db",
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork/commit/1c48041a96db"
+            "href": "https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork/commit/1c48041a96db"
           }
         }
       },
@@ -84,7 +84,7 @@
       "repository": {
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"
+            "href": "https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"
           },
           "html": {
             "href": "https://bitbucket.org/stephenc/temp-fork"
@@ -112,7 +112,7 @@
       "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
       "links": {
         "self": {
-          "href": "https://api.bitbucket.org/2.0/users/stephenc"
+          "href": "https://api.bitbucket.org/2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
         },
         "html": {
           "href": "https://bitbucket.org/stephenc/"
@@ -132,7 +132,7 @@
     "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org/2.0/users/stephenc"
+        "href": "https://api.bitbucket.org/2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
       },
       "html": {
         "href": "https://bitbucket.org/stephenc/"
