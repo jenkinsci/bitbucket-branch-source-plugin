@@ -39,6 +39,9 @@ public class BitbucketCloudTeam implements BitbucketTeam {
     @JsonProperty("display_name")
     private String displayName;
 
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("links")
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
     private Map<String,List<BitbucketHref>> links;
@@ -59,6 +62,14 @@ public class BitbucketCloudTeam implements BitbucketTeam {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public String getId() {
+        return uuid;
+    }
+
+    public void setId(String uuid) {
+        this.uuid = uuid;
     }
 
     @Override
