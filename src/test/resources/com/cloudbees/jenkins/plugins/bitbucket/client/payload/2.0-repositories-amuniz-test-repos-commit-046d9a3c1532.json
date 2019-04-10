@@ -3,7 +3,7 @@
   "repository": {
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos"
+        "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos"
       },
       "html": {
         "href": "https://bitbucket.org/amuniz/test-repos"
@@ -19,25 +19,25 @@
   },
   "links": {
     "self": {
-      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+      "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
     },
     "comments": {
-      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/comments"
+      "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/comments"
     },
     "patch": {
-      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/patch/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+      "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/patch/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
     },
     "html": {
       "href": "https://bitbucket.org/amuniz/test-repos/commits/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
     },
     "diff": {
-      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/diff/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+      "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/diff/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
     },
     "approve": {
-      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/approve"
+      "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/approve"
     },
     "statuses": {
-      "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/statuses"
+      "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/statuses"
     }
   },
   "author": {
@@ -55,7 +55,7 @@
     "type": "commit",
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+        "href": "https://api.bitbucket.org/2.0/repositories/%7Bc5716604-73d9-4ad4-a3dd-a75485652c57%7D/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
       },
       "html": {
         "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"

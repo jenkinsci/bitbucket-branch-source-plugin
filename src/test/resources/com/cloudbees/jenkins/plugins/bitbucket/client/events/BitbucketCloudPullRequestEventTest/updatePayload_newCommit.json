@@ -41,7 +41,7 @@
       "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
       "links": {
         "self": {
-          "href": "https://api.bitbucket.org2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
+          "href": "https://api.bitbucket.org/2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
         },
         "html": {
           "href": "https://bitbucket.org/stephenc/"
@@ -90,7 +90,7 @@
         "hash": "63e3d18dca4c",
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork/commit/63e3d18dca4c"
+            "href": "https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork/commit/63e3d18dca4c"
           }
         }
       },
@@ -100,7 +100,7 @@
       "repository": {
         "links": {
           "self": {
-            "href": "https://api.bitbucket.org2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"
+            "href": "https://api.bitbucket.org/2.0/repositories/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D/temp-fork"
           },
           "html": {
             "href": "https://bitbucket.org/stephenc/temp-fork"
@@ -132,7 +132,7 @@
     "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
     "links": {
       "self": {
-        "href": "https://api.bitbucket.org2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
+        "href": "https://api.bitbucket.org/2.0/users/%7Bf70f195e-ade1-4961-9f89-547541377b80%7D"
       },
       "html": {
         "href": "https://bitbucket.org/stephenc/"
