@@ -560,7 +560,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 .fromTemplate(REPO_URL_TEMPLATE + "/hooks/{uuid}")
                 .set("ownerId", ownerId)
                 .set("repo", repositoryName)
-                .set("hook", hook.getUuid())
+                .set("uuid", hook.getUuid())
                 .expand();
         putRequest(url, JsonParser.toJson(hook));
     }
