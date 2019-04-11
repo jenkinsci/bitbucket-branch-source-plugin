@@ -56,7 +56,7 @@ public class BitbucketIntegrationClientFactory {
 
                     try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
                         if (json == null) {
-                            throw new IllegalStateException("Payload for the REST path " + path + " could be found");
+                            throw new IllegalStateException("Payload for the REST path: " + payloadPath);
                         }
                         return IOUtils.toString(json);
                     }
@@ -78,7 +78,7 @@ public class BitbucketIntegrationClientFactory {
 
                     try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
                         if (json == null) {
-                            throw new IllegalStateException("Payload for the REST path " + path + " could be found");
+                            throw new IllegalStateException("Payload for the REST path: " + payloadPath);
                         }
                         return IOUtils.toString(json);
                     }
