@@ -691,7 +691,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         final UriTemplate template = UriTemplate.fromTemplate(V2_API_REPOS + "{/owner}{?role,page,pagelen}")
-                .set("owner", owner)
+                .set("ownerId", ownerId)
                 .set("pagelen", 50);
         if (role != null &&  authenticator != null) {
             template.set("role", role.getId());
