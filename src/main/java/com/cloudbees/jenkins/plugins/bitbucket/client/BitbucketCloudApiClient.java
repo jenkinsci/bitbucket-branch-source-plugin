@@ -117,7 +117,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
     private static final HttpHost API_HOST = HttpHost.create("https://api.bitbucket.org");
     private static final String V2_API_URL = "https://api.bitbucket.org/2.0";
-    private static final String REPO_USER_TEMPLATE = V2_API_URL + "/repositories" + "{/ownerId}";
+    private static final String REPO_USER_TEMPLATE = V2_API_URL + "/repositories" + "{/ownerId,repo}";
     private static final String TEAM_NAME_TEMPLATE = V2_API_URL + "/teams" + "{/owner}";
     private static final int API_RATE_LIMIT_CODE = 429;
     private static final PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
@@ -209,17 +209,15 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             BitbucketCloudTeam team = (BitbucketCloudTeam) getTeam();
             if (team != null) {
                 // Templating used to set the ownerId because it parses the UUID nicely
-                this.ownerRepositoriesUrl = UriTemplate.fromTemplate(REPO_USER_TEMPLATE)
-                        .set("ownerId", team.getId())
-                        .expand();
-                this.repoUrl = this.ownerRepositoriesUrl + "/" + this.repositoryName;
+                UriTemplate template = UriTemplate.fromTemplate(REPO_USER_TEMPLATE);
+                this.ownerRepositoriesUrl = template.set("ownerId", team.getId()).expand();
+                this.repoUrl = template.set("repo", this.repositoryName).expand();
             } else {
                 BitbucketCloudUser user = getUser();
                 if (user != null) {
-                    this.ownerRepositoriesUrl = UriTemplate.fromTemplate(REPO_USER_TEMPLATE)
-                            .set("ownerId", user.getId())
-                            .expand();
-                    this.repoUrl = this.ownerRepositoriesUrl + "/" + this.repositoryName;
+                    UriTemplate template = UriTemplate.fromTemplate(REPO_USER_TEMPLATE);
+                    this.ownerRepositoriesUrl = template.set("ownerId", user.getId()).expand();
+                    this.repoUrl = template.set("repo", this.repositoryName).expand();
                 } else {
                     throw new IllegalArgumentException(this.owner);
                 }
