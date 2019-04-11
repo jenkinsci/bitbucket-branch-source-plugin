@@ -1,7 +1,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -40,6 +42,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
+import static com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint.SERVER_URL;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -58,7 +61,19 @@ public class BitbucketGitSCMBuilderTest {
     @Before
     public void setUp() throws IOException {
         owner = j.createProject(WorkflowMultiBranchProject.class);
-        source = new BitbucketSCMSource( "tester", "test-repo");
+        source = new BitbucketSCMSource( "tester", "test-repo") {
+            BitbucketApi api = BitbucketIntegrationClientFactory.getClient(SERVER_URL,"tester", "test-repo");
+            @Override
+            public BitbucketApi buildBitbucketClient() {
+                return api;
+            }
+
+            @Override
+            public void setServerUrl(String serverUrl) {
+                super.setServerUrl(serverUrl);
+                api = BitbucketIntegrationClientFactory.getClient(serverUrl,"tester", "test-repo");
+            }
+        };
         owner.setSourcesList(Collections.singletonList(new BranchSource(source)));
         source.setOwner(owner);
         Credentials userPasswordCredential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "user-pass", null, "git-user", "git-secret");
