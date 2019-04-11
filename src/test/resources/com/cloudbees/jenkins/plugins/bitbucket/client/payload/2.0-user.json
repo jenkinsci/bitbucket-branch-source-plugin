@@ -1,0 +1,28 @@
+{
+  "is_staff" : false,
+  "display_name" : "Antonio MuÃ±iz",
+  "website" : "http://amunizmartin.com/",
+  "links" : {
+    "avatar" : {
+      "href" : "https://bitbucket.org/account/amuniz/avatar/"
+    },
+    "hooks" : {
+      "href" : "https://api.bitbucket.org/2.0/users/57058:7d868a72-5091-4ffe-9f31-22d89142d9f6/hooks"
+    },
+    "repositories" : {
+      "href" : "https://api.bitbucket.org/2.0/repositories/57058:7d868a72-5091-4ffe-9f31-22d89142d9f6"
+    },
+    "snippets" : {
+      "href" : "https://api.bitbucket.org/2.0/snippets/557058:7d868a72-5091-4ffe-9f31-22d89142d9f6"
+    },
+    "self" : {
+      "href" : "https://api.bitbucket.org/2.0/users/57058:7d868a72-5091-4ffe-9f31-22d89142d9f6"
+    }
+  },
+  "nickname" : "amuniz",
+  "uuid" : "{c5716604-73d9-4ad4-a3dd-a75485652c57}",
+  "account_status" : "active",
+  "created_on" : "2013-07-15T17:32:46.197356+00:00",
+  "account_id" : "557058:7d868a72-5091-4ffe-9f31-22d89142d9f6",
+  "type" : "user"
+}

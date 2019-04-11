@@ -33,83 +33,57 @@ import org.apache.commons.io.IOUtils;
 
 public class BitbucketIntegrationClientFactory {
 
-    public static BitbucketApi getClient(String payloadRootPath, String serverURL, String owner, String repositoryName) {
+    public static BitbucketApi getClient(String serverURL, String owner, String repositoryName) {
         if (BitbucketCloudEndpoint.SERVER_URL.equals(serverURL) ||
                 BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverURL)) {
-            return new BitbucketCouldIntegrationClient(payloadRootPath, owner, repositoryName);
+            BitbucketCloudIntegrationClient cloudClient = new BitbucketCloudIntegrationClient();
+            return cloudClient.getBitbucketCloudApiClient(owner, repositoryName);
         } else {
-            return new BitbucketServerIntegrationClient(payloadRootPath, serverURL, owner, repositoryName);
+            BitbucketServerIntegrationClient serverClient = new BitbucketServerIntegrationClient();
+            return serverClient.getBitbucketServerAPIClient(serverURL,owner, repositoryName);
         }
     }
 
-    public static BitbucketApi getClient(String serverURL, String owner, String repositoryName) {
-        return getClient(null, serverURL, owner, repositoryName);
-    }
-
-    private static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient {
+    private static class BitbucketServerIntegrationClient {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/server/payload/";
 
-        private final String payloadRootPath;
+        BitbucketApi getBitbucketServerAPIClient(String baseURL, String owner, String repositoryName) {
+            return new BitbucketServerAPIClient(baseURL, owner, repositoryName, (BitbucketAuthenticator) null, false) {
+                @Override
+                protected String getRequest(String path) throws IOException {
+                    String payloadPath = path.replace("/rest/api/", "").replace('/', '-').replaceAll("[=%&?]", "_");
+                    payloadPath = PAYLOAD_RESOURCE_ROOTPATH + payloadPath + ".json";
 
-        public BitbucketServerIntegrationClient(String payloadRootPath, String baseURL, String owner, String repositoryName) {
-            super(baseURL, owner, repositoryName, (BitbucketAuthenticator) null, false);
-
-            if (payloadRootPath == null) {
-                this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;
-            } else if (!payloadRootPath.startsWith("/")) {
-                this.payloadRootPath = '/' + payloadRootPath;
-            } else {
-                this.payloadRootPath = payloadRootPath;
-            }
-        }
-
-        @Override
-        protected String getRequest(String path) throws IOException {
-            String payloadPath = path.replace("/rest/api/", "").replace('/', '-').replaceAll("[=%&?]", "_");
-            payloadPath = payloadRootPath + payloadPath + ".json";
-
-            try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
-                if (json == null) {
-                    throw new IllegalStateException("Payload for the REST path " + path + " could be found");
+                    try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
+                        if (json == null) {
+                            throw new IllegalStateException("Payload for the REST path " + path + " could be found");
+                        }
+                        return IOUtils.toString(json);
+                    }
                 }
-                return IOUtils.toString(json);
-            }
+            };
         }
     }
 
-    private static class BitbucketCouldIntegrationClient extends BitbucketCloudApiClient {
+    private static class BitbucketCloudIntegrationClient {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/client/payload/";
         private static final String API_ENDPOINT = "https://api.bitbucket.org/";
 
-        private final String payloadRootPath;
+        BitbucketApi getBitbucketCloudApiClient(String owner, String repositoryName) {
+            return new BitbucketCloudApiClient(false, 0, 0, owner, repositoryName, (BitbucketAuthenticator) null) {
+                @Override
+                protected String getRequest(String path) throws IOException, InterruptedException {
+                    String payloadPath = path.replace(API_ENDPOINT, "").replace('/', '-').replaceAll("[=%&?]", "_");
+                    payloadPath = PAYLOAD_RESOURCE_ROOTPATH + payloadPath + ".json";
 
-        public BitbucketCouldIntegrationClient(String payloadRootPath, String owner, String repositoryName) {
-            super(false, 0, 0, owner, repositoryName, (BitbucketAuthenticator) null);
-
-            if (payloadRootPath == null) {
-                this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;
-            } else if (!payloadRootPath.startsWith("/")) {
-                if (!payloadRootPath.endsWith("/")) {
-                    this.payloadRootPath = '/' + payloadRootPath + '/';
-                } else {
-                    this.payloadRootPath = '/' + payloadRootPath;
+                    try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
+                        if (json == null) {
+                            throw new IllegalStateException("Payload for the REST path " + path + " could be found");
+                        }
+                        return IOUtils.toString(json);
+                    }
                 }
-            } else {
-                this.payloadRootPath = payloadRootPath;
-            }
-        }
-
-        @Override
-        protected String getRequest(String path) throws IOException, InterruptedException {
-            String payloadPath = path.replace(API_ENDPOINT, "").replace('/', '-').replaceAll("[=%&?]", "_");
-            payloadPath = payloadRootPath + payloadPath + ".json";
-
-            try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
-                if (json == null) {
-                    throw new IllegalStateException("Payload for the REST path " + path + " could be found");
-                }
-                return IOUtils.toString(json);
-            }
+            };
         }
     }
 
