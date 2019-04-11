@@ -10,10 +10,9 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
-import org.apache.commons.io.IOUtils;
-
 import java.io.InputStream;
 import java.io.IOException;
+import org.apache.commons.io.IOUtils;
 
 @Extension
 public class BitbucketCloudApiFactory extends BitbucketApiFactory {
