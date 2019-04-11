@@ -208,7 +208,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             if (team != null) {
                 ownerId = team.getId();
             } else {
-                BitbucketCloudUser user = getUserInfo();
+                BitbucketCloudUser user = getUser();
                 if (user != null) {
                     ownerId = user.getId();
                 } else {
@@ -741,7 +741,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      * @throws InterruptedException
      */
     @CheckForNull
-    private BitbucketCloudUser getUserInfo() throws IOException, InterruptedException {
+    private BitbucketCloudUser getUser() throws IOException, InterruptedException {
         String url = V2_API_URL + "/user";
 
         try {
