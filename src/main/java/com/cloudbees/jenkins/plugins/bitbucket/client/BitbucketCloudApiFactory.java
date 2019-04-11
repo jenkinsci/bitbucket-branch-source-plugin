@@ -10,15 +10,9 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
-import java.io.InputStream;
-import java.io.IOException;
-import org.apache.commons.io.IOUtils;
 
 @Extension
 public class BitbucketCloudApiFactory extends BitbucketApiFactory {
-    private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/client/payload/";
-    private static final String API_ENDPOINT = "https://api.bitbucket.org/";
-
     @Override
     protected boolean isMatch(@Nullable String serverUrl) {
         return serverUrl == null || BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl);
@@ -37,20 +31,8 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
             teamCacheDuration = ((BitbucketCloudEndpoint) endpoint).getTeamCacheDuration();
             repositoriesCacheDuration = ((BitbucketCloudEndpoint) endpoint).getRepositoriesCacheDuration();
         }
-        return new BitbucketCloudApiClient(enableCache, teamCacheDuration, repositoriesCacheDuration,
-                owner, repository, authenticator) {
-            @Override
-            protected String getRequest(String path) throws IOException {
-                String payloadPath = path.replace(API_ENDPOINT, "").replace('/', '-').replaceAll("[=%&?]", "_");
-                payloadPath = PAYLOAD_RESOURCE_ROOTPATH + payloadPath + ".json";
-
-                try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
-                    if (json == null) {
-                        throw new IllegalStateException("Payload for the REST path " + path + " could be found");
-                    }
-                    return IOUtils.toString(json);
-                }
-            }
-        };
+        return new BitbucketCloudApiClient(
+                enableCache, teamCacheDuration, repositoriesCacheDuration,
+                owner, repository, authenticator);
     }
 }
