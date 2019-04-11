@@ -28,6 +28,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import org.junit.Test;
@@ -38,7 +40,7 @@ public class UriResolverTest {
 
     @Test
     public void httpUriResolver() throws Exception {
-        BitbucketApi api = new BitbucketCloudApiClient(false, 0, 0, "test", null, (BitbucketAuthenticator) null);
+        BitbucketApi api = BitbucketIntegrationClientFactory.getClient(BitbucketCloudEndpoint.SERVER_URL, "test", null);
         assertEquals("https://bitbucket.org/user1/repo1.git", api.getRepositoryUri(
                 BitbucketRepositoryType.GIT,
                 BitbucketRepositoryProtocol.HTTP,
@@ -84,7 +86,7 @@ public class UriResolverTest {
 
     @Test
     public void sshUriResolver() throws Exception {
-        BitbucketApi api = new BitbucketCloudApiClient(false, 0, 0, "test", null, (BitbucketAuthenticator) null);
+        BitbucketApi api = BitbucketIntegrationClientFactory.getClient(BitbucketCloudEndpoint.SERVER_URL, "test", null);
         assertEquals("git@bitbucket.org:user1/repo1.git", api.getRepositoryUri(
                 BitbucketRepositoryType.GIT,
                 BitbucketRepositoryProtocol.SSH,
