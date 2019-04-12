@@ -24,11 +24,21 @@
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+
+import hudson.EnvVars;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.NodePropertyDescriptor;
+import hudson.util.DescribableList;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
@@ -108,5 +118,29 @@ public abstract class HookProcessor {
                 LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
             }
         }
+    }
+
+    /**
+     * Set global Jenkins environment variables
+     *
+     * @param key of the environment variable
+     * @param value of the environment variable
+     */
+    protected void putEnvVar(String key, String value) throws IOException {
+        Jenkins jenkins = Jenkins.getInstance();
+        DescribableList<NodeProperty<?>, NodePropertyDescriptor> globalNodeProperties = jenkins.getGlobalNodeProperties();
+        List<EnvironmentVariablesNodeProperty> envVarsNodePropertyList = globalNodeProperties.getAll(hudson.slaves.EnvironmentVariablesNodeProperty.class);
+
+        EnvironmentVariablesNodeProperty newEnvVarsNodeProperty = null;
+        EnvVars envVars = null;
+
+        if (envVarsNodePropertyList == null || envVarsNodePropertyList.isEmpty()) {
+            newEnvVarsNodeProperty = new hudson.slaves.EnvironmentVariablesNodeProperty();
+            globalNodeProperties.add(newEnvVarsNodeProperty);
+            envVars = newEnvVarsNodeProperty.getEnvVars();
+        } else {
+            envVars = envVarsNodePropertyList.get(0).getEnvVars();
+        }
+        envVars.put(key, value);
     }
 }
