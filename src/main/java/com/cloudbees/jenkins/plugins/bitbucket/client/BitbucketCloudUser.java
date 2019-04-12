@@ -2,24 +2,36 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Class that represents a bitbucket cloud user account
  */
 public class BitbucketCloudUser {
+    private final String username;
     private final String uuid;
     private final String accountId;
     private final String displayName;
     private final String nickname;
 
-    public BitbucketCloudUser(@Nonnull @JsonProperty("uuid") String uuid,
+    public BitbucketCloudUser(@Nullable @JsonProperty("username") String username,
+                              @Nonnull @JsonProperty("uuid") String uuid,
                               @Nonnull @JsonProperty("account_id") String accountId,
                               @Nonnull @JsonProperty("display_name") String displayName,
                               @Nonnull @JsonProperty("nickname") String nickname) {
+        this.username = username;
         this.uuid = uuid;
         this.accountId = accountId;
         this.displayName = displayName;
         this.nickname = nickname;
+    }
+
+    /**
+     * Account's username
+     * @return username
+     */
+    public @Nullable String getUsername() {
+        return username;
     }
 
     /**
@@ -34,7 +46,7 @@ public class BitbucketCloudUser {
      * Account's id
      * @return uuid
      */
-    public @Nonnull String getAcctId() {
+    public @Nonnull String getAccountId() {
         return accountId;
     }
 

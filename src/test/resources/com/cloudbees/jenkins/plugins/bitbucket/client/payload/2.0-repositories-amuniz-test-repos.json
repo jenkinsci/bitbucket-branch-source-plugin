@@ -1,0 +1,85 @@
+{
+  "scm": "git",
+  "website": "",
+  "has_wiki": false,
+  "name": "test-repos",
+  "links": {
+    "watchers": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/watchers"
+    },
+    "branches": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches"
+    },
+    "tags": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/tags"
+    },
+    "commits": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits"
+    },
+    "clone": [{
+      "href": "https://amuniz@bitbucket.org/amuniz/test-repos.git",
+      "name": "https"
+    }, {
+      "href": "git@bitbucket.org:amuniz/test-repos.git",
+      "name": "ssh"
+    }],
+    "self": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+    },
+    "source": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src"
+    },
+    "html": {
+      "href": "https://bitbucket.org/amuniz/test-repos"
+    },
+    "avatar": {
+      "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
+    },
+    "hooks": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks"
+    },
+    "forks": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/forks"
+    },
+    "downloads": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/downloads"
+    },
+    "pullrequests": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests"
+    }
+  },
+  "fork_policy": "allow_forks",
+  "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}",
+  "language": "",
+  "created_on": "2018-09-20T12:49:08.541926+00:00",
+  "mainbranch": {
+    "type": "branch",
+    "name": "master"
+  },
+  "full_name": "amuniz/test-repos",
+  "has_issues": false,
+  "owner": {
+    "username": "amuniz",
+    "display_name": "Nikolas Falco",
+    "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/amuniz"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/account/amuniz/avatar/"
+      }
+    },
+    "type": "user",
+    "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}"
+  },
+  "updated_on": "2018-09-21T15:53:38.794718+00:00",
+  "size": 84351,
+  "type": "repository",
+  "slug": "test-repos",
+  "is_private": false,
+  "description": ""
+}

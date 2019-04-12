@@ -206,22 +206,31 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         this.client = httpClientBuilder.build();
 
         try {
+            String ownerId = this.owner;
             BitbucketCloudTeam team = (BitbucketCloudTeam) getTeam();
             if (team != null) {
-                // Templating used to set the ownerId because it parses the UUID nicely
-                UriTemplate template = UriTemplate.fromTemplate(REPO_USER_TEMPLATE);
-                this.ownerRepositoriesUrl = template.set("ownerId", team.getId()).expand();
-                this.repoUrl = template.set("repo", this.repositoryName).expand();
+                ownerId = team.getId();
             } else {
-                BitbucketCloudUser user = getUser();
-                if (user != null) {
-                    UriTemplate template = UriTemplate.fromTemplate(REPO_USER_TEMPLATE);
-                    this.ownerRepositoriesUrl = template.set("ownerId", user.getId()).expand();
-                    this.repoUrl = template.set("repo", this.repositoryName).expand();
-                } else {
-                    throw new IllegalArgumentException(this.owner);
+                // See if we can fetch the repositories using the owner name (username) and not uuid
+                int headStatus = headRequestStatus(UriTemplate.fromTemplate(REPO_USER_TEMPLATE).set("ownerId", ownerId).expand());
+                if (HttpStatus.SC_NOT_FOUND == headStatus) {
+                    // See if logged in account is same as the requested owner
+                    BitbucketCloudUser user = getUser();
+                    if (user != null) {
+                        if (this.owner.equals(user.getUsername())) {
+                            ownerId = user.getId();
+                        } else {
+                            throw new IllegalArgumentException("logged in user does not match requested owner");
+                        }
+                    } else {
+                        throw new IllegalArgumentException("unable to log in");
+                    }
                 }
             }
+            // Templating used to set the ownerId because it parses the UUID nicely
+            UriTemplate template = UriTemplate.fromTemplate(REPO_USER_TEMPLATE);
+            this.ownerRepositoriesUrl = template.set("ownerId", ownerId).expand();
+            this.repoUrl = template.set("repo", this.repositoryName).expand();
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to get Bitbucket Cloud account", e);
         }
@@ -721,7 +730,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         try {
             String response = getRequest(url);
             return JsonParser.toJava(response, BitbucketCloudUser.class);
-        } catch (IOException e) {
+        } catch (BitbucketRequestException e) {
+            if (e.getHttpCode() == HttpStatus.SC_UNAUTHORIZED) {
+                return null;
+            }
             throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
     }

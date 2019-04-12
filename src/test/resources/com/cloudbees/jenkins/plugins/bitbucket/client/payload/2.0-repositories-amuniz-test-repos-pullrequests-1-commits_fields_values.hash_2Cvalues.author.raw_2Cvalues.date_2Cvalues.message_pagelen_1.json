@@ -1,0 +1,10 @@
+{
+  "values": [{
+    "date": "2018-09-21T14:53:12+00:00",
+    "message": "[CI] Release version 1.0.0",
+    "hash": "bf0e8b7962c024026ad01ae09d3a11732e26c0d4",
+    "author": {
+      "raw": "Builder <no-reply@acme.com>"
+    }
+  }]
+}
