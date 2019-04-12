@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-
 import hudson.EnvVars;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
@@ -32,12 +31,10 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 import hudson.util.DescribableList;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
@@ -129,13 +126,13 @@ public abstract class HookProcessor {
     protected void putEnvVar(String key, String value) throws IOException {
         Jenkins jenkins = Jenkins.getInstance();
         DescribableList<NodeProperty<?>, NodePropertyDescriptor> globalNodeProperties = jenkins.getGlobalNodeProperties();
-        List<EnvironmentVariablesNodeProperty> envVarsNodePropertyList = globalNodeProperties.getAll(hudson.slaves.EnvironmentVariablesNodeProperty.class);
+        List<EnvironmentVariablesNodeProperty> envVarsNodePropertyList = globalNodeProperties.getAll(EnvironmentVariablesNodeProperty.class);
 
         EnvironmentVariablesNodeProperty newEnvVarsNodeProperty = null;
         EnvVars envVars = null;
 
         if (envVarsNodePropertyList == null || envVarsNodePropertyList.isEmpty()) {
-            newEnvVarsNodeProperty = new hudson.slaves.EnvironmentVariablesNodeProperty();
+            newEnvVarsNodeProperty = new EnvironmentVariablesNodeProperty();
             globalNodeProperties.add(newEnvVarsNodeProperty);
             envVars = newEnvVarsNodeProperty.getEnvVars();
         } else {
