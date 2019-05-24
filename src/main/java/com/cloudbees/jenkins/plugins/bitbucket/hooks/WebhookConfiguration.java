@@ -84,6 +84,10 @@ public class WebhookConfiguration {
         this.committersToIgnore = committersToIgnore;
     }
 
+    public String getCommittersToIgnore() {
+        return this.committersToIgnore;
+    }
+
     boolean updateHook(BitbucketWebHook hook, BitbucketSCMSource owner) {
         if (hook instanceof BitbucketRepositoryHook) {
             if (!hook.getEvents().containsAll(CLOUD_EVENTS)) {
