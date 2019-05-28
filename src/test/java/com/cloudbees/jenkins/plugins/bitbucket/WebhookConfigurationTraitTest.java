@@ -16,7 +16,7 @@ public class WebhookConfigurationTraitTest {
      * @throws Exception
      */
     @Test
-    public void given__webhookConfigurationEmpty__when__appliedToContext__then__webhookConfigurationEmpty()
+    public void ignoredCommittersDefault()
             throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), null);
@@ -30,7 +30,7 @@ public class WebhookConfigurationTraitTest {
      * @throws Exception
      */
     @Test
-    public void given__webhookRegistrationFromItem__when__appliedToContext__then__webhookRegistrationFromItem()
+    public void ignoredCommittersWithValue()
             throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), null);
