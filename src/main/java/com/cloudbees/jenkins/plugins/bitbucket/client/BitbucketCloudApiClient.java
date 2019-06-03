@@ -176,6 +176,9 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
             String owner, String repositoryName, BitbucketAuthenticator authenticator) {
+        LOGGER.log(Level.INFO, "Creating bitbucket client with {0} - {1} {2} {3} {4} {5}", new Object[]{
+            enableCache, teamCacheDuration, repositoriesCacheDuration, owner, repositoryName, authenticator
+        });
         this.authenticator = authenticator;
         this.owner = owner;
         this.repositoryName = repositoryName;
@@ -630,12 +633,16 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         final String url = UriTemplate.fromTemplate(V2_TEAMS_API_BASE_URL + "{/owner}")
                 .set("owner", owner)
                 .expand();
+        LOGGER.log(Level.INFO, "Using bitbucket url {0}", new Object[]{url});
 
         Callable<BitbucketTeam> request = () -> {
             try {
-                String response = getRequest(url);
+                LOGGER.log(Level.INFO, "Requesting url {0} ", new Object[]{url});
+                String response = getRequest(url, null);
+                LOGGER.log(Level.INFO, "Got result {0} for url {1}", new Object[]{response, url});
                 return JsonParser.toJava(response, BitbucketCloudTeam.class);
             } catch (FileNotFoundException e) {
+                LOGGER.log(Level.SEVERE, "Exception requesting team", e);
                 return null;
             } catch (IOException e) {
                 throw new IOException("I/O error when parsing response from URL: " + url, e);
@@ -643,12 +650,18 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         };
 
         try {
+            BitbucketTeam team;
             if (enableCache) {
-                return cachedTeam.get(owner, request);
+                team = cachedTeam.get(owner, request);
+                LOGGER.log(Level.INFO, "Using cached team version {0}", new Object[]{team});
+                return team;
             } else {
-                return request.call();
+                team = request.call();
+                LOGGER.log(Level.INFO, "Request team from server {0}", new Object[]{team});
+                return team;
             }
         } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Exception getting team", ex);
             return null;
         }
     }
@@ -744,19 +757,24 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
     }
 
-    private CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws InterruptedException, IOException {
+    private CloseableHttpResponse executeMethod(HttpRequestBase httpMethod, BitbucketAuthenticator authenticator) throws InterruptedException, IOException {
 
         if (authenticator != null) {
             authenticator.configureRequest(httpMethod);
         }
+        HttpClientContext httpClientContext= context;
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
         requestConfig.setConnectTimeout(10 * 1000);
         requestConfig.setConnectionRequestTimeout(60 * 1000);
         requestConfig.setSocketTimeout(60 * 1000);
+        if (authenticator == null) {
+            requestConfig.setAuthenticationEnabled(false);
+            httpClientContext = HttpClientContext.create();
+        }
         httpMethod.setConfig(requestConfig.build());
-
-        CloseableHttpResponse response = client.execute(API_HOST, httpMethod, context);
+        LOGGER.log(Level.INFO, "Request is {0}", httpMethod.toString());
+        CloseableHttpResponse response = client.execute(API_HOST, httpMethod, httpClientContext);
         while (response.getStatusLine().getStatusCode() == API_RATE_LIMIT_CODE) {
             release(httpMethod);
             if (Thread.interrupted()) {
@@ -773,13 +791,16 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         return response;
     }
 
+    private InputStream getRequestAsInputStream(String path) throws IOException, InterruptedException {
+        return getRequestAsInputStream(path, authenticator);
+    }
     /**
      * Caller's responsible to close the InputStream.
      */
-    private InputStream getRequestAsInputStream(String path) throws IOException, InterruptedException {
+    private InputStream getRequestAsInputStream(String path, BitbucketAuthenticator authenticator) throws IOException, InterruptedException {
         HttpGet httpget = new HttpGet(path);
         try {
-            CloseableHttpResponse response =  executeMethod(httpget);
+            CloseableHttpResponse response =  executeMethod(httpget, authenticator);
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 EntityUtils.consume(response.getEntity());
                 response.close();
@@ -792,7 +813,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 EntityUtils.consume(response.getEntity());
                 response.close();
                 throw new BitbucketRequestException(statusCode,
-                        "HTTP request error. Status: " + statusCode + ": " + status + ".\n" + content);
+                        "HTTP request error. Status: " + statusCode + ": " + status + ".\n" + content + "\n");
             }
             return new ClosingConnectionInputStream(response, httpget, connectionManager);
         } catch (BitbucketRequestException | FileNotFoundException e) {
@@ -808,9 +829,15 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
     }
 
+    protected String getRequest(String path, BitbucketAuthenticator authenticator) throws IOException, InterruptedException {
+        try (InputStream inputStream = getRequestAsInputStream(path, authenticator)){
+            return IOUtils.toString(inputStream, "UTF-8");
+        }
+    }
+
     private int headRequestStatus(String path) throws IOException, InterruptedException {
         HttpHead httpHead = new HttpHead(path);
-        try(CloseableHttpResponse response = executeMethod(httpHead)) {
+        try(CloseableHttpResponse response = executeMethod(httpHead, null)) {
             EntityUtils.consume(response.getEntity());
             return response.getStatusLine().getStatusCode();
         } catch (IOException e) {
@@ -822,7 +849,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private void deleteRequest(String path) throws IOException, InterruptedException {
         HttpDelete httppost = new HttpDelete(path);
-        try(CloseableHttpResponse response =  executeMethod(httppost)) {
+        try(CloseableHttpResponse response =  executeMethod(httppost, authenticator)) {
             EntityUtils.consume(response.getEntity());
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("URL: " + path);
@@ -840,7 +867,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     private String doRequest(HttpRequestBase httppost) throws IOException, InterruptedException {
-        try(CloseableHttpResponse response =  executeMethod(httppost)) {
+        try(CloseableHttpResponse response =  executeMethod(httppost, authenticator)) {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NO_CONTENT) {
                 EntityUtils.consume(response.getEntity());
                 // 204, no content

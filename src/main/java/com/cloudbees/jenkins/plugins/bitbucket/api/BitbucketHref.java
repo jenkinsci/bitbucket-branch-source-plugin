@@ -90,4 +90,11 @@ public class BitbucketHref {
         }
     }
 
+    @Override
+    public String toString() {
+        return "BitbucketHref{" +
+            "name='" + name + '\'' +
+            ", href='" + href + '\'' +
+            '}';
+    }
 }

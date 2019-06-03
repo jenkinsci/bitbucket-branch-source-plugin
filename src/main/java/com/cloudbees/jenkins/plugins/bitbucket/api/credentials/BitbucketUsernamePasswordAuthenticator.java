@@ -70,4 +70,11 @@ public class BitbucketUsernamePasswordAuthenticator extends BitbucketAuthenticat
         context.setCredentialsProvider(credentialsProvider);
         context.setAuthCache(authCache);
     }
+
+    @Override
+    public String toString() {
+        return "BitbucketUsernamePasswordAuthenticator{" +
+            "httpCredentials=" + httpCredentials +
+            '}';
+    }
 }

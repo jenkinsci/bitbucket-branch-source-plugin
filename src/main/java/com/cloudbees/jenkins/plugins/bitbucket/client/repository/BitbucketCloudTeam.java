@@ -71,4 +71,13 @@ public class BitbucketCloudTeam implements BitbucketTeam {
     public void setLinks(Map<String, List<BitbucketHref>> links) {
         this.links = links;
     }
+
+    @Override
+    public String toString() {
+        return "BitbucketCloudTeam{" +
+            "name='" + name + '\'' +
+            ", displayName='" + displayName + '\'' +
+            ", links=" + links +
+            '}';
+    }
 }
