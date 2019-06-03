@@ -41,7 +41,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class WebhookConfigurationTrait extends SCMSourceTrait {
 
     /**
-     * The committers that should be ignored in the webhook
+     * The committers that should be ignored in the webhook. A comma separated string.
      */
     @NonNull
     private final String committersToIgnore;
