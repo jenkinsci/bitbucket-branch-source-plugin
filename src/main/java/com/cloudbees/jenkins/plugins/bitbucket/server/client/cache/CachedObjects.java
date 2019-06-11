@@ -8,16 +8,14 @@ import java.util.logging.Logger;
 
 public class CachedObjects<K,V> {
 
-    private static final Logger LOGGER = Logger.getLogger(CachedObjects.class.getName());
-    public interface IFilter<K> {
-        public boolean matches(K key);
-    }
-
     private final long timeout;
 
     private Map<K,Long> timestamps = new HashMap<K,Long>();
     private Map<K,V> cachedObjects = new HashMap<K,V>();
 
+    public interface IFilter<K> {
+        public boolean matches(K key);
+    }
 
     public CachedObjects(long timeout) {
         this.timeout = timeout;
@@ -26,10 +24,8 @@ public class CachedObjects<K,V> {
     public synchronized V get(K key, Callable<V> result) throws Exception {
         Long last = timestamps.get(key);
         Long now = System.currentTimeMillis();
-        if (last != null) {
-            if ( now < last + timeout) {
-                return cachedObjects.get(key);
-            }
+        if (last != null &&  now < last + timeout) {
+            return cachedObjects.get(key);
         }
         V cache = result.call();
         cachedObjects.put(key,cache);

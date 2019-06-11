@@ -7,13 +7,11 @@ import java.util.logging.Logger;
 
 public class CachedLRUObjects<K,V> {
 
-    private static final Logger LOGGER = Logger.getLogger(CachedLRUObjects.class.getName());
+    private Map<K,V> cachedObjects;
+
     public interface IFilter<K> {
         public boolean matches(K key);
     }
-
-    private Map<K,V> cachedObjects;
-
 
     public CachedLRUObjects(int maxSize) {
         cachedObjects = new SimpleLRUCache<>(maxSize);

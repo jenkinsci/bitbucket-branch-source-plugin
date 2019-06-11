@@ -6,9 +6,6 @@ import java.util.logging.Logger;
 
 public class BitbucketApiKey {
 
-    private static final Logger LOGGER = Logger.getLogger(BitbucketApiKey.class.getName());
-
-
     private final String serverUrl;
     private final String ownerName;
     private final String repositoryName;
@@ -35,7 +32,6 @@ public class BitbucketApiKey {
     }
 
     public boolean equalsRepository(BitbucketRepository repository) {
-        //LOGGER.info("["+repository.getOwnerName()+"]["+ownerName+"]["+repository.getRepositoryName()+"]["+repositoryName+"]");
         return ownerName.equalsIgnoreCase(repository.getOwnerName()) &&
                repositoryName.equalsIgnoreCase(repository.getRepositoryName());
     }

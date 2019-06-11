@@ -63,7 +63,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
         return displayId;
     }
 
-    public long getTimestamp() {
+    public synchronized long getTimestamp() {
         return timestamp();
     }
 
