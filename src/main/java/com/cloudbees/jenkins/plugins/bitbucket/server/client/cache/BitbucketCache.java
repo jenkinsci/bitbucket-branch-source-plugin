@@ -1,8 +1,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.cache;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.*;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +22,7 @@ public class BitbucketCache {
 
     public Map<BitbucketApiKey,BitbucketServerAPIClient> bitbucketApiMap = new HashMap<>();
 
-    private CachedObjects<BitbucketApiKey,BitbucketRepository> repositoryCachedObjects = new CachedObjects<>(TIMEOUT);
+    private CachedObjects<BitbucketApiKey, BitbucketRepository> repositoryCachedObjects = new CachedObjects<>(TIMEOUT);
     private CachedObjects<BitbucketApiKey,List<? extends BitbucketBranch>> branchesCachedObjects = new CachedObjects<>(TIMEOUT);
     private CachedObjects<BitbucketApiKey,List<? extends BitbucketPullRequest>> pullRequestsCachedObjects = new CachedObjects<>(TIMEOUT);
     private CachedObjects<BitbucketApiKey,String> defaultBranchCachedObjects = new CachedObjects<>(TIMEOUT);

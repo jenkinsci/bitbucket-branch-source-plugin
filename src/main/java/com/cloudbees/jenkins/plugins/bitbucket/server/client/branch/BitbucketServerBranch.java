@@ -88,12 +88,12 @@ public class BitbucketServerBranch implements BitbucketBranch {
         this.latestCommit = latestCommit;
     }
 
-    public void setTimestamp(long timestamp) {
+    public synchronized void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
     @Restricted(NoExternalUse.class)
-    public void setCommitClosure(Callable<BitbucketCommit> commitClosure) {
+    public synchronized void setCommitClosure(Callable<BitbucketCommit> commitClosure) {
         this.commitClosure = commitClosure;
     }
 

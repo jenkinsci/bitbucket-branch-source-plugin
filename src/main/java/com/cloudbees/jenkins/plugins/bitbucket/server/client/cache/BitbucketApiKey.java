@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.cache;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-
 import java.util.Objects;
 import java.util.logging.Logger;
 
