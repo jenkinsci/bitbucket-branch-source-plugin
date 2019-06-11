@@ -97,7 +97,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
         this.commitClosure = commitClosure;
     }
 
-    private long timestamp() {
+    private synchronized long timestamp() {
         if (timestamp == null) {
             if (commitClosure == null) {
                 timestamp = 0L;
