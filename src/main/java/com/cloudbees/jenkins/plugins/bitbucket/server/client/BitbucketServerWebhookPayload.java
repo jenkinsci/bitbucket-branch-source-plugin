@@ -43,7 +43,7 @@ public class BitbucketServerWebhookPayload {
     public static BitbucketPushEvent pushEventFromPayload(@NonNull String payload) {
         BitbucketPushEvent result = null;
         try {
-            LOGGER.log(Level.INFO, "Received pushEventFromPayload");
+            LOGGER.log(Level.FINE, "Received pushEventFromPayload");
             result =  JsonParser.toJava(payload, BitbucketServerPushEvent.class);
             BitbucketCache.getInstance().invalidate(result.getRepository());
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class BitbucketServerWebhookPayload {
     public static BitbucketPullRequestEvent pullRequestEventFromPayload(@NonNull String payload) {
         BitbucketPullRequestEvent result = null;
         try {
-            LOGGER.log(Level.INFO, "Received pullRequestEventFromPayload");
+            LOGGER.log(Level.FINE, "Received pullRequestEventFromPayload");
             result =  JsonParser.toJava(payload, BitbucketServerPullRequestEvent.class);
             BitbucketCache.getInstance().invalidate(result.getRepository());
         } catch (Exception e) {

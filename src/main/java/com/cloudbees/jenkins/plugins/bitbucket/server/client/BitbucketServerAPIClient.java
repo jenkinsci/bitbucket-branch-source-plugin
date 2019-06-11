@@ -360,13 +360,10 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             BitbucketServerBranch branch = (BitbucketServerBranch) pr.getSource().getBranch();
             if (branch != null) {
                 branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
-                LOGGER.severe("setupClosureForPRBranch source");
             }
-
             branch = (BitbucketServerBranch) pr.getDestination().getBranch();
             if (branch != null) {
                 branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
-                LOGGER.severe("setupClosureForPRBranch destination");
             }
         } catch (Exception e) {
             LOGGER.log( Level.SEVERE, "setupClosureForPRBranch", e);

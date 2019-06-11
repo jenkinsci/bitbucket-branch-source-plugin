@@ -32,12 +32,16 @@ import hudson.Util;
 import hudson.model.TaskListener;
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceRequest;
-
 
 /**
  * The {@link SCMSourceRequest} for bitbucket.

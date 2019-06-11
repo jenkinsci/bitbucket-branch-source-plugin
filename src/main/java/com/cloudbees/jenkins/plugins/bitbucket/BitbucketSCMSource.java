@@ -23,7 +23,18 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.*;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
@@ -72,8 +83,18 @@ import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
-import jenkins.scm.api.*;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadCategory;
+import jenkins.scm.api.SCMHeadEvent;
+import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMHeadOrigin;
+import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceCriteria.Probe;
+import jenkins.scm.api.SCMSourceDescriptor;
+import jenkins.scm.api.SCMSourceEvent;
+import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.ContributorMetadataAction;
 import jenkins.scm.api.metadata.ObjectMetadataAction;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
@@ -99,7 +120,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
 
 /**
  * SCM source implementation for Bitbucket.

@@ -26,6 +26,5 @@ public class BitbucketServerApiFactory extends BitbucketApiFactory {
             throw new IllegalArgumentException("serverUrl is required");
         }
         return new CachedBitbucketApi(serverUrl, authenticator, owner,repository);
-        //return new BitbucketServerAPIClient(serverUrl, owner, repository, credentials, false);
     }
 }
