@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -138,18 +139,34 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
             BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, authenticator, owner, repository);
-            String ref;
+            String ref = null;
+
             if (head instanceof BranchSCMHead) {
                 ref = head.getName();
             } else if (head instanceof PullRequestSCMHead) {
+                // working on a pull request - can be either "HEAD" or "MERGE"
                 PullRequestSCMHead pr = (PullRequestSCMHead) head;
-                if (pr.getRepository() != null) {
-                    ref = pr.getOriginName();
+                if (pr.getRepository() == null) { // check access to repository (might be forked)
+                    return null;
+                }
+
+                if (apiClient instanceof BitbucketCloudApiClient) {
+                    // support lightweight checkout for branches with same owner and repository
+                    if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
+                        pr.getRepoOwner().equals(src.getRepoOwner()) &&
+                        pr.getRepository().equals(src.getRepository())) {
+                        ref = pr.getOriginName();
+                    } else {
+                        // Bitbucket cloud does not support refs for pull requests
+                        // Makes lightweight checkout for forks and merge strategy improbable
+                        // TODO waiting for cloud support: https://bitbucket.org/site/master/issues/5814/refify-pull-requests-by-making-them-a-ref
+                        return null;
+                    }
                 } else {
-                    return null; // TODO support merge revisions somehow
+                    ref = pr.getOriginName();
                 }
             } else if (head instanceof BitbucketTagSCMHead) {
-                 ref = "tags/" + head.getName();
+                ref = "tags/" + head.getName();
             } else {
                 return null;
             }

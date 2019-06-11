@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
@@ -65,40 +66,45 @@ public class BitbucketBuildStatusNotifications {
             throw new IllegalStateException("Could not determine Jenkins URL.");
         }
 
-        String url = DisplayURLProvider.get().getRunURL(build);
-        return checkURL(url);
+        return DisplayURLProvider.get().getRunURL(build);
     }
 
     /**
      * Check if the build URL is compatible with Bitbucket API.
-     * For example, Bitbucket API doesn't accept simple hostnames as URLs host value
+     * For example, Bitbucket Cloud API requires fully qualified or IP
+     * Where we actively do not allow localhost
      * Throws an IllegalStateException if it is not valid, or return the url otherwise
      *
      * @param url the URL of the build to check
-     * @return the url if it is valid
+     * @param bitbucket the bitbucket client we are facing.
      */
-    static String checkURL(@NonNull String url) {
-        if (url.startsWith("http://unconfigured-jenkins-location/")) {
-            throw new IllegalStateException("Could not determine Jenkins URL.");
-        }
+    static String checkURL(@NonNull String url, BitbucketApi bitbucket) {
         try {
-            URL u = new URL(url);
-            if (!u.getHost().contains(".")) {
-                throw new IllegalStateException("Please use a fully qualified name or an IP address for Jenkins URL");
+            URL anURL = new URL(url);
+            if ("localhost".equals(anURL.getHost())) {
+                throw new IllegalStateException("Jenkins URL cannot start with http://localhost");
             }
+            if ("unconfigured-jenkins-location".equals(anURL.getHost())) {
+                throw new IllegalStateException("Could not determine Jenkins URL.");
+            }
+            if (bitbucket instanceof BitbucketCloudApiClient && !anURL.getHost().contains(".")) {
+                throw new IllegalStateException(
+                    "Please use a fully qualified name or an IP address for Jenkins URL, this is required by Bitbucket cloud");
+            }
+            return url;
         } catch (MalformedURLException e) {
             throw new IllegalStateException("Bad Jenkins URL");
         }
-        return url;
     }
 
     private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,
-                                     @NonNull BitbucketApi bitbucket, @NonNull String hash)
+        @NonNull BitbucketApi bitbucket, @NonNull String key, @NonNull String hash)
             throws IOException, InterruptedException {
 
         String url;
         try {
             url = getRootURL(build);
+            checkURL(url, bitbucket);
         } catch (IllegalStateException e) {
             listener.getLogger().println("Can not determine Jenkins root URL " +
                     "or Jenkins URL is not a valid URL regarding Bitbucket API. " +
@@ -107,7 +113,6 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
 
-        String key = build.getParent().getFullName(); // use the job full name as the key for the status
         String name = build.getFullDisplayName(); // use the build number as the display name of the status
         BitbucketBuildStatus status;
         Result result = build.getResult();
@@ -148,24 +153,36 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
         BitbucketSCMSource source = (BitbucketSCMSource) s;
-        if (new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(source.getTraits())
-                .notificationsDisabled()) {
+        BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null,
+            SCMHeadObserver.none()).withTraits(source.getTraits());
+        if (sourceContext.notificationsDisabled()) {
             return;
         }
         SCMRevision r = SCMRevisionAction.getRevision(s, build);
+        if (r == null) {
+            return;
+        }
         String hash = getHash(r);
         if (hash == null) {
             return;
         }
+        boolean shareBuildKeyBetweenBranchAndPR = sourceContext
+            .filters().stream()
+            .anyMatch(filter -> filter instanceof ExcludeOriginPRBranchesSCMHeadFilter);
+
+        String key;
+        BitbucketApi bitbucket;
         if (r instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
-            createStatus(build, listener, source.buildBitbucketClient((PullRequestSCMHead) r.getHead()), hash);
-
+            PullRequestSCMHead head = (PullRequestSCMHead) r.getHead();
+            key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
+            bitbucket = source.buildBitbucketClient(head);
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
-            createStatus(build, listener, source.buildBitbucketClient(), hash);
+            key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
+            bitbucket = source.buildBitbucketClient();
         }
+        createStatus(build, listener, bitbucket, key, hash);
     }
 
     @CheckForNull
@@ -182,6 +199,25 @@ public class BitbucketBuildStatusNotifications {
             return ((AbstractGitSCMSource.SCMRevisionImpl) revision).getHash();
         }
         return null;
+    }
+
+    private static String getBuildKey(@NonNull Run<?, ?> build, String branch,
+        boolean shareBuildKeyBetweenBranchAndPR) {
+
+        // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
+        // build status key to be the same between the branch project and the PR project.
+        // This is to avoid having two build statuses when a branch goes into PR and
+        // it was already built at least once as a branch.
+        // So the key we use is the branch name.
+        String key;
+        if (shareBuildKeyBetweenBranchAndPR) {
+            String folderName = build.getParent().getParent().getFullName();
+            key = String.format("%s/%s", folderName, branch);
+        } else {
+            key = build.getParent().getFullName(); // use the job full name as the key for the status
+        }
+
+        return key;
     }
 
     /**

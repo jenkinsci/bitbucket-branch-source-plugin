@@ -112,4 +112,8 @@ public class BitbucketIntegrationClientFactory {
             }
         }
     }
+
+    public static BitbucketApi getApiMockClient(String serverURL) {
+        return BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+    }
 }

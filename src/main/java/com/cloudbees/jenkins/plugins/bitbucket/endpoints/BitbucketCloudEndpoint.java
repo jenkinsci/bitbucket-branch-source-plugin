@@ -162,7 +162,7 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
 
         public FormValidation doClear() {
             BitbucketCloudApiClient.clearCaches();
-            return FormValidation.ok("done");
+            return FormValidation.ok("Caches cleared");
         }
     }
 
