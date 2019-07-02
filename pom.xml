@@ -53,9 +53,11 @@
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.60.3</jenkins.version>
     <java.level>8</java.level>
-    <scm-api.version>2.2.7</scm-api.version>
+    <scm-api.version>2.4.2-SNAPSHOT</scm-api.version>
     <git.version>3.6.0</git.version>
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
+    <!-- To fix https://github.com/mojohaus/animal-sniffer/issues/53 -->
+    <animal.sniffer.version>1.18</animal.sniffer.version>
   </properties>
 
   <developers>

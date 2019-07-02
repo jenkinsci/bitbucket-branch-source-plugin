@@ -45,6 +45,7 @@ import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import java.io.IOException;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -53,6 +54,7 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 
 public class BitbucketSCMFileSystem extends SCMFileSystem {
@@ -96,6 +98,17 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
         @Override
         public boolean supports(SCMSource source) {
             return source instanceof BitbucketSCMSource;
+        }
+
+        @Override
+        protected boolean supportsDescriptor(SCMDescriptor descriptor) {
+          //TODO: Determine supported by checking if its git/hg bitbucket scm with proper credentials and non wildcard branch
+            return false;
+        }
+
+        @Override
+        protected boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return descriptor instanceof BitbucketSCMSource.DescriptorImpl;
         }
 
         @Override
