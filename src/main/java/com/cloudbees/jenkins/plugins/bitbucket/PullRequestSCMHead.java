@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import java.io.ObjectStreamException;
@@ -35,7 +36,7 @@ import jenkins.scm.api.SCMHeadMigration;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import jenkins.scm.api.mixin.ChangeRequestSCMHead2;
+import jenkins.scm.api.mixin.ChangeRequestSCMHead3;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -45,7 +46,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  *
  * @since 2.0.0
  */
-public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2 {
+public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead3 {
 
     private static final String PR_BRANCH_PREFIX = "PR-";
 
@@ -59,6 +60,8 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     private final String number;
 
+    private final String sourceCommitHash;
+
     private final BranchSCMHead target;
 
     private final SCMHeadOrigin origin;
@@ -66,7 +69,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
     private final ChangeRequestCheckoutStrategy strategy;
 
     public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
-                              String number, BranchSCMHead target, SCMHeadOrigin origin,
+                              String number, @Nullable String sourceCommitHash, BranchSCMHead target, SCMHeadOrigin origin,
                               ChangeRequestCheckoutStrategy strategy) {
         super(name);
         this.repoOwner = repoOwner;
@@ -74,8 +77,15 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         this.branchName = branchName;
         this.number = number;
         this.target = target;
+        this.sourceCommitHash = sourceCommitHash;
         this.origin = origin;
         this.strategy = strategy;
+    }
+
+    public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
+                              String number, BranchSCMHead target, SCMHeadOrigin origin,
+                              ChangeRequestCheckoutStrategy strategy) {
+        this(name, repoOwner, repository, branchName, number, null, target, origin, strategy);
     }
 
     public PullRequestSCMHead(String name, String repoOwner, String repository, BitbucketRepositoryType repositoryType,
@@ -86,6 +96,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         this.repository = repository;
         this.branchName = branchName;
         this.number = pr.getId();
+        this.sourceCommitHash = pr.getSource().getCommit().getHash();
         this.target = new BranchSCMHead(pr.getDestination().getBranch().getName(), repositoryType);
         this.origin = origin;
         this.strategy = strategy;
@@ -95,7 +106,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
     @Restricted(DoNotUse.class)
     public PullRequestSCMHead(String repoOwner, String repository, String branchName,
                               String number, BranchSCMHead target, SCMHeadOrigin origin) {
-        this(PR_BRANCH_PREFIX + number, repoOwner, repository, branchName, number, target, origin,
+        this(PR_BRANCH_PREFIX + number, repoOwner, repository, branchName, number, null, target, origin,
                 ChangeRequestCheckoutStrategy.HEAD);
     }
 
@@ -189,6 +200,11 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         return branchName;
     }
 
+    @Override
+    public String getSourceCommitId() {
+        return sourceCommitHash;
+    }
+
     @NonNull
     @Override
     public SCMHeadOrigin getOrigin() {
@@ -208,7 +224,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
         FixLegacy(PullRequestSCMHead copy) {
             super(copy.getName(), copy.repoOwner, copy.repository, copy.branchName, copy.number,
-                    copy.target, copy.getOrigin(), ChangeRequestCheckoutStrategy.HEAD);
+                    copy.sourceCommitHash, copy.target, copy.getOrigin(), ChangeRequestCheckoutStrategy.HEAD);
         }
     }
 
@@ -234,6 +250,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                     head.getRepository(),
                     head.getBranchName(),
                     head.getId(),
+                    head.getSourceCommitId(),
                     (BranchSCMHead) head.getTarget(),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD // legacy is always HEAD
@@ -276,6 +293,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                     head.getRepository(),
                     head.getBranchName(),
                     head.getId(),
+                    head.getSourceCommitId(),
                     (BranchSCMHead) head.getTarget(),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD

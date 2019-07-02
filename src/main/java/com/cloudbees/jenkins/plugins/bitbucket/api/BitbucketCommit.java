@@ -48,7 +48,7 @@ public interface BitbucketCommit {
     String getDate();
 
     /**
-     * @return the commit hash (complete, not reduced)
+     * @return the commit hash (short one for Bitbucket Cloud)
      */
     String getHash();
 
