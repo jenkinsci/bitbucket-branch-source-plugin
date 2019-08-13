@@ -105,6 +105,7 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -189,6 +190,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         httpClientBuilder.setConnectionManager(connectionManager);
         httpClientBuilder.setConnectionManagerShared(true);
+        httpClientBuilder.setRetryHandler(new StandardHttpRequestRetryHandler());
 
         if (authenticator != null) {
             authenticator.configureBuilder(httpClientBuilder);
