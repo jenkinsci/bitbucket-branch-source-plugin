@@ -190,7 +190,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         // Create Http client
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
-        httpClientBuilder.setKeepAliveStrategy((__, ___) -> {return MILLISECONDS.convert(5, SECONDS);});
+        httpClientBuilder.setKeepAliveStrategy((__, ___) -> MILLISECONDS.convert(5, SECONDS));
         httpClientBuilder.setConnectionManager(connectionManager);
         httpClientBuilder.setConnectionManagerShared(true);
 
