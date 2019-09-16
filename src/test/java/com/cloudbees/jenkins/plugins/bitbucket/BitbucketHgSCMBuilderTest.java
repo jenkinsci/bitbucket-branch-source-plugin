@@ -91,7 +91,7 @@ public class BitbucketHgSCMBuilderTest {
 
     @Test
     public void given__pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL),
                 new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
@@ -160,7 +160,7 @@ public class BitbucketHgSCMBuilderTest {
 
     @Test
     public void given__pullHead_rev_userpass__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL),
                 new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
@@ -229,7 +229,7 @@ public class BitbucketHgSCMBuilderTest {
 
     @Test
     public void given__pullHead_rev_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL),
                 new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
@@ -524,7 +524,7 @@ public class BitbucketHgSCMBuilderTest {
 
     @Test
     public void given__pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL),
                 new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
@@ -587,7 +587,7 @@ public class BitbucketHgSCMBuilderTest {
 
     @Test
     public void given__pullHead_norev_userpass__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL),
                 new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
@@ -650,7 +650,7 @@ public class BitbucketHgSCMBuilderTest {
 
     @Test
     public void given__pullHead_norev_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.MERCURIAL),
                 new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);

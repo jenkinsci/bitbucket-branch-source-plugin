@@ -59,6 +59,8 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     private final String number;
 
+    private final String title;
+
     private final BranchSCMHead target;
 
     private final SCMHeadOrigin origin;
@@ -66,13 +68,14 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
     private final ChangeRequestCheckoutStrategy strategy;
 
     public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
-                              String number, BranchSCMHead target, SCMHeadOrigin origin,
+                              String number, String title, BranchSCMHead target, SCMHeadOrigin origin,
                               ChangeRequestCheckoutStrategy strategy) {
         super(name);
         this.repoOwner = repoOwner;
         this.repository = repository;
         this.branchName = branchName;
         this.number = number;
+        this.title = title;
         this.target = target;
         this.origin = origin;
         this.strategy = strategy;
@@ -86,6 +89,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         this.repository = repository;
         this.branchName = branchName;
         this.number = pr.getId();
+        this.title = pr.getTitle();
         this.target = new BranchSCMHead(pr.getDestination().getBranch().getName(), repositoryType);
         this.origin = origin;
         this.strategy = strategy;
@@ -95,7 +99,15 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
     @Restricted(DoNotUse.class)
     public PullRequestSCMHead(String repoOwner, String repository, String branchName,
                               String number, BranchSCMHead target, SCMHeadOrigin origin) {
-        this(PR_BRANCH_PREFIX + number, repoOwner, repository, branchName, number, target, origin,
+        this(PR_BRANCH_PREFIX + number, null, repoOwner, repository, branchName, number, target, origin,
+                ChangeRequestCheckoutStrategy.HEAD);
+    }
+
+    @Deprecated
+    @Restricted(DoNotUse.class)
+    public PullRequestSCMHead(String repoOwner, String repository, String branchName,
+                              String number, String title, BranchSCMHead target, SCMHeadOrigin origin) {
+        this(PR_BRANCH_PREFIX + number, repoOwner, repository, branchName, number, title, target, origin,
                 ChangeRequestCheckoutStrategy.HEAD);
     }
 
@@ -171,6 +183,10 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         return number;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     @NonNull
     @Override
     public SCMHead getTarget() {
@@ -208,7 +224,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
         FixLegacy(PullRequestSCMHead copy) {
             super(copy.getName(), copy.repoOwner, copy.repository, copy.branchName, copy.number,
-                    copy.target, copy.getOrigin(), ChangeRequestCheckoutStrategy.HEAD);
+                    copy.getTitle(), copy.target, copy.getOrigin(), ChangeRequestCheckoutStrategy.HEAD);
         }
     }
 
@@ -234,6 +250,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                     head.getRepository(),
                     head.getBranchName(),
                     head.getId(),
+                    head.getTitle(),
                     (BranchSCMHead) head.getTarget(),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD // legacy is always HEAD
@@ -276,6 +293,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                     head.getRepository(),
                     head.getBranchName(),
                     head.getId(),
+                    head.getTitle(),
                     (BranchSCMHead) head.getTarget(),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD

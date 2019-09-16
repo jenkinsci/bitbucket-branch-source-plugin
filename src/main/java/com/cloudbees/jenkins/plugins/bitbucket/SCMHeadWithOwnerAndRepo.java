@@ -150,6 +150,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                     head.getRepository(),
                     head.getBranchName(),
                     head.getId(),
+                    head.getTitle(),
                     new BranchSCMHead(target, BitbucketRepositoryType.MERCURIAL),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD
@@ -194,6 +195,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                     head.getRepository(),
                     head.getBranchName(),
                     head.getId(),
+                    head.getTitle(),
                     new BranchSCMHead(target, BitbucketRepositoryType.GIT),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD

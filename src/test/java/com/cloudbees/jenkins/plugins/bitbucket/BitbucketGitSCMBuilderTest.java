@@ -804,7 +804,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -866,7 +866,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_userpass__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -928,7 +928,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -990,7 +990,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_anon_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1058,7 +1058,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_userpass_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1126,7 +1126,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_userkey_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1194,7 +1194,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_anon_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1262,7 +1262,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_userpass_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1330,7 +1330,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_rev_userkey_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1398,7 +1398,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -1444,7 +1444,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_norev_userpass__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -1490,7 +1490,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullHead_norev_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -1537,7 +1537,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1601,7 +1601,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_rev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1664,7 +1664,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_rev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1727,7 +1727,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_rev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -1791,7 +1791,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -1838,7 +1838,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_norev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -1885,7 +1885,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_norev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -1932,7 +1932,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullHead_norev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -1980,7 +1980,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullMerge_rev_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -2062,7 +2062,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullMerge_rev_userpass__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -2144,7 +2144,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullMerge_rev_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -2226,7 +2226,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullMerge_norev_anon__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2292,7 +2292,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullMerge_norev_userpass__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2358,7 +2358,7 @@ public class BitbucketGitSCMBuilderTest {
 
     @Test
     public void given__cloud_pullMerge_norev_userkey__when__build__then__scmBuilt() throws Exception {
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2425,7 +2425,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -2509,7 +2509,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_rev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -2592,7 +2592,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_rev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -2675,7 +2675,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_rev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision<AbstractGitSCMSource.SCMRevisionImpl> revision =
@@ -2760,7 +2760,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2828,7 +2828,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_norev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2896,7 +2896,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_norev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2964,7 +2964,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given__server_pullMerge_norev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
-        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1",
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "qa", "qa-repo", "qa-branch", "1", "a fake title",
                 new BranchSCMHead("test-branch", BitbucketRepositoryType.GIT), new SCMHeadOrigin.Fork("qa/qa-repo"),
                 ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
