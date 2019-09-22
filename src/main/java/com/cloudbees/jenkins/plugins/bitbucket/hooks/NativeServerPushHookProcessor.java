@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
@@ -128,7 +129,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         @Override
         protected Map<SCMHead, SCMRevision> heads(BitbucketSCMSource source) {
             final Map<SCMHead, SCMRevision> result = new HashMap<>();
-            addBranches(source, result);
+            addBranchesAndTags(source, result);
             try {
                 addPullRequests(source, result);
             } catch (InterruptedException interrupted) {
@@ -137,23 +138,29 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             return result;
         }
 
-        private void addBranches(BitbucketSCMSource src, Map<SCMHead, SCMRevision> result) {
+        private void addBranchesAndTags(BitbucketSCMSource src, Map<SCMHead, SCMRevision> result) {
             if (!eventMatchesRepo(src)) {
                 return;
             }
 
             for (final NativeServerRefsChangedEvent.Change change : getPayload()) {
-                if (!"BRANCH".equals(change.getRef().getType())) {
-                    LOGGER.log(Level.INFO, "Received event for unknown ref type {0} of ref {1}",
-                        new Object[] { change.getRef().getType(), change.getRef().getDisplayId() });
-                    continue;
-                }
+                String refType = change.getRef().getType();
 
-                final BranchSCMHead head = new BranchSCMHead(change.getRef().getDisplayId(),
-                    BitbucketRepositoryType.GIT);
-                final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
-                    : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
-                result.put(head, revision);
+                if ("BRANCH".equals(refType)) {
+                    final BranchSCMHead head = new BranchSCMHead(change.getRef().getDisplayId(),
+                            BitbucketRepositoryType.GIT);
+                    final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
+                            : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
+                    result.put(head, revision);
+                } else if ("TAG".equals(refType)) {
+                    SCMHead head = new BitbucketTagSCMHead(change.getRef().getDisplayId(), 0, BitbucketRepositoryType.GIT);
+                    final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
+                            : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
+                    result.put(head, revision);
+                } else {
+                    LOGGER.log(Level.INFO, "Received event for unknown ref type {0} of ref {1}",
+                            new Object[] { change.getRef().getType(), change.getRef().getDisplayId() });
+                }
             }
         }
 
