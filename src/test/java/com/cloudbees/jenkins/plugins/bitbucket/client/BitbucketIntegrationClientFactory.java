@@ -30,13 +30,29 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIC
 import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.tools.ant.filters.StringInputStream;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BitbucketIntegrationClientFactory {
+
+    public interface IRequestAudit {
+        default void request(String url) {
+            // mockito audit
+        };
+
+        IRequestAudit getAudit();
+    }
 
     public static BitbucketApi getClient(String payloadRootPath, String serverURL, String owner, String repositoryName) {
         if (BitbucketCloudEndpoint.SERVER_URL.equals(serverURL) ||
                 BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverURL)) {
-            return new BitbucketCouldIntegrationClient(payloadRootPath, owner, repositoryName);
+            return new BitbucketClouldIntegrationClient(payloadRootPath, owner, repositoryName);
         } else {
             return new BitbucketServerIntegrationClient(payloadRootPath, serverURL, owner, repositoryName);
         }
@@ -46,12 +62,13 @@ public class BitbucketIntegrationClientFactory {
         return getClient(null, serverURL, owner, repositoryName);
     }
 
-    private static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient {
+    private static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient implements IRequestAudit {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/server/payload/";
 
         private final String payloadRootPath;
+        private final IRequestAudit audit;
 
-        public BitbucketServerIntegrationClient(String payloadRootPath, String baseURL, String owner, String repositoryName) {
+        private BitbucketServerIntegrationClient(String payloadRootPath, String baseURL, String owner, String repositoryName) {
             super(baseURL, owner, repositoryName, (BitbucketAuthenticator) null, false);
 
             if (payloadRootPath == null) {
@@ -61,10 +78,13 @@ public class BitbucketIntegrationClientFactory {
             } else {
                 this.payloadRootPath = payloadRootPath;
             }
+            this.audit = mock(IRequestAudit.class);
         }
 
         @Override
         protected String getRequest(String path) throws IOException {
+            audit.request(path);
+
             String payloadPath = path.replace("/rest/api/", "").replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";
 
@@ -75,15 +95,21 @@ public class BitbucketIntegrationClientFactory {
                 return IOUtils.toString(json);
             }
         }
+
+        @Override
+        public IRequestAudit getAudit() {
+            return audit;
+        }
     }
 
-    private static class BitbucketCouldIntegrationClient extends BitbucketCloudApiClient {
+    private static class BitbucketClouldIntegrationClient extends BitbucketCloudApiClient implements IRequestAudit {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/client/payload/";
         private static final String API_ENDPOINT = "https://api.bitbucket.org/";
 
         private final String payloadRootPath;
+        private final IRequestAudit audit;
 
-        public BitbucketCouldIntegrationClient(String payloadRootPath, String owner, String repositoryName) {
+        private BitbucketClouldIntegrationClient(String payloadRootPath, String owner, String repositoryName) {
             super(false, 0, 0, owner, repositoryName, (BitbucketAuthenticator) null);
 
             if (payloadRootPath == null) {
@@ -97,10 +123,14 @@ public class BitbucketIntegrationClientFactory {
             } else {
                 this.payloadRootPath = payloadRootPath;
             }
+            this.audit = mock(IRequestAudit.class);
         }
 
         @Override
-        protected String getRequest(String path) throws IOException, InterruptedException {
+        protected CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws InterruptedException, IOException {
+            String path = httpMethod.getURI().toString();
+            audit.request(path);
+
             String payloadPath = path.replace(API_ENDPOINT, "").replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";
 
@@ -108,12 +138,27 @@ public class BitbucketIntegrationClientFactory {
                 if (json == null) {
                     throw new IllegalStateException("Payload for the REST path " + path + " could be found");
                 }
-                return IOUtils.toString(json);
+                HttpEntity entity = mock(HttpEntity.class);
+                when(entity.getContent()).thenReturn(new StringInputStream(IOUtils.toString(json)));
+
+                StatusLine statusLine = mock(StatusLine.class);
+                when(statusLine.getStatusCode()).thenReturn(200);
+
+                CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+                when(response.getEntity()).thenReturn(entity);
+                when(response.getStatusLine()).thenReturn(statusLine);
+
+                return response;
             }
+        }
+
+        @Override
+        public IRequestAudit getAudit() {
+            return audit;
         }
     }
 
     public static BitbucketApi getApiMockClient(String serverURL) {
-        return BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+        return BitbucketIntegrationClientFactory.getClient(null, serverURL, "amuniz", "test-repos");
     }
 }

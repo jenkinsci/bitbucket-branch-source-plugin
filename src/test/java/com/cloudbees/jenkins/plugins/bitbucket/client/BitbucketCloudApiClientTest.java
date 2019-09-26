@@ -24,16 +24,25 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 
 public class BitbucketCloudApiClientTest {
 
@@ -49,6 +58,18 @@ public class BitbucketCloudApiClientTest {
         assertNotNull("update on date is null", repository.getUpdatedOn());
         Date date = DateUtils.getDate(2018, 4, 27, 15, 32, 8, 356);
         assertThat(repository.getUpdatedOn().getTime(), CoreMatchers.is(date.getTime()));
+    }
+
+    @Test
+    public void verifyUpdateWebhookURL() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        IRequestAudit audit = ((IRequestAudit) client).getAudit();
+        Optional<? extends BitbucketWebHook> webHook = client.getWebHooks().stream().filter(h -> h.getDescription().contains("Jenkins")).findFirst();
+        assertTrue(webHook.isPresent());
+
+        reset(audit);
+        client.updateCommitWebHook(webHook.get());
+        verify(audit).request(Mockito.eq("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
     }
 
 }

@@ -109,6 +109,8 @@ import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -546,6 +548,8 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     public void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException {
         String url = UriTemplate
                 .fromTemplate(REPO_URL_TEMPLATE + "/hooks/{hook}")
+                .set("owner", owner)
+                .set("repo", repositoryName)
                 .set("hook", hook.getUuid())
                 .expand();
         putRequest(url, JsonParser.toJson(hook));
@@ -750,7 +754,8 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
     }
 
-    private CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws InterruptedException, IOException {
+    @Restricted(ProtectedExternally.class)
+    protected CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws InterruptedException, IOException {
 
         if (authenticator != null) {
             authenticator.configureRequest(httpMethod);
@@ -808,7 +813,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
     }
 
-    protected String getRequest(String path) throws IOException, InterruptedException {
+    private String getRequest(String path) throws IOException, InterruptedException {
         try (InputStream inputStream = getRequestAsInputStream(path)){
             return IOUtils.toString(inputStream, "UTF-8");
         }

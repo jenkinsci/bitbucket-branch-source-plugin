@@ -1,0 +1,44 @@
+{
+  "pagelen": 50,
+  "values": [
+    {
+      "read_only": null,
+      "description": "Jenkins hook",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"
+        }
+      },
+      "url": "https://jenkins.io/jenkins/bitbucket-scmsource-hook/notify",
+      "created_at": "2019-09-27T08:23:28.347759Z",
+      "skip_cert_verification": false,
+      "source": null,
+      "history_enabled": false,
+      "active": true,
+      "subject": {
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+          },
+          "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
+          }
+        },
+        "type": "repository",
+        "name": "test-repos",
+        "full_name": "amuniz/test-repos",
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+      },
+      "type": "webhook_subscription",
+      "events": [
+        "repo:push"
+      ],
+      "uuid": "{202cf34e-7ccf-44b7-ba6b-8827a14d5324}"
+    }
+  ],
+  "page": 1,
+  "size": 1
+}
