@@ -25,10 +25,13 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import java.util.List;
 import java.util.Map;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Represents a Bitbucket repository.
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketRepository {
 
     /**

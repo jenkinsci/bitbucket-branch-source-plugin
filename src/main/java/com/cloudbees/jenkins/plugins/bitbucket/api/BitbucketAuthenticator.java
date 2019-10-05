@@ -31,10 +31,13 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Support for various different methods of authenticating with Bitbucket
  */
+@Restricted(NoExternalUse.class)
 public abstract class BitbucketAuthenticator {
 
     private final String id;

@@ -23,10 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 /**
  * A repository owner.
  * It could be a user, a team or a project.
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketRepositoryOwner {
 
     /**

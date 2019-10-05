@@ -23,6 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+@Restricted(NoExternalUse.class)
 public class BitbucketException extends RuntimeException {
 
     public BitbucketException(String message, Throwable cause) {

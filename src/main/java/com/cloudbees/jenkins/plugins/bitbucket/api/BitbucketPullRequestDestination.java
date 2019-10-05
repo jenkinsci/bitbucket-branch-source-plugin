@@ -24,9 +24,13 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 /**
  * Represents a pull request destination, which is a repository and a branch in that repository.
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketPullRequestDestination {
 
     /**

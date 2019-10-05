@@ -8,12 +8,15 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import java.net.URL;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Factory for creating {@link BitbucketApi} instances to connect to a given server {@link URL}.
  *
  * @since 2.1.0
  */
+@Restricted(NoExternalUse.class)
 public abstract class BitbucketApiFactory implements ExtensionPoint {
 
     /**

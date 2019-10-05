@@ -23,11 +23,15 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 /**
  * Bitbucket Branch.
  *
  * It's used to represent branches to be built and source branches for pull requests.
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketBranch {
 
     /**

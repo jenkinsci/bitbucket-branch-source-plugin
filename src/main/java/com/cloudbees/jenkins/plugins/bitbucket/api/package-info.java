@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-@Restricted(NoExternalUse.class)
-package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
+/**
+ * Internal API that provides access to Bitbucket.
+ */
+package com.cloudbees.jenkins.plugins.bitbucket.api;

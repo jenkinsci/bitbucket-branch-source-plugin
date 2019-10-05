@@ -24,7 +24,10 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import java.io.IOException;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Restricted(NoExternalUse.class)
 public class BitbucketRequestException extends IOException {
 
     private final int httpCode;

@@ -1,8 +1,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Restricted(NoExternalUse.class)
 public class BitbucketProject {
 
     private String key;

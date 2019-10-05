@@ -25,7 +25,10 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Restricted(NoExternalUse.class)
 public enum BitbucketRepositoryType {
 
     /**

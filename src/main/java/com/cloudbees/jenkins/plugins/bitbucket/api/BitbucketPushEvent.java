@@ -2,10 +2,13 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import java.util.Date;
 import java.util.List;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Represents a push event coming from Bitbucket (webhooks).
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketPushEvent {
     /**
      * @return the destination repository that the push points to.

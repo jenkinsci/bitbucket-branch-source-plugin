@@ -23,9 +23,13 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 /**
  * Represents a pull request event coming from Bitbucket (webhooks).
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketPullRequestEvent {
 
     /**

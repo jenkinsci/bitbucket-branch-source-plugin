@@ -39,6 +39,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * Provides access to a specific repository.
  * One API object needs to be created for each repository you want to work with.
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketApi {
 
     /**

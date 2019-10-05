@@ -24,10 +24,13 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import java.util.List;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Represents a webhook in Bitbucket.
  */
+@Restricted(NoExternalUse.class)
 public interface BitbucketWebHook {
 
     /**

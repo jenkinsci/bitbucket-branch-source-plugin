@@ -30,10 +30,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Map;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Shared Code between two team implementations
  */
+@Restricted(NoExternalUse.class)
 public abstract class AbstractBitbucketTeam implements BitbucketTeam {
 
     @JsonProperty("username")
