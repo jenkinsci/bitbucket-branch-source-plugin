@@ -68,7 +68,7 @@ public class BitbucketEndpointConfigurationTest {
     @Before
     public void cleanUp() {
         BitbucketEndpointConfiguration.get().setEndpoints(null);
-        new XmlFile(new File(Jenkins.getInstance().getRootDir(), BitbucketEndpointConfiguration.get().getId() + ".xml"))
+        new XmlFile(new File(Jenkins.get().getRootDir(), BitbucketEndpointConfiguration.get().getId() + ".xml"))
                 .delete();
         SystemCredentialsProvider.getInstance()
                 .setDomainCredentialsMap(Collections.<Domain, List<Credentials>>emptyMap());
@@ -631,7 +631,7 @@ public class BitbucketEndpointConfigurationTest {
     @Test
     public void given__serverConfig__without__webhookImplementation__then__usePlugin() throws Exception {
         final URL configWithoutWebhookImpl = Resources.getResource(getClass(), "config-without-webhook-impl.xml");
-        final File configFile = new File(Jenkins.getInstance().getRootDir(), BitbucketEndpointConfiguration.class.getName() + ".xml");
+        final File configFile = new File(Jenkins.get().getRootDir(), BitbucketEndpointConfiguration.class.getName() + ".xml");
         Files.copy(Resources.newInputStreamSupplier(configWithoutWebhookImpl), configFile);
 
         final BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();

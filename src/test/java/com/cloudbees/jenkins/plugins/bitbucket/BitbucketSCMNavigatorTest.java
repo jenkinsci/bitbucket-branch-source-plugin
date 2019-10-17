@@ -462,14 +462,14 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__instance__when__setTraits_empty__then__traitsEmpty() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Collections.<SCMTrait>emptyList());
+        instance.setTraits(Collections.emptyList());
         assertThat(instance.getTraits(), is(Collections.<SCMTrait<?>>emptyList()));
     }
 
     @Test
     public void given__instance__when__setTraits__then__traitsSet() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(new BranchDiscoveryTrait(1),
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(1),
                 new WebhookRegistrationTrait(WebhookRegistration.DISABLE)));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
@@ -549,7 +549,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setPattern_default__then__patternSetAndTraitRemoved() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.getPattern(), is("job.*"));
         assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(instanceOf(RegexSCMSourceFilterTrait.class)));
@@ -564,7 +564,7 @@ public class BitbucketSCMNavigatorTest {
     public void given__legacyCode__when__setPattern_custom__then__patternSetAndTraitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setTraits(
-                Arrays.<SCMTrait>asList(new BranchDiscoveryTrait(true, false), new SSHCheckoutTrait("dummy")));
+                Arrays.asList(new BranchDiscoveryTrait(true, false), new SSHCheckoutTrait("dummy")));
         assertThat(instance.getPattern(), is(".*"));
         assertThat(instance.getTraits(),
                 not(Matchers.<SCMTrait<?>>hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
@@ -578,7 +578,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setPattern_custom__then__patternSetAndTraitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.getPattern(), is("job.*"));
         assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(instanceOf(RegexSCMSourceFilterTrait.class)));
@@ -594,7 +594,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setAutoRegisterHooks_true__then__traitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.isAutoRegisterHooks(), is(true));
         assertThat(instance.getTraits(),
@@ -608,7 +608,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setAutoRegisterHooks_changes__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.isAutoRegisterHooks(), is(true));
         assertThat(instance.getTraits(),
@@ -623,7 +623,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setAutoRegisterHooks_false__then__traitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
+        instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy"), new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.isAutoRegisterHooks(), is(true));
         assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(
@@ -638,7 +638,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_SAME__then__noTraitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
@@ -652,7 +652,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_SAME__then__traitRemoved() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
@@ -670,7 +670,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_null__then__noTraitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
@@ -684,7 +684,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_null__then__traitRemoved() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
@@ -702,7 +702,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_value__then__traitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
@@ -719,7 +719,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_value__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
@@ -740,7 +740,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_ANONYMOUS__then__traitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
@@ -757,7 +757,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode__when__setCheckoutCredentials_ANONYMOUS__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
@@ -778,7 +778,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withoutExcludes__when__setIncludes_default__then__traitRemoved() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("feature/*", ""),
@@ -801,7 +801,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withoutExcludes__when__setIncludes_value__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("feature/*", ""),
@@ -826,7 +826,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withoutTrait__when__setIncludes_value__then__traitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
@@ -848,7 +848,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withExcludes__when__setIncludes_default__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("feature/*", "feature/ignore"),
@@ -873,7 +873,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withExcludes__when__setIncludes_value__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("feature/*", "feature/ignore"),
@@ -898,7 +898,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withoutIncludes__when__setExcludes_default__then__traitRemoved() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("*", "feature/ignore"),
@@ -921,7 +921,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withoutIncludes__when__setExcludes_value__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("*", "feature/ignore"),
@@ -946,7 +946,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withoutTrait__when__setExcludes_value__then__traitAdded() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
@@ -968,7 +968,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withIncludes__when__setExcludes_default__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("feature/*", "feature/ignore"),
@@ -993,7 +993,7 @@ public class BitbucketSCMNavigatorTest {
     @Test
     public void given__legacyCode_withIncludes__when__setExcludes_value__then__traitUpdated() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
-        instance.setTraits(Arrays.<SCMTrait>asList(
+        instance.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, false),
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WildcardSCMHeadFilterTrait("feature/*", ""),

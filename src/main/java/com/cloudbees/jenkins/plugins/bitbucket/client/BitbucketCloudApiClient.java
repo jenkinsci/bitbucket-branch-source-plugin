@@ -962,7 +962,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         while (!page.isLastPage()){
             response = getRequest(page.getNext());
             page = JsonParser.mapper.readValue(response,
-                    new TypeReference<BitbucketCloudPage<Map>>(){});
+                    new TypeReference<BitbucketCloudPage<BitbucketRepositorySource>>(){});
             for(BitbucketRepositorySource source:page.getValues()){
                 result.add(source.toBitbucketScmFile(parent));
             }
