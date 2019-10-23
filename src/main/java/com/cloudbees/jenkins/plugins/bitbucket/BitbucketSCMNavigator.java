@@ -632,7 +632,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         public List<NamedArrayList<? extends SCMTraitDescriptor<?>>> getTraitsDescriptorLists() {
             BitbucketSCMSource.DescriptorImpl sourceDescriptor =
-                    Jenkins.getInstance().getDescriptorByType(BitbucketSCMSource.DescriptorImpl.class);
+                    Jenkins.get().getDescriptorByType(BitbucketSCMSource.DescriptorImpl.class);
             List<SCMTraitDescriptor<?>> all = new ArrayList<>();
             all.addAll(
                     SCMNavigatorTrait._for(this, BitbucketSCMNavigatorContext.class, BitbucketSCMSourceBuilder.class));

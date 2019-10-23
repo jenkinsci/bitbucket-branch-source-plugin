@@ -55,7 +55,7 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
     @Restricted(NoExternalUse.class) // stapler
     @SuppressWarnings("unused")
     public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl) {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         jenkins.checkPermission(Jenkins.ADMINISTER);
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeMatchingAs(

@@ -60,7 +60,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
     /**
      * Jenkins Server Root URL to be used by that Bitbucket endpoint.
-     * The global setting from Jenkins.getInstance().getRootUrl()
+     * The global setting from Jenkins.get().getRootUrl()
      * will be used if this field is null or equals an empty string.
      * This variable is bound to the UI, so an empty value is saved
      * and returned by getter as such.
@@ -111,7 +111,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
     /**
      * Jenkins Server Root URL to be used by this Bitbucket endpoint.
-     * The global setting from Jenkins.getInstance().getRootUrl()
+     * The global setting from Jenkins.get().getRootUrl()
      * will be used if this field is null or equals an empty string.
      *
      * @return the verbatim setting provided by endpoint configuration
@@ -135,7 +135,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
 
     /**
      * Jenkins Server Root URL to be used by this Bitbucket endpoint.
-     * The global setting from Jenkins.getInstance().getRootUrl()
+     * The global setting from Jenkins.get().getRootUrl()
      * will be used if this field is null or equals an empty string.
      *
      * @return the normalized value from setting provided by endpoint
@@ -220,7 +220,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
                 CredentialsProvider.lookupCredentials(
                         StandardCredentials.class,
-                        Jenkins.getInstance(),
+                        Jenkins.get(),
                         ACL.SYSTEM,
                         URIRequirementBuilder.fromUri(getServerUrl()).build()
                 ),

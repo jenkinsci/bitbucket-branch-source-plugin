@@ -80,10 +80,10 @@ public class BitbucketServerEndpointTest {
     public void getUnmanagedDefaultRootUrl() {
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
                 true, null).getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getInstance().getRootUrl())));
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.get().getRootUrl())));
         assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
                 false, "{cred}").getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getInstance().getRootUrl())));
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.get().getRootUrl())));
     }
 
     @Test

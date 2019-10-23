@@ -724,7 +724,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     private void setClientProxyParams(String host, HttpClientBuilder builder) {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
         ProxyConfiguration proxyConfig = null;
         if (jenkins != null) {
             proxyConfig = jenkins.proxy;
@@ -815,7 +815,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private String getRequest(String path) throws IOException, InterruptedException {
         try (InputStream inputStream = getRequestAsInputStream(path)){
-            return IOUtils.toString(inputStream, "UTF-8");
+            return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
         }
     }
 
