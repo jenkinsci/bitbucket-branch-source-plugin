@@ -65,8 +65,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 public class BranchScanningIntegrationTest {
 
@@ -191,13 +189,9 @@ public class BranchScanningIntegrationTest {
 
             @Override
             public FreeStyleProject newInstance(Branch branch) {
-                FreeStyleProject job = new FreeStyleProject(getOwner(), branch.getName());
-                job.onCreatedFromScratch();
-                FreeStyleProject spied = spy(job);
-                // Do nothing.. Running the actual build is not desired/required (and not possible) in this tests.
-                when(spied.scheduleBuild()).thenReturn(false);
-                setBranch(spied, branch);
-                return spied;
+                FreeStyleProject job = new FreeStyleProject(getOwner(), branch.getEncodedName());
+                setBranch(job, branch);
+                return job;
             }
 
             @Override
