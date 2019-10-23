@@ -125,6 +125,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private static final String V2_TEAMS_API_BASE_URL = "https://api.bitbucket.org/2.0/teams";
     private static final String REPO_URL_TEMPLATE = V2_API_BASE_URL + "{/owner,repo}";
     private static final int API_RATE_LIMIT_CODE = 429;
+    private static final int MAX_PAGE_LENGTH = 100;
     private static final PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
     private CloseableHttpClient client;
     private HttpClientContext context;
@@ -262,10 +263,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     public List<BitbucketPullRequestValue> getPullRequests() throws InterruptedException, IOException {
         List<BitbucketPullRequestValue> pullRequests = new ArrayList<>();
 
+        // we can not use the default max pagelen also if documented
+        // https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests#get
+        // so because with values greater than 50 the API returns HTTP 400
+        int pageLen = 50;
         UriTemplate template = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{?page,pagelen}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
-                .set("pagelen", 50);
+                .set("pagelen", pageLen);
 
         BitbucketPullRequests page;
         int pageNumber = 1;
@@ -583,7 +588,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 .set("owner", owner)
                 .set("repo", repositoryName)
                 .set("page", pageNumber)
-                .set("pagelen", 50);
+                .set("pagelen", MAX_PAGE_LENGTH);
         String url = template.expand();
         try {
             String response = getRequest(url);
@@ -682,7 +687,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
         final UriTemplate template = UriTemplate.fromTemplate(V2_API_BASE_URL + "{/owner}{?role,page,pagelen}")
                 .set("owner", owner)
-                .set("pagelen", 50);
+                .set("pagelen", MAX_PAGE_LENGTH);
         if (role != null &&  authenticator != null) {
             template.set("role", role.getId());
             cacheKey.append("::").append(role.getId());
