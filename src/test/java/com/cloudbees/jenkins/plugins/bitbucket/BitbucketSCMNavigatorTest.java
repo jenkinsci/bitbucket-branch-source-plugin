@@ -4,10 +4,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import java.util.Arrays;
 import java.util.Collections;
 import jenkins.model.Jenkins;
-import jenkins.scm.api.trait.SCMTrait;
 import jenkins.scm.impl.trait.RegexSCMSourceFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
-import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +45,7 @@ public class BitbucketSCMNavigatorTest {
         assertThat(instance.getRepoOwner(), is("cloudbeers"));
         assertThat(instance.getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
         assertThat(instance.getCredentialsId(), is("bcaef157-f105-407f-b150-df7722eab6c1"));
-        assertThat(instance.getTraits(), is(Collections.<SCMTrait<?>>emptyList()));
+        assertThat(instance.getTraits(), is(Collections.emptyList()));
     }
 
     @Test
@@ -59,28 +57,28 @@ public class BitbucketSCMNavigatorTest {
         assertThat(instance.getCredentialsId(), is("bcaef157-f105-407f-b150-df7722eab6c1"));
         assertThat("SAME checkout credentials should mean no checkout trait",
                 instance.getTraits(),
-                not(hasItem(Matchers.<SCMTrait<?>>instanceOf(SSHCheckoutTrait.class))));
+                not(hasItem(instanceOf(SSHCheckoutTrait.class))));
         assertThat(".* as a pattern should mean no RegexSCMSourceFilterTrait",
                 instance.getTraits(),
-                not(hasItem(Matchers.<SCMTrait<?>>instanceOf(RegexSCMSourceFilterTrait.class))));
+                not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         )
@@ -105,38 +103,38 @@ public class BitbucketSCMNavigatorTest {
         assertThat("checkout credentials should mean checkout trait",
                 instance.getTraits(),
                 hasItem(
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is("8b2e4f77-39c5-41a9-b63b-8d367350bfdf"))
                         )
                 )
         );
         assertThat(".* as a pattern should mean no RegexSCMSourceFilterTrait",
                 instance.getTraits(),
-                not(hasItem(Matchers.<SCMTrait<?>>instanceOf(RegexSCMSourceFilterTrait.class))));
+                not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is("8b2e4f77-39c5-41a9-b63b-8d367350bfdf"))
                         )
                 )
@@ -160,38 +158,38 @@ public class BitbucketSCMNavigatorTest {
         assertThat("checkout credentials should mean checkout trait",
                 instance.getTraits(),
                 hasItem(
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is(nullValue()))
                         )
                 )
         );
         assertThat(".* as a pattern should mean no RegexSCMSourceFilterTrait",
                 instance.getTraits(),
-                not(hasItem(Matchers.<SCMTrait<?>>instanceOf(RegexSCMSourceFilterTrait.class))));
+                not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is(nullValue()))
                         )
                 )
@@ -217,8 +215,8 @@ public class BitbucketSCMNavigatorTest {
                 instance.getTraits(),
                 not(
                         hasItem(
-                                Matchers.<SCMTrait<?>>allOf(
-                                        Matchers.instanceOf(SSHCheckoutTrait.class),
+                                allOf(
+                                        instanceOf(SSHCheckoutTrait.class),
                                         hasProperty("credentialsId", is(nullValue()))
                                 )
                         )
@@ -226,25 +224,25 @@ public class BitbucketSCMNavigatorTest {
         );
         assertThat(".* as a pattern should mean no RegexSCMSourceFilterTrait",
                 instance.getTraits(),
-                not(hasItem(Matchers.<SCMTrait<?>>instanceOf(RegexSCMSourceFilterTrait.class))));
+                not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         )
@@ -269,38 +267,38 @@ public class BitbucketSCMNavigatorTest {
         assertThat("checkout credentials should mean checkout trait",
                 instance.getTraits(),
                 hasItem(
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is("8b2e4f77-39c5-41a9-b63b-8d367350bfdf"))
                         )
                 )
         );
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is("8b2e4f77-39c5-41a9-b63b-8d367350bfdf"))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(RegexSCMSourceFilterTrait.class),
                                 hasProperty("regex", is("limited.*"))
                         )
@@ -325,27 +323,27 @@ public class BitbucketSCMNavigatorTest {
         assertThat(instance.getCredentialsId(), is("bcaef157-f105-407f-b150-df7722eab6c1"));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("*")),
                                 hasProperty("excludes", is("master"))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         )
@@ -369,27 +367,27 @@ public class BitbucketSCMNavigatorTest {
         assertThat(instance.getCredentialsId(), is("bcaef157-f105-407f-b150-df7722eab6c1"));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("feature/*")),
                                 hasProperty("excludes", is(""))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         )
@@ -414,38 +412,38 @@ public class BitbucketSCMNavigatorTest {
         assertThat("checkout credentials should mean checkout trait",
                 instance.getTraits(),
                 hasItem(
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is("8b2e4f77-39c5-41a9-b63b-8d367350bfdf"))
                         )
                 )
         );
         assertThat(".* as a pattern should mean no RegexSCMSourceFilterTrait",
                 instance.getTraits(),
-                not(hasItem(Matchers.<SCMTrait<?>>instanceOf(RegexSCMSourceFilterTrait.class))));
+                not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(true))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(OriginPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(ForkPullRequestDiscoveryTrait.class),
                                 hasProperty("strategyId", is(2)),
                                 hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
                         ),
-                        Matchers.<SCMTrait<?>>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMTrait<?>>allOf(
+                        instanceOf(PublicRepoPullRequestFilterTrait.class),
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.ITEM))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
-                                Matchers.instanceOf(SSHCheckoutTrait.class),
+                        allOf(
+                                instanceOf(SSHCheckoutTrait.class),
                                 hasProperty("credentialsId", is("8b2e4f77-39c5-41a9-b63b-8d367350bfdf"))
                         )
                 )
@@ -463,7 +461,7 @@ public class BitbucketSCMNavigatorTest {
     public void given__instance__when__setTraits_empty__then__traitsEmpty() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setTraits(Collections.emptyList());
-        assertThat(instance.getTraits(), is(Collections.<SCMTrait<?>>emptyList()));
+        assertThat(instance.getTraits(), is(Collections.emptyList()));
     }
 
     @Test
@@ -473,12 +471,12 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.DISABLE)));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(BranchDiscoveryTrait.class),
                                 hasProperty("buildBranch", is(true)),
                                 hasProperty("buildBranchesWithPR", is(false))
                         ),
-                        Matchers.<SCMTrait<?>>allOf(
+                        allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
                                 hasProperty("mode", is(WebhookRegistration.DISABLE))
                         )
@@ -552,11 +550,11 @@ public class BitbucketSCMNavigatorTest {
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.getPattern(), is("job.*"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(instanceOf(RegexSCMSourceFilterTrait.class)));
+        assertThat(instance.getTraits(), hasItem(instanceOf(RegexSCMSourceFilterTrait.class)));
         instance.setPattern(".*");
         assertThat(instance.getPattern(), is(".*"));
         assertThat(instance.getTraits(),
-                not(Matchers.<SCMTrait<?>>hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
+                not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
 
     }
 
@@ -567,10 +565,10 @@ public class BitbucketSCMNavigatorTest {
                 Arrays.asList(new BranchDiscoveryTrait(true, false), new SSHCheckoutTrait("dummy")));
         assertThat(instance.getPattern(), is(".*"));
         assertThat(instance.getTraits(),
-                not(Matchers.<SCMTrait<?>>hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
+                not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
         instance.setPattern("job.*");
         assertThat(instance.getPattern(), is("job.*"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), hasItem(
                 allOf(instanceOf(RegexSCMSourceFilterTrait.class), hasProperty("regex", is("job.*")))));
 
     }
@@ -581,12 +579,12 @@ public class BitbucketSCMNavigatorTest {
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.getPattern(), is("job.*"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(instanceOf(RegexSCMSourceFilterTrait.class)));
+        assertThat(instance.getTraits(), hasItem(instanceOf(RegexSCMSourceFilterTrait.class)));
         instance.setPattern("project.*");
         assertThat(instance.getPattern(), is("project.*"));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), not(hasItem(
                 allOf(instanceOf(RegexSCMSourceFilterTrait.class), hasProperty("regex", is("job.*"))))));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), hasItem(
                 allOf(instanceOf(RegexSCMSourceFilterTrait.class), hasProperty("regex", is("project.*")))));
 
     }
@@ -598,10 +596,10 @@ public class BitbucketSCMNavigatorTest {
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.isAutoRegisterHooks(), is(true));
         assertThat(instance.getTraits(),
-                not(Matchers.<SCMTrait<?>>hasItem(instanceOf(WebhookRegistrationTrait.class))));
+                not(hasItem(instanceOf(WebhookRegistrationTrait.class))));
         instance.setAutoRegisterHooks(true);
         assertThat(instance.isAutoRegisterHooks(), is(true));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), hasItem(
                 allOf(instanceOf(WebhookRegistrationTrait.class), hasProperty("mode", is(WebhookRegistration.ITEM)))));
     }
 
@@ -612,10 +610,10 @@ public class BitbucketSCMNavigatorTest {
                 new SSHCheckoutTrait("dummy")));
         assertThat(instance.isAutoRegisterHooks(), is(true));
         assertThat(instance.getTraits(),
-                not(Matchers.<SCMTrait<?>>hasItem(instanceOf(WebhookRegistrationTrait.class))));
+                not(hasItem(instanceOf(WebhookRegistrationTrait.class))));
         instance.setAutoRegisterHooks(false);
         assertThat(instance.isAutoRegisterHooks(), is(false));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), hasItem(
                 allOf(instanceOf(WebhookRegistrationTrait.class),
                         hasProperty("mode", is(WebhookRegistration.DISABLE)))));
     }
@@ -626,12 +624,12 @@ public class BitbucketSCMNavigatorTest {
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(true, false), new RegexSCMSourceFilterTrait("job.*"),
                 new SSHCheckoutTrait("dummy"), new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.isAutoRegisterHooks(), is(true));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), hasItem(
                 allOf(instanceOf(WebhookRegistrationTrait.class),
                         hasProperty("mode", is(WebhookRegistration.SYSTEM)))));
         instance.setAutoRegisterHooks(true);
         assertThat(instance.isAutoRegisterHooks(), is(true));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), hasItem(
                 allOf(instanceOf(WebhookRegistrationTrait.class), hasProperty("mode", is(WebhookRegistration.ITEM)))));
     }
 
@@ -643,10 +641,10 @@ public class BitbucketSCMNavigatorTest {
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
         instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.SAME);
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
     }
 
     @Test
@@ -658,13 +656,13 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
                 new SSHCheckoutTrait("value")));
         assertThat(instance.getCheckoutCredentialsId(), is("value"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is("value"))
         )));
         instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.SAME);
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
     }
 
     @Test
@@ -675,10 +673,10 @@ public class BitbucketSCMNavigatorTest {
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
         instance.setCheckoutCredentialsId(null);
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
     }
 
     @Test
@@ -690,13 +688,13 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
                 new SSHCheckoutTrait("value")));
         assertThat(instance.getCheckoutCredentialsId(), is("value"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is("value"))
         )));
         instance.setCheckoutCredentialsId(null);
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
     }
 
     @Test
@@ -707,10 +705,10 @@ public class BitbucketSCMNavigatorTest {
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
         instance.setCheckoutCredentialsId("value");
         assertThat(instance.getCheckoutCredentialsId(), is("value"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is("value"))
         )));
@@ -725,13 +723,13 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
                 new SSHCheckoutTrait(null)));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.ANONYMOUS));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is(nullValue()))
         )));
         instance.setCheckoutCredentialsId("value");
         assertThat(instance.getCheckoutCredentialsId(), is("value"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is("value"))
         )));
@@ -745,10 +743,10 @@ public class BitbucketSCMNavigatorTest {
                 new RegexSCMSourceFilterTrait("job.*"),
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(instance.getTraits(), not(hasItem(instanceOf(SSHCheckoutTrait.class))));
         instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.ANONYMOUS));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is(nullValue()))
         )));
@@ -763,13 +761,13 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
                 new SSHCheckoutTrait("value")));
         assertThat(instance.getCheckoutCredentialsId(), is("value"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is("value"))
         )));
         instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.ANONYMOUS));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(SSHCheckoutTrait.class),
                 hasProperty("credentialsId", is(nullValue()))
         )));
@@ -785,7 +783,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is(""))
@@ -793,7 +791,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setIncludes("*");
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), not(hasItem(
                 instanceOf(WildcardSCMHeadFilterTrait.class)
         )));
     }
@@ -808,7 +806,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is(""))
@@ -816,7 +814,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setIncludes("bug/*");
         assertThat(instance.getIncludes(), is("bug/*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("bug/*")),
                 hasProperty("excludes", is(""))
@@ -832,13 +830,13 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), not(hasItem(
                 instanceOf(WildcardSCMHeadFilterTrait.class)
         )));
         instance.setIncludes("feature/*");
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is(""))
@@ -855,7 +853,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -863,7 +861,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setIncludes("*");
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -880,7 +878,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -888,7 +886,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setIncludes("bug/*");
         assertThat(instance.getIncludes(), is("bug/*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("bug/*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -905,7 +903,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -913,7 +911,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setExcludes("");
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), not(hasItem(
                 instanceOf(WildcardSCMHeadFilterTrait.class)
         )));
     }
@@ -928,7 +926,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -936,7 +934,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setExcludes("bug/ignore");
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is("bug/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("*")),
                 hasProperty("excludes", is("bug/ignore"))
@@ -952,13 +950,13 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), not(Matchers.<SCMTrait<?>>hasItem(
+        assertThat(instance.getTraits(), not(hasItem(
                 instanceOf(WildcardSCMHeadFilterTrait.class)
         )));
         instance.setExcludes("feature/ignore");
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -975,7 +973,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is("feature/ignore"))
@@ -983,7 +981,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setExcludes("");
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is(""))
@@ -1000,7 +998,7 @@ public class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is(""))
@@ -1008,7 +1006,7 @@ public class BitbucketSCMNavigatorTest {
         instance.setExcludes("feature/ignore");
         assertThat(instance.getIncludes(), is("feature/*"));
         assertThat(instance.getExcludes(), is("feature/ignore"));
-        assertThat(instance.getTraits(), Matchers.<SCMTrait<?>>hasItem(allOf(
+        assertThat(instance.getTraits(), hasItem(allOf(
                 instanceOf(WildcardSCMHeadFilterTrait.class),
                 hasProperty("includes", is("feature/*")),
                 hasProperty("excludes", is("feature/ignore"))
