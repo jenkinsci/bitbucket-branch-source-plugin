@@ -62,17 +62,16 @@ public class BitbucketGitSCMRevisionTest {
         });
     }
 
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
+
     private final SCMSourceTrait trait;
     private final String serverURL;
 
     public BitbucketGitSCMRevisionTest(String testName, SCMSourceTrait trait, String serverURL) {
         this.trait = trait;
         this.serverURL = serverURL;
-
     }
-
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
 
     @Before
     public void setup() {

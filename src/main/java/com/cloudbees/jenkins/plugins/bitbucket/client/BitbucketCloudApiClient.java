@@ -119,24 +119,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class BitbucketCloudApiClient implements BitbucketApi {
 
-    /**
-     * Make available commit informations in a lazy way.
-     *
-     * @author Nikolas Falco
-     */
-    private class CommitClosure implements Callable<BitbucketCommit> {
-        private final String hash;
-
-        public CommitClosure(@NonNull String hash) {
-            this.hash = hash;
-        }
-
-        @Override
-        public BitbucketCommit call() throws Exception {
-            return resolveCommit(hash);
-        }
-    }
-
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
     private static final HttpHost API_HOST = HttpHost.create("https://api.bitbucket.org");
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
@@ -308,6 +290,24 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         return pullRequests;
+    }
+
+    /**
+     * Make available commit informations in a lazy way.
+     *
+     * @author Nikolas Falco
+     */
+    private class CommitClosure implements Callable<BitbucketCommit> {
+        private final String hash;
+
+        public CommitClosure(@NonNull String hash) {
+            this.hash = hash;
+        }
+
+        @Override
+        public BitbucketCommit call() throws Exception {
+            return resolveCommit(hash);
+        }
     }
 
     private void setupClosureForPRBranch(BitbucketPullRequestValue pullRequest) {
