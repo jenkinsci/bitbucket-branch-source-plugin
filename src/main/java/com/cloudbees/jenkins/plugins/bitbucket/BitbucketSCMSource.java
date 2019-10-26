@@ -1023,7 +1023,7 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @CheckForNull
-    BitbucketAuthenticator authenticator() {
+    /* package */ BitbucketAuthenticator authenticator() {
         return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerUrl()), credentials());
     }
 
