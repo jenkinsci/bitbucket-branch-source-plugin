@@ -56,7 +56,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
 
     @Override
     public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
-        return; // without a server URL, the event wouldn't match anything
+        // without a server URL, the event wouldn't match anything
     }
 
     @Override
