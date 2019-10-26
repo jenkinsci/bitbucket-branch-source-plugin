@@ -84,14 +84,18 @@ public abstract class BitbucketAuthenticator {
      * Configures an {@link HttpClientBuilder}. Override if you need to adjust connection setup.
      * @param builder The client builder.
      */
-    public void configureBuilder(HttpClientBuilder builder) { }
+    public void configureBuilder(HttpClientBuilder builder) {
+        // override to configure HttpClientBuilder
+    }
 
     /**
      * Configures an {@link HttpClientContext}. Override
      * @param context The connection context
      * @param host host being connected to
      */
-    public void configureContext(HttpClientContext context, HttpHost host) { }
+    public void configureContext(HttpClientContext context, HttpHost host) {
+        // override to configure HttpClientContext
+    }
 
     /**
      * Configures an {@link HttpRequest}. Override this if your authentication method needs to set headers on a
@@ -99,7 +103,9 @@ public abstract class BitbucketAuthenticator {
      *
      * @param request the request.
      */
-    public void configureRequest(HttpRequest request) { }
+    public void configureRequest(HttpRequest request) {
+        // override to configure HttpRequest
+    }
 
     /**
      * Generates context that sub-classes can use to determine if they would be able to authenticate against the
