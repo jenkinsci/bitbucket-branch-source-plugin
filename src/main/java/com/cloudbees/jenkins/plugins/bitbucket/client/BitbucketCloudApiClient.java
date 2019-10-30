@@ -743,18 +743,29 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         if (proxy.type() != Proxy.Type.DIRECT) {
             final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
             LOGGER.fine("Jenkins proxy: " + proxy.address());
-            builder.setProxy(new HttpHost(proxyAddress.getHostName(), proxyAddress.getPort()));
+            HttpHost proxyHttpHost = new HttpHost(proxyAddress.getHostName(), proxyAddress.getPort());
+            builder.setProxy(proxyHttpHost);
             String username = proxyConfig.getUserName();
             String password = proxyConfig.getPassword();
             if (username != null && !"".equals(username.trim())) {
                 LOGGER.fine("Using proxy authentication (user=" + username + ")");
-                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
-                AuthCache authCache = new BasicAuthCache();
-                authCache.put(HttpHost.create(proxyAddress.getHostName()), new BasicScheme());
-                context = HttpClientContext.create();
-                context.setCredentialsProvider(credentialsProvider);
-                context.setAuthCache(authCache);
+                if (context == null) {
+                	// may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
+                	context = HttpClientContext.create();
+                }
+                CredentialsProvider credentialsProvider = context.getCredentialsProvider();
+                if (credentialsProvider == null) {
+                	credentialsProvider = new BasicCredentialsProvider();
+                	// may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
+                	context.setCredentialsProvider(credentialsProvider);
+                }
+                credentialsProvider.setCredentials(new AuthScope(proxyHttpHost), new UsernamePasswordCredentials(username, password));
+                AuthCache authCache = context.getAuthCache();
+                if (authCache == null) {
+                	authCache = new BasicAuthCache();
+                	context.setAuthCache(authCache);
+                }
+				authCache.put(proxyHttpHost, new BasicScheme());
             }
         }
     }
