@@ -750,22 +750,22 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             if (username != null && !"".equals(username.trim())) {
                 LOGGER.fine("Using proxy authentication (user=" + username + ")");
                 if (context == null) {
-                	// may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
-                	context = HttpClientContext.create();
+                    // may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
+                    context = HttpClientContext.create();
                 }
                 CredentialsProvider credentialsProvider = context.getCredentialsProvider();
                 if (credentialsProvider == null) {
-                	credentialsProvider = new BasicCredentialsProvider();
-                	// may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
-                	context.setCredentialsProvider(credentialsProvider);
+                    credentialsProvider = new BasicCredentialsProvider();
+                    // may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
+                    context.setCredentialsProvider(credentialsProvider);
                 }
                 credentialsProvider.setCredentials(new AuthScope(proxyHttpHost), new UsernamePasswordCredentials(username, password));
                 AuthCache authCache = context.getAuthCache();
                 if (authCache == null) {
-                	authCache = new BasicAuthCache();
-                	context.setAuthCache(authCache);
+                    authCache = new BasicAuthCache();
+                    context.setAuthCache(authCache);
                 }
-				authCache.put(proxyHttpHost, new BasicScheme());
+                authCache.put(proxyHttpHost, new BasicScheme());
             }
         }
     }
