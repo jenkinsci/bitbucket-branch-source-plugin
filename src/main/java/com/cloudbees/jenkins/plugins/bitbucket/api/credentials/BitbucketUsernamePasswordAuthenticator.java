@@ -70,7 +70,7 @@ public class BitbucketUsernamePasswordAuthenticator extends BitbucketAuthenticat
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(new AuthScope(host), httpCredentials);
         AuthCache authCache = new BasicAuthCache();
-        LOGGER.log(Level.SEVERE,"Add host={0} to authCache.", host);
+        LOGGER.log(Level.FINE,"Add host={0} to authCache.", host);
         authCache.put(host, new BasicScheme());
         context.setCredentialsProvider(credentialsProvider);
         context.setAuthCache(authCache);
