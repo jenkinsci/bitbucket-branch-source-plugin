@@ -37,7 +37,7 @@
   <packaging>hpi</packaging>
 
   <name>Bitbucket Branch Source Plugin</name>
-  <url>https://wiki.jenkins.io/display/JENKINS/Bitbucket+Branch+Source+Plugin</url>
+  <url>https://github.com/jenkinsci/bitbucket-branch-source-plugin</url>
   <description>Discover and build Bitbucket Cloud and Bitbucket Server pull requests and branches and send status
     notifications with the build result.
   </description>

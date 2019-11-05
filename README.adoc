@@ -1,5 +1,13 @@
 == BitBucket Branch Source Plugin
 
+image:https://img.shields.io/jenkins/plugin/v/cloudbees-bitbucket-branch-source["Jenkins Plugin", link="https://plugins.jenkins.io/cloudbees-bitbucket-branch-source"]
+image:https://img.shields.io/jenkins/plugin/i/cloudbees-bitbucket-branch-source?color=blue["Jenkins Plugin Installs", link="https://plugins.jenkins.io/cloudbees-bitbucket-branch-source"]
+image:https://img.shields.io/github/release/jenkinsci/bitbucket-branch-source-plugin.svg?label=changelog["Changelog", link="https://github.com/jenkinsci/bitbucket-branch-source-plugin/releases/latest"]
+
+=== User Guide
+
+https://docs.cloudbees.com/docs/admin-resources/latest/plugins/bitbucket[See Cloudbees excellent user guide]
+
 === Notes
 
 * Unlike GitHub, in BitBucket, https://bitbucket.org/site/master/issues/4828/team-admins-dont-have-read-access-to-forks[team admins do not have access to forks].
