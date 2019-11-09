@@ -30,6 +30,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -84,6 +85,7 @@ public class WebhookConfigurationTrait extends SCMSourceTrait {
     /**
      * Our constructor.
      */
+    @Symbol("bitbucketWebhookConfiguration")
     @Extension
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
