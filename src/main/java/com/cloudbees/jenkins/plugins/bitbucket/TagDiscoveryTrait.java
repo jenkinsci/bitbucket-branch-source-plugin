@@ -51,7 +51,6 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public TagDiscoveryTrait() {
-        //empty
     }
 
     /**
@@ -59,10 +58,9 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        if (context instanceof BitbucketSCMSourceContext) {
-            BitbucketSCMSourceContext ctx = (BitbucketSCMSourceContext) context;
-            ctx.wantTags(true).withAuthority(new TagSCMHeadAuthority());
-        }
+        BitbucketSCMSourceContext ctx = (BitbucketSCMSourceContext) context;
+        ctx.wantTags(true);
+        ctx.withAuthority(new TagSCMHeadAuthority());
     }
 
     /**

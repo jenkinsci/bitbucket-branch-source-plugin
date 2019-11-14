@@ -36,7 +36,6 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
-import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.MercurialSCMBuilder;
@@ -185,7 +184,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
             result.add(Messages.SSHCheckoutTrait_useAgentKey(), "");
             return result.includeMatchingAs(
                     context instanceof Queue.Task
-                            ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                            ? ((Queue.Task) context).getDefaultAuthentication()
                             : ACL.SYSTEM,
                     context,
                     StandardUsernameCredentials.class,
@@ -219,7 +218,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
             if (CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
                     SSHUserPrivateKey.class,
                     context,
-                    context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
+                    context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication() : ACL.SYSTEM,
                     URIRequirementBuilder.fromUri(serverUrl).build()),
                     CredentialsMatchers.withId(value)) != null) {
                 return FormValidation.ok();
@@ -227,7 +226,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
             if (CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
                     StandardUsernameCredentials.class,
                     context,
-                    context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
+                    context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication() : ACL.SYSTEM,
                     URIRequirementBuilder.fromUri(serverUrl).build()),
                     CredentialsMatchers.withId(value)) != null) {
                 return FormValidation.error(Messages.SSHCheckoutTrait_incompatibleCredentials());
