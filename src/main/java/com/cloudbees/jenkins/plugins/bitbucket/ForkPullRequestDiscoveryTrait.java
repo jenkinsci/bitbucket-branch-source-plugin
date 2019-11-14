@@ -63,10 +63,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
      * The authority.
      */
     @NonNull
-    private final SCMHeadAuthority<
-            ? super BitbucketSCMSourceRequest,
-            ? extends ChangeRequestSCMHead2,
-            ? extends SCMRevision> trust;
+    private final SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends SCMRevision> trust;
 
     /**
      * Constructor for stapler.
@@ -76,8 +73,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public ForkPullRequestDiscoveryTrait(int strategyId,
-                                         @NonNull SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends
-                                                 ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
+                                         @NonNull SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
         this.strategyId = strategyId;
         this.trust = trust;
     }
@@ -89,8 +85,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
      * @param trust      the authority.
      */
     public ForkPullRequestDiscoveryTrait(@NonNull Set<ChangeRequestCheckoutStrategy> strategies,
-                                         @NonNull SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends
-                                                 ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
+                                         @NonNull SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
         this((strategies.contains(ChangeRequestCheckoutStrategy.MERGE) ? 1 : 0)
                 + (strategies.contains(ChangeRequestCheckoutStrategy.HEAD) ? 2 : 0), trust);
     }
@@ -103,7 +98,6 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
     public int getStrategyId() {
         return strategyId;
     }
-
 
     /**
      * Returns the strategies.
@@ -130,8 +124,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
      * @return the authority.
      */
     @NonNull
-    public SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends
-            SCMRevision> getTrust() {
+    public SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends SCMRevision> getTrust() {
         return trust;
     }
 
@@ -323,7 +316,6 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
             public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Fork.class.isAssignableFrom(originClass);
             }
-
         }
     }
 

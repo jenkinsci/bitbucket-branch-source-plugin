@@ -100,7 +100,6 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     @Restricted(NoExternalUse.class)
     public boolean isBuildBranch() {
         return (strategyId & 1) != 0;
-
     }
 
     /**
@@ -135,7 +134,6 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                 // we don't care if it is a PR or not, we're taking them all, no need to ask for PRs and no need
                 // to filter
                 break;
-
         }
     }
 
