@@ -356,11 +356,18 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private void setupClosureForPRBranch(BitbucketServerPullRequest pr) {
-        BitbucketServerBranch branch = (BitbucketServerBranch) pr.getSource().getBranch();
-        branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
-
-        branch = (BitbucketServerBranch) pr.getDestination().getBranch();
-        branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        try {
+            BitbucketServerBranch branch = (BitbucketServerBranch) pr.getSource().getBranch();
+            if (branch != null) {
+                branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+            }
+            branch = (BitbucketServerBranch) pr.getDestination().getBranch();
+            if (branch != null) {
+                branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+            }
+        } catch (NullPointerException e) {
+            LOGGER.log(Level.SEVERE, "setupClosureForPRBranch", e);
+        }
     }
 
     private boolean getPullRequestCanMergeById(@NonNull Integer id) throws IOException {
@@ -525,7 +532,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         List<BitbucketServerBranch> branches = getResources(template, BitbucketServerBranches.class);
         for (final BitbucketServerBranch branch : branches) {
-            branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+            if (branch != null) {
+                branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+            }
         }
 
         return branches;
