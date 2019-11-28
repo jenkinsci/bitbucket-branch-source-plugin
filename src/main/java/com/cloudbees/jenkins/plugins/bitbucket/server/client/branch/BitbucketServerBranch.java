@@ -63,7 +63,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
         return displayId;
     }
 
-    public long getTimestamp() {
+    public synchronized long getTimestamp() {
         return timestamp();
     }
 
@@ -88,16 +88,16 @@ public class BitbucketServerBranch implements BitbucketBranch {
         this.latestCommit = latestCommit;
     }
 
-    public void setTimestamp(long timestamp) {
+    public synchronized void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
     @Restricted(NoExternalUse.class)
-    public void setCommitClosure(Callable<BitbucketCommit> commitClosure) {
+    public synchronized void setCommitClosure(Callable<BitbucketCommit> commitClosure) {
         this.commitClosure = commitClosure;
     }
 
-    private long timestamp() {
+    private synchronized long timestamp() {
         if (timestamp == null) {
             if (commitClosure == null) {
                 timestamp = 0L;
@@ -105,7 +105,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
                 initHeadCommitInfo();
             }
         }
-        return timestamp;
+        return timestamp == null ? 0L : timestamp;
     }
 
     @Override
@@ -132,12 +132,10 @@ public class BitbucketServerBranch implements BitbucketBranch {
         this.author = author;
     }
 
-    private void initHeadCommitInfo() {
+    private synchronized void initHeadCommitInfo() {
         if (callableInitialised || commitClosure == null) {
             return;
         }
-
-        callableInitialised = true;
         try {
             BitbucketCommit commit = commitClosure.call();
 
@@ -148,6 +146,9 @@ public class BitbucketServerBranch implements BitbucketBranch {
             LOGGER.log(Level.FINER, "Could not determine head commit details", e);
             // fallback on default values
             this.timestamp = 0L;
+            this.message = "Unknown";
+            this.author = "Unknown";
         }
+        callableInitialised = true;
     }
 }
