@@ -1,10 +1,16 @@
-package com.cloudbees.jenkins.plugins.bitbucket.api;
+package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
+
+import java.nio.charset.StandardCharsets;
 import org.eclipse.jgit.util.Base64;
 import org.scribe.builder.api.DefaultApi20;
-import org.scribe.model.*;
+import org.scribe.model.OAuthConfig;
+import org.scribe.model.OAuthConstants;
+import org.scribe.model.OAuthRequest;
+import org.scribe.model.Response;
+import org.scribe.model.Token;
+import org.scribe.model.Verifier;
 import org.scribe.oauth.OAuth20ServiceImpl;
-import java.nio.charset.StandardCharsets;
 
 public class BitbucketOAuthService extends OAuth20ServiceImpl {
     private static final String GRANT_TYPE_KEY = "grant_type";

@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.bitbucket.api;
+package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import org.scribe.builder.api.DefaultApi20;
 import org.scribe.extractors.AccessTokenExtractor;

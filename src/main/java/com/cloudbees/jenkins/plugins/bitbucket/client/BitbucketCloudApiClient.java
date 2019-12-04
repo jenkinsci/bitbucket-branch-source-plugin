@@ -37,8 +37,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketOAuth;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketOAuthService;
 import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
@@ -125,12 +123,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.scribe.model.OAuthConfig;
-import org.scribe.model.OAuthConstants;
-import org.scribe.model.Token;
-
 public class BitbucketCloudApiClient implements BitbucketApi {
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
@@ -193,21 +185,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
         // Create Http client
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-
-
-//        if (credentials != null) {
-//            if(this.token == null) {
-//                OAuthConfig config = new OAuthConfig(credentials.getUserName(), credentials.getPassword());
-//                BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
-//                Token token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
-//                this.token = token;
-//            }
-////                client.getState().setCredentials(AuthScope.ANY, credentials);
-////                client.getParams().setAuthenticationPreemptive(true);
-//            client.getParams().setAuthenticationPreemptive(false);
-//       } else {
-//            client.getParams().setAuthenticationPreemptive(false);
-//        }
 
         httpClientBuilder.setKeepAliveStrategy((__, ___) -> MILLISECONDS.convert(5, SECONDS));
         httpClientBuilder.setConnectionManager(connectionManager);
@@ -801,10 +778,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Override
     public List<BitbucketCloudRepository> getRepositories() throws IOException, InterruptedException {
         return getRepositories(null);
-    }
-
-    private synchronized void signRequest(HttpMethod request) {
-        request.addRequestHeader(OAuthConstants.HEADER, "Bearer " + this.token.getToken());
     }
 
     private void setClientProxyParams(String host, HttpClientBuilder builder) {
