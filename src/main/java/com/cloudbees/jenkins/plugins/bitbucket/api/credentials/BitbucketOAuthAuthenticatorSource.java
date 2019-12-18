@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -45,6 +46,14 @@ public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource
     public boolean isFit(AuthenticationTokenContext ctx) {
         return ctx.mustHave(BitbucketAuthenticator.SCHEME, "https") && ctx.mustHave(
                 BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_CLOUD);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CredentialsMatcher matcher() {
+        return new BitbucketOAuthCredentialMatcher();
     }
 
 }
