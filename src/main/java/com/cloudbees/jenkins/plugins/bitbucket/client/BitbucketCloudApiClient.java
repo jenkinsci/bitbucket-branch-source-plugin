@@ -245,6 +245,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             case GIT:
                 switch (protocol) {
                     case HTTP:
+                        if(authenticator != null ) {
+                            String username = authenticator.getUserUri();
+                            if (!username.isEmpty()) {
+                                return "https://" + username + "@bitbucket.org/" + owner + "/" + repository + ".git";
+                            }
+                        }
                         return "https://bitbucket.org/" + owner + "/" + repository + ".git";
                     case SSH:
                         return "git@bitbucket.org:" + owner + "/" + repository + ".git";

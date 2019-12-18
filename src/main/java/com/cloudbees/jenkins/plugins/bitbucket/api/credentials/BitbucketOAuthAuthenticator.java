@@ -35,4 +35,9 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
         request.addHeader(OAuthConstants.HEADER, "Bearer " + this.token.getToken());
     }
 
+    @Override
+    public String getUserUri() {
+        return "x-token-auth:{" + token.getToken() + "}";
+    }
+
 }
