@@ -16,7 +16,6 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
      */
     @Override
     public boolean matches(Credentials item) {
-        // TODO Auto-generated method stub
         if (!(item instanceof UsernamePasswordCredentials))
             return false;
 
@@ -34,7 +33,6 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
      */
     @Override
     public String describe() {
-        // TODO Auto-generated method stub
         return String.format(
                 "(username.lenght == %d && password.lenght == %d && !(username CONTAINS \".\" && username CONTAINS \"@\")",
                 keyLenght, secretLenght);
