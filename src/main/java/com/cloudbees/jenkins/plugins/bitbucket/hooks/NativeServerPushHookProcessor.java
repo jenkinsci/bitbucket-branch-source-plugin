@@ -35,7 +35,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIC
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerRefsChangedEvent;
-import com.google.common.base.Ascii;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -204,10 +203,16 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                         }
 
                         final String originalBranchName = pullRequest.getSource().getBranch().getName();
-                        final String branchName = String.format("PR-%s%s", pullRequest.getId(),
-                            strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
+                        final String pullDisplayName = BitbucketSCMSource.applyPRsNamingStrategy(
+                                pullRequest,
+                                originalBranchName,
+                                strategies.size(),
+                                strategy,
+                                ctx.pullRequestNamingStrategy(),
+                                ctx.pullRequestNamingExcludePattern()
+                        );
 
-                        final PullRequestSCMHead head = new PullRequestSCMHead(branchName, sourceOwnerName, sourceRepoName,
+                        final PullRequestSCMHead head = new PullRequestSCMHead(pullDisplayName, sourceOwnerName, sourceRepoName,
                             BitbucketRepositoryType.GIT, originalBranchName, pullRequest, headOrigin, strategy);
 
                         final String targetHash = pullRequest.getDestination().getCommit().getHash();

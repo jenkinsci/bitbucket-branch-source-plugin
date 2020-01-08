@@ -1,0 +1,9 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:entry title="${%Naming strategy}" field="namingStrategy">
+    <f:select default="PR_ID"/>
+  </f:entry>
+  <f:entry title="${%Naming exclusions}" field="namingExcludeRegex">
+    <f:textbox default="^release/.*|^hotfix/.*"/>
+  </f:entry>
+</j:jelly>

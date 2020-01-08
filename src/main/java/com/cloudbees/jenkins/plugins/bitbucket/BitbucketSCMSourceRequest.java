@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
@@ -132,6 +133,16 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     @CheckForNull
     private Iterable<BitbucketBranch> tags;
+    /**
+     * The {@link PullRequestNamingStrategy} that is used for the request.
+     */
+    @NonNull
+    private final PullRequestNamingStrategy pullRequestNamingStrategy;
+    /**
+     * The pull request naming strategy exclude {@link Pattern} that is used for the request.
+     */
+    @NonNull
+    private final Pattern pullRequestNamingExcludePattern;
 
     /**
      * Constructor.
@@ -148,6 +159,8 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         fetchBranches = context.wantBranches();
         fetchTags = context.wantTags();
         fetchOriginPRs = context.wantOriginPRs();
+        pullRequestNamingStrategy = context.pullRequestNamingStrategy();
+        pullRequestNamingExcludePattern = context.pullRequestNamingExcludePattern();
         fetchForkPRs = context.wantForkPRs();
         skipPublicPRs = context.skipPublicPRs();
         originPRStrategies = fetchOriginPRs && !context.originPRStrategies().isEmpty()
@@ -424,6 +437,26 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     @NonNull
     public final Iterable<BitbucketBranch> getTags() {
         return Util.fixNull(tags);
+    }
+
+    /**
+     * Returns the {@link PullRequestNamingStrategy} for this request.
+     *
+     * @return the {@link PullRequestNamingStrategy} for this request.
+     */
+    @NonNull
+    public final PullRequestNamingStrategy getPullRequestNamingStrategy() {
+        return pullRequestNamingStrategy;
+    }
+
+    /**
+     * Returns the pull request naming strategy exclude {@link Pattern} to use in this request.
+     *
+     * @return the pull request naming strategy exclude {@link Pattern} to use in this request.
+     */
+    @NonNull
+    public final Pattern getPullRequestNamingExcludePattern() {
+        return pullRequestNamingExcludePattern;
     }
 
     /**

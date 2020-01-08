@@ -44,7 +44,6 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -181,15 +180,20 @@ public class PullRequestHookProcessor extends HookProcessor {
                                         : ctx.forkPRStrategies();
                         Map<SCMHead, SCMRevision> result = new HashMap<>(strategies.size());
                         for (ChangeRequestCheckoutStrategy strategy : strategies) {
-                            String branchName = "PR-" + pull.getId();
-                            if (strategies.size() > 1) {
-                                branchName = branchName + "-" + strategy.name().toLowerCase(Locale.ENGLISH);
-                            }
                             String originalBranchName = pull.getSource().getBranch().getName();
+                            String pullDisplayName = BitbucketSCMSource.applyPRsNamingStrategy(
+                                    pull,
+                                    originalBranchName,
+                                    strategies.size(),
+                                    strategy,
+                                    ctx.pullRequestNamingStrategy(),
+                                    ctx.pullRequestNamingExcludePattern()
+                            );
+
                             PullRequestSCMHead head;
                             if (instanceType == BitbucketType.CLOUD) {
                                 head = new PullRequestSCMHead(
-                                        branchName,
+                                        pullDisplayName,
                                         pullRepoOwner,
                                         pullRepository,
                                         type,
@@ -200,7 +204,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                                 );
                             } else {
                                 head = new PullRequestSCMHead(
-                                        branchName,
+                                        pullDisplayName,
                                         src.getRepoOwner(),
                                         src.getRepository(),
                                         type,

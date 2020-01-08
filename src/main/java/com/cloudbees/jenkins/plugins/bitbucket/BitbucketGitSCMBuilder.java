@@ -99,13 +99,13 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         super(head, revision, /*dummy value*/scmSource.getServerUrl(), credentialsId);
         withoutRefSpecs();
         if (head instanceof PullRequestSCMHead) {
+            PullRequestSCMHead pull = (PullRequestSCMHead) head;
+            // can't use head.getName() in refs since it can contain unsupported characters, leading to syntax errors
             if (scmSource.buildBitbucketClient() instanceof BitbucketCloudApiClient) {
                 // TODO fix once Bitbucket Cloud has a fix for https://bitbucket.org/site/master/issues/5814
-                String branchName = ((PullRequestSCMHead) head).getBranchName();
-                withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + head.getName());
+                withRefSpec("+refs/heads/" + pull.getBranchName() + ":refs/remotes/@{remote}/PR-" + pull.getId());
             } else {
-                String pullId = ((PullRequestSCMHead) head).getId();
-                withRefSpec("+refs/pull-requests/" + pullId + "/from:refs/remotes/@{remote}/" + head.getName());
+                withRefSpec("+refs/pull-requests/" + pull.getId() + "/from:refs/remotes/@{remote}/PR-" + pull.getId());
             }
         } else if (head instanceof TagSCMHead ){
             withRefSpec("+refs/tags/" + head.getName() + ":refs/tags/" + head.getName());

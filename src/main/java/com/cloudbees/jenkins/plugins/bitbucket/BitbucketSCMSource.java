@@ -78,6 +78,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
@@ -600,6 +601,50 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
+    /**
+     * Generates display names based on the pull request naming strategy. Behavior is governed by the {@link PullRequestNamingTrait}.
+     *
+     * @param pullRequest          {@link BitbucketPullRequest}.
+     * @param originalBranchName   the original branch name of the pull request.
+     * @param activeStrategyCount  the number of active pull request discovery strategies, see {@link ChangeRequestCheckoutStrategy}.
+     * @param strategy             the current {@link ChangeRequestCheckoutStrategy}.
+     * @param namingStrategy       the {@link PullRequestNamingStrategy}.
+     * @param namingExcludePattern the naming exclude {@link Pattern}.
+     * @return the new branch display name.
+     * @since 2.10.0
+     */
+    public static String applyPRsNamingStrategy(final BitbucketPullRequest pullRequest, String originalBranchName,
+                                                int activeStrategyCount, ChangeRequestCheckoutStrategy strategy,
+                                                PullRequestNamingStrategy namingStrategy, Pattern namingExcludePattern) {
+        StringBuilder pullDisplayName = new StringBuilder();
+        boolean skip = false;
+        if (!namingExcludePattern.pattern().trim().isEmpty() && namingExcludePattern.matcher(originalBranchName).matches()) {
+            pullDisplayName.append(originalBranchName);
+            skip = true;
+        }
+
+        if (!skip && namingStrategy.showIdPrefix()) {
+            pullDisplayName.append("PR-").append(pullRequest.getId());
+        }
+        if (activeStrategyCount > 1) {
+            pullDisplayName.append(pullDisplayName.length() != 0 ? "-" : "");
+            pullDisplayName.append(strategy.name().toLowerCase(Locale.ENGLISH));
+        }
+
+        boolean hasPrTitle = false;
+        if (!skip && namingStrategy.showPrTitle() && pullRequest.getTitle() != null && !pullRequest.getTitle().trim().isEmpty()) {
+            pullDisplayName.append((namingStrategy.showIdPrefix() || activeStrategyCount > 1) ? ": " : "");
+            pullDisplayName.append(pullRequest.getTitle());
+            hasPrTitle = true;
+        }
+        if (!skip && (namingStrategy.showPrBranch() || (namingStrategy.showPrTitle() && !hasPrTitle))) {
+            pullDisplayName.append((namingStrategy.showIdPrefix() || activeStrategyCount > 1) ? "_" : "");
+            pullDisplayName.append(originalBranchName);
+        }
+
+        return pullDisplayName.toString();
+    }
+
     private void retrievePullRequests(final BitbucketSCMSourceRequest request) throws IOException, InterruptedException {
         final String fullName = repoOwner + "/" + repository;
 
@@ -644,14 +689,19 @@ public class BitbucketSCMSource extends SCMSource {
             try {
                 // We store resolved hashes here so to avoid resolving the commits multiple times
                 for (final ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
-                    String branchName = "PR-" + pull.getId();
-                    if (strategies.get(fork).size() > 1) {
-                        branchName = "PR-" + pull.getId() + "-" + strategy.name().toLowerCase(Locale.ENGLISH);
-                    }
+                    String pullDisplayName = BitbucketSCMSource.applyPRsNamingStrategy(
+                            pull,
+                            originalBranchName,
+                            strategies.get(fork).size(),
+                            strategy,
+                            request.getPullRequestNamingStrategy(),
+                            request.getPullRequestNamingExcludePattern()
+                    );
+
                     PullRequestSCMHead head;
                     if (originBitbucket instanceof BitbucketCloudApiClient) {
                         head = new PullRequestSCMHead( //
-                                branchName, //
+                                pullDisplayName, //
                                 pullRepoOwner, //
                                 pullRepository, //
                                 repositoryType, //
@@ -661,7 +711,7 @@ public class BitbucketSCMSource extends SCMSource {
                                 strategy);
                     } else {
                         head = new PullRequestSCMHead( //
-                                branchName, //
+                                pullDisplayName, //
                                 repoOwner, //
                                 repository, //
                                 repositoryType, //

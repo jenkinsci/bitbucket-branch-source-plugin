@@ -1,0 +1,10 @@
+<div>
+    A <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Java regular expression</a> to
+    exclude specific pull request branch names from being affected by the selected naming strategy. Names that match
+    the supplied regular expression will not be changed (their original branch names will be used).
+    <p>Example: use <code>^release/.*|^hotfix/.*</code> to exclude all <code>release/*</code> and <code>hotfix/*</code>
+    branches.<br>Leave empty to apply the selected naming strategy to all pull requests.</p>
+    <strong>NOTE:</strong> Pull request discovery strategy classifiers (<code>merge</code> or <code>head</code>) will
+    still be appended (or prepended, depending on the naming strategy) if multiple pull request "discovery strategies"
+    are active at the same time. Even for branches matching the specified pattern.
+</div>

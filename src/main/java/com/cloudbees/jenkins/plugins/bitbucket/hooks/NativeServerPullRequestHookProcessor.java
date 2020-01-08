@@ -33,7 +33,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerPullRequestEvent;
-import com.google.common.base.Ascii;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.Collections;
@@ -124,9 +123,16 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
             final Map<SCMHead, SCMRevision> result = new HashMap<>(strategies.size());
             for (final ChangeRequestCheckoutStrategy strategy : strategies) {
                 final String originalBranchName = pullRequest.getSource().getBranch().getName();
-                final String branchName = String.format("PR-%s%s", pullRequest.getId(),
-                    strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
-                final PullRequestSCMHead head = new PullRequestSCMHead(branchName, source.getRepoOwner(), source.getRepository(),
+                final String pullDisplayName = BitbucketSCMSource.applyPRsNamingStrategy(
+                        pullRequest,
+                        originalBranchName,
+                        strategies.size(),
+                        strategy,
+                        ctx.pullRequestNamingStrategy(),
+                        ctx.pullRequestNamingExcludePattern()
+                );
+
+                final PullRequestSCMHead head = new PullRequestSCMHead(pullDisplayName, source.getRepoOwner(), source.getRepository(),
                     BitbucketRepositoryType.GIT, originalBranchName, pullRequest, headOrigin, strategy);
 
                 switch (getType()) {

@@ -1,0 +1,29 @@
+<div>
+    Determines the display name of pull requests in Jenkins.
+    <dl>
+        <dt>Use pull request ID (default)</dt>
+        <dd>Transforms the branch name to "<code>PR-#</code>", example: "<code>PR-24</code>"
+        </dd>
+        <dt>Use pull request ID and title (experimental) *</dt>
+        <dd>Transforms the branch name to "<code>PR-#: {pr-title}</code>", example: "<code>PR-24: My feature title</code>"
+            <br>Note that whitespace characters will occur! This can potentially conflict with other Jenkins plugins.
+        </dd>
+        <dt>Use pull request ID and branch name</dt>
+        <dd>Transforms the branch name to "<code>PR-#_{branch-name}</code>", example: "<code>PR-24_feature/my-branch-name</code>"
+        </dd>
+        <dt>Use only pull request title (experimental) *</dt>
+        <dd>Transforms the branch name to "<code>{pr-title}</code>", example: "<code>My feature title</code>"
+            <br>Note that whitespace characters will occur! This can potentially conflict with other Jenkins plugins.
+        </dd>
+        <dt>Use only pull request branch name</dt>
+        <dd>Transforms the branch name to "<code>{branch-name}</code>", example: "<code>feature/my-branch-name</code>"
+        </dd>
+    </dl>
+    <p><strong>NOTE:</strong> Any selected strategy will not affect the branch or pull request names on Bitbucket.</p>
+    <p><strong>NOTE:</strong> Pull request discovery strategy classifiers (<code>merge</code> or <code>head</code>) will
+    still be appended (or prepended, depending on the naming strategy) if multiple pull request "discovery strategies"
+    are active at the same time.</p>
+    <strong>*</strong> Changing the title of the pull request in Bitbucket will currently cause any previous builds of
+    said pull request to be discarded, and a new build branch to be created. It is currently not advised to use this
+    strategy if project builds tend to be time consuming.
+</div>

@@ -29,6 +29,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
@@ -90,6 +91,17 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      * {@code true} if unstable builds should be considered as successful by Bitbucket.
      */
     private boolean sendSuccessNotificationForUnstableBuild;
+
+    /**
+     * The {@link PullRequestNamingStrategy} to use in this context.
+     */
+    @NonNull
+    private PullRequestNamingStrategy pullRequestNamingStrategy = PullRequestNamingStrategy.PR_ID;
+    /**
+     * The pull request naming strategy exclude {@link Pattern} to use in this context.
+     */
+    @NonNull
+    private Pattern pullRequestNamingExcludePattern = Pattern.compile("");
 
     /**
      * Constructor.
@@ -203,7 +215,6 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
-
     }
 
     /**
@@ -213,6 +224,26 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean sendSuccessNotificationForUnstableBuild() {
         return sendSuccessNotificationForUnstableBuild;
+    }
+
+    /**
+     * Returns the {@link PullRequestNamingStrategy} for this context.
+     *
+     * @return the {@link PullRequestNamingStrategy} for this context.
+     */
+    @NonNull
+    public final PullRequestNamingStrategy pullRequestNamingStrategy() {
+        return pullRequestNamingStrategy;
+    }
+
+    /**
+     * Returns the pull request naming strategy exclude {@link Pattern} to use in this context.
+     *
+     * @return the pull request naming strategy exclude {@link Pattern} to use in this context.
+     */
+    @NonNull
+    public final Pattern pullRequestNamingExcludePattern() {
+        return pullRequestNamingExcludePattern;
     }
 
     /**
@@ -349,6 +380,30 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final BitbucketSCMSourceContext withSendSuccessNotificationForUnstableBuild(boolean isUnstableBuildSuccess) {
         this.sendSuccessNotificationForUnstableBuild = isUnstableBuildSuccess;
+        return this;
+    }
+
+    /**
+     * Defines the {@link PullRequestNamingStrategy} to use in this context.
+     *
+     * @param pullRequestNamingStrategy the strategy.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext pullRequestNamingStrategy(PullRequestNamingStrategy pullRequestNamingStrategy) {
+        this.pullRequestNamingStrategy = pullRequestNamingStrategy;
+        return this;
+    }
+
+    /**
+     * Defines the pull request naming strategy exclude {@link Pattern} to use in this context.
+     *
+     * @param pullRequestNamingExcludePattern the regex pattern.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext pullRequestNamingExcludePattern(Pattern pullRequestNamingExcludePattern) {
+        this.pullRequestNamingExcludePattern = pullRequestNamingExcludePattern;
         return this;
     }
 
