@@ -23,6 +23,29 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.imageio.ImageIO;
+
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
@@ -58,34 +81,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.ProxyConfiguration;
-import hudson.Util;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import jenkins.model.Jenkins;
-import jenkins.scm.api.SCMFile;
-import net.sf.json.JSONObject;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
@@ -114,6 +110,14 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.ProxyConfiguration;
+import hudson.Util;
+import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMFile;
+import net.sf.json.JSONObject;
 
 import static java.util.Objects.requireNonNull;
 
@@ -802,46 +806,63 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     protected String getRequest(String path) throws IOException {
-        HttpGet httpget = new HttpGet(this.baseURL + path);
+        while (true) {
+            HttpGet httpget = new HttpGet(this.baseURL + path);
 
-        if (authenticator != null) {
-            authenticator.configureRequest(httpget);
-        }
+            if (authenticator != null) {
+                authenticator.configureRequest(httpget);
+            }
 
-        try(CloseableHttpClient client = getHttpClient(httpget);
-                CloseableHttpResponse response = client.execute(httpget, context)) {
-            String content;
-            long len = response.getEntity().getContentLength();
-            if (len == 0) {
-                content = "";
-            } else {
-                ByteArrayOutputStream buf;
-                if (len > 0 && len <= Integer.MAX_VALUE / 2) {
-                    buf = new ByteArrayOutputStream((int) len);
+            try (CloseableHttpClient client = getHttpClient(httpget);
+                    CloseableHttpResponse response = client.execute(httpget, context)) {
+                String content;
+                long len = response.getEntity().getContentLength();
+                if (len == 0) {
+                    content = "";
                 } else {
-                    buf = new ByteArrayOutputStream();
+                    ByteArrayOutputStream buf;
+                    if (len > 0 && len <= Integer.MAX_VALUE / 2) {
+                        buf = new ByteArrayOutputStream((int) len);
+                    } else {
+                        buf = new ByteArrayOutputStream();
+                    }
+                    try (InputStream is = response.getEntity().getContent()) {
+                        IOUtils.copy(is, buf);
+                    }
+                    content = new String(buf.toByteArray(), StandardCharsets.UTF_8);
                 }
-                try (InputStream is = response.getEntity().getContent()) {
-                    IOUtils.copy(is, buf);
+                EntityUtils.consume(response.getEntity());
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                    throw new FileNotFoundException("URL: " + path);
                 }
-                content = new String(buf.toByteArray(), StandardCharsets.UTF_8);
+                if (response.getStatusLine().getStatusCode() == 429) {
+                    int sleep = 5;
+                    if (response.getFirstHeader("Retry-After") != null) {
+                        try {
+                            sleep = Integer.parseInt(response.getFirstHeader("Retry-After").getValue());
+                        } catch (NumberFormatException e) {
+                           LOGGER.log(Level.INFO, "Cannot parse Retry-After header. Default 5 seconds.", e);
+                        }
+                    }
+                    LOGGER.log(Level.INFO, "Retry {0} after {1} seconds.", new Object[]{ path, sleep + 1});
+                    Thread.sleep((sleep + 1) * 1000);
+                    continue;
+                }
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    throw new BitbucketRequestException(response.getStatusLine().getStatusCode(),
+                            "HTTP request error. Status: " + response.getStatusLine().getStatusCode()
+                                    + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
+                }
+                return content;
+            } catch (BitbucketRequestException | FileNotFoundException e) {
+                throw e;
+            } catch (IOException e) {
+                throw new IOException("Communication error for url: " + path, e);
+            } catch (InterruptedException e) {
+                throw new IOException("Communication error for url: " + path, e);
+            } finally {
+                httpget.releaseConnection();
             }
-            EntityUtils.consume(response.getEntity());
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-                throw new FileNotFoundException("URL: " + path);
-            }
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                throw new BitbucketRequestException(response.getStatusLine().getStatusCode(),
-                        "HTTP request error. Status: " + response.getStatusLine().getStatusCode()
-                                + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
-            }
-            return content;
-        } catch (BitbucketRequestException | FileNotFoundException e) {
-            throw e;
-        } catch (IOException e) {
-            throw new IOException("Communication error for url: " + path, e);
-        } finally {
-            httpget.releaseConnection();
         }
     }
     private BufferedImage getImageRequest(String path) throws IOException, InterruptedException {
