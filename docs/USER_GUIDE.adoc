@@ -85,7 +85,7 @@ to let Jenkins to automatically register the webhooks in all involved repositori
 
 IMPORTANT: This feature is only available for *Bitbucket Cloud* at the moment.
 
-image::bitbucket-screenshots/screenshot-4.png[scaledwidth=90%]
+image::images/screenshot-4.png[scaledwidth=90%]
 
 IMPORTANT: In order to have the auto-registering process working fine the Jenkins base URL must be
 properly configured in _Manage Jenkins_ » _Configure System_
@@ -102,4 +102,4 @@ Webhooks auto-register feature requires scan credentials to be set. Only HTTP cr
 . *Checkout Credentials*: credentials used to checkout sources once the repository, branch or pull request is discovered. HTTP and SSH credentials
 are allowed. If not set then _Scan Credentials_ are used.
 
-image::bitbucket-screenshots/screenshot-3.png[scaledwidth=90%]
+image::images/screenshot-3.png[scaledwidth=90%]
