@@ -10,7 +10,7 @@ On April 29th, 2019, link:https://developer.atlassian.com/cloud/bitbucket/bbc-gd
 .. Upgrading to Blue Ocean 1.16.0 or later fixes this issue.
 .. However, because "owner name" has been removed from the BitBucket REST API, when you edit Bitbucket Cloud Pipelines in the "classic" Jenkins UI, a UUID (instead of human-readable text) is displayed in the "owner" field of the Pipeline.
 
-We *do not* anticipate any broader customer impact. If you encounter a change in behavior that you believe is due to the BitBucket or JIRA API changes, please link:https://support.cloudbees.com/hc/en-us[contact CloudBees Support] for assistance.
+We *do not* anticipate any broader user impact. If you encounter a change in behavior that you believe is due to the BitBucket or JIRA API changes, please link:https://support.cloudbees.com/hc/en-us[contact CloudBees Support] for assistance.
 =====================================================================
 
 [id=bitbucket-sect-intro]
