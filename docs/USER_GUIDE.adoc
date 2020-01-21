@@ -44,11 +44,11 @@ image::images/screenshot-2.png[scaledwidth=90%]
 . Set the repository owner and name that will be monitored for branches and pull requests.
 . If using Bitbucket Server the server base URL needs to be configured (expand the _Advanced_ section to do it).
 +
-image::bitbucket-screenshots/screenshot-4.png[scaledwidth=90%]
+image::images/screenshot-4.png[scaledwidth=90%]
 
 . Finally, save the project. The initial indexing process will run and create projects for branches and pull requests.
 +
-image::bitbucket-screenshots/screenshot-5.png[scaledwidth=90%]
+image::images/screenshot-5.png[scaledwidth=90%]
 
 [id=bitbucket-scm-navigator]
 == Team folders
@@ -58,19 +58,19 @@ in a Bitbucket Team or Project.
 
 . Create a project of type _Bitbucket Team/Project_. The project name will be proposed automatically as default _Owner_ (or _Team_) name.
 +
-image::bitbucket-screenshots/screenshot-6.png[scaledwidth=90%]
+image::images/screenshot-6.png[scaledwidth=90%]
 
 . Configure the repository owner (if the proposed value does not match with the actual team or username). It could be:
 .. A Bitbucket Cloud Team name: all repositories in the team are imported as Multibranch projects.
 .. A Bitbucket Server Project ID: all repositories in the project are imported as Multibranch projects. *Note that the project ID needs to be used instead of the project name*.
 .. A regular username: all repositories which the username is owner of are imported.
 +
-image::bitbucket-screenshots/screenshot-8.png[scaledwidth=90%]
+image::images/screenshot-8.png[scaledwidth=90%]
 
 . Save the configuration and an initial indexing process starts, once it finishes a Multibranch
 project is created for each repository.
 +
-image::bitbucket-screenshots/screenshot-9.png[scaledwidth=90%]
+image::images/screenshot-9.png[scaledwidth=90%]
 
 [id=bitbucket-webhooks]
 == Webhooks registering
