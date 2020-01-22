@@ -424,7 +424,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             return false;
         } else if (HttpStatus.SC_FORBIDDEN == status) {
             // Needs to skip over the branch if there are permissions issues but let you know in the logs
-            LOGGER.log(Level.FINE, "You currently do not have permissions to pull from repo: {0} at branch {1}", new Object[]{repositoryName, branchOrHash.toString()});
+            LOGGER.log(Level.FINE, "You currently do not have permissions to pull from repo: {0} at branch {1}", new Object[]{repositoryName, branchOrHash});
             return false;
         } else {
             throw new IOException("Communication error for url: " + path + " status code: " + status);
