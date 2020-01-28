@@ -475,7 +475,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     public List<BitbucketCloudBranch> getBranchesByRef(String nodePath) throws IOException, InterruptedException {
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath)
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath + "{?pagelen}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
                 .set("pagelen", MAX_PAGE_LENGTH)
