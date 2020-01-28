@@ -214,7 +214,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @Override
     @NonNull
     public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
-        return Collections.<SCMTrait<? extends SCMTrait<?>>>unmodifiableList(traits);
+        return Collections.unmodifiableList(traits);
     }
 
     @DataBoundSetter
@@ -222,10 +222,35 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         this.credentialsId = Util.fixEmpty(credentialsId);
     }
 
+    /**
+     * Sets the behavioural traits that are applied to this navigator and any {@link BitbucketSCMSource} instances it
+     * discovers. The new traits will take affect on the next navigation through any of the
+     * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
+     *
+     * @param traits the new behavioural traits.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @DataBoundSetter
-    public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
+    public void setTraits(@CheckForNull SCMTrait[] traits) {
         // the reduced generics in the method signature are a workaround for JENKINS-26535
-        this.traits = new ArrayList<>(Util.fixNull(traits));
+        this.traits = new ArrayList<>();
+        if (traits != null) {
+            for (SCMTrait trait : traits) {
+                this.traits.add(trait);
+            }
+        }
+    }
+
+    /**
+     * Sets the behavioural traits that are applied to this navigator and any {@link BitbucketSCMSource} instances it
+     * discovers. The new traits will take affect on the next navigation through any of the
+     * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
+     *
+     * @param traits the new behavioural traits.
+     */
+    @Override
+    public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
+        this.traits = traits != null ? new ArrayList<>(traits) : new ArrayList<SCMTrait<? extends SCMTrait<?>>>();
     }
 
     public String getServerUrl() {
@@ -642,8 +667,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         @Override
+        @NonNull
         public List<SCMTrait<? extends SCMTrait<?>>> getTraitsDefaults() {
-            return Arrays.<SCMTrait<? extends SCMTrait<?>>>asList(
+            return Arrays.asList(
                     new BranchDiscoveryTrait(true, false),
                     new OriginPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)),
                     new ForkPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),

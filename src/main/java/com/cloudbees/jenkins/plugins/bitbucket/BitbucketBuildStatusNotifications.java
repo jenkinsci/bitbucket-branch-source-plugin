@@ -109,7 +109,8 @@ public class BitbucketBuildStatusNotifications {
             listener.getLogger().println("Can not determine Jenkins root URL " +
                     "or Jenkins URL is not a valid URL regarding Bitbucket API. " +
                     "Commit status notifications are disabled until a root URL is " +
-                    "configured in Jenkins global configuration.");
+                    "configured in Jenkins global configuration. \n" +
+                    "IllegalStateException: " + e.getMessage());
             return;
         }
 

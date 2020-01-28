@@ -6,7 +6,7 @@ image:https://img.shields.io/github/release/jenkinsci/bitbucket-branch-source-pl
 
 === User Guide
 
-https://docs.cloudbees.com/docs/admin-resources/latest/plugins/bitbucket[See CloudBees excellent user guide]
+link:./docs/USER_GUIDE.adoc[Browse the user guide here]
 
 === Notes
 
