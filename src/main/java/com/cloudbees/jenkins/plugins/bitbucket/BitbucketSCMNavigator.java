@@ -213,8 +213,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     @Override
     @NonNull
-    public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
-        return Collections.<SCMTrait<? extends SCMTrait<?>>>unmodifiableList(traits);
+    public List<SCMTrait<?>> getTraits() {
+        return Collections.<SCMTrait<?>>unmodifiableList(traits);
     }
 
     @DataBoundSetter
@@ -223,9 +223,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     }
 
     @DataBoundSetter
-    public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
+    public void setTraits(@CheckForNull List<SCMTrait<?>> traits) {
         // the reduced generics in the method signature are a workaround for JENKINS-26535
-        this.traits = new ArrayList<>(Util.fixNull(traits));
+        //noinspection unchecked,rawtypes
+        this.traits = new ArrayList<>((List)/*defensive*/Util.fixNull(traits));
     }
 
     public String getServerUrl() {
@@ -642,8 +643,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         @Override
-        public List<SCMTrait<? extends SCMTrait<?>>> getTraitsDefaults() {
-            return Arrays.<SCMTrait<? extends SCMTrait<?>>>asList(
+        @NonNull
+        public List<SCMTrait<?>> getTraitsDefaults() {
+            return Arrays.<SCMTrait<?>>asList(
                     new BranchDiscoveryTrait(true, false),
                     new OriginPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)),
                     new ForkPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
