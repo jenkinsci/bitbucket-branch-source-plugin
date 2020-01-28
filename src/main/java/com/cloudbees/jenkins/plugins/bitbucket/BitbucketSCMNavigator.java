@@ -223,7 +223,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     }
 
     @DataBoundSetter
-    public void setTraits(@CheckForNull List<SCMTrait<?>> traits) {
+    public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
         // the reduced generics in the method signature are a workaround for JENKINS-26535
         //noinspection unchecked,rawtypes
         this.traits = new ArrayList<>((List)/*defensive*/Util.fixNull(traits));
