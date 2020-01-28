@@ -1,5 +1,5 @@
 {
-  "pagelen": 10,
+  "pagelen": 100,
   "values": [{
     "name": "feature/BB-1",
     "links": {

@@ -478,6 +478,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath)
                 .set("owner", owner)
                 .set("repo", repositoryName)
+                .set("pagelen", MAX_PAGE_LENGTH)
                 .expand();
         String response = getRequest(url);
         try {
