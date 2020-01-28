@@ -213,8 +213,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     @Override
     @NonNull
-    public List<SCMTrait<?>> getTraits() {
-        return Collections.<SCMTrait<?>>unmodifiableList(traits);
+    public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
+        return Collections.unmodifiableList(traits);
     }
 
     @DataBoundSetter
@@ -669,8 +669,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         @Override
         @NonNull
-        public List<SCMTrait<?>> getTraitsDefaults() {
-            return Arrays.<SCMTrait<?>>asList(
+        public List<SCMTrait<? extends SCMTrait<?>>> getTraitsDefaults() {
+            return Arrays.asList(
                     new BranchDiscoveryTrait(true, false),
                     new OriginPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)),
                     new ForkPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
