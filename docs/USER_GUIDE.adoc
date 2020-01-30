@@ -98,8 +98,17 @@ two credentials to configure:
 
 . *Scan Credentials*: credentials used to access Bitbucket API in order to discover repositories, branches and pull requests.
 If not set then anonymous access is used, so only public repositories, branches and pull requests are discovered and managed. Note that the
-Webhooks auto-register feature requires scan credentials to be set. Only HTTP credentials are accepted in this field.
-. *Checkout Credentials*: credentials used to checkout sources once the repository, branch or pull request is discovered. HTTP and SSH credentials
+Webhooks auto-register feature requires scan credentials to be set. Only HTTP or OAuth credentials are accepted in this field.
+. *Checkout Credentials*: credentials used to checkout sources once the repository, branch or pull request is discovered. HTTP, SSH and OAuthcredentials
 are allowed. If not set then _Scan Credentials_ are used.
 
 image::images/screenshot-3.png[scaledwidth=90%]
+
+=== OAuth credentials
+
+Bitbucket plugin can make use of OAuth credentials instead of the standard username/password.
+
+First create a new OAuth consumer as instructed in https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html[Bitbucket OAuth Documentation].
+Don't forget to check _This is a private consumer_ and at least allow read access to the repositories and Pull requests. If you want the Bitbucket to install the Webhooks also allow the read and write access of the Webhooks
+
+Then create new _Username with password credentials_, enter the Bitbucket OAuth consumer key in _Username_ field and the Bitbucket OAuth consumer secret in _Password_ field
