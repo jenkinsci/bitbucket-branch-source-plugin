@@ -111,4 +111,10 @@ Bitbucket plugin can make use of OAuth credentials instead of the standard usern
 First create a new OAuth consumer as instructed in https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html[Bitbucket OAuth Documentation].
 Don't forget to check _This is a private consumer_ and at least allow read access to the repositories and Pull requests. If you want the Bitbucket to install the Webhooks also allow the read and write access of the Webhooks
 
+image::images/screenshot-10.png[scaledwidth=90%]
+
 Then create new _Username with password credentials_, enter the Bitbucket OAuth consumer key in _Username_ field and the Bitbucket OAuth consumer secret in _Password_ field
+
+image::images/screenshot-11.png[scaledwidth=90%]
+
+image::images/screenshot-12.png[scaledwidth=90%]
