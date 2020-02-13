@@ -43,14 +43,17 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
 
     @JsonCreator
     public BitbucketPullRequestValueDestination(@NonNull @JsonProperty("repository") BitbucketCloudRepository repository,
-                                                @NonNull @JsonProperty("branch") BitbucketCloudBranch branch,
+                                                @JsonProperty("branch") BitbucketCloudBranch branch,
                                                 @NonNull @JsonProperty("commit") BitbucketCloudCommit commit) {
         this.repository = repository;
         this.branch = branch;
         this.commit = commit;
 
-        // redound available the informations into impl objects
-        this.branch.setRawNode(commit.getHash());
+        // It is possible for a PR's original destination to no longer exist.
+        if(this.branch != null) {
+            // redound available the informations into impl objects
+            this.branch.setRawNode(commit.getHash());
+        }
     }
 
     @Override

@@ -328,6 +328,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             throws IOException, InterruptedException {
         List<BitbucketServerPullRequest> pullRequests = getResources(template, BitbucketServerPullRequests.class);
 
+        // PRs with missing destination branch are invalid and should be ignored.
+        pullRequests.removeIf(pr -> pr.getDestination().getBranch() == null);
+
         // set commit closure to make commit informations available when need, in a similar way to when request branches
         for (BitbucketServerPullRequest pullRequest : pullRequests) {
             setupClosureForPRBranch(pullRequest);
