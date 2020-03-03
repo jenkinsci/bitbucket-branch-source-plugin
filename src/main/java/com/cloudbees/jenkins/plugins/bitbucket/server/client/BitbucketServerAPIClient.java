@@ -900,9 +900,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         httpClientBuilder.useSystemProperties();
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setConnectTimeout(10 * 1000 * 10);
-        requestConfig.setConnectionRequestTimeout(60 * 1000 * 10);
-        requestConfig.setSocketTimeout(60 * 1000 * 10);
+        String connectTimeout = System.getProperty("http.connect.timeout", "10");
+        requestConfig.setConnectTimeout(Integer.parseInt(connectTimeout) * 1000);
+        String connectionRequestTimeout = System.getProperty("http.connect.request.timeout", "60");
+        requestConfig.setConnectionRequestTimeout(Integer.parseInt(connectionRequestTimeout) * 1000);
+        String socketTimeout = System.getProperty("http.socket.timeout", "60");
+        requestConfig.setSocketTimeout(Integer.parseInt(socketTimeout) * 1000);
         request.setConfig(requestConfig.build());
 
         final String host = getMethodHost(request);
