@@ -10,15 +10,4 @@
   <f:entry field="callCanMerge">
     <f:checkbox title="${%Call Can Merge}" default="true"/>
   </f:entry>
-  <f:optionalBlock name="timeout" title="Override default timeout">
-    <f:entry title="${%Connect timeout}" field="connectTimeout" value="10">
-      <f:textbox/>
-    </f:entry>
-    <f:entry title="${%Connect request timeout}" field="connectionRequestTimeout" value="60">
-      <f:textbox/>
-    </f:entry>
-    <f:entry title="${%Socket timeout}" field="socketTimeout" value="60">
-      <f:textbox/>
-    </f:entry>
-  </f:optionalBlock>
 </j:jelly>
