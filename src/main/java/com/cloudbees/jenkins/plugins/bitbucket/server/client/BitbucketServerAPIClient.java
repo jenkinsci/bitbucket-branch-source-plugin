@@ -127,7 +127,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final int MAX_AVATAR_SIZE = 16384;
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketServerAPIClient.class.getName());
-    private static final String API_BASE_PATH = "/rest/api/1.0";
+    private static final String BASE_PATH = "/rest/%s/1.0";
+
+    private static final String API_BASE_PATH = String.format(BASE_PATH, "rest");
     private static final String API_REPOSITORIES_PATH = API_BASE_PATH + "/projects/{owner}/repos{?start,limit}";
     private static final String API_REPOSITORY_PATH = API_BASE_PATH + "/projects/{owner}/repos/{repo}";
     private static final String API_DEFAULT_BRANCH_PATH = API_REPOSITORY_PATH + "/branches/default";
@@ -136,19 +138,26 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
-    static final String API_BROWSE_PATH = API_REPOSITORY_PATH + "/browse{/path*}{?at}";
+    private static final String API_BROWSE_PATH = API_REPOSITORY_PATH + "/browse{/path*}{?at}";
     private static final String API_COMMITS_PATH = API_REPOSITORY_PATH + "/commits{/hash}";
     private static final String API_PROJECT_PATH = API_BASE_PATH + "/projects/{owner}";
     private static final String AVATAR_PATH = API_BASE_PATH + "/projects/{owner}/avatar.png";
     private static final String API_COMMIT_COMMENT_PATH = API_REPOSITORY_PATH + "/commits{/hash}/comments";
     private static final String API_WEBHOOKS_PATH = API_BASE_PATH + "/projects/{owner}/repos/{repo}/webhooks{/id}{?start,limit}";
 
-    private static final String WEBHOOK_BASE_PATH = "/rest/webhook/1.0";
+    private static final String WEBHOOK_BASE_PATH = String.format(BASE_PATH, "webhook");
     private static final String WEBHOOK_REPOSITORY_PATH = WEBHOOK_BASE_PATH + "/projects/{owner}/repos/{repo}/configurations";
     private static final String WEBHOOK_REPOSITORY_CONFIG_PATH = WEBHOOK_REPOSITORY_PATH + "/{id}";
 
-    private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits{/hash}";
+    private static final String API_COMMIT_STATUS_PATH = String.format(BASE_PATH, "build.status") + "/commits{/hash}";
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
+
+    private static final String OWNER_PROPERTY = "owner";
+    private static final String START_PROPERTY = "start";
+    private static final String LIMIT_PROPERTY = "limit";
+
+    private static final String IO_EXCEPTION_MESSAGE = "I/O error when accessing URL: %s";
+    private static final String IO_EXCEPTION_COMMUNICATION_MESSAGE = "Communication error for url: %s status code: %d";
 
     /**
      * Repository owner.
@@ -177,6 +186,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     private final BitbucketServerWebhookImplementation webhookImplementation;
 
+    /***
+     * @deprecated
+     */
     @Deprecated
     public BitbucketServerAPIClient(@NonNull String baseURL, @NonNull String owner, @CheckForNull String repositoryName,
                                     @CheckForNull StandardUsernamePasswordCredentials credentials, boolean userCentric) {
@@ -252,7 +264,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 }
 
                 UriTemplate template = UriTemplate.fromTemplate("{scheme}://{+authority}{+path}{/owner,repository}.git");
-                template.set("owner", owner);
+                template.set(OWNER_PROPERTY, owner);
                 template.set("repository", repository);
 
                 switch (protocol) {
@@ -295,7 +307,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public List<BitbucketServerPullRequest> getPullRequests() throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
                 .fromTemplate(API_PULL_REQUESTS_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName);
         return getPullRequests(template);
     }
@@ -304,7 +316,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public List<BitbucketServerPullRequest> getOutgoingOpenPullRequests(String fromRef) throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
                 .fromTemplate(API_PULL_REQUESTS_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("at", fromRef)
                 .set("direction", "outgoing")
@@ -316,7 +328,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public List<BitbucketServerPullRequest> getIncomingOpenPullRequests(String toRef) throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
                 .fromTemplate(API_PULL_REQUESTS_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("at", toRef)
                 .set("direction", "incoming")
@@ -381,7 +393,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private boolean getPullRequestCanMergeById(@NonNull Integer id) throws IOException {
         String url = UriTemplate
                 .fromTemplate(API_PULL_REQUEST_MERGE_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("id", id)
                 .expand();
@@ -389,7 +401,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         try {
             return JsonParser.toJava(response, BitbucketServerPullRequestCanMerge.class).isCanMerge();
         } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
+            throw new IOException(String.format(IO_EXCEPTION_MESSAGE, url), e);
         }
     }
 
@@ -401,7 +413,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException {
         String url = UriTemplate
                 .fromTemplate(API_PULL_REQUEST_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("id", id)
                 .expand();
@@ -413,7 +425,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
             return pr;
         } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
+            throw new IOException(String.format(IO_EXCEPTION_MESSAGE, url), e);
         }
     }
 
@@ -429,14 +441,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
         String url = UriTemplate
                 .fromTemplate(API_REPOSITORY_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .expand();
         String response = getRequest(url);
         try {
             return JsonParser.toJava(response, BitbucketServerRepository.class);
         } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
+            throw new IOException(String.format(IO_EXCEPTION_MESSAGE, url), e);
         }
     }
 
@@ -448,7 +460,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         postRequest(
             UriTemplate
                 .fromTemplate(API_COMMIT_COMMENT_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("hash", hash)
                 .expand(),
@@ -479,7 +491,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public boolean checkPathExists(@NonNull String branchOrHash, @NonNull String path) throws IOException {
         String url = UriTemplate
                 .fromTemplate(API_BROWSE_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", path.split(Operator.PATH.getSeparator()))
                 .set("at", branchOrHash)
@@ -490,7 +502,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         } else if (HttpStatus.SC_NOT_FOUND == status) {
             return false;
         } else {
-            throw new IOException("Communication error for url: " + path + " status code: " + status);
+            throw new IOException(String.format(IO_EXCEPTION_COMMUNICATION_MESSAGE, path, status));
         }
     }
 
@@ -499,7 +511,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public String getDefaultBranch() throws IOException {
         String url = UriTemplate
                 .fromTemplate(API_DEFAULT_BRANCH_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .expand();
         try {
@@ -510,7 +522,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                     new Object[]{this.owner, this.repositoryName});
             return null;
         } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
+            throw new IOException(String.format(IO_EXCEPTION_MESSAGE, url), e);
         }
     }
 
@@ -535,7 +547,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private List<BitbucketServerBranch> getServerBranches(String apiPath) throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
                 .fromTemplate(apiPath)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName);
 
         List<BitbucketServerBranch> branches = getResources(template, BitbucketServerBranches.class);
@@ -554,7 +566,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public BitbucketCommit resolveCommit(@NonNull String hash) throws IOException {
         String url = UriTemplate
                 .fromTemplate(API_COMMITS_PATH)
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("hash", hash)
                 .expand();
@@ -562,7 +574,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             String response = getRequest(url);
             return JsonParser.toJava(response, BitbucketServerCommit.class);
         } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
+            throw new IOException(String.format(IO_EXCEPTION_MESSAGE, url), e);
         }
     }
 
@@ -586,7 +598,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 putRequest(
                         UriTemplate
                             .fromTemplate(WEBHOOK_REPOSITORY_PATH)
-                            .set("owner", getUserCentricOwner())
+                            .set(OWNER_PROPERTY, getUserCentricOwner())
                             .set("repo", repositoryName)
                             .expand(),
                         JsonParser.toJson(hook)
@@ -597,7 +609,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 postRequest(
                         UriTemplate
                             .fromTemplate(API_WEBHOOKS_PATH)
-                            .set("owner", getUserCentricOwner())
+                            .set(OWNER_PROPERTY, getUserCentricOwner())
                             .set("repo", repositoryName)
                             .expand(),
                         JsonParser.toJson(hook)
@@ -617,7 +629,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 postRequest(
                         UriTemplate
                             .fromTemplate(WEBHOOK_REPOSITORY_CONFIG_PATH)
-                            .set("owner", getUserCentricOwner())
+                            .set(OWNER_PROPERTY, getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
                             .expand(), JsonParser.toJson(hook)
@@ -628,7 +640,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 putRequest(
                         UriTemplate
                             .fromTemplate(API_WEBHOOKS_PATH)
-                            .set("owner", getUserCentricOwner())
+                            .set(OWNER_PROPERTY, getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
                             .expand(), JsonParser.toJson(hook)
@@ -648,7 +660,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 deleteRequest(
                         UriTemplate
                             .fromTemplate(WEBHOOK_REPOSITORY_CONFIG_PATH)
-                            .set("owner", getUserCentricOwner())
+                            .set(OWNER_PROPERTY, getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
                             .expand()
@@ -659,7 +671,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 deleteRequest(
                         UriTemplate
                             .fromTemplate(API_WEBHOOKS_PATH)
-                            .set("owner", getUserCentricOwner())
+                            .set(OWNER_PROPERTY, getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
                             .expand()
@@ -679,7 +691,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             case PLUGIN:
                 String url = UriTemplate
                         .fromTemplate(WEBHOOK_REPOSITORY_PATH)
-                        .set("owner", getUserCentricOwner())
+                        .set(OWNER_PROPERTY, getUserCentricOwner())
                         .set("repo", repositoryName)
                         .expand();
                 String response = getRequest(url);
@@ -687,12 +699,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             case NATIVE:
                 UriTemplate urlTemplate = UriTemplate
                         .fromTemplate(API_WEBHOOKS_PATH)
-                        .set("owner", getUserCentricOwner())
+                        .set(OWNER_PROPERTY, getUserCentricOwner())
                         .set("repo", repositoryName);
                 return getResources(urlTemplate, NativeBitbucketServerWebhooks.class);
+            default:
+                return Collections.emptyList();
         }
-
-        return Collections.emptyList();
     }
 
     /**
@@ -703,7 +715,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         if (userCentric) {
             return null;
         } else {
-            String url = UriTemplate.fromTemplate(API_PROJECT_PATH).set("owner", getOwner()).expand();
+            String url = UriTemplate.fromTemplate(API_PROJECT_PATH).set(OWNER_PROPERTY, getOwner()).expand();
             try {
                 String response = getRequest(url);
                 return JsonParser.toJava(response, BitbucketServerProject.class);
@@ -723,7 +735,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         if (userCentric) {
             return null;
         } else {
-            String url = UriTemplate.fromTemplate(AVATAR_PATH).set("owner", getOwner()).expand();
+            String url = UriTemplate.fromTemplate(AVATAR_PATH).set(OWNER_PROPERTY, getOwner()).expand();
             try {
                 BufferedImage response = getImageRequest(url);
                 return new AvatarImage(response, System.currentTimeMillis());
@@ -731,8 +743,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 return null;
             } catch (IOException e) {
                 throw new IOException("I/O error when accessing URL: " + url, e);
-            } catch (InterruptedException e) {
-                throw new IOException("InterruptedException when accessing URL: " + url, e);
             }
         }
     }
@@ -746,7 +756,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
                 .fromTemplate(API_REPOSITORIES_PATH)
-                .set("owner", getUserCentricOwner());
+                .set(OWNER_PROPERTY, getUserCentricOwner());
 
         List<BitbucketServerRepository> repositories;
         try {
@@ -782,8 +792,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 throw new InterruptedException();
             }
             String url = template //
-                    .set("start", pageNumber) //
-                    .set("limit", limit) //
+                    .set(START_PROPERTY, pageNumber) //
+                    .set(LIMIT_PROPERTY, limit) //
                     .expand();
             String response = getRequest(url);
             try {
@@ -844,7 +854,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             httpget.releaseConnection();
         }
     }
-    private BufferedImage getImageRequest(String path) throws IOException, InterruptedException {
+    private BufferedImage getImageRequest(String path) throws IOException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
 
         if (authenticator != null) {
@@ -917,7 +927,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private void setClientProxyParams(String host, HttpClientBuilder builder) {
-        Jenkins jenkins = Jenkins.get();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
         ProxyConfiguration proxyConfig = null;
         if (jenkins != null) {
             proxyConfig = jenkins.proxy;
@@ -939,7 +949,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             String username = proxyConfig.getUserName();
             String password = proxyConfig.getPassword();
             if (username != null && !"".equals(username.trim())) {
-                LOGGER.fine("Using proxy authentication (user=" + username + ")");
+                LOGGER.fine(String.format("Using proxy authentication (user=%s)", username);
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
                 AuthCache authCache = new BasicAuthCache();
@@ -1065,12 +1075,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         int start=0;
         UriTemplate template = UriTemplate
                 .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", directory.getPath().split(Operator.PATH.getSeparator()))
                 .set("at", directory.getRef())
-                .set("start", start)
-                .set("limit", 500);
+                .set(START_PROPERTY, start)
+                .set(LIMIT_PROPERTY, 500);
         String url = template.expand();
         String response = getRequest(url);
         Map<String,Object> content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
@@ -1080,7 +1090,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         while (!(boolean)page.get("isLastPage")){
             start += (int) content.get("size");
             url = template
-                    .set("start", start)
+                    .set(START_PROPERTY, start)
                     .expand();
             response = getRequest(url);
             content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
@@ -1099,7 +1109,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             } else if(type.equals("DIRECTORY")){
                 fileType = SCMFile.Type.DIRECTORY;
             }
-            if(components.size() > 0 && fileType != null){
+            if(components.isEmpty() && fileType != null){
                 // revision is set to null as fetched values from server API do not give us revision hash
                 // Later on hash is not needed anyways when file content is fetched from server API
                 files.add(new BitbucketSCMFile(parent, components.get(0), fileType, null));
@@ -1113,12 +1123,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         int start=0;
         UriTemplate template = UriTemplate
                 .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
-                .set("owner", getUserCentricOwner())
+                .set(OWNER_PROPERTY, getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", file.getPath().split(Operator.PATH.getSeparator()))
                 .set("at", file.getRef())
-                .set("start", start)
-                .set("limit", 500);
+                .set(START_PROPERTY, start)
+                .set(LIMIT_PROPERTY, 500);
         String url = template.expand();
         String response = getRequest(url);
         Map<String,Object> content = collectLines(response, lines);
@@ -1126,12 +1136,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         while(!(boolean)content.get("isLastPage")){
             start += (int) content.get("size");
             url = template
-                    .set("start", start)
+                    .set(START_PROPERTY, start)
                     .expand();
             response = getRequest(url);
             content = collectLines(response, lines);
         }
-        return IOUtils.toInputStream(StringUtils.join(lines,'\n'), "UTF-8");
+        return IOUtils.toInputStream(StringUtils.join(lines,'\n'), StandardCharsets.UTF_8);
     }
 
     private Map<String,Object> collectLines(String response, final List<String> lines) throws IOException {
