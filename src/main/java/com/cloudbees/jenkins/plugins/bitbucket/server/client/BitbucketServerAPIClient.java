@@ -949,7 +949,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             String username = proxyConfig.getUserName();
             String password = proxyConfig.getPassword();
             if (username != null && !"".equals(username.trim())) {
-                LOGGER.fine(String.format("Using proxy authentication (user=%s)", username);
+                LOGGER.fine(String.format("Using proxy authentication (user=%s)", username));
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
                 AuthCache authCache = new BasicAuthCache();
