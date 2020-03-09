@@ -100,6 +100,18 @@ public enum HookEventType {
     SERVER_PULL_REQUEST_APPROVED("pr:reviewer:approved", NativeServerPullRequestHookProcessor.class),
 
     /**
+     * @see <a href="https://confluence.atlassian.com/bitbucketserver068/event-payload-981145451.html#Eventpayload-Modified">Eventpayload-Modified</a>
+     * @since Bitbucket Server 5.4
+     */
+    SERVER_PULL_REQUEST_MODIFIED("pr:modified", NativeServerPullRequestHookProcessor.class),
+
+    /**
+     * @see <a href="https://confluence.atlassian.com/bitbucketserver054/event-payload-939508609.html#Eventpayload-ReviewersUpdated">Eventpayload-Modified</a>
+     * @since Bitbucket Server 6.8
+     */
+    SERVER_PULL_REQUEST_REVIEWER_UPDATED("pr:reviewer:updated", NativeServerPullRequestHookProcessor.class),
+
+    /**
      * Sent when hitting the {@literal "Test connection"} button in Bitbucket Server. Apparently undocumented.
      */
     SERVER_PING("diagnostics:ping", PingHookProcessor.class);

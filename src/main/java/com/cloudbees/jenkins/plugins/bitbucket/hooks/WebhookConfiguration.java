@@ -63,7 +63,9 @@ public class WebhookConfiguration {
             HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_DECLINED.getKey(),
-            HookEventType.SERVER_PULL_REQUEST_DELETED.getKey()
+            HookEventType.SERVER_PULL_REQUEST_DELETED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey()
     ));
 
     /**
