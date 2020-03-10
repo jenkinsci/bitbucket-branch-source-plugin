@@ -120,9 +120,9 @@ image::images/screenshot-12.png[scaledwidth=90%]
 [id=bitbucket-misc-config]
 == Miscellaneous configuration
 
-In case of slow network, you can increase socket timeout in the link:https://jenkins.io/doc/book/managing/script-console/[Script Console] :
+In case of slow network, you can increase socket timeout using the link:https://jenkins.io/doc/book/managing/script-console/[Script Console] :
 
 [source,groovy]
 ----
-System.setProperty("http.socket.timeout", "300")
+System.setProperty("http.socket.timeout", "300") // 5 minutes
 ----
