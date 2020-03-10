@@ -116,3 +116,13 @@ Then create new _Username with password credentials_, enter the Bitbucket OAuth 
 image::images/screenshot-11.png[scaledwidth=90%]
 
 image::images/screenshot-12.png[scaledwidth=90%]
+
+[id=bitbucket-misc-config]
+== Miscellaneous configuration
+
+In case of slow network, you can increase socket timeout in the link:https://jenkins.io/doc/book/managing/script-console/[Script Console] :
+
+[source,groovy]
+----
+System.setProperty("http.socket.timeout", "300")
+----
