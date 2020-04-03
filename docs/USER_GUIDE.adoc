@@ -83,8 +83,6 @@ triggering builds on matching branches or pull requests.
 For both _Bitbucket Multibranch_ projects and _Bitbucket Team_ projects there is an option in the configuration page
 to let Jenkins to automatically register the webhooks in all involved repositories.
 
-IMPORTANT: This feature is only available for *Bitbucket Cloud* at the moment.
-
 image::images/screenshot-4.png[scaledwidth=90%]
 
 IMPORTANT: In order to have the auto-registering process working fine the Jenkins base URL must be
