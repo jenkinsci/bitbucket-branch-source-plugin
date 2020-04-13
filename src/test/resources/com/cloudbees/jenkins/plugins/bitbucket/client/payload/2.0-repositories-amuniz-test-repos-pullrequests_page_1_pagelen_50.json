@@ -278,6 +278,144 @@
     },
     "merge_commit": null,
     "closed_by": null
+  },
+   {
+    "description": "PR with destination branch deleted",
+    "links": {
+      "decline": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/decline"
+      },
+      "commits": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/commits"
+      },
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3"
+      },
+      "comments": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/comments"
+      },
+      "merge": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/merge"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/test-repos/pull-requests/3"
+      },
+      "activity": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/activity"
+      },
+      "diff": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/diff"
+      },
+      "approve": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/approve"
+      },
+      "statuses": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/3/statuses"
+      }
+    },
+    "title": "Bugfix 123",
+    "close_source_branch": true,
+    "type": "pullrequest",
+    "id": 3,
+    "destination": {
+      "commit": {
+        "hash": "bf4f4ce8a3a8",
+        "type": "commit",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8"
+          },
+          "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8"
+          }
+        }
+      },
+      "repository": {
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+          },
+          "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
+          }
+        },
+        "type": "repository",
+        "name": "test-repos",
+        "full_name": "amuniz/test-repos",
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+      },
+      "branch": null
+    },
+    "created_on": "2018-09-21T14:57:59.455870+00:00",
+    "summary": {
+      "raw": "PR with destination branch deleted",
+      "markup": "markdown",
+      "html": "<p>PR with destination branch deleted</p>",
+      "type": "rendered"
+    },
+    "source": {
+      "commit": {
+        "hash": "bf0e8b7962c4",
+        "type": "commit",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf0e8b7962c4"
+          },
+          "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos/commits/bf0e8b7962c4"
+          }
+        }
+      },
+      "repository": {
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+          },
+          "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
+          }
+        },
+        "type": "repository",
+        "name": "test-repos",
+        "full_name": "amuniz/test-repos",
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+      },
+      "branch": {
+        "name": "bugfix/123"
+      }
+    },
+    "comment_count": 0,
+    "state": "OPEN",
+    "task_count": 0,
+    "reason": "",
+    "updated_on": "2018-09-21T14:57:59.488719+00:00",
+    "author": {
+      "username": "amuniz",
+      "display_name": "Nikolas Falco",
+      "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/amuniz"
+        },
+        "html": {
+          "href": "https://bitbucket.org/amuniz/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/amuniz/avatar/"
+        }
+      },
+      "nickname": "amuniz",
+      "type": "user",
+      "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}"
+    },
+    "merge_commit": null,
+    "closed_by": null
   }],
   "page": 1,
   "size": 2
