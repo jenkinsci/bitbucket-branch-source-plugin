@@ -29,7 +29,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.mercurial.MercurialSCM;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -79,11 +78,6 @@ public class BranchScanningTest {
         assertThat(new BitbucketGitSCMBuilder(getBitbucketSCMSourceMock(BitbucketRepositoryType.GIT),
                 new BranchSCMHead("branch1", BitbucketRepositoryType.GIT), null,
                 null).withBitbucketRemote().remote(), is("https://bitbucket.org/amuniz/test-repos.git"));
-
-        // Resolve URL for Mercurial repositories
-        assertThat(new BitbucketHgSCMBuilder(getBitbucketSCMSourceMock(BitbucketRepositoryType.MERCURIAL),
-                new BranchSCMHead("branch1", BitbucketRepositoryType.MERCURIAL), null,
-                null).withBitbucketSource().source(), is("https://bitbucket.org/amuniz/test-repos"));
     }
 
     @Test
@@ -142,14 +136,6 @@ public class BranchScanningTest {
                 BitbucketClientMockUtils.getAPIClientMock(BitbucketRepositoryType.GIT, false));
         SCM scm = scmBuild(BitbucketRepositoryType.GIT);
         assertTrue("SCM must be an instance of GitSCM", scm instanceof GitSCM);
-    }
-
-    @Test
-    public void mercurialSCMTest() throws Exception {
-        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL,
-                BitbucketClientMockUtils.getAPIClientMock(BitbucketRepositoryType.MERCURIAL, false));
-        SCM scm = scmBuild(BitbucketRepositoryType.MERCURIAL);
-        assertTrue("SCM must be an instance of MercurialSCM", scm instanceof MercurialSCM);
     }
 
     private SCM scmBuild(BitbucketRepositoryType type) throws IOException, InterruptedException {

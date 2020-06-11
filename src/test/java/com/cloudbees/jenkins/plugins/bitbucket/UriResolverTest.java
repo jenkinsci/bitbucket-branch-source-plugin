@@ -46,13 +46,6 @@ public class UriResolverTest {
                 "user1",
                 "repo1"
         ));
-        assertEquals("https://bitbucket.org/user1/repo1", api.getRepositoryUri(
-                BitbucketRepositoryType.MERCURIAL,
-                BitbucketRepositoryProtocol.HTTP,
-                null,
-                "user1",
-                "repo1"
-        ));
         api = new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false,
                 BitbucketServerWebhookImplementation.PLUGIN);
         assertEquals("http://localhost:1234/scm/user2/repo2.git", api.getRepositoryUri(
@@ -92,13 +85,6 @@ public class UriResolverTest {
                 "user1",
                 "repo1"
         ));
-        assertEquals("ssh://hg@bitbucket.org/user1/repo1", api.getRepositoryUri(
-                BitbucketRepositoryType.MERCURIAL,
-                BitbucketRepositoryProtocol.SSH,
-                null,
-                "user1",
-                "repo1"
-        ));
         api = new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false,
                 BitbucketServerWebhookImplementation.PLUGIN);
         assertEquals("ssh://git@localhost:7999/user2/repo2.git", api.getRepositoryUri(
@@ -119,18 +105,4 @@ public class UriResolverTest {
         ));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void httpUriResolverIllegalStates() throws Exception {
-        new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false,
-                BitbucketServerWebhookImplementation.PLUGIN)
-                .getRepositoryUri(BitbucketRepositoryType.MERCURIAL, BitbucketRepositoryProtocol.HTTP, null, "user1", "repo1");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void sshUriResolverIllegalStates() throws Exception {
-        new BitbucketServerAPIClient("http://localhost:1234", "test", null, null, false,
-                BitbucketServerWebhookImplementation.PLUGIN)
-                .getRepositoryUri(BitbucketRepositoryType.MERCURIAL, BitbucketRepositoryProtocol.SSH, null, "user1",
-                        "repo1");
-    }
 }

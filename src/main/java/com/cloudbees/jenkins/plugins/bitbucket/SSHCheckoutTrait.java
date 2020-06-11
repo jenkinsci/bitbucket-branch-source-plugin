@@ -37,8 +37,6 @@ import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.mercurial.MercurialSCM;
-import hudson.plugins.mercurial.MercurialSCMBuilder;
 import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
@@ -59,7 +57,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 /**
- * A {@link SCMSourceTrait} for {@link BitbucketSCMSource} that causes the {@link GitSCM} or {@link MercurialSCM}
+ * A {@link SCMSourceTrait} for {@link BitbucketSCMSource} that causes the {@link GitSCM}
  * checkout to be performed using a SSH private key rather than the Bitbucket username password credentials used
  * for scanning / indexing.
  *
@@ -108,9 +106,6 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
         if (builder instanceof GitSCMBuilder) {
             ((BitbucketGitSCMBuilder) builder)
                 .withCredentials(credentialsId, BitbucketRepositoryProtocol.SSH);
-        } else if (builder instanceof MercurialSCMBuilder) {
-            ((BitbucketHgSCMBuilder) builder)
-                .withCredentialsId(credentialsId, BitbucketRepositoryProtocol.SSH);
         }
     }
 
@@ -151,7 +146,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToBuilder(@NonNull Class<? extends SCMBuilder> builderClass) {
-            return BitbucketGitSCMBuilder.class.isAssignableFrom(builderClass) || BitbucketHgSCMBuilder.class.isAssignableFrom(builderClass);
+            return BitbucketGitSCMBuilder.class.isAssignableFrom(builderClass);
         }
 
         /**
@@ -159,7 +154,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToSCM(@NonNull SCMDescriptor<?> scm) {
-            return scm instanceof GitSCM.DescriptorImpl || scm instanceof MercurialSCM.DescriptorImpl;
+            return scm instanceof GitSCM.DescriptorImpl;
         }
 
         /**

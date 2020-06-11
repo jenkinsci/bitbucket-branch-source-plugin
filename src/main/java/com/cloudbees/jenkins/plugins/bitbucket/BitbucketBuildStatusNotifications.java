@@ -35,7 +35,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.model.listeners.SCMListener;
-import hudson.plugins.mercurial.MercurialSCMSource;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
@@ -192,11 +191,7 @@ public class BitbucketBuildStatusNotifications {
             // unwrap
             revision = ((PullRequestSCMRevision) revision).getPull();
         }
-        if (revision instanceof BitbucketSCMSource.MercurialRevision) {
-            return ((BitbucketSCMSource.MercurialRevision) revision).getHash();
-        } else if (revision instanceof MercurialSCMSource.MercurialRevision) {
-            return ((MercurialSCMSource.MercurialRevision) revision).getHash();
-        } else if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
+        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
             return ((AbstractGitSCMSource.SCMRevisionImpl) revision).getHash();
         }
         return null;

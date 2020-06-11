@@ -32,7 +32,7 @@ import java.util.Map;
 public interface BitbucketRepository {
 
     /**
-     * @return the scm type (git ot hg)
+     * @return the scm type (git)
      */
     String getScm();
 

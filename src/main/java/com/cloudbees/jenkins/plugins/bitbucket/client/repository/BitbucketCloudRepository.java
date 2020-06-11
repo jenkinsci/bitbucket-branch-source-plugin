@@ -72,6 +72,7 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         return owner;
     }
 
+    // TODO deprecate
     public void setScm(String scm) {
         this.scm = scm;
     }

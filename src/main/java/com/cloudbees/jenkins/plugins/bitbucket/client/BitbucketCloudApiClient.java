@@ -257,15 +257,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                     default:
                         throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
                 }
-            case MERCURIAL:
-                switch (protocol) {
-                    case HTTP:
-                        return "https://bitbucket.org/" + owner + "/" + repository;
-                    case SSH:
-                        return "ssh://hg@bitbucket.org/" + owner + "/" + repository;
-                    default:
-                        throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
-                }
             default:
                 throw new IllegalArgumentException("Unsupported repository type: " + type);
         }
