@@ -215,7 +215,6 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
      * Used to handle data migration.
      *
      * @see FixLegacyMigration1
-     * @see FixLegacyMigration2
      * @deprecated used for data migration.
      */
     @Deprecated
