@@ -330,8 +330,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         // PRs with missing destination branch are invalid and should be ignored.
         pullRequests.removeIf(pr -> pr.getSource().getRepository() == null
-                || pr.getSource().getCommit() == null
-                || pr.getDestination().getCommit() == null);
+                || pr.getSource().getBranch() == null
+                || pr.getDestination().getBranch() == null);
 
         // set commit closure to make commit informations available when need, in a similar way to when request branches
         for (BitbucketServerPullRequest pullRequest : pullRequests) {
