@@ -49,7 +49,7 @@ public class BitbucketPullRequestValueRepository implements BitbucketPullRequest
 
         // It is possible for a PR's original source to no longer exist.
         if(branch != null && commit != null) {
-            // redound available the information into impl objects
+            // Make the commit information available into impl objects
             this.branch.setRawNode(commit.getHash());
         }
     }

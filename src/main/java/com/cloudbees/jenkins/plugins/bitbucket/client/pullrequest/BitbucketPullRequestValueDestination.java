@@ -52,7 +52,7 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
 
         // It is possible for a PR's original destination to no longer exist.
         if(this.branch != null && this.commit != null) {
-            // redound available the information into impl objects
+            // Make the commit information available into impl objects
             this.branch.setRawNode(commit.getHash());
         }
     }
