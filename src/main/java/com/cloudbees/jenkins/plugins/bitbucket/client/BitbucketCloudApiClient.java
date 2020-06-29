@@ -339,9 +339,13 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private void setupClosureForPRBranch(BitbucketPullRequestValue pullRequest) {
         BitbucketCloudBranch branch = pullRequest.getSource().getBranch();
-        branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        if (branch != null) {
+            branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        }
         branch = pullRequest.getDestination().getBranch();
-        branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        if (branch != null) {
+            branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        }
     }
 
     @Deprecated
