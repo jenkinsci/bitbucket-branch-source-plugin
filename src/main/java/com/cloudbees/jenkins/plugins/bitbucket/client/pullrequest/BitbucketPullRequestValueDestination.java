@@ -45,7 +45,7 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
     @JsonCreator
     public BitbucketPullRequestValueDestination(@NonNull @JsonProperty("repository") BitbucketCloudRepository repository,
                                                 @JsonProperty("branch") BitbucketCloudBranch branch,
-                                                @JsonProperty("commit") BitbucketCloudCommit commit) {
+                                                @CheckForNull @JsonProperty("commit") BitbucketCloudCommit commit) {
         this.repository = repository;
         this.branch = branch;
         this.commit = commit;
