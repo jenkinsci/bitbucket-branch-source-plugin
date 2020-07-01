@@ -81,7 +81,7 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
     @Override
     public String getAuthorLogin() {
-        return author.username;
+        return author.displayName;
     }
 
     @Override
@@ -105,10 +105,6 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
     public void setAuthor(Author author) {
         this.author = author;
-    }
-
-    public String getAuthorDisplayName() {
-        return author.displayName;
     }
 
     @Override
@@ -155,27 +151,15 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
     public static class Author {
         @JsonProperty("account_id")
         private String identifier;
-        private String username;
-        @JsonProperty("display_name")
+        @JsonProperty("nickname")
         private String displayName;
         public Author() {}
-        public Author(String username) {
-            this.username = username;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
 
         public String getIdentifier() {
             return identifier;
         }
 
-        public void setIndentifier(String identifier) {
+        public void setIdentifier(String identifier) {
             this.identifier = identifier;
         }
 

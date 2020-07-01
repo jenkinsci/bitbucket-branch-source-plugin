@@ -73,7 +73,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                     if (this.pullRequest.getSource().getRepository().getOwnerName().equals(this.pullRequest.getAuthorLogin())) {
                         BitbucketCloudRepositoryOwner owner = new BitbucketCloudRepositoryOwner();
                         owner.setUsername(this.pullRequest.getAuthorLogin());
-                        owner.setDisplayName(this.pullRequest.getAuthorDisplayName());
+                        owner.setDisplayName(this.pullRequest.getAuthorLogin());
                         if (repository.isPrivate()) {
                             this.pullRequest.getSource().getRepository().setPrivate(repository.isPrivate());
                         }

@@ -641,8 +641,7 @@ public class BitbucketSCMSource extends SCMSource {
             getPullRequestTitleCache()
                     .put(pull.getId(), StringUtils.defaultString(pull.getTitle()));
             getPullRequestContributorCache().put(pull.getId(),
-                    // TODO get more details on the author
-                    new ContributorMetadataAction(pull.getAuthorLogin(), null, pull.getAuthorEmail()));
+                    new ContributorMetadataAction(pull.getAuthorIdentifier(), pull.getAuthorLogin(), pull.getAuthorEmail()));
             try {
                 // We store resolved hashes here so to avoid resolving the commits multiple times
                 for (final ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
