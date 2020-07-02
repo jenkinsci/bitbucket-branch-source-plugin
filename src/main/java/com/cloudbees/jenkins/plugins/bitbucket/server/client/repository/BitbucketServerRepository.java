@@ -39,6 +39,7 @@ public class BitbucketServerRepository implements BitbucketRepository {
 
     private Long id;
 
+    @Deprecated
     @JsonProperty("scmId")
     private String scm;
 

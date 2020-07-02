@@ -37,6 +37,7 @@ import java.util.Map;
 
 public class BitbucketCloudRepository implements BitbucketRepository {
 
+    @Deprecated
     private String scm;
 
     @JsonProperty("full_name")
@@ -72,7 +73,7 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         return owner;
     }
 
-    // TODO deprecate
+    @Deprecated
     public void setScm(String scm) {
         this.scm = scm;
     }

@@ -26,7 +26,10 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-// TODO deprecate
+/**
+ * @deprecated No longer a choice.
+ */
+@Deprecated
 public enum BitbucketRepositoryType {
 
     /**
