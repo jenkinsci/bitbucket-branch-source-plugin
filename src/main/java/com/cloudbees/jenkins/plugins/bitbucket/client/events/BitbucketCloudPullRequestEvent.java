@@ -70,15 +70,15 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                     this.pullRequest.getSource().getRepository().setScm(repository.getScm());
                 }
                 if (this.pullRequest.getSource().getRepository().getOwner() == null) {
-                    if (this.pullRequest.getSource().getRepository().getOwnerName().equals(this.pullRequest.getAuthorLogin())) {
+                    if (!this.pullRequest.getSource().getRepository().getOwnerName().equals(repository.getOwnerName())) { // i.e., a fork
                         BitbucketCloudRepositoryOwner owner = new BitbucketCloudRepositoryOwner();
-                        owner.setUsername(this.pullRequest.getAuthorLogin());
+                        owner.setUsername(this.pullRequest.getSource().getRepository().getOwnerName());
                         owner.setDisplayName(this.pullRequest.getAuthorLogin());
                         if (repository.isPrivate()) {
                             this.pullRequest.getSource().getRepository().setPrivate(repository.isPrivate());
                         }
                         this.pullRequest.getSource().getRepository().setOwner(owner);
-                    } else if (this.pullRequest.getSource().getRepository().getOwnerName().equals(repository.getOwnerName())) {
+                    } else { // origin branch
                         this.pullRequest.getSource().getRepository().setOwner(repository.getOwner());
                         this.pullRequest.getSource().getRepository().setPrivate(repository.isPrivate());
                     }
