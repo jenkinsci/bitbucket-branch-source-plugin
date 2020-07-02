@@ -64,7 +64,6 @@ public interface BitbucketPullRequest {
 
     /**
      * Username or account identifier of the author.
-     * @return
      */
     String getAuthorIdentifier();
 
