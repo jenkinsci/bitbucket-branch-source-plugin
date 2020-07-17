@@ -71,22 +71,22 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
             BitbucketPullRequestValueRepository source = this.pullRequest.getSource();
             if (source != null) {
                 BitbucketCloudRepository sourceRepository = source.getRepository();
-                if(sourceRepository != null) {
+                if (sourceRepository != null) {
                     if (sourceRepository.getScm() == null) {
                         sourceRepository.setScm(repository.getScm());
                     }
                     if (sourceRepository.getOwner() == null) {
-                        if (sourceRepository.getOwnerName().equals(this.pullRequest.getAuthorLogin())) {
+                        if (!sourceRepository.getOwnerName().equals(repository.getOwnerName())) { // i.e., a fork
                             BitbucketCloudRepositoryOwner owner = new BitbucketCloudRepositoryOwner();
-                            owner.setUsername(this.pullRequest.getAuthorLogin());
-                            owner.setDisplayName(this.pullRequest.getAuthorDisplayName());
-                            if (this.repository.isPrivate()) {
-                                sourceRepository.setPrivate(this.repository.isPrivate());
+                            owner.setUsername(sourceRepository.getOwnerName());
+                            owner.setDisplayName(this.pullRequest.getAuthorLogin());
+                            if (repository.isPrivate()) {
+                                sourceRepository.setPrivate(repository.isPrivate());
                             }
                             sourceRepository.setOwner(owner);
-                        } else if (sourceRepository.getOwnerName().equals(this.repository.getOwnerName())) {
-                            sourceRepository.setOwner(this.repository.getOwner());
-                            sourceRepository.setPrivate(this.repository.isPrivate());
+                        } else { // origin branch
+                            sourceRepository.setOwner(repository.getOwner());
+                            sourceRepository.setPrivate(repository.isPrivate());
                         }
                     }
                 }
@@ -95,7 +95,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                 BitbucketCloudBranch sourceBranch = source.getBranch();
                 BitbucketCommit sourceCommit = source.getCommit();
                 if (sourceCommit != null
-                        && sourceBranch != null) {
+                    && sourceBranch != null) {
                     if (sourceBranch.getRawNode() == null) {
                         sourceBranch.setRawNode(source.getCommit().getHash());
                     }
@@ -106,23 +106,23 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
             }
             BitbucketPullRequestValueDestination destination = this.pullRequest.getDestination();
             if (destination != null
-                    && destination.getRepository() != null) {
+                && destination.getRepository() != null) {
                 if (destination.getRepository().getScm() == null) {
                     destination.getRepository().setScm(repository.getScm());
                 }
                 if (destination.getRepository().getOwner() == null
-                        && destination.getRepository().getOwnerName()
-                        .equals(repository.getOwnerName())) {
+                    && destination.getRepository().getOwnerName()
+                    .equals(repository.getOwnerName())) {
                     destination.getRepository().setOwner(repository.getOwner());
                     destination.getRepository().setPrivate(repository.isPrivate());
                 }
             }
             if (destination != null
-                    && destination.getCommit() != null
-                    && destination.getBranch() != null
-                    && destination.getBranch().getRawNode() == null) {
+                && destination.getCommit() != null
+                && destination.getBranch() != null
+                && destination.getBranch().getRawNode() == null) {
                 destination.getBranch()
-                        .setRawNode(destination.getCommit().getHash());
+                    .setRawNode(destination.getCommit().getHash());
             }
         }
     }

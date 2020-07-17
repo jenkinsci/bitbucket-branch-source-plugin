@@ -86,6 +86,11 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     private boolean callCanMerge = true;
 
     /**
+     * Whether to always call the can diff api when retrieving pull requests.
+     */
+    private boolean callChanges = true;
+
+    /**
      * @param displayName   Optional name to use to describe the end-point.
      * @param serverUrl     The URL of this Bitbucket Server
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -126,6 +131,15 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     @DataBoundSetter
     public void setCallCanMerge(boolean callCanMerge) {
         this.callCanMerge = callCanMerge;
+    }
+
+    public boolean isCallChanges() {
+        return callChanges;
+    }
+
+    @DataBoundSetter
+    public void setCallChanges(boolean callChanges) {
+        this.callChanges = callChanges;
     }
 
     /**

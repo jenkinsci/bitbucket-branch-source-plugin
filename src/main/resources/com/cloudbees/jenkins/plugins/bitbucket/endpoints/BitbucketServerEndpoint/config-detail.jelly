@@ -10,4 +10,7 @@
   <f:entry field="callCanMerge">
     <f:checkbox title="${%Call Can Merge}" default="true"/>
   </f:entry>
+  <f:entry field="callChanges">
+    <f:checkbox title="${%Call Changes api}" default="true"/>
+  </f:entry>
 </j:jelly>

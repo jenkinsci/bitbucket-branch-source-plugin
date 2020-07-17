@@ -106,8 +106,9 @@
     "reason": "",
     "updated_on": "2017-03-06T12:02:59.640844+00:00",
     "author": {
-      "username": "stephenc",
-      "display_name": "Stephen Connolly",
+      "account_id": "123456:dead-beef",
+      "nickname": "Stephen Connolly",
+      "display_name": "Stephen Q. Connolly",
       "type": "user",
       "uuid": "{f70f195e-ade1-4961-9f89-547541377b80}",
       "links": {

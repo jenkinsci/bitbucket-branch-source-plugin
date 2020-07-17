@@ -9,3 +9,6 @@ work
 *.iml
 *.iws
 *.ipr
+
+# VSCode
+.factorypath
