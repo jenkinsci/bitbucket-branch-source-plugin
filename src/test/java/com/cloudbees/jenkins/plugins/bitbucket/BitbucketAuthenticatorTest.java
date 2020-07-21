@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.credentials.BitbucketOAuthCredentialsImpl;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -67,6 +68,15 @@ public class BitbucketAuthenticatorTest {
         Object a = AuthenticationTokens.convert(ctx, c);
         assertThat(a, notNullValue());
         assertThat(a, isA(BitbucketUsernamePasswordAuthenticator.class));
+    }
+
+    @Test
+    public void bitbucketOAuthCredentialsTest() {
+        List<Credentials> list = Collections.<Credentials>singletonList(new BitbucketOAuthCredentialsImpl(
+                        CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"));
+        AuthenticationTokenContext ctx = BitbucketAuthenticator.authenticationContext((null));
+        Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
+        assertThat(c, notNullValue());
     }
 
     @Test

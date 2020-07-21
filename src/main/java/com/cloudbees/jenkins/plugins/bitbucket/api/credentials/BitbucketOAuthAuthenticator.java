@@ -1,8 +1,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.credentials.BitbucketOAuthCredentials;
 import hudson.util.Secret;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.http.HttpRequest;
 import org.scribe.model.OAuthConfig;
 import org.scribe.model.OAuthConstants;
@@ -11,20 +14,32 @@ import org.scribe.model.Token;
 public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
 
     private Token token;
+    private static final Logger LOGGER = Logger.getLogger(BitbucketOAuthAuthenticator.class.getName());
 
     /**
      * Constructor.
      *
      * @param credentials the key/pass that will be used
      */
-    public BitbucketOAuthAuthenticator(StandardUsernamePasswordCredentials credentials) {
+    public BitbucketOAuthAuthenticator(BitbucketOAuthCredentials credentials) {
         super(credentials);
 
-        OAuthConfig config = new OAuthConfig(credentials.getUsername(), Secret.toString(credentials.getPassword()));
+        OAuthConfig config;
+        try {
+            config = new OAuthConfig(credentials.getKey(), Secret.toString(credentials.getSecret()));
 
-        BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
+            BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
 
-        token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
+            token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            LOGGER.log(Level.WARNING, "Could not retrieve credentials: { " + e.getMessage() + "}");
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            LOGGER.log(Level.WARNING, "Could not retrieve credentials: { " + e.getMessage() + "}");
+        }
+
+
     }
 
     /**

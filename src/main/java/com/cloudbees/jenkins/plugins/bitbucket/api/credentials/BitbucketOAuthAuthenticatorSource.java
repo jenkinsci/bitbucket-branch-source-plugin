@@ -1,8 +1,8 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.credentials.BitbucketOAuthCredentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
@@ -13,26 +13,26 @@ import jenkins.authentication.tokens.api.AuthenticationTokenSource;
  * Source for OAuth authenticators.
  */
 @Extension
-public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource<BitbucketOAuthAuthenticator, StandardUsernamePasswordCredentials> {
+public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource<BitbucketOAuthAuthenticator, BitbucketOAuthCredentials> {
 
     /**
      * Constructor.
      */
     public BitbucketOAuthAuthenticatorSource() {
-        super(BitbucketOAuthAuthenticator.class, StandardUsernamePasswordCredentials.class);
+        super(BitbucketOAuthAuthenticator.class, BitbucketOAuthCredentials.class);
     }
 
     /**
      * Converts username/password credentials to an authenticator.
      *
-     * @param standardUsernamePasswordCredentials the username/password combo
+     * @param bitbucketOAuthCredentials the username/password combo
      * @return an authenticator that will use them.
      */
     @NonNull
     @Override
     public BitbucketOAuthAuthenticator convert(
-            @NonNull StandardUsernamePasswordCredentials standardUsernamePasswordCredentials) {
-        return new BitbucketOAuthAuthenticator(standardUsernamePasswordCredentials);
+            @NonNull BitbucketOAuthCredentials bitbucketOAuthCredentials) {
+        return new BitbucketOAuthAuthenticator(bitbucketOAuthCredentials);
     }
 
     /**

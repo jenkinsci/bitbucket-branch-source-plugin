@@ -118,7 +118,7 @@ Don't forget to check _This is a private consumer_ and at least allow read acces
 
 image::images/screenshot-10.png[scaledwidth=90%]
 
-Then create new _Username with password credentials_, enter the Bitbucket OAuth consumer key in _Username_ field and the Bitbucket OAuth consumer secret in _Password_ field
+Then create new _Bitbucket OAuth credentials_, enter the Bitbucket OAuth consumer key in _key_ field and the Bitbucket OAuth consumer secret in _secret_ field
 
 image::images/screenshot-11.png[scaledwidth=90%]
 
