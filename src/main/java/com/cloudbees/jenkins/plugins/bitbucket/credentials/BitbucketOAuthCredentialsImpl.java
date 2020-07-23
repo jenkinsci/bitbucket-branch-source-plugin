@@ -15,6 +15,13 @@ public class BitbucketOAuthCredentialsImpl extends BaseStandardCredentials imple
     private final Secret secret;
     @DataBoundConstructor
     public BitbucketOAuthCredentialsImpl(@CheckForNull CredentialsScope scope, @CheckForNull String id, String key,
+            Secret secret, @CheckForNull String description) {
+        super(scope, id, description);
+        this.key = key;
+        this.secret = secret;
+    }
+
+    public BitbucketOAuthCredentialsImpl(@CheckForNull CredentialsScope scope, @CheckForNull String id, String key,
             String secret, @CheckForNull String description) {
         super(scope, id, description);
         this.key = key;
