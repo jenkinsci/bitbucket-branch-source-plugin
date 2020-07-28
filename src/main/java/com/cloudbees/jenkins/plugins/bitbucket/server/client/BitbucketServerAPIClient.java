@@ -42,6 +42,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
@@ -342,7 +343,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(baseURL);
         if (endpointConfig instanceof BitbucketServerEndpoint) {
             final BitbucketServerEndpoint endpoint = (BitbucketServerEndpoint) endpointConfig;
-            if (!endpoint.isCallCanMerge() && !endpoint.isCallChanges()) {
+            if (!endpoint.isCallCanMerge() && !(endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion()))) {
                 return pullRequests;
             }
 
@@ -352,7 +353,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 if (endpoint.isCallCanMerge()) {
                     pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
                 }
-                if (endpoint.isCallChanges()) {
+                if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
                     callPullRequestChangesById(pullRequest.getId());
                 }
             }
