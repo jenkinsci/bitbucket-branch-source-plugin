@@ -209,11 +209,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
             setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
         }
         if (serverVersion == null) {
-            if (Boolean.TRUE.equals(callChanges)) {
-                serverVersion = BitbucketServerVersion.VERSION_7;
-            } else {
-                serverVersion = BitbucketServerVersion.VERSION_6;
-            }
+            serverVersion = BitbucketServerVersion.VERSION_7;
         }
 
         return this;

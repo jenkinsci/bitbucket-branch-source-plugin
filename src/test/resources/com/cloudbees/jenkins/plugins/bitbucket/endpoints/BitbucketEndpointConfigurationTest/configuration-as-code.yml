@@ -17,3 +17,45 @@ unclassified:
     - bitbucketServerEndpoint:
         displayName: "Example Org"
         serverUrl: "http://example.org:8080/bitbucket"
+    - bitbucketServerEndpoint:
+        credentialsId: "third"
+        displayName: "Example Inc"
+        manageHooks: true
+        serverUrl: "http://bitbucket.example.com:8083"
+        callCanMerge: true
+        webhookImplementation: NATIVE
+    - bitbucketServerEndpoint:
+        credentialsId: "fourth"
+        displayName: "Example Inc"
+        manageHooks: true
+        serverUrl: "http://bitbucket.example.com:8084"
+        callCanMerge: false
+        webhookImplementation: PLUGIN
+        callChanges: false
+    - bitbucketServerEndpoint:
+        credentialsId: "fifth"
+        displayName: "Example Inc"
+        manageHooks: true
+        serverUrl: "http://bitbucket.example.com:8085"
+        callCanMerge: false
+        webhookImplementation: PLUGIN
+        callChanges: true
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8086"
+        manageHooks: false
+        callCanMerge: false
+        callChanges: false
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8087"
+        callCanMerge: false
+        callChanges: false
+        serverVersion: VERSION_7
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8088"
+        callCanMerge: false
+        callChanges: true
+        serverVersion: VERSION_6
+
