@@ -26,16 +26,19 @@ package com.cloudbees.jenkins.plugins.bitbucket.server;
 import hudson.model.ModelObject;
 
 public enum BitbucketServerVersion implements ModelObject {
-    VERSION_7 {
-        @Override
-        public String getDisplayName() {
-            return "Bitbucket v7.x (and later)";
-        }
-    },
+    VERSION_7("Bitbucket v7.x (and later)"),
+    VERSION_6("Bitbucket v6.x (and earlier)");
 
-    VERSION_6 {
-        @Override
-        public String getDisplayName() {
-            return "Bitbucket v6.x (and earlier)";
-        }
-    }}
+    private final String displayName;
+
+    BitbucketServerVersion(String displayName) {
+        this.displayName = displayName;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return displayName;
+    }
+
+}
+
