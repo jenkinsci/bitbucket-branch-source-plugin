@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
@@ -34,6 +35,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.StringUtils;
@@ -79,6 +81,11 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
     @NonNull
     private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+
+    /**
+     * The server version for this endpoint.
+     */
+    private BitbucketServerVersion serverVersion = BitbucketServerVersion.VERSION_7;
 
     /**
      * Whether to always call the can merge api when retrieving pull requests.
@@ -142,6 +149,26 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         this.callChanges = callChanges;
     }
 
+    @NonNull
+    public static BitbucketServerVersion findServerVersion(String serverUrl) {
+        final AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
+        if (endpoint instanceof BitbucketServerEndpoint) {
+            return ((BitbucketServerEndpoint) endpoint).getServerVersion();
+        }
+
+        return BitbucketServerVersion.VERSION_7;
+    }
+
+    @NonNull
+    public BitbucketServerVersion getServerVersion() {
+        return this.serverVersion;
+    }
+
+    @DataBoundSetter
+    public void setServerVersion(@NonNull BitbucketServerVersion serverVersion) {
+        this.serverVersion = Objects.requireNonNull(serverVersion);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -181,6 +208,10 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         if (getBitbucketJenkinsRootUrl() != null) {
             setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
         }
+        if (serverVersion == null) {
+            serverVersion = BitbucketServerVersion.VERSION_7;
+        }
+
         return this;
     }
 
@@ -213,6 +244,16 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
             ListBoxModel items = new ListBoxModel();
             for (BitbucketServerWebhookImplementation webhookImplementation : BitbucketServerWebhookImplementation.values()) {
                 items.add(webhookImplementation, webhookImplementation.name());
+            }
+
+            return items;
+        }
+
+        @Restricted(NoExternalUse.class)
+        public ListBoxModel doFillServerVersionItems() {
+            ListBoxModel items = new ListBoxModel();
+            for (BitbucketServerVersion serverVersion : BitbucketServerVersion.values()) {
+                items.add(serverVersion, serverVersion.name());
             }
 
             return items;

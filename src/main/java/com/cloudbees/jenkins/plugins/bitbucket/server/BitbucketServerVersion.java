@@ -1,7 +1,7 @@
 /**
  * The MIT License
  *
- * Copyright (c) 2016-2018, Yieldlab AG
+ * Copyright (c) 2016-2020, CloudBees Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,17 +25,13 @@ package com.cloudbees.jenkins.plugins.bitbucket.server;
 
 import hudson.model.ModelObject;
 
-/** The different webhook implementations available for Bitbucket Server. */
-public enum BitbucketServerWebhookImplementation implements ModelObject {
-    /** Plugin-based webhooks. */
-    PLUGIN("Plugin"),
-
-    /** Native webhooks, available since Bitbucket Server 5.4. */
-    NATIVE("Native");
+public enum BitbucketServerVersion implements ModelObject {
+    VERSION_7("Bitbucket v7.x (and later)"),
+    VERSION_6("Bitbucket v6.x (and earlier)");
 
     private final String displayName;
 
-    BitbucketServerWebhookImplementation(String displayName) {
+    BitbucketServerVersion(String displayName) {
         this.displayName = displayName;
     }
 
@@ -43,4 +39,6 @@ public enum BitbucketServerWebhookImplementation implements ModelObject {
     public String getDisplayName() {
         return displayName;
     }
+
 }
+

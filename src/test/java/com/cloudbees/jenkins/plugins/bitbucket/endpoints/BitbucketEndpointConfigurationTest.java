@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -647,7 +648,7 @@ public class BitbucketEndpointConfigurationTest {
 
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
 
-        assertThat(instance.getEndpoints(), hasSize(3));
+        assertThat(instance.getEndpoints(), hasSize(9));
 
         BitbucketCloudEndpoint endpoint1 = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
         assertThat(endpoint1.getDisplayName(), is(Messages.BitbucketCloudEndpoint_displayName()));
@@ -658,18 +659,86 @@ public class BitbucketEndpointConfigurationTest {
         assertThat(endpoint1.getTeamCacheDuration(), is(1));
         assertThat(endpoint1.getRepositoriesCacheDuration(), is(2));
 
-        BitbucketServerEndpoint endpoint2 = (BitbucketServerEndpoint) instance.getEndpoints().get(1);
-        assertThat(endpoint2.getDisplayName(), is("Example Inc"));
-        assertThat(endpoint2.getServerUrl(), is("https://bitbucket.example.com"));
-        assertThat(endpoint2.isManageHooks(), is(true));
-        assertThat(endpoint2.getCredentialsId(), is("second"));
-        assertThat(endpoint2.isCallCanMerge(), is(false));
+        BitbucketServerEndpoint serverEndpoint;
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(1);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("https://bitbucket.example.com"));
+        assertThat(serverEndpoint.isManageHooks(), is(true));
+        assertThat(serverEndpoint.getCredentialsId(), is("second"));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_7));
 
-        BitbucketServerEndpoint endpoint3 = (BitbucketServerEndpoint) instance.getEndpoints().get(2);
-        assertThat(endpoint3.getDisplayName(), is("Example Org"));
-        assertThat(endpoint3.getServerUrl(), is("http://example.org:8080/bitbucket"));
-        assertThat(endpoint3.isManageHooks(), is(false));
-        assertThat(endpoint3.getCredentialsId(), is(nullValue()));
-        assertThat(endpoint3.isCallCanMerge(), is(true));
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(2);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Org"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://example.org:8080/bitbucket"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(true));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_7));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(3);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8083"));
+        assertThat(serverEndpoint.isManageHooks(), is(true));
+        assertThat(serverEndpoint.getCredentialsId(), is("third"));
+        assertThat(serverEndpoint.isCallCanMerge(), is(true));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.NATIVE));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_7));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(4);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8084"));
+        assertThat(serverEndpoint.isManageHooks(), is(true));
+        assertThat(serverEndpoint.getCredentialsId(), is("fourth"));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(false));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_7));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(5);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8085"));
+        assertThat(serverEndpoint.isManageHooks(), is(true));
+        assertThat(serverEndpoint.getCredentialsId(), is("fifth"));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_7));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(6);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8086"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(false));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_7));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(7);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8087"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(false));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_7));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(8);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8088"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_6));
+
     }
 }

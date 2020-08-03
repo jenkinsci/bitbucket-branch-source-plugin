@@ -42,6 +42,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
@@ -334,25 +335,21 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 || pr.getSource().getBranch() == null
                 || pr.getDestination().getBranch() == null);
 
-        // set commit closure to make commit informations available when need, in a similar way to when request branches
-        for (BitbucketServerPullRequest pullRequest : pullRequests) {
-            setupClosureForPRBranch(pullRequest);
-        }
-
         AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(baseURL);
-        if (endpointConfig instanceof BitbucketServerEndpoint) {
-            final BitbucketServerEndpoint endpoint = (BitbucketServerEndpoint) endpointConfig;
-            if (!endpoint.isCallCanMerge() && !endpoint.isCallChanges()) {
-                return pullRequests;
-            }
+        final BitbucketServerEndpoint endpoint = endpointConfig instanceof BitbucketServerEndpoint ?
+            (BitbucketServerEndpoint) endpointConfig : null;
 
-            // This is required for Bitbucket Server to update the refs/pull-requests/* references
-            // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
-            for (BitbucketServerPullRequest pullRequest : pullRequests) {
+        for (BitbucketServerPullRequest pullRequest : pullRequests) {
+            // set commit closure to make commit informations available when need, in a similar way to when request branches
+            setupClosureForPRBranch(pullRequest);
+
+            if (endpoint != null) {
+                // This is required for Bitbucket Server to update the refs/pull-requests/* references
+                // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
                 if (endpoint.isCallCanMerge()) {
                     pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
                 }
-                if (endpoint.isCallChanges()) {
+                if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
                     callPullRequestChangesById(pullRequest.getId());
                 }
             }

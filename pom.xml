@@ -49,7 +49,7 @@
   </licenses>
 
   <properties>
-    <revision>2.9.1</revision>
+    <revision>2.9.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.138.4</jenkins.version>
     <java.level>8</java.level>
