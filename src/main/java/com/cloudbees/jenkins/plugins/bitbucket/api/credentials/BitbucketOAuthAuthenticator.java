@@ -31,10 +31,7 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
             BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
 
             token = OAuthService.getAccessToken(OAuthConstants.EMPTY_TOKEN, null);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            LOGGER.log(Level.WARNING, "Could not retrieve credentials: { " + e.getMessage() + "}");
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             // TODO Auto-generated catch block
             LOGGER.log(Level.WARNING, "Could not retrieve credentials: { " + e.getMessage() + "}");
         }
