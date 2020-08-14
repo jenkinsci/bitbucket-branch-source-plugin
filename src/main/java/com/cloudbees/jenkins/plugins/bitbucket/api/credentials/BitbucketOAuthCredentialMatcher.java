@@ -4,12 +4,15 @@ import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import hudson.util.Secret;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, CredentialsMatcher.CQL {
-    private static int keyLenght = 18;
-    private static int secretLenght = 32;
+    private static int keyLength = 18;
+    private static int secretLength = 32;
 
     private static final long serialVersionUID = 6458784517693211197L;
+    private static final Logger LOGGER = Logger.getLogger(BitbucketOAuthCredentialMatcher.class.getName());
 
     /**
      * {@inheritDoc}
@@ -19,13 +22,18 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
         if (!(item instanceof UsernamePasswordCredentials))
             return false;
 
-        UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
-        String username = usernamePasswordCredential.getUsername();
-        boolean isEMail = username.contains(".") && username.contains("@");
-        boolean validSecretLenght = Secret.toString(usernamePasswordCredential.getPassword()).length() == secretLenght;
-        boolean validKeyLenght = username.length() == keyLenght;
+        try {
+            UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
+            String username = usernamePasswordCredential.getUsername();
+            boolean isEMail = username.contains(".") && username.contains("@");
+            boolean validSecretLength = Secret.toString(usernamePasswordCredential.getPassword()).length() == secretLength;
+            boolean validKeyLength = username.length() == keyLength;
 
-        return !isEMail && validKeyLenght && validSecretLenght;
+            return !isEMail && validKeyLength && validSecretLength;
+        } catch (RuntimeException e) {
+            LOGGER.log(Level.FINE, "Caught exception validating credential", e);
+            return false;
+        }
     }
 
     /**
@@ -35,7 +43,7 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
     public String describe() {
         return String.format(
                 "(username.lenght == %d && password.lenght == %d && !(username CONTAINS \".\" && username CONTAINS \"@\")",
-                keyLenght, secretLenght);
+                keyLength, secretLength);
     }
 
 
