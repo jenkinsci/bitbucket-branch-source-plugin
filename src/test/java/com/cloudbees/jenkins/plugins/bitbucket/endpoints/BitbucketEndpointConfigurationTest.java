@@ -45,7 +45,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import jenkins.model.Jenkins;
-import org.acegisecurity.AccessDeniedException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -110,7 +109,7 @@ public class BitbucketEndpointConfigurationTest {
         assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     public void given__newInstance__when__configuredAsAnon__then__permissionError() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         j.jenkins.setAuthorizationStrategy(new FullControlOnceLoggedInAuthorizationStrategy());
@@ -121,6 +120,8 @@ public class BitbucketEndpointConfigurationTest {
                     new BitbucketCloudEndpoint(true, "third")));
             assertThat(instance.getEndpoints(), contains(instanceOf(BitbucketCloudEndpoint.class)));
             assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
+        } catch (RuntimeException x) {
+            assertThat(x.getMessage(), is(hudson.security.Messages.AccessDeniedException2_MissingPermission("anonymous", "Overall/Administer")));
         } finally {
             j.jenkins.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED);
         }
