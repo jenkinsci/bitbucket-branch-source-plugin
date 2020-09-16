@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait.ExcludeOrigi
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Result;
@@ -43,6 +42,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHeadObserver;
@@ -59,10 +60,12 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
  */
 public class BitbucketBuildStatusNotifications {
 
-    private static String getRootURL(@NonNull Run<?, ?> build) {
+    private static final String FAILED_DESCRIPTION = "FAILED";
+
+    private static String getRootURL(@Nonnull Run<?, ?> build) {
         JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
 
-        if (cfg == null || cfg.getUrl() == null) {
+        if (cfg.getUrl() == null) {
             throw new IllegalStateException("Could not determine Jenkins URL.");
         }
 
@@ -78,7 +81,7 @@ public class BitbucketBuildStatusNotifications {
      * @param url the URL of the build to check
      * @param bitbucket the bitbucket client we are facing.
      */
-    static String checkURL(@NonNull String url, BitbucketApi bitbucket) {
+    static String checkURL(@Nonnull String url, BitbucketApi bitbucket) {
         try {
             URL anURL = new URL(url);
             if ("localhost".equals(anURL.getHost())) {
@@ -97,8 +100,8 @@ public class BitbucketBuildStatusNotifications {
         }
     }
 
-    private static void createStatus(@NonNull Run<?, ?> build, @NonNull TaskListener listener,
-        @NonNull BitbucketApi bitbucket, @NonNull String key, @NonNull String hash)
+    private static void createStatus(@Nonnull Run<?, ?> build, @Nonnull TaskListener listener,
+                                     @Nonnull BitbucketApi bitbucket, @Nonnull String key, @Nonnull String hash)
             throws IOException, InterruptedException {
 
         String url;
@@ -125,17 +128,17 @@ public class BitbucketBuildStatusNotifications {
             state = "SUCCESSFUL";
         } else if (Result.UNSTABLE.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
-            state = "FAILED";
+            state = FAILED_DESCRIPTION;
         } else if (Result.FAILURE.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "There was a failure building this commit.");
-            state = "FAILED";
+            state = FAILED_DESCRIPTION;
         } else if (Result.NOT_BUILT.equals(result)) {
             // Bitbucket Cloud and Server support different build states.
             state = (bitbucket instanceof BitbucketCloudApiClient) ? "STOPPED" : "SUCCESSFUL";
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
         } else if (result != null) { // ABORTED etc.
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
-            state = "FAILED";
+            state = FAILED_DESCRIPTION;
         } else {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "The build is in progress...");
             state = "INPROGRESS";
@@ -202,7 +205,7 @@ public class BitbucketBuildStatusNotifications {
         return null;
     }
 
-    private static String getBuildKey(@NonNull Run<?, ?> build, String branch,
+    private static String getBuildKey(@Nonnull Run<?, ?> build, String branch,
         boolean shareBuildKeyBetweenBranchAndPR) {
 
         // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the

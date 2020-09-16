@@ -30,8 +30,6 @@ import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
@@ -42,6 +40,8 @@ import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
+
+import javax.annotation.Nonnull;
 
 /**
  * Utility class for common code accessing credentials
@@ -55,7 +55,7 @@ class BitbucketCredentials {
     static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverUrl,
                                                                @CheckForNull SCMSourceOwner context,
                                                                @CheckForNull String id,
-                                                               @NonNull Class<T> type) {
+                                                               @Nonnull Class<T> type) {
         if (StringUtils.isNotBlank(id) && context != null) {
             return CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
