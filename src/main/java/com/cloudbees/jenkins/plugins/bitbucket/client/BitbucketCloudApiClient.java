@@ -298,7 +298,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         } while (page.getNext() != null);
 
         // PRs with missing destination branch are invalid and should be ignored.
-        pullRequests.removeIf(pr -> pr.getDestination().getBranch() == null);
+        pullRequests.removeIf(pr -> pr.getSource().getRepository() == null
+                || pr.getSource().getCommit() == null
+                || pr.getDestination().getBranch() == null
+                || pr.getDestination().getCommit() == null);
 
         for (BitbucketPullRequestValue pullRequest : pullRequests) {
             setupClosureForPRBranch(pullRequest);
@@ -327,9 +330,13 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     private void setupClosureForPRBranch(BitbucketPullRequestValue pullRequest) {
         BitbucketCloudBranch branch = pullRequest.getSource().getBranch();
-        branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        if (branch != null) {
+            branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        }
         branch = pullRequest.getDestination().getBranch();
-        branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        if (branch != null) {
+            branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+        }
     }
 
     @Deprecated

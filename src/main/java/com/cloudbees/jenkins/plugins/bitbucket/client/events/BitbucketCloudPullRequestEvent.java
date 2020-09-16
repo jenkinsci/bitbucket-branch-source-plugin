@@ -23,10 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.events;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepositoryOwner;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -64,58 +68,61 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
 
     private void reconstructMissingData() {
         if (this.repository != null && this.pullRequest != null) {
-            if (this.pullRequest.getSource() != null
-                    && this.pullRequest.getSource().getRepository() != null) {
-                if (this.pullRequest.getSource().getRepository().getScm() == null) {
-                    this.pullRequest.getSource().getRepository().setScm(repository.getScm());
-                }
-                if (this.pullRequest.getSource().getRepository().getOwner() == null) {
-                    if (this.pullRequest.getSource().getRepository().getOwnerName().equals(this.pullRequest.getAuthorLogin())) {
-                        BitbucketCloudRepositoryOwner owner = new BitbucketCloudRepositoryOwner();
-                        owner.setUsername(this.pullRequest.getAuthorLogin());
-                        owner.setDisplayName(this.pullRequest.getAuthorDisplayName());
-                        if (repository.isPrivate()) {
-                            this.pullRequest.getSource().getRepository().setPrivate(repository.isPrivate());
+            BitbucketPullRequestValueRepository source = this.pullRequest.getSource();
+            if (source != null) {
+                BitbucketCloudRepository sourceRepository = source.getRepository();
+                if (sourceRepository != null) {
+                    if (sourceRepository.getScm() == null) {
+                        sourceRepository.setScm(repository.getScm());
+                    }
+                    if (sourceRepository.getOwner() == null) {
+                        if (!sourceRepository.getOwnerName().equals(repository.getOwnerName())) { // i.e., a fork
+                            BitbucketCloudRepositoryOwner owner = new BitbucketCloudRepositoryOwner();
+                            owner.setUsername(sourceRepository.getOwnerName());
+                            owner.setDisplayName(this.pullRequest.getAuthorLogin());
+                            if (repository.isPrivate()) {
+                                sourceRepository.setPrivate(repository.isPrivate());
+                            }
+                            sourceRepository.setOwner(owner);
+                        } else { // origin branch
+                            sourceRepository.setOwner(repository.getOwner());
+                            sourceRepository.setPrivate(repository.isPrivate());
                         }
-                        this.pullRequest.getSource().getRepository().setOwner(owner);
-                    } else if (this.pullRequest.getSource().getRepository().getOwnerName().equals(repository.getOwnerName())) {
-                        this.pullRequest.getSource().getRepository().setOwner(repository.getOwner());
-                        this.pullRequest.getSource().getRepository().setPrivate(repository.isPrivate());
                     }
                 }
             }
-            if (this.pullRequest.getSource() != null
-                    && this.pullRequest.getSource().getCommit() != null
-                    && this.pullRequest.getSource().getBranch() != null
-                    && this.pullRequest.getSource().getBranch().getRawNode() == null) {
-                this.pullRequest.getSource().getBranch()
-                        .setRawNode(this.pullRequest.getSource().getCommit().getHash());
-            }
-            if (this.pullRequest.getSource() != null
-                    && this.pullRequest.getSource().getCommit() != null
-                    && this.pullRequest.getSource().getBranch() != null
-                    && this.pullRequest.getSource().getBranch().getDateMillis() == 0) {
-                this.pullRequest.getSource().getBranch()
-                        .setDateMillis(toDate(this.pullRequest.getSource().getCommit().getDate()));
-            }
-            if (this.pullRequest.getDestination() != null
-                    && this.pullRequest.getDestination().getRepository() != null) {
-                if (this.pullRequest.getDestination().getRepository().getScm() == null) {
-                    this.pullRequest.getDestination().getRepository().setScm(repository.getScm());
-                }
-                if (this.pullRequest.getDestination().getRepository().getOwner() == null
-                        && this.pullRequest.getDestination().getRepository().getOwnerName()
-                        .equals(repository.getOwnerName())) {
-                    this.pullRequest.getDestination().getRepository().setOwner(repository.getOwner());
-                    this.pullRequest.getDestination().getRepository().setPrivate(repository.isPrivate());
+            if (source != null) {
+                BitbucketCloudBranch sourceBranch = source.getBranch();
+                BitbucketCommit sourceCommit = source.getCommit();
+                if (sourceCommit != null
+                    && sourceBranch != null) {
+                    if (sourceBranch.getRawNode() == null) {
+                        sourceBranch.setRawNode(source.getCommit().getHash());
+                    }
+                    if (sourceBranch.getDateMillis() == 0) {
+                        sourceBranch.setDateMillis(toDate(sourceCommit.getDate()));
+                    }
                 }
             }
-            if (this.pullRequest.getDestination() != null
-                    && this.pullRequest.getDestination().getCommit() != null
-                    && this.pullRequest.getDestination().getBranch() != null
-                    && this.pullRequest.getDestination().getBranch().getRawNode() == null) {
-                this.pullRequest.getDestination().getBranch()
-                        .setRawNode(this.pullRequest.getDestination().getCommit().getHash());
+            BitbucketPullRequestValueDestination destination = this.pullRequest.getDestination();
+            if (destination != null
+                && destination.getRepository() != null) {
+                if (destination.getRepository().getScm() == null) {
+                    destination.getRepository().setScm(repository.getScm());
+                }
+                if (destination.getRepository().getOwner() == null
+                    && destination.getRepository().getOwnerName()
+                    .equals(repository.getOwnerName())) {
+                    destination.getRepository().setOwner(repository.getOwner());
+                    destination.getRepository().setPrivate(repository.isPrivate());
+                }
+            }
+            if (destination != null
+                && destination.getCommit() != null
+                && destination.getBranch() != null
+                && destination.getBranch().getRawNode() == null) {
+                destination.getBranch()
+                    .setRawNode(destination.getCommit().getHash());
             }
         }
     }

@@ -42,6 +42,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
@@ -136,6 +137,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
+    private static final String API_PULL_REQUEST_CHANGES_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/changes{?start,limit}";
     static final String API_BROWSE_PATH = API_REPOSITORY_PATH + "/browse{/path*}{?at}";
     private static final String API_COMMITS_PATH = API_REPOSITORY_PATH + "/commits{/hash}";
     private static final String API_PROJECT_PATH = API_BASE_PATH + "/projects/{owner}";
@@ -329,19 +331,27 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         List<BitbucketServerPullRequest> pullRequests = getResources(template, BitbucketServerPullRequests.class);
 
         // PRs with missing destination branch are invalid and should be ignored.
-        pullRequests.removeIf(pr -> pr.getDestination().getBranch() == null);
-
-        // set commit closure to make commit informations available when need, in a similar way to when request branches
-        for (BitbucketServerPullRequest pullRequest : pullRequests) {
-            setupClosureForPRBranch(pullRequest);
-        }
+        pullRequests.removeIf(pr -> pr.getSource().getRepository() == null
+                || pr.getSource().getBranch() == null
+                || pr.getDestination().getBranch() == null);
 
         AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(baseURL);
-        if (endpointConfig instanceof BitbucketServerEndpoint && ((BitbucketServerEndpoint)endpointConfig).isCallCanMerge()) {
-            // This is required for Bitbucket Server to update the refs/pull-requests/* references
-            // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
-            for (BitbucketServerPullRequest pullRequest : pullRequests) {
-                pullRequest.setCanMerge(getPullRequestCanMergeById(Integer.parseInt(pullRequest.getId())));
+        final BitbucketServerEndpoint endpoint = endpointConfig instanceof BitbucketServerEndpoint ?
+            (BitbucketServerEndpoint) endpointConfig : null;
+
+        for (BitbucketServerPullRequest pullRequest : pullRequests) {
+            // set commit closure to make commit informations available when need, in a similar way to when request branches
+            setupClosureForPRBranch(pullRequest);
+
+            if (endpoint != null) {
+                // This is required for Bitbucket Server to update the refs/pull-requests/* references
+                // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
+                if (endpoint.isCallCanMerge()) {
+                    pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
+                }
+                if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
+                    callPullRequestChangesById(pullRequest.getId());
+                }
             }
         }
 
@@ -381,7 +391,17 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
     }
 
-    private boolean getPullRequestCanMergeById(@NonNull Integer id) throws IOException {
+    private void callPullRequestChangesById(@NonNull String id) throws IOException {
+        String url = UriTemplate
+                .fromTemplate(API_PULL_REQUEST_CHANGES_PATH)
+                .set("owner", getUserCentricOwner())
+                .set("repo", repositoryName)
+                .set("id", id).set("limit", 1)
+                .expand();
+        getRequest(url);
+    }
+
+    private boolean getPullRequestCanMergeById(@NonNull String id) throws IOException {
         String url = UriTemplate
                 .fromTemplate(API_PULL_REQUEST_MERGE_PATH)
                 .set("owner", getUserCentricOwner())

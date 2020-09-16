@@ -69,7 +69,8 @@ public class BitbucketCloudPullRequestEventTest {
 
         assertThat(event.getPullRequest(), notNullValue());
         assertThat(event.getPullRequest().getTitle(), is("README.md edited online with Bitbucket"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getAuthorIdentifier(), is("123456:dead-beef"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("Stephen Connolly"));
         assertThat(event.getPullRequest().getLink(),
                 is("https://bitbucket.org/cloudbeers/temp/pull-requests/1"));
 
@@ -134,7 +135,8 @@ public class BitbucketCloudPullRequestEventTest {
 
         assertThat(event.getPullRequest(), notNullValue());
         assertThat(event.getPullRequest().getTitle(), is("Forking for PR"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getAuthorIdentifier(), is("123456:dead-beef"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("Stephen Connolly"));
         assertThat(event.getPullRequest().getLink(),
                 is("https://bitbucket.org/cloudbeers/temp/pull-requests/3"));
 
@@ -198,7 +200,8 @@ public class BitbucketCloudPullRequestEventTest {
 
         assertThat(event.getPullRequest(), notNullValue());
         assertThat(event.getPullRequest().getTitle(), is("Forking for PR"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getAuthorIdentifier(), is("123456:dead-beef"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("Stephen Connolly"));
         assertThat(event.getPullRequest().getLink(),
                 is("https://bitbucket.org/cloudbeers/temp/pull-requests/3"));
 
@@ -262,7 +265,8 @@ public class BitbucketCloudPullRequestEventTest {
 
         assertThat(event.getPullRequest(), notNullValue());
         assertThat(event.getPullRequest().getTitle(), is("Forking for PR"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getAuthorIdentifier(), is("123456:dead-beef"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("Stephen Connolly"));
         assertThat(event.getPullRequest().getLink(),
                 is("https://bitbucket.org/cloudbeers/temp/pull-requests/3"));
 
@@ -326,7 +330,8 @@ public class BitbucketCloudPullRequestEventTest {
 
         assertThat(event.getPullRequest(), notNullValue());
         assertThat(event.getPullRequest().getTitle(), is("Forking for PR"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getAuthorIdentifier(), is("123456:dead-beef"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("Stephen Connolly"));
         assertThat(event.getPullRequest().getLink(),
                 is("https://bitbucket.org/cloudbeers/temp/pull-requests/3"));
 
@@ -390,7 +395,8 @@ public class BitbucketCloudPullRequestEventTest {
 
         assertThat(event.getPullRequest(), notNullValue());
         assertThat(event.getPullRequest().getTitle(), is("Forking for PR"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getAuthorIdentifier(), is("123456:dead-beef"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("Stephen Connolly"));
         assertThat(event.getPullRequest().getLink(),
                 is("https://bitbucket.org/cloudbeers/temp/pull-requests/3"));
 
@@ -455,7 +461,8 @@ public class BitbucketCloudPullRequestEventTest {
 
         assertThat(event.getPullRequest(), notNullValue());
         assertThat(event.getPullRequest().getTitle(), is("README.md edited online with Bitbucket"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("stephenc"));
+        assertThat(event.getPullRequest().getAuthorIdentifier(), is("123456:dead-beef"));
+        assertThat(event.getPullRequest().getAuthorLogin(), is("Stephen Connolly"));
         assertThat(event.getPullRequest().getLink(),
                 is("https://bitbucket.org/cloudbeers/temp/pull-requests/2"));
 

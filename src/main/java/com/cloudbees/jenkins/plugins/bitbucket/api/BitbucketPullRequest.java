@@ -52,10 +52,19 @@ public interface BitbucketPullRequest {
 
     String getLink();
 
+    /**
+     * Despite the name, this is a <em>display name</em> or <em>nickname</em> for the author, not a stable <em>username</em> for login.
+     */
     String getAuthorLogin();
 
+    /**
+     * Not set in Cloud.
+     */
     String getAuthorEmail();
 
+    /**
+     * Username or account identifier of the author.
+     */
     String getAuthorIdentifier();
 
     List<BitbucketReviewer> getReviewers();

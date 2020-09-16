@@ -188,7 +188,7 @@ public class BitbucketClientMockUtils {
         pr.setDestination(new BitbucketPullRequestValueDestination(repository, branch, commit));
 
         pr.setId("23");
-        pr.setAuthor(new BitbucketPullRequestValue.Author("amuniz"));
+        pr.setAuthor(new BitbucketPullRequestValue.Author());
         pr.setLinks(new BitbucketPullRequestValue.Links("https://bitbucket.org/amuniz/test-repos/pull-requests/23"));
         return pr;
     }

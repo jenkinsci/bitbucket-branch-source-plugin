@@ -7,7 +7,13 @@
   <f:entry title="${%Server URL}" field="serverUrl">
     <f:textbox/>
   </f:entry>
+  <f:entry title="${%Server Version}" field="serverVersion">
+    <f:select />
+  </f:entry>
   <f:entry field="callCanMerge">
     <f:checkbox title="${%Call Can Merge}" default="true"/>
+  </f:entry>
+  <f:entry field="callChanges">
+    <f:checkbox title="${%Call Changes api}" default="true"/>
   </f:entry>
 </j:jelly>
