@@ -649,7 +649,7 @@ public class BitbucketEndpointConfigurationTest {
 
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
 
-        assertThat(instance.getEndpoints(), hasSize(9));
+        assertThat(instance.getEndpoints(), hasSize(11));
 
         BitbucketCloudEndpoint endpoint1 = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
         assertThat(endpoint1.getDisplayName(), is(Messages.BitbucketCloudEndpoint_displayName()));
@@ -740,6 +740,26 @@ public class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.isCallChanges(), is(true));
         assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
         assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_6));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(9);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8089"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_5_10));
+        
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(10);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8090"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_5_9));
 
     }
 }
