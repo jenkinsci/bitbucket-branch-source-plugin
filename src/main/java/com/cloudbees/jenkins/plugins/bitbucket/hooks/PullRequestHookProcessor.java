@@ -83,6 +83,8 @@ public class PullRequestHookProcessor extends HookProcessor {
                         eventType = SCMEvent.Type.CREATED;
                         break;
                     case PULL_REQUEST_DECLINED:
+                        eventType = SCMEvent.Type.REMOVED;
+                        break;
                     case PULL_REQUEST_MERGED:
                         eventType = SCMEvent.Type.REMOVED;
                         break;
