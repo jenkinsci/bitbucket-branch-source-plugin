@@ -74,14 +74,14 @@ public class WebhookConfiguration {
     ));
 
     /**
-     * The list of events available in Bitbucket Server v5.10+.
+     * The list of events available in Bitbucket Server v6.x.  Applies to v5.10+.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v5_10 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 7));
+    private static final List<String> NATIVE_SERVER_EVENTS_v6 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 7));
 
     /**
      * The list of events available in Bitbucket Server v5.9-.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v5_9 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 5));
+    private static final List<String> NATIVE_SERVER_EVENTS_v5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 5));
 
     /**
      * The title of the webhook.
@@ -184,24 +184,24 @@ public class WebhookConfiguration {
         }
 
         switch (BitbucketServerEndpoint.findWebhookImplementation(serverUrl)) {
-            case NATIVE: {
-                NativeBitbucketServerWebhook hook = new NativeBitbucketServerWebhook();
-                hook.setActive(true);
-                hook.setEvents(getNativeServerEvents(serverUrl));
-                hook.setDescription(description);
-                hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
-                return hook;
-            }
+        case NATIVE: {
+            NativeBitbucketServerWebhook hook = new NativeBitbucketServerWebhook();
+            hook.setActive(true);
+            hook.setEvents(getNativeServerEvents(serverUrl));
+            hook.setDescription(description);
+            hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
+            return hook;
+        }
 
-            case PLUGIN:
-            default: {
-                BitbucketServerWebhook hook = new BitbucketServerWebhook();
-                hook.setActive(true);
-                hook.setDescription(description);
-                hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
-                hook.setCommittersToIgnore(committersToIgnore);
-                return hook;
-            }
+        case PLUGIN:
+        default: {
+            BitbucketServerWebhook hook = new BitbucketServerWebhook();
+            hook.setActive(true);
+            hook.setDescription(description);
+            hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+            hook.setCommittersToIgnore(committersToIgnore);
+            return hook;
+        }
         }
     }
 
@@ -209,20 +209,23 @@ public class WebhookConfiguration {
         AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
         if (endpoint instanceof BitbucketServerEndpoint) {
             switch (((BitbucketServerEndpoint) endpoint).getServerVersion()) {
-            case VERSION_5_9:
-				return NATIVE_SERVER_EVENTS_v5_9;
+            case VERSION_5:
+                return NATIVE_SERVER_EVENTS_v5;
             case VERSION_5_10:
-				return NATIVE_SERVER_EVENTS_v5_10;
+                return NATIVE_SERVER_EVENTS_v6;
             case VERSION_6:
-				// plugin version 2.9.1 introduced VERSION_6 setting for BitBucket but it actually applies
-				// to Version 5.10+. In order to preserve backwards compatibility, rather than remove
-				// VERSION_6, it will use the same list as 5.10 until such time a need arises for it to have its
-				// own list
-				return NATIVE_SERVER_EVENTS_v5_10;
+                // plugin version 2.9.1 introduced VERSION_6 setting for BitBucket but it
+                // actually applies
+                // to Version 5.10+. In order to preserve backwards compatibility, rather than
+                // remove
+                // VERSION_6, it will use the same list as 5.10 until such time a need arises
+                // for it to have its
+                // own list
+                return NATIVE_SERVER_EVENTS_v6;
             case VERSION_7:
             default:
-				return NATIVE_SERVER_EVENTS_v7;
-			}
+                return NATIVE_SERVER_EVENTS_v7;
+            }
         }
 
         // Not specifically v6, use v7.

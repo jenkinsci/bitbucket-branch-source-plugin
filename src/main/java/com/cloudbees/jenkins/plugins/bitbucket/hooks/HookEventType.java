@@ -100,13 +100,13 @@ public enum HookEventType {
     SERVER_PULL_REQUEST_APPROVED("pr:reviewer:approved", NativeServerPullRequestHookProcessor.class),
 
     /**
-     * @see <a href="https://confluence.atlassian.com/bitbucketserver0510/event-payload-951390742.html">Eventpayload-Modified</a>
+     * @see <a href="https://confluence.atlassian.com/bitbucketserver0510/event-payload-951390742.html#Eventpayload-Modified.1">Eventpayload: Pull Request - Modified</a>
      * @since Bitbucket Server 5.10
      */
     SERVER_PULL_REQUEST_MODIFIED("pr:modified", NativeServerPullRequestHookProcessor.class),
 
     /**
-     * @see <a href="https://confluence.atlassian.com/bitbucketserver0510/event-payload-951390742.html">Eventpayload-Modified</a>
+     * @see <a href="https://confluence.atlassian.com/bitbucketserver0510/event-payload-951390742.html#Eventpayload-ReviewersUpdated">Eventpayload: Pull Request - Reviewers Updated</a>
      * @since Bitbucket Server 5.10
      */
     SERVER_PULL_REQUEST_REVIEWER_UPDATED("pr:reviewer:updated", NativeServerPullRequestHookProcessor.class),

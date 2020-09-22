@@ -69,5 +69,4 @@ unclassified:
         serverUrl: "http://bitbucket.example.com:8090"
         callCanMerge: false
         callChanges: true
-        serverVersion: VERSION_5_9
-
+        serverVersion: VERSION_5
