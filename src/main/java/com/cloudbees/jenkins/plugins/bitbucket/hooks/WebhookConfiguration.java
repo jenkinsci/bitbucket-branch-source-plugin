@@ -184,14 +184,14 @@ public class WebhookConfiguration {
         }
 
         switch (BitbucketServerEndpoint.findWebhookImplementation(serverUrl)) {
-        case NATIVE: {
-            NativeBitbucketServerWebhook hook = new NativeBitbucketServerWebhook();
-            hook.setActive(true);
-            hook.setEvents(getNativeServerEvents(serverUrl));
-            hook.setDescription(description);
-            hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
-            return hook;
-        }
+            case NATIVE: {
+                NativeBitbucketServerWebhook hook = new NativeBitbucketServerWebhook();
+                hook.setActive(true);
+                hook.setEvents(getNativeServerEvents(serverUrl));
+                hook.setDescription(description);
+                hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
+                return hook;
+            }
 
         case PLUGIN:
         default: {
