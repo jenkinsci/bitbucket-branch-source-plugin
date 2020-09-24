@@ -193,15 +193,15 @@ public class WebhookConfiguration {
                 return hook;
             }
 
-        case PLUGIN:
-        default: {
-            BitbucketServerWebhook hook = new BitbucketServerWebhook();
-            hook.setActive(true);
-            hook.setDescription(description);
-            hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
-            hook.setCommittersToIgnore(committersToIgnore);
-            return hook;
-        }
+            case PLUGIN:
+            default: {
+                BitbucketServerWebhook hook = new BitbucketServerWebhook();
+                hook.setActive(true);
+                hook.setDescription(description);
+                hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+                hook.setCommittersToIgnore(committersToIgnore);
+                return hook;
+            }
         }
     }
 
