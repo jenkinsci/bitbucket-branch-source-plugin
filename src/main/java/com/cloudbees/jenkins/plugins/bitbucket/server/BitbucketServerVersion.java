@@ -27,7 +27,9 @@ import hudson.model.ModelObject;
 
 public enum BitbucketServerVersion implements ModelObject {
     VERSION_7("Bitbucket v7.x (and later)"),
-    VERSION_6("Bitbucket v6.x (and earlier)");
+    VERSION_6("Bitbucket v6.x"),
+    VERSION_5_10("Bitbucket v5.10 to v5.16"),
+    VERSION_5("Bitbucket v5.9 (and earlier)");
 
     private final String displayName;
 
@@ -41,4 +43,3 @@ public enum BitbucketServerVersion implements ModelObject {
     }
 
 }
-

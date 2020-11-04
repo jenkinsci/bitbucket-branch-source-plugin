@@ -45,7 +45,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import jenkins.model.Jenkins;
-import org.acegisecurity.AccessDeniedException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -110,7 +109,7 @@ public class BitbucketEndpointConfigurationTest {
         assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     public void given__newInstance__when__configuredAsAnon__then__permissionError() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         j.jenkins.setAuthorizationStrategy(new FullControlOnceLoggedInAuthorizationStrategy());
@@ -121,6 +120,8 @@ public class BitbucketEndpointConfigurationTest {
                     new BitbucketCloudEndpoint(true, "third")));
             assertThat(instance.getEndpoints(), contains(instanceOf(BitbucketCloudEndpoint.class)));
             assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
+        } catch (RuntimeException x) {
+            assertThat(x.getMessage(), is(hudson.security.Messages.AccessDeniedException2_MissingPermission("anonymous", "Overall/Administer")));
         } finally {
             j.jenkins.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED);
         }
@@ -648,7 +649,7 @@ public class BitbucketEndpointConfigurationTest {
 
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
 
-        assertThat(instance.getEndpoints(), hasSize(9));
+        assertThat(instance.getEndpoints(), hasSize(11));
 
         BitbucketCloudEndpoint endpoint1 = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
         assertThat(endpoint1.getDisplayName(), is(Messages.BitbucketCloudEndpoint_displayName()));
@@ -739,6 +740,26 @@ public class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.isCallChanges(), is(true));
         assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
         assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_6));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(9);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8089"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_5_10));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(10);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8090"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_5));
 
     }
 }

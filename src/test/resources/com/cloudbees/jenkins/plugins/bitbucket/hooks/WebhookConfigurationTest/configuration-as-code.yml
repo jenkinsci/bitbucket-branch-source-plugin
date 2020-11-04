@@ -1,0 +1,32 @@
+---
+unclassified:
+  bitbucketendpointconfiguration:
+    endpoints:
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8087"
+        callCanMerge: false
+        callChanges: false
+        serverVersion: VERSION_7
+        webhookImplementation: NATIVE        
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8088"
+        callCanMerge: false
+        callChanges: true
+        serverVersion: VERSION_6
+        webhookImplementation: NATIVE        
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8089"
+        callCanMerge: false
+        callChanges: true
+        serverVersion: VERSION_5_10
+        webhookImplementation: NATIVE        
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8090"
+        callCanMerge: false
+        callChanges: true
+        serverVersion: VERSION_5
+        webhookImplementation: NATIVE        
