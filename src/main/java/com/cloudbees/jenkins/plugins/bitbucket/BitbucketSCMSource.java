@@ -1206,6 +1206,7 @@ public class BitbucketSCMSource extends SCMSource {
             }
             if (context != null && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return new ListBoxModel(); // not permitted to try connecting with these credentials
+            }
 
             //JENKINS-64125 in case the serverUrl is NOT selectable because there is only one server configured, we need to check
             // if the BitBucketEndpoint configured is "server type" in order to use this URL instead of the cloud one.
