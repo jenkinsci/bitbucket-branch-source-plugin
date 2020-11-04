@@ -40,6 +40,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
@@ -1197,6 +1198,17 @@ public class BitbucketSCMSource extends SCMSource {
                 return new ListBoxModel();
             }
             context.getACL().checkPermission(Item.CONFIGURE);
+
+            //JENKINS-64125 in case the serverUrl is NOT selectable because there is only one server configured, we need to check
+            // if the BitBucketEndpoint configured is "server type" in order to use this URL instead of the cloud one.
+            if (serverUrl.isEmpty() && BitbucketEndpointConfiguration.get() != null && !BitbucketEndpointConfiguration.get().isEndpointSelectable()) {
+                // We will only iterate once, but it is safer than access to a specific position in the List
+                for (AbstractBitbucketEndpoint abstractBitbucketEndpoint : BitbucketEndpointConfiguration.get().getEndpoints()) {
+                    if (abstractBitbucketEndpoint instanceof BitbucketServerEndpoint) {
+                        serverUrl = abstractBitbucketEndpoint.getServerUrl();
+                    }
+                }
+            }
             serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
             ListBoxModel result = new ListBoxModel();
             StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
