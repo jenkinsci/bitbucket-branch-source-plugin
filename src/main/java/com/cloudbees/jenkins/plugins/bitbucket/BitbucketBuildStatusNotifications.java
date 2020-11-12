@@ -147,19 +147,19 @@ public class BitbucketBuildStatusNotifications {
         }
     }
 
-    private static void sendNotifications(Run<?, ?> build, TaskListener listener)
+    private static @CheckForNull BitbucketSCMSource findBitbucketSCMSource(Run<?, ?> build) {
+        SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
+        return s instanceof BitbucketSCMSource ? (BitbucketSCMSource) s : null;
+    }
+
+    private static void sendNotifications(BitbucketSCMSource source, Run<?, ?> build, TaskListener listener)
             throws IOException, InterruptedException {
-        final SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
-        if (!(s instanceof BitbucketSCMSource)) {
-            return;
-        }
-        BitbucketSCMSource source = (BitbucketSCMSource) s;
         BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null,
             SCMHeadObserver.none()).withTraits(source.getTraits());
         if (sourceContext.notificationsDisabled()) {
             return;
         }
-        SCMRevision r = SCMRevisionAction.getRevision(s, build);
+        SCMRevision r = SCMRevisionAction.getRevision(source, build);
         if (r == null) {
             return;
         }
@@ -230,6 +230,10 @@ public class BitbucketBuildStatusNotifications {
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
                                SCMRevisionState pollingBaseline) throws Exception {
+            BitbucketSCMSource source = findBitbucketSCMSource(build);
+            if (source == null) {
+                return;
+            }
 
             boolean hasCompletedCheckoutBefore =
                 build.getAction(FirstCheckoutCompletedInvisibleAction.class) != null;
@@ -238,7 +242,7 @@ public class BitbucketBuildStatusNotifications {
                 build.addAction(new FirstCheckoutCompletedInvisibleAction());
 
                 try {
-                    sendNotifications(build, listener);
+                    sendNotifications(source, build, listener);
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace(listener.error("Could not send notifications"));
                 }
@@ -254,8 +258,13 @@ public class BitbucketBuildStatusNotifications {
 
         @Override
         public void onCompleted(Run<?, ?> build, TaskListener listener) {
+            BitbucketSCMSource source = findBitbucketSCMSource(build);
+            if (source == null) {
+                return;
+            }
+
             try {
-                sendNotifications(build, listener);
+                sendNotifications(source, build, listener);
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace(listener.error("Could not send notifications"));
             }
