@@ -1007,6 +1007,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private String postRequest(String path, String content) throws IOException {
         HttpPost request = new HttpPost(this.baseURL + path);
         request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
+        LOGGER.log(Level.FINEST, content);
         return postRequest(request);
     }
 

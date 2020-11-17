@@ -619,14 +619,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         @SuppressWarnings("unused") // used By stapler
-        public static FormValidation doCheckServerUrl(@QueryParameter String value) {
-            if (BitbucketEndpointConfiguration.get().findEndpoint(value) == null) {
-                return FormValidation.error("Unregistered Server: " + value);
-            }
-            return FormValidation.ok();
-        }
-
-        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter String serverUrl) {
             return BitbucketCredentials.fillCredentialsIdItems(context, serverUrl);
