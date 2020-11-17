@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.7</version>
+    <version>4.13</version>
     <relativePath />
   </parent>
 
@@ -49,8 +49,9 @@
   </licenses>
 
   <properties>
-    <revision>2.9.3</revision>
+    <revision>2.9.5</revision>
     <changelist>-SNAPSHOT</changelist>
+    <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.version>2.176.4</jenkins.version>
     <java.level>8</java.level>
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
@@ -76,9 +77,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/bitbucket-branch-source-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/bitbucket-branch-source-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/bitbucket-branch-source-plugin</url>
+    <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+    <url>https://github.com/${gitHubRepo}</url>
     <tag>${scmTag}</tag>
   </scm>
 
@@ -87,7 +88,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.176.x</artifactId>
-        <version>11</version>
+        <version>16</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -113,7 +114,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>jackson2-api</artifactId>
-      <version>2.10.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -138,13 +138,11 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>1.10.19</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
-      <version>2.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -206,7 +204,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>8.36.1</version>
+              <version>8.37</version>
             </dependency>
           </dependencies>
         </plugin>

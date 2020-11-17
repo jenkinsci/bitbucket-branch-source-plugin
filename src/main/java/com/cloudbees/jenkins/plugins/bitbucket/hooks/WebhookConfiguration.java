@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.NativeBitbucketServerWebhook;
 import com.damnhandy.uri.template.UriTemplate;
@@ -67,6 +66,7 @@ public class WebhookConfiguration {
             HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_DECLINED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_DELETED.getKey(),
+            // only on v5.10 and above
             HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey(),
             // only on v7.x and above
@@ -74,9 +74,14 @@ public class WebhookConfiguration {
     ));
 
     /**
-     * The list of events available in Bitbucket Server v6.x.
+     * The list of events available in Bitbucket Server v6.x.  Applies to v5.10+.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v6 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 6));
+    private static final List<String> NATIVE_SERVER_EVENTS_v6 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 7));
+
+    /**
+     * The list of events available in Bitbucket Server v5.9-.
+     */
+    private static final List<String> NATIVE_SERVER_EVENTS_v5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 5));
 
     /**
      * The title of the webhook.
@@ -203,8 +208,23 @@ public class WebhookConfiguration {
     private static List<String> getNativeServerEvents(String serverUrl) {
         AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
         if (endpoint instanceof BitbucketServerEndpoint) {
-            if (((BitbucketServerEndpoint)endpoint).getServerVersion().equals(BitbucketServerVersion.VERSION_6)) {
+            switch (((BitbucketServerEndpoint) endpoint).getServerVersion()) {
+            case VERSION_5:
+                return NATIVE_SERVER_EVENTS_v5;
+            case VERSION_5_10:
                 return NATIVE_SERVER_EVENTS_v6;
+            case VERSION_6:
+                // plugin version 2.9.1 introduced VERSION_6 setting for BitBucket but it
+                // actually applies
+                // to Version 5.10+. In order to preserve backwards compatibility, rather than
+                // remove
+                // VERSION_6, it will use the same list as 5.10 until such time a need arises
+                // for it to have its
+                // own list
+                return NATIVE_SERVER_EVENTS_v6;
+            case VERSION_7:
+            default:
+                return NATIVE_SERVER_EVENTS_v7;
             }
         }
 

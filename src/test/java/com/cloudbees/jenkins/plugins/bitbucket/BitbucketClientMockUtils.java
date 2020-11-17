@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import jenkins.model.Jenkins;
 
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -57,7 +58,7 @@ public class BitbucketClientMockUtils {
     public static BitbucketCloudApiClient getAPIClientMock(BitbucketRepositoryType type, boolean includePullRequests,
             boolean includeWebHooks) throws IOException, InterruptedException {
         BitbucketCloudApiClient bitbucket = mock(BitbucketCloudApiClient.class);
-        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), anyString(), anyString(), anyString())).thenCallRealMethod();
+        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), nullable(String.class), anyString(), anyString())).thenCallRealMethod();
         // mock branch list
         List<BitbucketCloudBranch> branches = new ArrayList<>();
         branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
