@@ -1,17 +1,8 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:c="/lib/credentials" xmlns:scm="/jenkins/scm/api/form">
-  <j:choose>
-    <j:when test="${descriptor.serverUrlSelectable}">
-      <f:entry title="${%Server}" field="serverUrl">
-        <f:select/>
-      </f:entry>
-    </j:when>
-    <j:otherwise>
-      <f:invisibleEntry>
-        <f:select field="serverUrl"/>
-      </f:invisibleEntry>
-    </j:otherwise>
-  </j:choose>
+  <f:entry title="${%Server}" field="serverUrl">
+    <f:select/>
+  </f:entry>
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select/>
   </f:entry>
