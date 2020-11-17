@@ -101,6 +101,11 @@ public class BitbucketBuildStatusNotifications {
         @NonNull BitbucketApi bitbucket, @NonNull String key, @NonNull String hash)
             throws IOException, InterruptedException {
 
+        final SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
+        if (!(s instanceof BitbucketSCMSource)) {
+            return;
+        }
+
         String url;
         try {
             url = getRootURL(build);
@@ -120,22 +125,32 @@ public class BitbucketBuildStatusNotifications {
         String buildDescription = build.getDescription();
         String statusDescription;
         String state;
+        final String successful_state = "SUCCESSFUL";
+        final String failed_state = "FAILED";
         if (Result.SUCCESS.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit looks good.");
-            state = "SUCCESSFUL";
+            state = successful_state;
         } else if (Result.UNSTABLE.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
-            state = "FAILED";
+
+            BitbucketSCMSource source = (BitbucketSCMSource) s;
+            BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
+                    .withTraits(source.getTraits());
+            if (sourceContext.sendSuccessNotificationForUnstableBuild()) {
+                state = successful_state;
+            } else {
+                state = failed_state;
+            }
         } else if (Result.FAILURE.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "There was a failure building this commit.");
-            state = "FAILED";
+            state = failed_state;
         } else if (Result.NOT_BUILT.equals(result)) {
             // Bitbucket Cloud and Server support different build states.
-            state = (bitbucket instanceof BitbucketCloudApiClient) ? "STOPPED" : "SUCCESSFUL";
+            state = (bitbucket instanceof BitbucketCloudApiClient) ? "STOPPED" : successful_state;
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
         } else if (result != null) { // ABORTED etc.
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
-            state = "FAILED";
+            state = failed_state;
         } else {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "The build is in progress...");
             state = "INPROGRESS";
