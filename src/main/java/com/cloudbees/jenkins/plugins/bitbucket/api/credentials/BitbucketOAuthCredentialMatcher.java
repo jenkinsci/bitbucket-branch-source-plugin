@@ -22,6 +22,10 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
         if (!(item instanceof UsernamePasswordCredentials))
             return false;
 
+        if(item.getClass().getName().equals("com.cloudbees.jenkins.plugins.amazonecr.AmazonECSRegistryCredential")) {
+            return false;
+        }
+
         try {
             UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
             String username = usernamePasswordCredential.getUsername();
