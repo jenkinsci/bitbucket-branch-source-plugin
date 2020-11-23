@@ -73,7 +73,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     /**
      * Our constructor.
      */
-    @Symbol("bitbucketBuildStatusConfiguration")
+    @Symbol("bitbucketBuildStatusNotifications")
     @Extension
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
