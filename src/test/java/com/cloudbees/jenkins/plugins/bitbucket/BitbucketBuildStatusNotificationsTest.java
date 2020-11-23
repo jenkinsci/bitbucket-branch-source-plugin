@@ -47,7 +47,7 @@ public class BitbucketBuildStatusNotificationsTest {
         FreeStyleProject p = r.createFreeStyleProject();
         p.setScm(new SingleFileSCM("file", "contents"));
         FreeStyleBuild b = r.buildAndAssertSuccess(p);
-        assertThat(b.getAllActions(), not(hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class))));
+        assertThat((List<Action>)b.getAllActions(), not(hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class))));
     }
 
 }
