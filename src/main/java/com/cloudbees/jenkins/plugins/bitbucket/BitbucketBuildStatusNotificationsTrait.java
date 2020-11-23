@@ -58,7 +58,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     /**
      * @return if unstable builds will be communicated as successful
      */
-    public boolean sendSuccessNotificationForUnstableBuild() {
+    public boolean getSendSuccessNotificationForUnstableBuild() {
         return this.sendSuccessNotificationForUnstableBuild;
     }
 
