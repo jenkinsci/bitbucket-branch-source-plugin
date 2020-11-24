@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -91,7 +92,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                         break;
                 }
                 // assume updated as a catch-all type
-                SCMHeadEvent.fireNow(new SCMHeadEvent<BitbucketPullRequestEvent>(eventType, pull, origin) {
+                SCMHeadEvent.fireLater(new SCMHeadEvent<BitbucketPullRequestEvent>(eventType, pull, origin) {
                     @Override
                     public boolean isMatch(@NonNull SCMNavigator navigator) {
                         if (!(navigator instanceof BitbucketSCMNavigator)) {
@@ -260,7 +261,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                         // TODO
                         return false;
                     }
-                });
+                }, BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
             }
         }
     }

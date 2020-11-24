@@ -134,6 +134,8 @@ public class BitbucketSCMSource extends SCMSource {
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
     private static final String SERVER_REPO_TEMPLATE = "/projects{/owner}/repos{/repo}";
+    // TODO: 5 is just a testing value, if we are keeping this, set default value to 0
+    private static int eventDelaySeconds = Math.min(300, Math.max(0, Integer.getInteger(BitbucketSCMSource.class.getName() + ".eventDelaySeconds", 5)));
 
     /**
      * Bitbucket URL.
@@ -1145,6 +1147,16 @@ public class BitbucketSCMSource extends SCMSource {
             return new SCMHeadOrigin.Fork(repoOwner);
         }
         return new SCMHeadOrigin.Fork(repoOwner + "/" + repository);
+    }
+
+    /**
+     * Returns how long to delay events received from Bitbucket
+     *
+     * @returnholw to to delay events received from Bitbucket
+     */
+    @NonNull
+    public static int getEventDelaySeconds() {
+        return eventDelaySeconds;
     }
 
     @Symbol("bitbucket")
