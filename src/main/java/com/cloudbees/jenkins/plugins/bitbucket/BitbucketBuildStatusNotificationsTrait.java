@@ -67,7 +67,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(sendSuccessNotificationForUnstableBuild());
+        ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
     }
 
     /**
