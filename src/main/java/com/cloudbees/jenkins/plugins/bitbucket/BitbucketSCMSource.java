@@ -1152,7 +1152,7 @@ public class BitbucketSCMSource extends SCMSource {
     /**
      * Returns how long to delay events received from Bitbucket
      *
-     * @returnholw to to delay events received from Bitbucket
+     * @return how long to to delay events received from Bitbucket
      */
     @NonNull
     public static int getEventDelaySeconds() {
