@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait.ExcludeOrigi
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
@@ -41,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import javax.annotation.CheckForNull;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHeadObserver;
