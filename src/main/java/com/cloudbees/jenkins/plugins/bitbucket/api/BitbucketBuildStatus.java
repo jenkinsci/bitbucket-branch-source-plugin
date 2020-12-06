@@ -31,6 +31,27 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 public class BitbucketBuildStatus {
 
     /**
+     * Enumeration of possible Bitbucket commit notification states
+     */
+    public enum Status {
+        INPROGRESS("INPROGRESS"),
+        FAILED("FAILED"),
+        STOPPED("STOPPED"),
+        SUCCESSFUL("SUCCESSFUL");
+
+        private final String status;
+
+        Status(final String status) {
+            this.status = status;
+        }
+
+        @Override
+        public String toString() {
+            return status;
+        }
+    }
+
+    /**
      * The commit hash to set the status on
      */
     @JsonIgnore
@@ -42,9 +63,9 @@ public class BitbucketBuildStatus {
     private String description;
 
     /**
-     * One of: INPROGRESS|SUCCESSFUL|FAILED
+     * One of: INPROGRESS|FAILED|STOPPED|SUCCESSFUL
      */
-    private String state;
+    private Status state;
 
     /**
      * The URL to link from the status details
@@ -66,7 +87,7 @@ public class BitbucketBuildStatus {
     @Restricted(DoNotUse.class)
     public BitbucketBuildStatus() {}
 
-    public BitbucketBuildStatus(String hash, String description, String state, String url, String key, String name) {
+    public BitbucketBuildStatus(String hash, String description, Status state, String url, String key, String name) {
         this.hash = hash;
         this.description = description;
         this.state = state;
@@ -92,10 +113,10 @@ public class BitbucketBuildStatus {
     }
 
     public String getState() {
-        return state;
+        return state.toString();
     }
 
-    public void setState(String state) {
+    public void setState(Status state) {
         this.state = state;
     }
 
