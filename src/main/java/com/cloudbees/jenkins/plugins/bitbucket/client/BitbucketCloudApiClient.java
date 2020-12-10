@@ -78,6 +78,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -131,6 +132,8 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private static final String V2_TEAMS_API_BASE_URL = "https://api.bitbucket.org/2.0/teams";
     private static final String REPO_URL_TEMPLATE = V2_API_BASE_URL + "{/owner,repo}";
     private static final int API_RATE_LIMIT_CODE = 429;
+    private static final int RATE_LIMIT_BASE_SLEEP_MS = 100;
+    private static final int RATE_LIMIT_MAX_ATTEMPTS = 10;
     // Limit images to 16k
     private static final int MAX_AVATAR_LENGTH = 16384;
     private static final int MAX_PAGE_LENGTH = 100;
@@ -866,7 +869,8 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         httpMethod.setConfig(requestConfig.build());
 
         CloseableHttpResponse response = client.execute(host, httpMethod, requestContext);
-        while (response.getStatusLine().getStatusCode() == API_RATE_LIMIT_CODE) {
+        Random random = new Random();
+        for (int attempts = 0; response.getStatusLine().getStatusCode() == API_RATE_LIMIT_CODE; attempts++) {
             release(httpMethod);
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -875,8 +879,18 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 TODO: When bitbucket starts supporting rate limit expiration time, remove 5 sec wait and put code
                       to wait till expiration time is over. It should also fix the wait for ever loop.
              */
-            LOGGER.fine("Bitbucket Cloud API rate limit reached, sleeping for 5 sec then retry...");
-            Thread.sleep(5000);
+
+            // exponential backoff, sleep no longer than 10th attempt (almost 2 minutes)
+            attempts = attempts > RATE_LIMIT_MAX_ATTEMPTS ? RATE_LIMIT_MAX_ATTEMPTS : attempts;
+            int duration = RATE_LIMIT_BASE_SLEEP_MS * 1 << attempts;
+
+            // introduce jitter, actual sleep duration is somewhere between the min and current duration
+            if (duration > RATE_LIMIT_BASE_SLEEP_MS) {
+                duration = random.ints(RATE_LIMIT_BASE_SLEEP_MS, duration).findFirst().getAsInt();
+            }
+
+            LOGGER.fine("Bitbucket Cloud API rate limit reached, sleeping for " + duration + " ms then retry...");
+            Thread.sleep(duration);
             response = client.execute(host, httpMethod, requestContext);
         }
         return response;
