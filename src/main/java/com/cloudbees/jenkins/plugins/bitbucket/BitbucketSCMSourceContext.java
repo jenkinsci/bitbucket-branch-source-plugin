@@ -100,8 +100,7 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     /**
      * The pull request naming strategy exclude {@link Pattern} to use in this context.
      */
-    @NonNull
-    private Pattern pullRequestNamingExcludePattern = Pattern.compile("");
+    private Pattern pullRequestNamingExcludePattern;
 
     /**
      * Constructor.
@@ -243,6 +242,9 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     @NonNull
     public final Pattern pullRequestNamingExcludePattern() {
+        if (pullRequestNamingExcludePattern == null) {
+            pullRequestNamingExcludePattern = Pattern.compile("");
+        }
         return pullRequestNamingExcludePattern;
     }
 
