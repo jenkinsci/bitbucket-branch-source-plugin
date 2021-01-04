@@ -759,7 +759,7 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().format("%n  %d branches were processed%n", count);
     }
 
-    // tagTimestamp is used to detect the tag event creation time rather then the associated 
+    // tagTimestamp is used to detect the tag event creation time rather then the associated
     // commit's time. Relates to JENKINS-57772
     private void retrieveTags(final BitbucketSCMSourceRequest request, long tagTimestamp)
             throws IOException, InterruptedException {
