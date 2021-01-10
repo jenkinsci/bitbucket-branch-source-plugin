@@ -33,6 +33,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudR
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Date;
 
@@ -43,14 +44,17 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
 
     @JsonCreator
     public BitbucketPullRequestValueDestination(@NonNull @JsonProperty("repository") BitbucketCloudRepository repository,
-                                                @NonNull @JsonProperty("branch") BitbucketCloudBranch branch,
-                                                @NonNull @JsonProperty("commit") BitbucketCloudCommit commit) {
+                                                @JsonProperty("branch") BitbucketCloudBranch branch,
+                                                @CheckForNull @JsonProperty("commit") BitbucketCloudCommit commit) {
         this.repository = repository;
         this.branch = branch;
         this.commit = commit;
 
-        // redound available the informations into impl objects
-        this.branch.setRawNode(commit.getHash());
+        // It is possible for a PR's original destination to no longer exist.
+        if(this.branch != null && this.commit != null) {
+            // Make the commit information available into impl objects
+            this.branch.setRawNode(commit.getHash());
+        }
     }
 
     @Override
@@ -63,6 +67,7 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
     }
 
     @Override
+    @CheckForNull
     public BitbucketCloudBranch getBranch() {
         return branch;
     }
@@ -72,6 +77,7 @@ public class BitbucketPullRequestValueDestination implements BitbucketPullReques
     }
 
     @Override
+    @CheckForNull
     public BitbucketCommit getCommit() {
         if (branch != null && commit != null) {
             // initialise commit value using branch closure if not already valued

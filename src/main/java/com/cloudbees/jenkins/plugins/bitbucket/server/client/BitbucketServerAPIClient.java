@@ -42,6 +42,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
@@ -136,6 +137,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
+    private static final String API_PULL_REQUEST_CHANGES_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/changes{?start,limit}";
     static final String API_BROWSE_PATH = API_REPOSITORY_PATH + "/browse{/path*}{?at}";
     private static final String API_COMMITS_PATH = API_REPOSITORY_PATH + "/commits{/hash}";
     private static final String API_PROJECT_PATH = API_BASE_PATH + "/projects/{owner}";
@@ -328,17 +330,28 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             throws IOException, InterruptedException {
         List<BitbucketServerPullRequest> pullRequests = getResources(template, BitbucketServerPullRequests.class);
 
-        // set commit closure to make commit informations available when need, in a similar way to when request branches
-        for (BitbucketServerPullRequest pullRequest : pullRequests) {
-            setupClosureForPRBranch(pullRequest);
-        }
+        // PRs with missing destination branch are invalid and should be ignored.
+        pullRequests.removeIf(pr -> pr.getSource().getRepository() == null
+                || pr.getSource().getBranch() == null
+                || pr.getDestination().getBranch() == null);
 
         AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(baseURL);
-        if (endpointConfig instanceof BitbucketServerEndpoint && ((BitbucketServerEndpoint)endpointConfig).isCallCanMerge()) {
-            // This is required for Bitbucket Server to update the refs/pull-requests/* references
-            // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
-            for (BitbucketServerPullRequest pullRequest : pullRequests) {
-                pullRequest.setCanMerge(getPullRequestCanMergeById(Integer.parseInt(pullRequest.getId())));
+        final BitbucketServerEndpoint endpoint = endpointConfig instanceof BitbucketServerEndpoint ?
+            (BitbucketServerEndpoint) endpointConfig : null;
+
+        for (BitbucketServerPullRequest pullRequest : pullRequests) {
+            // set commit closure to make commit informations available when need, in a similar way to when request branches
+            setupClosureForPRBranch(pullRequest);
+
+            if (endpoint != null) {
+                // This is required for Bitbucket Server to update the refs/pull-requests/* references
+                // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
+                if (endpoint.isCallCanMerge()) {
+                    pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
+                }
+                if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
+                    callPullRequestChangesById(pullRequest.getId());
+                }
             }
         }
 
@@ -378,7 +391,17 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
     }
 
-    private boolean getPullRequestCanMergeById(@NonNull Integer id) throws IOException {
+    private void callPullRequestChangesById(@NonNull String id) throws IOException {
+        String url = UriTemplate
+                .fromTemplate(API_PULL_REQUEST_CHANGES_PATH)
+                .set("owner", getUserCentricOwner())
+                .set("repo", repositoryName)
+                .set("id", id).set("limit", 1)
+                .expand();
+        getRequest(url);
+    }
+
+    private boolean getPullRequestCanMergeById(@NonNull String id) throws IOException {
         String url = UriTemplate
                 .fromTemplate(API_PULL_REQUEST_MERGE_PATH)
                 .set("owner", getUserCentricOwner())
@@ -487,7 +510,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         int status = getRequestStatus(url);
         if (HttpStatus.SC_OK == status) {
             return true;
-        } else if (HttpStatus.SC_NOT_FOUND == status) {
+            // BitBucket return UNAUTHORIZED when no credentials are provided
+            // https://support.atlassian.com/bitbucket-cloud/docs/use-bitbucket-rest-api-version-1/
+        } else if (HttpStatus.SC_NOT_FOUND == status || HttpStatus.SC_UNAUTHORIZED == status) {
             return false;
         } else {
             throw new IOException("Communication error for url: " + path + " status code: " + status);
@@ -897,9 +922,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         httpClientBuilder.useSystemProperties();
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setConnectTimeout(10 * 1000);
-        requestConfig.setConnectionRequestTimeout(60 * 1000);
-        requestConfig.setSocketTimeout(60 * 1000);
+        String connectTimeout = System.getProperty("http.connect.timeout", "10");
+        requestConfig.setConnectTimeout(Integer.parseInt(connectTimeout) * 1000);
+        String connectionRequestTimeout = System.getProperty("http.connect.request.timeout", "60");
+        requestConfig.setConnectionRequestTimeout(Integer.parseInt(connectionRequestTimeout) * 1000);
+        String socketTimeout = System.getProperty("http.socket.timeout", "60");
+        requestConfig.setSocketTimeout(Integer.parseInt(socketTimeout) * 1000);
         request.setConfig(requestConfig.build());
 
         final String host = getMethodHost(request);
@@ -981,6 +1009,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private String postRequest(String path, String content) throws IOException {
         HttpPost request = new HttpPost(this.baseURL + path);
         request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
+        LOGGER.log(Level.FINEST, content);
         return postRequest(request);
     }
 

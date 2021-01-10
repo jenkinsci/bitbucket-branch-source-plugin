@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import hudson.model.ItemGroup;
+import java.io.File;
 import java.util.Map;
 import jenkins.branch.MultiBranchProject;
 import jenkins.branch.MultiBranchProjectFactory;
@@ -41,6 +42,7 @@ import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 public class SCMNavigatorIntegrationTest {
 
@@ -49,6 +51,7 @@ public class SCMNavigatorIntegrationTest {
 
     @Test
     public void teamDiscoveringTest() throws Exception {
+        assumeTrue(!isWindows()); // Test is unreliable on Windows, due to file locks
         BitbucketEndpointConfiguration
                 .get().addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test", false, null));
         BitbucketMockApiFactory.add("http://bitbucket.test",
@@ -99,6 +102,14 @@ public class SCMNavigatorIntegrationTest {
 
         }
 
+    }
+
+    /**
+     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
+     * remote classloader issue
+     */
+    private static boolean isWindows() {
+        return File.pathSeparatorChar == ';';
     }
 
 }

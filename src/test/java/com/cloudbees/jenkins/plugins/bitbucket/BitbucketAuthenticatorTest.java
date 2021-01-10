@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -19,6 +20,7 @@ import org.junit.rules.TestName;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -62,7 +64,9 @@ public class BitbucketAuthenticatorTest {
         AuthenticationTokenContext ctx = BitbucketAuthenticator.authenticationContext((null));
         Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
         assertThat(c, notNullValue());
-        assertThat(AuthenticationTokens.convert(ctx, c), notNullValue());
+        Object a = AuthenticationTokens.convert(ctx, c);
+        assertThat(a, notNullValue());
+        assertThat(a, isA(BitbucketUsernamePasswordAuthenticator.class));
     }
 
     @Test

@@ -41,6 +41,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
@@ -81,6 +82,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
@@ -641,8 +643,7 @@ public class BitbucketSCMSource extends SCMSource {
             getPullRequestTitleCache()
                     .put(pull.getId(), StringUtils.defaultString(pull.getTitle()));
             getPullRequestContributorCache().put(pull.getId(),
-                    // TODO get more details on the author
-                    new ContributorMetadataAction(pull.getAuthorLogin(), null, pull.getAuthorEmail()));
+                    new ContributorMetadataAction(pull.getAuthorIdentifier(), pull.getAuthorLogin(), pull.getAuthorEmail()));
             try {
                 // We store resolved hashes here so to avoid resolving the commits multiple times
                 for (final ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
@@ -1194,11 +1195,25 @@ public class BitbucketSCMSource extends SCMSource {
                                                   @QueryParameter String credentialsId,
                                                   @QueryParameter String repoOwner)
                 throws IOException, InterruptedException {
-            if (StringUtils.isBlank(repoOwner)) {
+            repoOwner = Util.fixEmptyAndTrim(repoOwner);
+            if (repoOwner == null) {
                 return new ListBoxModel();
             }
-            context.getACL().checkPermission(Item.CONFIGURE);
-            serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
+            if (context == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
+                context != null && !context.hasPermission(Item.EXTENDED_READ)) {
+                return new ListBoxModel(); // not supposed to be seeing this form
+            }
+            if (context != null && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                return new ListBoxModel(); // not permitted to try connecting with these credentials
+            }
+
+            String serverUrlFallback = BitbucketCloudEndpoint.SERVER_URL;
+            // if at least one bitbucket server is configured use it instead of bitbucket cloud
+            if(BitbucketEndpointConfiguration.get().getEndpointItems().size() > 0){
+               serverUrlFallback =  BitbucketEndpointConfiguration.get().getEndpointItems().get(0).value;
+            }
+
+            serverUrl = StringUtils.defaultIfBlank(serverUrl, serverUrlFallback);
             ListBoxModel result = new ListBoxModel();
             StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
                     serverUrl,

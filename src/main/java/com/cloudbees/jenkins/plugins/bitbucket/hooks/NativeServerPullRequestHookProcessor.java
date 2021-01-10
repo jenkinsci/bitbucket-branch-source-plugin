@@ -80,6 +80,11 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
             case SERVER_PULL_REQUEST_DELETED:
                 eventType = SCMEvent.Type.REMOVED;
                 break;
+            case SERVER_PULL_REQUEST_MODIFIED:
+            case SERVER_PULL_REQUEST_REVIEWER_UPDATED:
+            case SERVER_PULL_REQUEST_FROM_REF_UPDATED:
+                eventType = SCMEvent.Type.UPDATED;
+                break;
             default:
                 LOGGER.log(Level.INFO, "Unknown hook event {0} received from Bitbucket Server", hookEvent);
                 return;
@@ -126,6 +131,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
 
                 switch (getType()) {
                     case CREATED:
+                    case UPDATED:
                         final String targetHash = pullRequest.getDestination().getCommit().getHash();
                         final String pullHash = pullRequest.getSource().getCommit().getHash();
                         result.put(head,

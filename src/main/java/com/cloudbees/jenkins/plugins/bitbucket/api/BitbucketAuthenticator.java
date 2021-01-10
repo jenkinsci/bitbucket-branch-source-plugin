@@ -108,6 +108,17 @@ public abstract class BitbucketAuthenticator {
     }
 
     /**
+     * Return the user to be used in the clone Uri. Override this if your
+     * authentication method needs to set the user in the repository Uri
+     *
+     * @return user name to use in the repository Uri
+     */
+    public String getUserUri() {
+        // override to return a user
+        return "";
+    }
+
+    /**
      * Generates context that sub-classes can use to determine if they would be able to authenticate against the
      * provided server.
      *
