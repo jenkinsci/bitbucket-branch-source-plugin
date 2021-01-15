@@ -26,13 +26,13 @@ public class SSHCheckoutTraitTest {
     public static JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void given__legacyConfig__when__creatingTrait__then__convertedToModern() throws Exception {
+    public void given_legacyConfig_when_creatingTrait_then_convertedToModern() throws Exception {
         assertThat(new SSHCheckoutTrait(BitbucketSCMSource.DescriptorImpl.ANONYMOUS).getCredentialsId(),
                 is(nullValue()));
     }
 
     @Test
-    public void given__sshCheckoutWithCredentials__when__decoratingGit__then__credentialsApplied() throws Exception {
+    public void given_sshCheckoutWithCredentials_when_decoratingGit_then_credentialsApplied() throws Exception {
         SSHCheckoutTrait instance = new SSHCheckoutTrait("keyId");
         BitbucketGitSCMBuilder probe =
                 new BitbucketGitSCMBuilder(new BitbucketSCMSource("example", "does-not-exist"),
@@ -43,7 +43,7 @@ public class SSHCheckoutTraitTest {
     }
 
     @Test
-    public void given__sshCheckoutWithAgentKey__when__decoratingGit__then__useAgentKeyApplied() throws Exception {
+    public void given_sshCheckoutWithAgentKey_when_decoratingGit_then_useAgentKeyApplied() throws Exception {
         SSHCheckoutTrait instance = new SSHCheckoutTrait(null);
         BitbucketGitSCMBuilder probe =
                 new BitbucketGitSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"),
@@ -54,7 +54,7 @@ public class SSHCheckoutTraitTest {
     }
 
     @Test
-    public void given__sshCheckoutWithCredentials__when__decoratingHg__then__credentialsApplied() throws Exception {
+    public void given_sshCheckoutWithCredentials_when_decoratingHg_then_credentialsApplied() throws Exception {
         SSHCheckoutTrait instance = new SSHCheckoutTrait("keyId");
         BitbucketHgSCMBuilder probe =
                 new BitbucketHgSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"),
@@ -65,7 +65,7 @@ public class SSHCheckoutTraitTest {
     }
 
     @Test
-    public void given__sshCheckoutWithAgentKey__when__decoratingHg__then__useAgentKeyApplied() throws Exception {
+    public void given_sshCheckoutWithAgentKey_when_decoratingHg_then_useAgentKeyApplied() throws Exception {
         SSHCheckoutTrait instance = new SSHCheckoutTrait(null);
         BitbucketHgSCMBuilder probe =
                 new BitbucketHgSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"),
@@ -76,7 +76,7 @@ public class SSHCheckoutTraitTest {
     }
 
     @Test
-    public void given__descriptor__when__displayingCredentials__then__contractEnforced() throws Exception {
+    public void given_descriptor_when_displayingCredentials_then_contractEnforced() throws Exception {
         final SSHCheckoutTrait.DescriptorImpl d = j.jenkins.getDescriptorByType(SSHCheckoutTrait.DescriptorImpl.class);
         final MockFolder dummy = j.createFolder("dummy");
         SecurityRealm realm = j.jenkins.getSecurityRealm();
