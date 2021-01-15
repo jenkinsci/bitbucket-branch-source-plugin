@@ -1180,7 +1180,14 @@ public class BitbucketSCMSource extends SCMSource {
             if (context != null && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return new ListBoxModel(); // not permitted to try connecting with these credentials
             }
-            serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
+
+            String serverUrlFallback = BitbucketCloudEndpoint.SERVER_URL;
+            // if at least one bitbucket server is configured use it instead of bitbucket cloud
+            if(BitbucketEndpointConfiguration.get().getEndpointItems().size() > 0){
+               serverUrlFallback =  BitbucketEndpointConfiguration.get().getEndpointItems().get(0).value;
+            }
+
+            serverUrl = StringUtils.defaultIfBlank(serverUrl, serverUrlFallback);
             ListBoxModel result = new ListBoxModel();
             StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
                     serverUrl,
