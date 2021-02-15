@@ -70,7 +70,8 @@ public class WebhookConfiguration {
             HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey(),
             // only on v7.x and above
-            HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()
+            HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_APPROVED.getKey()
     ));
 
     /**
