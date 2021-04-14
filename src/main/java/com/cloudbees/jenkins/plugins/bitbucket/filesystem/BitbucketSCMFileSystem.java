@@ -33,6 +33,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -91,7 +95,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            //TODO: Determine supported by checking if its git/hg bitbucket scm with proper credentials and non wildcard branch
+            //TODO: Determine supported by checking if its git bitbucket scm with proper credentials and non wildcard branch
             return false;
         }
 
@@ -178,8 +182,18 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                 } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
                     ref = "pull-requests/" + pr.getId() + "/from";
                 } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-                    // No longer supported since bitbucket server v7, falls back to heavycheckout
-                    ref = "pull-requests/" + pr.getId() + "/merge";
+                    // Bitbucket server v7 doesn't have the `merge` ref for PRs
+                    // We don't return `ref` when working with v7
+                    // so that pipeline falls back to heavyweight checkout properly
+                    AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(src.getServerUrl());
+                    final BitbucketServerEndpoint endpoint = endpointConfig instanceof BitbucketServerEndpoint ?
+                            (BitbucketServerEndpoint) endpointConfig : null;
+                    if (endpoint != null && endpoint.getServerVersion() != BitbucketServerVersion.VERSION_7) {
+                        ref = "pull-requests/" + pr.getId() + "/merge";
+                    } else {
+                        // returning null to fallback to heavyweight checkout
+                        return null;
+                    }
                 }
             } else if (head instanceof BitbucketTagSCMHead) {
                 ref = "tags/" + head.getName();

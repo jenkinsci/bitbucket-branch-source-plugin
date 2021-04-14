@@ -125,46 +125,6 @@ public class BitbucketSCMSourceTest {
     }
 
     @Test
-    public void basic_cloud_hg() throws Exception {
-        BitbucketSCMSource instance = load();
-        assertThat(instance.getId(), is("com.cloudbees.jenkins.plugins.bitbucket"
-                + ".BitbucketSCMNavigator::https://bitbucket.org::cloudbeers::shiny-telegram"));
-        assertThat(instance.getServerUrl(), is("https://bitbucket.org"));
-        assertThat(instance.getRepoOwner(), is("cloudbeers"));
-        assertThat(instance.getRepository(), is("shiny-telegram"));
-        assertThat(instance.getCredentialsId(), is("bitbucket-cloud"));
-        assertThat(instance.getTraits(),
-                containsInAnyOrder(
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(BranchDiscoveryTrait.class),
-                                hasProperty("buildBranch", is(true)),
-                                hasProperty("buildBranchesWithPR", is(true))
-                        ),
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(OriginPullRequestDiscoveryTrait.class),
-                                hasProperty("strategyId", is(2))
-                        ),
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(ForkPullRequestDiscoveryTrait.class),
-                                hasProperty("strategyId", is(2)),
-                                hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
-                        ),
-                        Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(WebhookRegistrationTrait.class),
-                                hasProperty("mode", is(WebhookRegistration.DISABLE))
-                        )
-                )
-        );
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl(), is(nullValue()));
-        assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getIncludes(), is("*"));
-        assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.isAutoRegisterHook(), is(false));
-    }
-
-    @Test
     public void basic_server() throws Exception {
         BitbucketSCMSource instance = load();
         assertThat(instance.getId(), is("com.cloudbees.jenkins.plugins.bitbucket"

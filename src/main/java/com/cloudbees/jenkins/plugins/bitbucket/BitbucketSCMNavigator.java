@@ -45,8 +45,6 @@ import hudson.console.HyperlinkNote;
 import hudson.model.Action;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.mercurial.MercurialSCM;
-import hudson.plugins.mercurial.traits.MercurialBrowserSCMSourceTrait;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
@@ -632,12 +630,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     SCMNavigatorTrait._for(this, BitbucketSCMNavigatorContext.class, BitbucketSCMSourceBuilder.class));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, BitbucketSCMSourceContext.class, null));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, null, BitbucketGitSCMBuilder.class));
-            all.addAll(SCMSourceTrait._for(sourceDescriptor, null, BitbucketHgSCMBuilder.class));
             Set<SCMTraitDescriptor<?>> dedup = new HashSet<>();
             for (Iterator<SCMTraitDescriptor<?>> iterator = all.iterator(); iterator.hasNext(); ) {
                 SCMTraitDescriptor<?> d = iterator.next();
                 if (dedup.contains(d)
-                        || d instanceof MercurialBrowserSCMSourceTrait.DescriptorImpl
                         || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
                     // remove any we have seen already and ban the browser configuration as it will always be bitbucket
                     iterator.remove();
@@ -653,7 +649,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     true, result);
             int insertionPoint = result.size();
             NamedArrayList.select(all, "Git", it -> GitSCM.class.isAssignableFrom(it.getScmClass()), true, result);
-            NamedArrayList.select(all, "Mercurial", it -> MercurialSCM.class.isAssignableFrom(it.getScmClass()), true, result);
             NamedArrayList.select(all, "General", null, true, result, insertionPoint);
             return result;
         }
@@ -745,23 +740,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             IconSet.icons.addIcon(
                     new Icon("icon-bitbucket-repo-git icon-xlg",
                             "plugin/cloudbees-bitbucket-branch-source/images/48x48/bitbucket-repository-git.png",
-                            Icon.ICON_XLARGE_STYLE));
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-sm",
-                            "plugin/cloudbees-bitbucket-branch-source/images/16x16/bitbucket-repository-hg.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-md",
-                            "plugin/cloudbees-bitbucket-branch-source/images/24x24/bitbucket-repository-hg.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-lg",
-                            "plugin/cloudbees-bitbucket-branch-source/images/32x32/bitbucket-repository-hg.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-xlg",
-                            "plugin/cloudbees-bitbucket-branch-source/images/48x48/bitbucket-repository-hg.png",
                             Icon.ICON_XLARGE_STYLE));
 
             IconSet.icons.addIcon(

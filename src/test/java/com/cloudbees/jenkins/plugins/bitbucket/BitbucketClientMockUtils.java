@@ -65,11 +65,7 @@ public class BitbucketClientMockUtils {
         branches.add(getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f"));
         // add branches
         when(bitbucket.getBranches()).thenReturn(branches);
-        if (BitbucketRepositoryType.MERCURIAL == type) {
-            withMockMercurialRepos(bitbucket);
-        } else {
-            withMockGitRepos(bitbucket);
-        }
+        withMockGitRepos(bitbucket);
 
         if (includePullRequests) {
             when(bitbucket.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
@@ -165,14 +161,6 @@ public class BitbucketClientMockUtils {
     private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {
         BitbucketCloudRepository repo = new BitbucketCloudRepository();
         repo.setScm("git");
-        repo.setFullName("amuniz/test-repos");
-        repo.setPrivate(true);
-        when(bitbucket.getRepository()).thenReturn(repo);
-    }
-
-    private static void withMockMercurialRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {
-        BitbucketCloudRepository repo = new BitbucketCloudRepository();
-        repo.setScm("hg");
         repo.setFullName("amuniz/test-repos");
         repo.setPrivate(true);
         when(bitbucket.getRepository()).thenReturn(repo);

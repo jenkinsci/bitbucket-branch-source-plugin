@@ -58,8 +58,6 @@ import hudson.model.Actionable;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.mercurial.MercurialSCM;
-import hudson.plugins.mercurial.traits.MercurialBrowserSCMSourceTrait;
 import hudson.scm.SCM;
 import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
@@ -76,7 +74,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -818,19 +815,11 @@ public class BitbucketSCMSource extends SCMSource {
                         });
                 return null;
             }
-            if (getRepositoryType() == BitbucketRepositoryType.MERCURIAL) {
-                return new PullRequestSCMRevision<>(
-                        h,
-                        new MercurialRevision(h.getTarget(), targetRevision),
-                        new MercurialRevision(h, sourceRevision)
-                );
-            } else {
-                return new PullRequestSCMRevision<>(
-                        h,
-                        new BitbucketGitSCMRevision(h.getTarget(), targetRevision),
-                        new BitbucketGitSCMRevision(h, sourceRevision)
-                );
-            }
+            return new PullRequestSCMRevision<>(
+                    h,
+                    new BitbucketGitSCMRevision(h.getTarget(), targetRevision),
+                    new BitbucketGitSCMRevision(h, sourceRevision)
+            );
         } else if(head instanceof BitbucketTagSCMHead) {
             BitbucketTagSCMHead tagHead = (BitbucketTagSCMHead) head;
             List<? extends BitbucketBranch> tags = bitbucket.getTags();
@@ -839,11 +828,7 @@ public class BitbucketSCMSource extends SCMSource {
                 LOGGER.log(Level.WARNING, "No tag found in {0}/{1} with name [{2}]", new Object[] { repoOwner, repository, head.getName() });
                 return null;
             }
-            if (getRepositoryType() == BitbucketRepositoryType.MERCURIAL) {
-                return new MercurialRevision(head, revision);
-            } else {
-                return new BitbucketTagSCMRevision(tagHead, revision);
-            }
+            return new BitbucketTagSCMRevision(tagHead, revision);
         } else {
             BitbucketCommit revision = findCommit(head.getName(), branches, listener);
             if (revision == null) {
@@ -851,11 +836,7 @@ public class BitbucketSCMSource extends SCMSource {
                         new Object[]{repoOwner, repository, head.getName()});
                 return null;
             }
-            if (getRepositoryType() == BitbucketRepositoryType.MERCURIAL) {
-                return new MercurialRevision(head, revision);
-            } else {
-                return new BitbucketGitSCMRevision(head, revision);
-            }
+            return new BitbucketGitSCMRevision(head, revision);
         }
     }
 
@@ -918,9 +899,7 @@ public class BitbucketSCMSource extends SCMSource {
             throw new IllegalArgumentException("Either PullRequestSCMHead, BitbucketTagSCMHead or BranchSCMHead required as parameter");
         }
         if (type == null) {
-            if (revision instanceof MercurialRevision) {
-                type = BitbucketRepositoryType.MERCURIAL;
-            } else if (revision instanceof SCMRevisionImpl) {
+            if (revision instanceof SCMRevisionImpl) {
                 type = BitbucketRepositoryType.GIT;
             } else {
                 try {
@@ -969,11 +948,6 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         switch (type) {
-            case MERCURIAL:
-                return new BitbucketHgSCMBuilder(this, head, revision, getCredentialsId())
-                        .withCloneLinks(cloneLinks)
-                        .withTraits(traits)
-                        .build();
             case GIT:
             default:
                 return new BitbucketGitSCMBuilder(this, head, revision, getCredentialsId())
@@ -1276,12 +1250,10 @@ public class BitbucketSCMSource extends SCMSource {
             all.addAll(SCMSourceTrait._for(this, BitbucketSCMSourceContext.class, null));
             // all that are applicable to our builders
             all.addAll(SCMSourceTrait._for(this, null, BitbucketGitSCMBuilder.class));
-            all.addAll(SCMSourceTrait._for(this, null, BitbucketHgSCMBuilder.class));
             Set<SCMSourceTraitDescriptor> dedup = new HashSet<>();
             for (Iterator<SCMSourceTraitDescriptor> iterator = all.iterator(); iterator.hasNext(); ) {
                 SCMSourceTraitDescriptor d = iterator.next();
                 if (dedup.contains(d)
-                        || d instanceof MercurialBrowserSCMSourceTrait.DescriptorImpl
                         || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
                     // remove any we have seen already and ban the browser configuration as it will always be bitbucket
                     iterator.remove();
@@ -1296,7 +1268,6 @@ public class BitbucketSCMSource extends SCMSource {
                     true, result);
             int insertionPoint = result.size();
             NamedArrayList.select(all, "Git", it -> GitSCM.class.isAssignableFrom(it.getScmClass()), true, result);
-            NamedArrayList.select(all, "Mercurial", it -> MercurialSCM.class.isAssignableFrom(it.getScmClass()), true, result);
             NamedArrayList.select(all, "General", null, true, result, insertionPoint);
             return result;
         }
@@ -1309,105 +1280,6 @@ public class BitbucketSCMSource extends SCMSource {
                             new ForkPullRequestDiscoveryTrait.TrustTeamForks())
             );
         }
-    }
-
-    public static class MercurialRevision extends SCMRevision {
-
-        private static final long serialVersionUID = 1L;
-
-        private final String hash;
-        private final String author;
-        private final String message;
-        private final Date date;
-
-        /**
-         * Construct a Mercurial revision.
-         *
-         * @param head the {@link SCMHead} that represent this revision
-         * @param hash of the head commit for the given head
-         * @deprecated Use {@link #MercurialRevision(SCMHead, BitbucketCommit)}
-         *             instead of this
-         */
-        @Deprecated
-        public MercurialRevision(@NonNull final SCMHead head, @Nullable final String hash) {
-            super(head);
-            this.hash = hash;
-            this.author = null;
-            this.message = null;
-            this.date = null;
-        }
-
-        /**
-         * Construct a Mercurial revision.
-         *
-         * @param head the {@link SCMHead} that represent this revision
-         * @param commit head
-         */
-        public MercurialRevision(@NonNull final SCMHead head, @NonNull final BitbucketCommit commit) {
-            super(head);
-            this.hash = commit.getHash();
-            this.author = commit.getAuthor();
-            this.message = commit.getMessage();
-            this.date = new Date(commit.getDateMillis());
-        }
-
-
-        /**
-         * Returns the author of this revision in GIT format.
-         *
-         * @return commit author in the following format &gt;name&lt; &gt;email&lt;
-         */
-        public String getAuthor() {
-            return author;
-        }
-
-        /**
-         * Returns the message associated with this revision.
-         *
-         * @return revision message
-         */
-        public String getMessage() {
-            return message;
-        }
-
-        /**
-         * Return the revision date in ISO format.
-         *
-         * @return date for this revision
-         */
-        public Date getDate() {
-            return (Date) date.clone();
-        }
-
-        public String getHash() {
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            MercurialRevision that = (MercurialRevision) o;
-
-            return Objects.equals(hash, that.hash)
-                && Objects.equals(getHead(), that.getHead());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(hash);
-        }
-
-        @Override
-        public String toString() {
-            return hash;
-        }
-
     }
 
     private static class CriteriaWitness implements SCMSourceRequest.Witness {
@@ -1524,23 +1396,12 @@ public class BitbucketSCMSource extends SCMSource {
                 PullRequestSCMHead prHead = (PullRequestSCMHead) head;
                 SCMHead targetHead = prHead.getTarget();
 
-                if (repositoryType == BitbucketRepositoryType.MERCURIAL) {
-                    revision = new PullRequestSCMRevision<>( //
-                            prHead, //
-                            new MercurialRevision(targetHead, targetCommit), //
-                            new MercurialRevision(prHead, sourceCommit));
-                } else {
-                    return new PullRequestSCMRevision<>( //
-                            prHead, //
-                            new BitbucketGitSCMRevision(targetHead, targetCommit), //
-                            new BitbucketGitSCMRevision(prHead, sourceCommit));
-                }
+                return new PullRequestSCMRevision<>( //
+                        prHead, //
+                        new BitbucketGitSCMRevision(targetHead, targetCommit), //
+                        new BitbucketGitSCMRevision(prHead, sourceCommit));
             } else {
-                if (repositoryType == BitbucketRepositoryType.MERCURIAL) {
-                    revision = new MercurialRevision(head, sourceCommit);
-                } else {
-                    revision = new BitbucketGitSCMRevision(head, sourceCommit);
-                }
+                revision = new BitbucketGitSCMRevision(head, sourceCommit);
             }
             return revision;
         }

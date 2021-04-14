@@ -41,7 +41,6 @@ public class BitbucketCloudBranch implements BitbucketBranch {
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudBranch.class.getName());
 
     private final String name;
-    private final boolean isActive;
     private long dateInMillis;
     private String hash;
     private String author;
@@ -52,7 +51,7 @@ public class BitbucketCloudBranch implements BitbucketBranch {
     @JsonCreator
     public BitbucketCloudBranch(@NonNull @JsonProperty("name") String name,
                                 @Nullable @JsonProperty("target") BitbucketCloudBranch.Target target,
-                                @Nullable @JsonProperty("heads") List<Head> heads) {
+                                @Nullable @JsonProperty("heads") List<Head> heads) { // TODO delete heads arg if possible
         this.name = name;
         if (target != null) {
             this.dateInMillis = target.date.getTime();
@@ -60,20 +59,12 @@ public class BitbucketCloudBranch implements BitbucketBranch {
             this.author = target.author.getRaw();
             this.message = target.message;
         }
-
-        // For Hg repositories, Bitbucket returns all branches, including the closed/inactive ones.
-        // To determine if a branch has been closed, we look at the heads property:
-        // - Branches with non-empty heads are active.
-        // - Branches with empty heads are inactive.
-        // - On branches from git repositories heads is null. They all are active.
-        this.isActive = heads == null || !heads.isEmpty();
     }
 
     public BitbucketCloudBranch(@NonNull String name, String hash, long dateInMillis) {
         this.name = name;
         this.dateInMillis = dateInMillis;
         this.hash = hash;
-        this.isActive = true;
     }
 
     @Override
@@ -102,8 +93,9 @@ public class BitbucketCloudBranch implements BitbucketBranch {
         return dateInMillis;
     }
 
+    // TODO deprecate
     public boolean isActive() {
-        return isActive;
+        return true;
     }
 
     @Override
@@ -172,6 +164,7 @@ public class BitbucketCloudBranch implements BitbucketBranch {
         }
     }
 
+    @Deprecated
     public static class Head {
         private final String hash;
 

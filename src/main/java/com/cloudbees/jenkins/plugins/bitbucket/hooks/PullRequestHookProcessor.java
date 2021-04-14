@@ -232,20 +232,6 @@ public class PullRequestHookProcessor extends HookProcessor {
                                                 )
                                         );
                                         break;
-                                    case MERCURIAL:
-                                        result.put(head, new PullRequestSCMRevision<>(
-                                                        head,
-                                                        new BitbucketSCMSource.MercurialRevision(
-                                                                head.getTarget(),
-                                                                targetHash
-                                                        ),
-                                                        new BitbucketSCMSource.MercurialRevision(
-                                                                head,
-                                                                pullHash
-                                                        )
-                                                )
-                                        );
-                                        break;
                                     default:
                                         LOGGER.log(Level.INFO, "Received event for unknown repository type: {0}", type);
                                         break;
