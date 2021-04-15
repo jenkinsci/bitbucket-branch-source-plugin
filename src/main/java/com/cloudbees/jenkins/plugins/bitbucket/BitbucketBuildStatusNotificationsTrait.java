@@ -30,6 +30,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * A {@link SCMSourceTrait} for {@link BitbucketSCMSource} that sets how notifications
@@ -42,7 +43,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     /**
      * Should unstable builds be communicated as success to Bitbucket
      */
-    private boolean sendSuccessNotificationForUnstableBuild = true;
+    private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
      * Constructor.
@@ -53,6 +54,11 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
         /**
          * empty constructor
          */
+    }
+
+    @DataBoundSetter
+    public void setSendSuccessNotificationForUnstableBuild(boolean isSendSuccess) {
+        sendSuccessNotificationForUnstableBuild = isSendSuccess;
     }
 
     /**
