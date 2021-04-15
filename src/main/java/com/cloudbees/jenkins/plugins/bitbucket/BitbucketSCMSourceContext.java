@@ -201,7 +201,6 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      *
      * @return {@code true} if notifications should be disabled.
      */
-
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
 
