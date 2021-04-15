@@ -124,8 +124,10 @@ public class BitbucketBuildStatusNotifications {
         String buildDescription = build.getDescription();
         String statusDescription;
         String state;
-        final String successful_state = "SUCCESSFUL";
-        final String failed_state = "FAILED";
+        static final String SUCCESSFUL_STATE = "SUCCESSFUL";
+        static final String FAILED_STATE = "FAILED";
+        static final String STOPPED_STATE = "STOPPED";
+        static final String INPROGRESS_STATE = "INPROGRESS";
         if (Result.SUCCESS.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit looks good.");
             state = successful_state;
