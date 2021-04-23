@@ -40,6 +40,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -550,6 +551,11 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketPullRequest> create() {
                         try {
+                            if (event instanceof HasPullRequests) {
+                                HasPullRequests hasPrEvent = (HasPullRequests) event;
+                                return hasPrEvent.getPullRequests(BitbucketSCMSource.this);
+                            }
+
                             return (Iterable<BitbucketPullRequest>) buildBitbucketClient().getPullRequests();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
