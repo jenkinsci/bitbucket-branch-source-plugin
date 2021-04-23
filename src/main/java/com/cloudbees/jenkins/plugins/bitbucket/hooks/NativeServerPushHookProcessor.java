@@ -129,6 +129,10 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         @Override
         protected Map<SCMHead, SCMRevision> heads(BitbucketSCMSource source) {
             final Map<SCMHead, SCMRevision> result = new HashMap<>();
+            if (!eventMatchesRepo(source)) {
+                return result;
+            }
+
             addBranchesAndTags(source, result);
             try {
                 addPullRequests(source, result);
@@ -139,10 +143,6 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         }
 
         private void addBranchesAndTags(BitbucketSCMSource src, Map<SCMHead, SCMRevision> result) {
-            if (!eventMatchesRepo(src)) {
-                return;
-            }
-
             for (final NativeServerRefsChangedEvent.Change change : getPayload()) {
                 String refType = change.getRef().getType();
 
