@@ -808,8 +808,14 @@ public class BitbucketSCMSource extends SCMSource {
                         : buildBitbucketClient(h).getBranches();
                 sourceRevision = findCommit(h.getBranchName(), branches, listener);
             } else {
-                final List<? extends BitbucketPullRequest> pullRequests = bitbucket.getPullRequests();
-                sourceRevision = findPRCommit(h.getId(), pullRequests, listener);
+                BitbucketPullRequest pullRequest;
+                try {
+                    Integer prId = Integer.parseInt(h.getId());
+                    pullRequest = bitbucket.getPullRequestById(prId);
+                } catch (NumberFormatException e) {
+                    pullRequest = null;
+                }
+                sourceRevision = findPRCommit(h.getId(), pullRequest, listener);
             }
             if (sourceRevision == null) {
                 LOGGER.log(Level.WARNING, "No revision found in {0}/{1} for PR-{2} [{3}]",
@@ -868,28 +874,27 @@ public class BitbucketSCMSource extends SCMSource {
         return null;
     }
 
-    private BitbucketCommit findPRCommit(String prId, List<? extends BitbucketPullRequest> pullRequests, TaskListener listener) {
-        for (BitbucketPullRequest pr : pullRequests) {
-            if (prId.equals(pr.getId())) {
-                // if I use getCommit() the branch closure is trigger immediately
-                BitbucketBranch branch = pr.getSource().getBranch();
-                String hash = branch.getRawNode();
-                if (hash == null) {
-                    if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
-                        listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s%n",
-                                prId);
-                    } else {
-                        listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s. "
-                                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
-                                prId);
-                    }
-                    return null;
-                }
-                return new BranchHeadCommit(branch);
-            }
+    private BitbucketCommit findPRCommit(String prId, BitbucketPullRequest pullRequest, TaskListener listener) {
+        if (pullRequest == null) {
+            listener.getLogger().format("Cannot find the PR-%s%n", prId);
+            return null;
         }
-        listener.getLogger().format("Cannot find the PR-%s%n", prId);
-        return null;
+
+        // if I use getCommit() the branch closure is trigger immediately
+        BitbucketBranch branch = pullRequest.getSource().getBranch();
+        String hash = branch.getRawNode();
+        if (hash == null) {
+            if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
+                listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s%n",
+                        prId);
+            } else {
+                listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s. "
+                                + "Perhaps you are using Bitbucket Server previous to 4.x%n",
+                                prId);
+            }
+            return null;
+        }
+        return new BranchHeadCommit(branch);
     }
 
     @Override
