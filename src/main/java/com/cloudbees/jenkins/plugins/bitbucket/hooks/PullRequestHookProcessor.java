@@ -265,6 +265,9 @@ public class PullRequestHookProcessor extends HookProcessor {
 
         @Override
         public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+            if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
+                return Collections.emptyList();
+            }
             return Collections.singleton(getPayload().getPullRequest());
         }
     }

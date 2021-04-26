@@ -155,6 +155,9 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
 
         @Override
         public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+            if (Type.REMOVED.equals(getType())) {
+                return Collections.emptySet();
+            }
             return Collections.singleton(getPayload().getPullRequest());
         }
     }
