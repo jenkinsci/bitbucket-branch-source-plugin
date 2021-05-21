@@ -281,6 +281,15 @@ public interface BitbucketApi {
     void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException;
 
     /**
+     * Set the build status for the given commit hash.
+     *
+     * @param hash get the status object for specified key
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    BitbucketBuildStatuses getBuildStatus(@NonNull String hash) throws IOException, InterruptedException;
+
+    /**
      * Returns {@code true} if and only if the repository is private.
      *
      * @return {@code true} if the repository ({@link #getOwner()}/{@link #getRepositoryName()}) is private.

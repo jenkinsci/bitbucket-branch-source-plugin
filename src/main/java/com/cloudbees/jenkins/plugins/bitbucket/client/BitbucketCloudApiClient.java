@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatuses;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
@@ -646,6 +647,21 @@ public class BitbucketCloudApiClient implements BitbucketApi {
                 .set("hash", status.getHash())
                 .expand();
         postRequest(url, JsonParser.toJson(status));
+    }
+
+    @Override
+    public BitbucketBuildStatuses getBuildStatus(@NonNull String hash) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commit/{hash}/statuses/build")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("hash", hash)
+            .expand();
+        String response = getRequest(url);
+        try {
+            return JsonParser.toJava(response, BitbucketBuildStatuses.class);
+        } catch (IOException e) {
+            throw new IOException("I/O error when accessing URL: " + url, e);
+        }
     }
 
     /**
