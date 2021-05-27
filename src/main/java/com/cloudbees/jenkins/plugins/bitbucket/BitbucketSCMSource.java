@@ -866,7 +866,7 @@ public class BitbucketSCMSource extends SCMSource {
         listener.getLogger().format("Cannot find the branch %s%n", branchName);
         return null;
     }
-    
+
     private BitbucketCommit findPRCommit(BitbucketPullRequest pr, TaskListener listener) {
         // if I use getCommit() the branch closure is trigger immediately
         BitbucketBranch branch = pr.getSource().getBranch();
