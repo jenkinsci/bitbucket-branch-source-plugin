@@ -803,7 +803,8 @@ public class BitbucketSCMSource extends SCMSource {
                 sourceRevision = findCommit(h.getBranchName(), branches, listener);
             } else {
                 try {
-                    sourceRevision = findPRCommit(bitbucket.getPullRequestById(Integer.parseInt(h.getId())), listener);
+                    BitbucketPullRequest pr = bitbucket.getPullRequestById(Integer.parseInt(h.getId()));
+                    sourceRevision = findPRCommit(pr, listener);
                 } catch (NumberFormatException nfe) {
                     LOGGER.log(Level.WARNING, "Cannot parse the PR id {0}", h.getId());
                     sourceRevision = null;
@@ -844,7 +845,7 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
-    private BitbucketCommit findCommit(String branchName, List<? extends BitbucketBranch> branches, TaskListener listener) {
+    private BitbucketCommit findCommit(@NonNull String branchName, List<? extends BitbucketBranch> branches, TaskListener listener) {
         for (final BitbucketBranch b : branches) {
             if (branchName.equals(b.getName())) {
                 String revision = b.getRawNode();
@@ -865,7 +866,7 @@ public class BitbucketSCMSource extends SCMSource {
         listener.getLogger().format("Cannot find the branch %s%n", branchName);
         return null;
     }
-
+    
     private BitbucketCommit findPRCommit(BitbucketPullRequest pr, TaskListener listener) {
         // if I use getCommit() the branch closure is trigger immediately
         BitbucketBranch branch = pr.getSource().getBranch();
