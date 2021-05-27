@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.17</version>
+    <version>4.18</version>
     <relativePath />
   </parent>
 
@@ -49,7 +49,7 @@
   </licenses>
 
   <properties>
-    <revision>2.9.9</revision>
+    <revision>2.9.10</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.version>2.176.4</jenkins.version>
@@ -204,7 +204,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>8.41.1</version>
+              <version>8.42</version>
             </dependency>
           </dependencies>
         </plugin>

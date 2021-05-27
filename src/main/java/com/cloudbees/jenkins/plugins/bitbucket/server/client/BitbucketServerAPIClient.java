@@ -347,7 +347,17 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 // This is required for Bitbucket Server to update the refs/pull-requests/* references
                 // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
                 if (endpoint.isCallCanMerge()) {
-                    pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
+                    try {
+                        pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
+                    } catch (BitbucketRequestException e) {
+                        // see JENKINS-65718 https://docs.atlassian.com/bitbucket-server/rest/7.2.1/bitbucket-rest.html#errors-and-validation
+                        // in this case we just say cannot merge this one
+                        if(e.getHttpCode()==409){
+                            pullRequest.setCanMerge(false);
+                        } else {
+                            throw e;
+                        }
+                    }
                 }
                 if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
                     callPullRequestChangesById(pullRequest.getId());
