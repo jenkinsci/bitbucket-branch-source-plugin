@@ -298,16 +298,26 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         } while (page.getNext() != null);
 
         // PRs with missing destination branch are invalid and should be ignored.
-        pullRequests.removeIf(pr -> pr.getSource().getRepository() == null
-                || pr.getSource().getCommit() == null
-                || pr.getDestination().getBranch() == null
-                || pr.getDestination().getCommit() == null);
+        pullRequests.removeIf(this::shouldIgnore);
 
         for (BitbucketPullRequestValue pullRequest : pullRequests) {
             setupClosureForPRBranch(pullRequest);
         }
 
         return pullRequests;
+    }
+
+    /**
+     * PRs with missing source / destination branch are invalid and should be ignored.
+     *
+     * @param pr a {@link BitbucketPullRequest}
+     * @return
+     */
+    private boolean shouldIgnore(BitbucketPullRequest pr) {
+        return pr.getSource().getRepository() == null
+            || pr.getSource().getCommit() == null
+            || pr.getDestination().getBranch() == null
+            || pr.getDestination().getCommit() == null;
     }
 
     /**
