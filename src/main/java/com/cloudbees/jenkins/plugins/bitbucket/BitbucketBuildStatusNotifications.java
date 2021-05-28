@@ -63,11 +63,15 @@ public class BitbucketBuildStatusNotifications {
     private static final String STOPPED_STATE = "STOPPED";
     private static final String INPROGRESS_STATE = "INPROGRESS";
 
-    private static String getRootURL(@NonNull Run<?, ?> build) {
+    private static String getRootURL() {
+        return DisplayURLProvider.get().getRoot();
+    }
+
+    private static String getRunURL(@NonNull Run<?, ?> build) {
         JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
 
         if (cfg == null || cfg.getUrl() == null) {
-            throw new IllegalStateException("Could not determine Jenkins URL.");
+            throw new IllegalStateException("Could not determine job URL.");
         }
 
         return DisplayURLProvider.get().getRunURL(build);
@@ -110,9 +114,11 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
 
-        String url;
+        String rootUrl, url;
         try {
-            url = getRootURL(build);
+            rootUrl = getRootURL();
+
+            url = getRunURL(build);
             checkURL(url, bitbucket);
         } catch (IllegalStateException e) {
             listener.getLogger().println("Can not determine Jenkins root URL " +
@@ -123,10 +129,15 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
 
+        BitbucketSCMSource source = (BitbucketSCMSource) s;
+        BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits(source.getTraits());
+
         String name = build.getFullDisplayName(); // use the build number as the display name of the status
         BitbucketBuildStatus status;
         Result result = build.getResult();
         String buildDescription = build.getDescription();
+        String statusDescriptionSuffix = "";
         String statusDescription;
         String state;
         if (Result.SUCCESS.equals(result)) {
@@ -135,9 +146,6 @@ public class BitbucketBuildStatusNotifications {
         } else if (Result.UNSTABLE.equals(result)) {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
 
-            BitbucketSCMSource source = (BitbucketSCMSource) s;
-            BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
-                    .withTraits(source.getTraits());
             if (sourceContext.sendSuccessNotificationForUnstableBuild()) {
                 state = SUCCESSFUL_STATE;
             } else {
@@ -157,7 +165,10 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "The build is in progress...");
             state = INPROGRESS_STATE;
         }
-        status = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name);
+        if (sourceContext.buildStatusIncludeJenkinsURL()) {
+            statusDescriptionSuffix = "\n" + rootUrl;
+        }
+        status = new BitbucketBuildStatus(hash, statusDescription + statusDescriptionSuffix, state, url, key, name);
         new BitbucketChangesetCommentNotifier(bitbucket).buildStatus(status);
         if (result != null) {
             listener.getLogger().println("[Bitbucket] Build result notified");
@@ -171,6 +182,8 @@ public class BitbucketBuildStatusNotifications {
 
     private static void sendNotifications(BitbucketSCMSource source, Run<?, ?> build, TaskListener listener)
             throws IOException, InterruptedException {
+        String rootUrl = getRootURL();
+
         BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null,
             SCMHeadObserver.none()).withTraits(source.getTraits());
         if (sourceContext.notificationsDisabled()) {
@@ -193,11 +206,13 @@ public class BitbucketBuildStatusNotifications {
         if (r instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
             PullRequestSCMHead head = (PullRequestSCMHead) r.getHead();
-            key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
+            key = getBuildKey(build, rootUrl, head.getOriginName(),
+                    shareBuildKeyBetweenBranchAndPR, sourceContext.buildStatusIncludeJenkinsURL());
             bitbucket = source.buildBitbucketClient(head);
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
-            key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
+            key = getBuildKey(build, rootUrl, r.getHead().getName(),
+                    shareBuildKeyBetweenBranchAndPR, sourceContext.buildStatusIncludeJenkinsURL());
             bitbucket = source.buildBitbucketClient();
         }
         createStatus(build, listener, bitbucket, key, hash);
@@ -215,8 +230,8 @@ public class BitbucketBuildStatusNotifications {
         return null;
     }
 
-    private static String getBuildKey(@NonNull Run<?, ?> build, String branch,
-        boolean shareBuildKeyBetweenBranchAndPR) {
+    private static String getBuildKey(@NonNull Run<?, ?> build, String rootUrl, String branch,
+        boolean shareBuildKeyBetweenBranchAndPR, boolean includeJenkinsURL) {
 
         // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
         // build status key to be the same between the branch project and the PR project.
@@ -229,6 +244,10 @@ public class BitbucketBuildStatusNotifications {
             key = String.format("%s/%s", folderName, branch);
         } else {
             key = build.getParent().getFullName(); // use the job full name as the key for the status
+        }
+
+        if (includeJenkinsURL) {
+            key = rootUrl + "/" + key;
         }
 
         return key;

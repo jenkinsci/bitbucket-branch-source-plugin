@@ -92,6 +92,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
+     * {@code true} if need to include Jenkins URL to the build status name and key.
+     */
+    private boolean buildStatusIncludeJenkinsURL;
+
+    /**
      * Constructor.
      *
      * @param criteria (optional) criteria.
@@ -213,6 +218,15 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean sendSuccessNotificationForUnstableBuild() {
         return sendSuccessNotificationForUnstableBuild;
+    }
+
+    /**
+     * Returns {@code true} if should include Jenkins URL to a build status name and key.
+     *
+     * @return {@code false} if should NOT include Jenkins URL to a build status name and key.
+     */
+    public final boolean buildStatusIncludeJenkinsURL() {
+        return buildStatusIncludeJenkinsURL;
     }
 
     /**
@@ -349,6 +363,18 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final BitbucketSCMSourceContext withSendSuccessNotificationForUnstableBuild(boolean isUnstableBuildSuccess) {
         this.sendSuccessNotificationForUnstableBuild = isUnstableBuildSuccess;
+        return this;
+    }
+
+    /**
+     * Defines behaviour of build status name and key.
+     *
+     * @param buildStatusIncludeJenkinsURL {@code true} to inluce Jenkins URL to the build status key/name.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext withBuildStatusIncludeJenkinsURL(boolean buildStatusIncludeJenkinsURL) {
+        this.buildStatusIncludeJenkinsURL = buildStatusIncludeJenkinsURL;
         return this;
     }
 
