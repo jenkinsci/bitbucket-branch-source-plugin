@@ -38,6 +38,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPullRequestEvent;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Cause;
 import hudson.scm.SCM;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -92,6 +93,11 @@ public class PullRequestHookProcessor extends HookProcessor {
                 }
                 // assume updated as a catch-all type
                 SCMHeadEvent.fireNow(new SCMHeadEvent<BitbucketPullRequestEvent>(eventType, pull, origin) {
+                    @Override
+                    public Cause[] asCauses() {
+                        return new Cause[]{new WebhookCause(payload)};
+                    }
+
                     @Override
                     public boolean isMatch(@NonNull SCMNavigator navigator) {
                         if (!(navigator instanceof BitbucketSCMNavigator)) {
