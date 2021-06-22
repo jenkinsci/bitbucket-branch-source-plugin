@@ -137,6 +137,7 @@ public class BitbucketBuildStatusNotifications {
         BitbucketBuildStatus status;
         Result result = build.getResult();
         String buildDescription = build.getDescription();
+        String statusNamePrefix = "";
         String statusDescriptionSuffix = "";
         String statusDescription;
         String state;
@@ -166,9 +167,13 @@ public class BitbucketBuildStatusNotifications {
             state = INPROGRESS_STATE;
         }
         if (sourceContext.buildStatusIncludeJenkinsURL()) {
-            statusDescriptionSuffix = "\n" + rootUrl;
+            statusNamePrefix = rootUrl + " » ";
+            statusDescriptionSuffix = " @ " + rootUrl;
         }
-        status = new BitbucketBuildStatus(hash, statusDescription + statusDescriptionSuffix, state, url, key, name);
+        status = new BitbucketBuildStatus(hash,
+                statusDescription + statusDescriptionSuffix,
+                state, url, key,
+                statusNamePrefix + name);
         new BitbucketChangesetCommentNotifier(bitbucket).buildStatus(status);
         if (result != null) {
             listener.getLogger().println("[Bitbucket] Build result notified");
