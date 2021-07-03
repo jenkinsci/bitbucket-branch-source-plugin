@@ -248,6 +248,11 @@ public class BitbucketBuildStatusNotifications {
                 return;
             }
 
+            SCMRevision r = SCMRevisionAction.getRevision(source, build);
+            if (r == null) {
+                return;
+            }
+
             boolean hasCompletedCheckoutBefore =
                 build.getAction(FirstCheckoutCompletedInvisibleAction.class) != null;
 
