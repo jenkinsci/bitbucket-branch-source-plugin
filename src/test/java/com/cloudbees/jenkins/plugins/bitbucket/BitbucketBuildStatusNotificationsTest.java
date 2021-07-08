@@ -37,11 +37,17 @@ import java.util.List;
 
 import jenkins.branch.BranchSource;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceCriteria;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.multibranch.AbstractWorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.*;
 import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.mockito.Mockito;
@@ -82,13 +88,11 @@ public class BitbucketBuildStatusNotificationsTest {
         assertThat((List<Action>)b.getAllActions(), not(hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class))));
     }
 
-    @Test
-    public void firstCheckoutCompletedInvisibleAction() throws Exception {
+    private WorkflowMultiBranchProject prepareFirstCheckoutCompletedInvisibleActionTest(String dsl) throws Exception {
         String repoOwner = "bob";
         String repositoryName = "foo";
         String branchName = "master";
         String jenkinsfile = "Jenkinsfile";
-        String dsl = "node { checkout scm }";
         sampleRepo.init();
         sampleRepo.write(jenkinsfile, dsl);
         sampleRepo.git("add", jenkinsfile);
@@ -132,15 +136,62 @@ public class BitbucketBuildStatusNotificationsTest {
         ));
         owner.setSourcesList(Collections.singletonList(new BranchSource(source)));
         source.setOwner(owner);
+        return owner;
+    }
+
+    @Test
+    public void firstCheckoutCompletedInvisibleAction() throws Exception {
+        String dsl = "node { checkout scm }";
+        WorkflowMultiBranchProject owner = prepareFirstCheckoutCompletedInvisibleActionTest(dsl);
+
         owner.scheduleBuild2(0).getFuture().get();
         owner.getComputation().writeWholeLogTo(System.out);
         assertThat(owner.getIndexing().getResult(), is(Result.SUCCESS));
         r.waitUntilNoActivity();
-        WorkflowJob master = owner.getItem(branchName);
+        WorkflowJob master = owner.getItem("master");
         WorkflowRun run = master.getLastBuild();
         run.writeWholeLogTo(System.out);
         assertThat(run.getResult(), is(Result.SUCCESS));
         assertThat((List<Action>)run.getAllActions(), hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class)));
     }
 
+    @Issue("JENKINS-66040")
+    @Test
+    public void shouldNotSetFirstCheckoutCompletedInvisibleActionOnOtherCheckoutWithNonDefaultFactory() throws Exception {
+        String dsl = "node { checkout(scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/jenkinsci/bitbucket-branch-source-plugin.git']], branches: [[name: 'master']]]) }";
+        WorkflowMultiBranchProject owner = prepareFirstCheckoutCompletedInvisibleActionTest(dsl);
+        owner.setProjectFactory(new DummyWorkflowBranchProjectFactory(dsl));
+
+        owner.scheduleBuild2(0).getFuture().get();
+        owner.getComputation().writeWholeLogTo(System.out);
+        assertThat(owner.getIndexing().getResult(), is(Result.SUCCESS));
+        r.waitUntilNoActivity();
+        WorkflowJob master = owner.getItem("master");
+        WorkflowRun run = master.getLastBuild();
+        run.writeWholeLogTo(System.out);
+        assertThat(run.getResult(), is(Result.SUCCESS));
+        assertThat((List<Action>)run.getAllActions(), not(hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class))));
+    }
+
+    private static class DummyWorkflowBranchProjectFactory extends AbstractWorkflowBranchProjectFactory {
+        private final String dsl;
+
+        public DummyWorkflowBranchProjectFactory(String dsl) {
+            this.dsl = dsl;
+        }
+
+        @Override
+        protected FlowDefinition createDefinition() {
+            return new CpsFlowDefinition(dsl, true);
+        }
+
+        @Override
+        protected SCMSourceCriteria getSCMSourceCriteria(SCMSource source) {
+            return new SCMSourceCriteria() {
+                @Override public boolean isHead(Probe probe, TaskListener listener) throws IOException {
+                    return true;
+                }
+            };
+        }
+    }
 }
