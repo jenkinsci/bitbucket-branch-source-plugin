@@ -24,24 +24,53 @@
 
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import hudson.model.Action;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
+import com.cloudbees.jenkins.plugins.bitbucket.api.*;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import hudson.model.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Collections;
 import java.util.List;
-import org.junit.Rule;
-import org.junit.Test;
+
+import jenkins.branch.BranchSource;
+import jenkins.plugins.git.GitSampleRepoRule;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.*;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
+import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.Returns;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.when;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 
 public class BitbucketBuildStatusNotificationsTest {
 
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule
-    public JenkinsRule r = new JenkinsRule();
+    public JenkinsRule r = new JenkinsRule() {
+        @Override
+        public URL getURL() throws IOException {
+            return new URL("http://example.com:"+localPort+contextPath+"/");
+        }
+    };
+    @Rule
+    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     // TODO test of effectiveness of FirstCheckoutCompletedInvisibleAction (#130)
 
@@ -51,6 +80,67 @@ public class BitbucketBuildStatusNotificationsTest {
         p.setScm(new SingleFileSCM("file", "contents"));
         FreeStyleBuild b = r.buildAndAssertSuccess(p);
         assertThat((List<Action>)b.getAllActions(), not(hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class))));
+    }
+
+    @Test
+    public void firstCheckoutCompletedInvisibleAction() throws Exception {
+        String repoOwner = "bob";
+        String repositoryName = "foo";
+        String branchName = "master";
+        String jenkinsfile = "Jenkinsfile";
+        String dsl = "node { checkout scm }";
+        sampleRepo.init();
+        sampleRepo.write(jenkinsfile, dsl);
+        sampleRepo.git("add", jenkinsfile);
+        sampleRepo.git("commit", "--all", "--message=defined");
+
+        BitbucketApi api = Mockito.mock(BitbucketApi.class);
+        BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
+        List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
+        when(api.getBranches()).thenAnswer(new Returns(branchList));
+        when(branch.getName()).thenReturn(branchName);
+        when(branch.getRawNode()).thenReturn(sampleRepo.head());
+        BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
+        when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
+        when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
+        when(api.checkPathExists(Mockito.anyString(), eq(jenkinsfile))).thenReturn(true);
+        when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
+                any(BitbucketRepositoryProtocol.class),
+                anyString(),
+                eq(repoOwner),
+                eq(repositoryName)))
+                .thenReturn(sampleRepo.fileUrl());
+        BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
+        when(api.getRepository()).thenReturn(repository);
+        when(repository.getOwnerName()).thenReturn(repoOwner);
+        when(repository.getRepositoryName()).thenReturn(repositoryName);
+        when(repository.getScm()).thenReturn("git");
+        when(repository.getLinks()).thenReturn(
+                Collections.singletonMap("clone",
+                        Collections.singletonList(new BitbucketHref("http", sampleRepo.toString()))
+                )
+        );
+        when(api.getRepository()).thenReturn(repository);
+        when(api.getFileContent(any(BitbucketSCMFile.class))).thenReturn(
+                new ByteArrayInputStream(dsl.getBytes()));
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, api);
+
+        BitbucketSCMSource source = new BitbucketSCMSource( repoOwner, repositoryName);
+        WorkflowMultiBranchProject owner = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
+        source.setTraits(Collections.singletonList(
+                new BranchDiscoveryTrait(true, true)
+        ));
+        owner.setSourcesList(Collections.singletonList(new BranchSource(source)));
+        source.setOwner(owner);
+        owner.scheduleBuild2(0).getFuture().get();
+        owner.getComputation().writeWholeLogTo(System.out);
+        assertThat(owner.getIndexing().getResult(), is(Result.SUCCESS));
+        r.waitUntilNoActivity();
+        WorkflowJob master = owner.getItem(branchName);
+        WorkflowRun run = master.getLastBuild();
+        run.writeWholeLogTo(System.out);
+        assertThat(run.getResult(), is(Result.SUCCESS));
+        assertThat((List<Action>)run.getAllActions(), hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class)));
     }
 
 }
