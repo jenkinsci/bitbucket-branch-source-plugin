@@ -215,7 +215,6 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
      * Used to handle data migration.
      *
      * @see FixLegacyMigration1
-     * @see FixLegacyMigration2
      * @deprecated used for data migration.
      */
     @Deprecated
@@ -267,49 +266,6 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                     new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), null),
                     new AbstractGitSCMSource.SCMRevisionImpl(head, revision.getHash()
                     )
-            ) : null;
-        }
-    }
-
-    /**
-     * Used to handle data migration.
-     *
-     * @deprecated used for data migration.
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @Extension
-    public static class FixLegacyMigration2 extends
-            SCMHeadMigration<BitbucketSCMSource, FixLegacy, BitbucketSCMSource.MercurialRevision> {
-        public FixLegacyMigration2() {
-            super(BitbucketSCMSource.class, FixLegacy.class, BitbucketSCMSource.MercurialRevision.class);
-        }
-
-        @Override
-        public PullRequestSCMHead migrate(@NonNull BitbucketSCMSource source, @NonNull FixLegacy head) {
-            return new PullRequestSCMHead(
-                    head.getName(),
-                    head.getRepoOwner(),
-                    head.getRepository(),
-                    head.getBranchName(),
-                    head.getId(),
-                    head.getTitle(),
-                    (BranchSCMHead) head.getTarget(),
-                    source.originOf(head.getRepoOwner(), head.getRepository()),
-                    ChangeRequestCheckoutStrategy.HEAD
-            );
-        }
-
-        @Override
-        public SCMRevision migrate(@NonNull BitbucketSCMSource source,
-                                   @NonNull BitbucketSCMSource.MercurialRevision revision) {
-            PullRequestSCMHead head = migrate(source, (FixLegacy) revision.getHead());
-            return head != null ? new PullRequestSCMRevision<>(
-                    head,
-                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
-                    // so we can leave it null as a placeholder
-                    new BitbucketSCMSource.MercurialRevision(head.getTarget(), (String) null),
-                    new BitbucketSCMSource.MercurialRevision(head, revision.getHash())
             ) : null;
         }
     }

@@ -56,9 +56,6 @@ public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
         if ("git".equals(scm)) {
             return "icon-bitbucket-repo-git";
         }
-        if ("hg".equals(scm)) {
-            return "icon-bitbucket-repo-hg";
-        }
         return "icon-bitbucket-repo";
     }
 
@@ -69,9 +66,6 @@ public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
     public String getAvatarDescription() {
         if ("git".equals(scm)) {
             return Messages.BitbucketRepoMetadataAction_IconDescription_Git();
-        }
-        if ("hg".equals(scm)) {
-            return Messages.BitbucketRepoMetadataAction_IconDescription_Hg();
         }
         return Messages.BitbucketRepoMetadataAction_IconDescription();
     }

@@ -6,18 +6,11 @@
         <dd>These behaviours determine what gets discovered. <strong>If you do not configure at least one discovery
             behaviour then nothing will be found!</strong></dd>
         <dt>General</dt>
-        <dd>These behaviours affect the configuration of each discovered branch / pull request. These behaviours
-            are relevant to both Git and Mercurial based repositories
+        <dd>These behaviours affect the configuration of each discovered branch / pull request.
         </dd>
         <dt>Git</dt>
         <dd>These behaviours affect the configuration of each discovered branch / pull request
-            <strong>if and only if</strong> the repository is a Git repository. If the repository is a Mercurial
-            repository, these behaviours will be silently ignored.
-        </dd>
-        <dt>Mercurial</dt>
-        <dd>These behaviours affect the configuration of each discovered branch / pull request
-            <strong>if and only if</strong> the repository is a Mercurial repository. If the repository is a Git
-            repository, these behaviours will be silently ignored.
+            and are specific to Git semantics.
         </dd>
     </dl>
 </div>

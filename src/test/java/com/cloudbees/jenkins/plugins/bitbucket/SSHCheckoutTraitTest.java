@@ -54,28 +54,6 @@ public class SSHCheckoutTraitTest {
     }
 
     @Test
-    public void given__sshCheckoutWithCredentials__when__decoratingHg__then__credentialsApplied() throws Exception {
-        SSHCheckoutTrait instance = new SSHCheckoutTrait("keyId");
-        BitbucketHgSCMBuilder probe =
-                new BitbucketHgSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"),
-                        new BranchSCMHead("master", BitbucketRepositoryType.MERCURIAL), null, "scanId");
-        assumeThat(probe.credentialsId(), is("scanId"));
-        instance.decorateBuilder(probe);
-        assertThat(probe.credentialsId(), is("keyId"));
-    }
-
-    @Test
-    public void given__sshCheckoutWithAgentKey__when__decoratingHg__then__useAgentKeyApplied() throws Exception {
-        SSHCheckoutTrait instance = new SSHCheckoutTrait(null);
-        BitbucketHgSCMBuilder probe =
-                new BitbucketHgSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"),
-                        new BranchSCMHead("master", BitbucketRepositoryType.MERCURIAL), null, "scanId");
-        assumeThat(probe.credentialsId(), is("scanId"));
-        instance.decorateBuilder(probe);
-        assertThat(probe.credentialsId(), is(nullValue()));
-    }
-
-    @Test
     public void given__descriptor__when__displayingCredentials__then__contractEnforced() throws Exception {
         final SSHCheckoutTrait.DescriptorImpl d = j.jenkins.getDescriptorByType(SSHCheckoutTrait.DescriptorImpl.class);
         final MockFolder dummy = j.createFolder("dummy");

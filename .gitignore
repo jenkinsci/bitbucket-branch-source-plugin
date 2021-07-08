@@ -3,6 +3,7 @@
 .settings
 target
 work
+.checkstyle
 
 # INTELLIJ
 .idea

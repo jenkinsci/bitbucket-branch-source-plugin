@@ -189,9 +189,6 @@ public class PushHookProcessor extends HookProcessor {
                                         case GIT:
                                             result.put(head, new AbstractGitSCMSource.SCMRevisionImpl(head, target.getHash()));
                                             break;
-                                        case MERCURIAL:
-                                            result.put(head, new BitbucketSCMSource.MercurialRevision(head, target.getHash()));
-                                            break;
                                         default:
                                             LOGGER.log(Level.INFO, "Received event for unknown repository type: {0}", type);
                                             break;

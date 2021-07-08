@@ -95,7 +95,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            //TODO: Determine supported by checking if its git/hg bitbucket scm with proper credentials and non wildcard branch
+            //TODO: Determine supported by checking if its git bitbucket scm with proper credentials and non wildcard branch
             return false;
         }
 

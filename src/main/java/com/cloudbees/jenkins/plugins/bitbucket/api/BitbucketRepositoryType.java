@@ -26,17 +26,16 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * @deprecated No longer a choice.
+ */
+@Deprecated
 public enum BitbucketRepositoryType {
 
     /**
      * Git repository.
      */
-    GIT("git"),
-
-    /**
-     * Mercurial repository.
-     */
-    MERCURIAL("hg");
+    GIT("git");
 
     private final String type;
 
@@ -52,8 +51,6 @@ public enum BitbucketRepositoryType {
     public static BitbucketRepositoryType fromString(String type) {
         if (GIT.type.equals(type)) {
             return GIT;
-        } else if (MERCURIAL.type.equals(type)) {
-            return MERCURIAL;
         } else {
             return null;
         }

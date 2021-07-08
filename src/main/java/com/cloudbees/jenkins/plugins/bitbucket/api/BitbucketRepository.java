@@ -32,8 +32,10 @@ import java.util.Map;
 public interface BitbucketRepository {
 
     /**
-     * @return the scm type (git ot hg)
+     * @return the scm type (git)
+     * @deprecated no longer a choice
      */
+    @Deprecated
     String getScm();
 
     /**
