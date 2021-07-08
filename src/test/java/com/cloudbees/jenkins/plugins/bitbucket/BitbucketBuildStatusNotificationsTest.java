@@ -33,13 +33,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-
 import hudson.model.Action;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -64,16 +57,20 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.mockito.Mockito.when;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 public class BitbucketBuildStatusNotificationsTest {
 
