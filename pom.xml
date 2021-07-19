@@ -88,7 +88,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.222.x</artifactId>
-        <version>876.vc43b4c6423b6</version>
+        <version>887.vae9c8ac09ff7</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -209,7 +209,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>8.43</version>
+              <version>8.44</version>
             </dependency>
           </dependencies>
         </plugin>
