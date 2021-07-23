@@ -94,7 +94,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
         SCMHeadEvent.fireNow(new HeadEvent(serverUrl, eventType, pullRequestEvent, origin));
     }
 
-    private static final class HeadEvent extends NativeServerHeadEvent<NativeServerPullRequestEvent> {
+    private static final class HeadEvent extends NativeServerHeadEvent<NativeServerPullRequestEvent> implements HasPullRequests {
         private HeadEvent(String serverUrl, Type type, NativeServerPullRequestEvent payload, String origin) {
             super(serverUrl, type, payload, origin);
         }
@@ -152,6 +152,14 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
             }
 
             return result;
+        }
+
+        @Override
+        public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+            if (Type.REMOVED.equals(getType())) {
+                return Collections.emptySet();
+            }
+            return Collections.singleton(getPayload().getPullRequest());
         }
     }
 }
