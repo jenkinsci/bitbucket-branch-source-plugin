@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import java.util.List;
 import java.util.Map;
 
