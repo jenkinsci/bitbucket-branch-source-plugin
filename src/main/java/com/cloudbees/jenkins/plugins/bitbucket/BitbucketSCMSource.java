@@ -1205,7 +1205,7 @@ public class BitbucketSCMSource extends SCMSource {
 
             try {
                 BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
-                BitbucketTeam team = bitbucket.getTeam();
+                BitbucketTeam team = bitbucket.getWorkspace();
                 List<? extends BitbucketRepository> repositories =
                         bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
                 if (repositories.isEmpty()) {

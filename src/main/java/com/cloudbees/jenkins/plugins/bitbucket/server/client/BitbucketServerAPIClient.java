@@ -746,7 +746,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * There is no such Team concept in Bitbucket Server but Project.
      */
     @Override
-    public BitbucketTeam getTeam() throws IOException {
+    public BitbucketTeam getWorkspace() throws IOException {
         if (userCentric) {
             return null;
         } else {

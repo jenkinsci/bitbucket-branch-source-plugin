@@ -87,7 +87,7 @@ public class BitbucketClientMockUtils {
         when(bitbucket.checkPathExists("707c59ce8292c927dddb6807fcf9c3c5e7c9b00f", "markerfile.txt")).thenReturn(false);
 
         // Team discovering mocks
-        when(bitbucket.getTeam()).thenReturn(getTeam());
+        when(bitbucket.getWorkspace()).thenReturn(getTeam());
         when(bitbucket.getRepositories()).thenReturn(getRepositories(type));
 
         // Auto-registering hooks

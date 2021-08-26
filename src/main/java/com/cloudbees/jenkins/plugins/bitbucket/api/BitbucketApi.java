@@ -237,7 +237,7 @@ public interface BitbucketApi {
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @CheckForNull
-    BitbucketTeam getTeam() throws IOException, InterruptedException;
+    BitbucketTeam getWorkspace() throws IOException, InterruptedException;
 
     /**
      * Returns the team Avatar of the current owner or {@code null} if the current owner is not a team.

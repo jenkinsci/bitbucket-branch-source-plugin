@@ -485,7 +485,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
             BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
-            BitbucketTeam team = bitbucket.getTeam();
+            BitbucketTeam team = bitbucket.getWorkspace();
             if (team != null) {
                 // Navigate repositories of the team
                 listener.getLogger().format("Looking up repositories of team %s%n", repoOwner);
@@ -493,7 +493,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             } else {
                 // Navigate the repositories of the repoOwner as a user
                 listener.getLogger().format("Looking up repositories of user %s%n", repoOwner);
-                request.withRepositories(bitbucket.getRepositories(UserRoleInRepository.OWNER));
+                request.withRepositories(bitbucket.getRepositories(UserRoleInRepository.ADMIN));
             }
             for (BitbucketRepository repo : request.repositories()) {
                 if (request.process(repo.getRepositoryName(), sourceFactory, null, witness)) {
@@ -534,7 +534,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
         BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
-        BitbucketTeam team = bitbucket.getTeam();
+        BitbucketTeam team = bitbucket.getWorkspace();
         if (team != null) {
             String defaultTeamUrl;
             if (team instanceof BitbucketServerProject) {
