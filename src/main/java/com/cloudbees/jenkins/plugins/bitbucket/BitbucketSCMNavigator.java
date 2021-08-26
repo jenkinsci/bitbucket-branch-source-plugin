@@ -493,7 +493,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             } else {
                 // Navigate the repositories of the repoOwner as a user
                 listener.getLogger().format("Looking up repositories of user %s%n", repoOwner);
-                request.withRepositories(bitbucket.getRepositories(UserRoleInRepository.OWNER));
+                request.withRepositories(bitbucket.getRepositories(UserRoleInRepository.ADMIN));
             }
             for (BitbucketRepository repo : request.repositories()) {
                 if (request.process(repo.getRepositoryName(), sourceFactory, null, witness)) {
