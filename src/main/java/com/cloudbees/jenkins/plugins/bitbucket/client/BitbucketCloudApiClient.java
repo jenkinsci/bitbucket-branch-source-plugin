@@ -495,6 +495,21 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         return getBranchesByRef("/refs/branches");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @NonNull
+    public List<BitbucketCloudBranch> getBranchesByFilterText(String filterText) throws IOException, InterruptedException {
+        ArrayList<BitbucketCloudBranch> branches = new ArrayList<>();
+        for (BitbucketCloudBranch branch : getBranches()) {
+            if (branch.getName().contains(filterText)) {
+                branches.add(branch);
+            }
+        }
+        return branches;
+    }
+
     public List<BitbucketCloudBranch> getBranchesByRef(String nodePath) throws IOException, InterruptedException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath + "{?pagelen}")
                 .set("owner", owner)

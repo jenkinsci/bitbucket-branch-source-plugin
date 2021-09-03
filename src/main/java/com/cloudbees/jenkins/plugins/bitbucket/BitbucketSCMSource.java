@@ -41,6 +41,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasRefsChangedRequest;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -568,6 +569,11 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
+                            if (event instanceof HasRefsChangedRequest) {
+                                HasRefsChangedRequest hasRefsChangedRequest = (HasRefsChangedRequest) event;
+                                return hasRefsChangedRequest.getBranches(BitbucketSCMSource.this);
+                            }
+
                             return (Iterable<BitbucketBranch>) buildBitbucketClient().getBranches();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
@@ -792,9 +798,11 @@ public class BitbucketSCMSource extends SCMSource {
     @Override
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
         final BitbucketApi bitbucket = buildBitbucketClient();
-        List<? extends BitbucketBranch> branches = bitbucket.getBranches();
         if (head instanceof PullRequestSCMHead) {
             PullRequestSCMHead h = (PullRequestSCMHead) head;
+            List<BitbucketBranch> branches = new ArrayList<>();
+            branches.addAll(bitbucket.getBranchesByFilterText(h.getBranchName()));
+            branches.addAll(bitbucket.getBranchesByFilterText(h.getTarget().getName()));
             BitbucketCommit targetRevision = findCommit(h.getTarget().getName(), branches, listener);
             if (targetRevision == null) {
                 LOGGER.log(Level.WARNING, "No branch found in {0}/{1} with name [{2}]",
@@ -803,9 +811,10 @@ public class BitbucketSCMSource extends SCMSource {
             }
             BitbucketCommit sourceRevision;
             if (bitbucket instanceof BitbucketCloudApiClient) {
-                branches = head.getOrigin() == SCMHeadOrigin.DEFAULT
-                        ? branches
-                        : buildBitbucketClient(h).getBranches();
+                if (head.getOrigin() != SCMHeadOrigin.DEFAULT) {
+                    branches.clear();
+                    branches.addAll(buildBitbucketClient(h).getBranchesByFilterText(h.getBranchName()));
+                }
                 sourceRevision = findCommit(h.getBranchName(), branches, listener);
             } else {
                 try {
@@ -841,6 +850,7 @@ public class BitbucketSCMSource extends SCMSource {
             }
             return new BitbucketTagSCMRevision(tagHead, revision);
         } else {
+            List<? extends BitbucketBranch> branches = bitbucket.getBranchesByFilterText(head.getName());
             BitbucketCommit revision = findCommit(head.getName(), branches, listener);
             if (revision == null) {
                 LOGGER.log(Level.WARNING, "No branch found in {0}/{1} with name [{2}]",

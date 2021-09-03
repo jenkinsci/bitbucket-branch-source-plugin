@@ -61,10 +61,14 @@ public class BitbucketClientMockUtils {
         when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), nullable(String.class), anyString(), anyString())).thenCallRealMethod();
         // mock branch list
         List<BitbucketCloudBranch> branches = new ArrayList<>();
-        branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
-        branches.add(getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f"));
+        BitbucketCloudBranch branch1 = getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a");
+        BitbucketCloudBranch branch2 = getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f");
+        branches.add(branch1);
+        branches.add(branch2);
         // add branches
         when(bitbucket.getBranches()).thenReturn(branches);
+        when(bitbucket.getBranchesByFilterText("branch1")).thenReturn(Arrays.asList(branch1));
+        when(bitbucket.getBranchesByFilterText("branch2")).thenReturn(Arrays.asList(branch2));
         withMockGitRepos(bitbucket);
 
         if (includePullRequests) {
