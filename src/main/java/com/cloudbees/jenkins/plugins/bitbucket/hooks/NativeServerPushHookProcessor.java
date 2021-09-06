@@ -291,8 +291,21 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         @Override
         public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) throws InterruptedException {
             List<BitbucketBranch> branches = new ArrayList<>();
-            for(final NativeServerRefsChangedEvent.Change change : getPayload()) {
-                branches.add(new BitbucketServerBranch(change.getRef().getDisplayId(), change.getToHash()));
+            for (final NativeServerRefsChangedEvent.Change change : getPayload()) {
+                if ("BRANCH".equals(change.getRef().getType())) {
+                    branches.add(new BitbucketServerBranch(change.getRef().getDisplayId(), change.getToHash()));
+                }
+            }
+            return branches;
+        }
+
+        @Override
+        public Iterable<BitbucketBranch> getTags(BitbucketSCMSource src) throws InterruptedException {
+            List<BitbucketBranch> branches = new ArrayList<>();
+            for (final NativeServerRefsChangedEvent.Change change : getPayload()) {
+                if ("TAG".equals(change.getRef().getType())) {
+                    branches.add(new BitbucketServerBranch(change.getRef().getDisplayId(), change.getToHash()));
+                }
             }
             return branches;
         }

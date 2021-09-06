@@ -77,6 +77,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -569,9 +570,22 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
-                            if (event instanceof HasRefsChangedRequest) {
-                                HasRefsChangedRequest hasRefsChangedRequest = (HasRefsChangedRequest) event;
-                                return hasRefsChangedRequest.getBranches(BitbucketSCMSource.this);
+                            if (event != null) {
+                                Set<BitbucketBranch> branches = new TreeSet<>((a, b) -> a.getName().compareTo(b.getName()));
+                                if (event instanceof HasRefsChangedRequest) {
+                                    HasRefsChangedRequest hasRefsChangedRequest = (HasRefsChangedRequest) event;
+                                    hasRefsChangedRequest.getBranches(BitbucketSCMSource.this).forEach((b) -> branches.add(b));
+                                }
+
+                                if (event instanceof HasPullRequests) {
+                                    HasPullRequests hasPrEvent = (HasPullRequests) event;
+                                    hasPrEvent.getPullRequests(BitbucketSCMSource.this).forEach((pr) -> {
+                                        branches.add(pr.getSource().getBranch());
+                                        branches.add(pr.getDestination().getBranch());
+                                    });
+                                }
+
+                                return branches;
                             }
 
                             return (Iterable<BitbucketBranch>) buildBitbucketClient().getBranches();
@@ -586,6 +600,11 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
+                            if (event instanceof HasRefsChangedRequest) {
+                                HasRefsChangedRequest hasRefsChangedRequest = (HasRefsChangedRequest) event;
+                                return hasRefsChangedRequest.getTags(BitbucketSCMSource.this);
+                            }
+
                             return (Iterable<BitbucketBranch>) buildBitbucketClient().getTags();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
@@ -842,7 +861,7 @@ public class BitbucketSCMSource extends SCMSource {
             );
         } else if(head instanceof BitbucketTagSCMHead) {
             BitbucketTagSCMHead tagHead = (BitbucketTagSCMHead) head;
-            List<? extends BitbucketBranch> tags = bitbucket.getTags();
+            List<? extends BitbucketBranch> tags = bitbucket.getTagsByFilterText(head.getName());
             BitbucketCommit revision = findCommit(head.getName(), tags, listener);
             if (revision == null) {
                 LOGGER.log(Level.WARNING, "No tag found in {0}/{1} with name [{2}]", new Object[] { repoOwner, repository, head.getName() });
