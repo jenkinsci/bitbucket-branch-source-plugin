@@ -49,7 +49,7 @@
   </licenses>
 
   <properties>
-    <revision>2.9.11</revision>
+    <revision>2.9.12</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.version>2.222.4</jenkins.version>
