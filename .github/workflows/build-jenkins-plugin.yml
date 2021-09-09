@@ -1,4 +1,4 @@
-name: GitHub Actions Demo
+name: Build Jenkins Plugin
 
 on: [push]
 
