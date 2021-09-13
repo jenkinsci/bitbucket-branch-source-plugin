@@ -233,6 +233,12 @@ public class BitbucketSCMSource extends SCMSource {
     private transient List<BitbucketHref> cloneLinks = null;
 
     /**
+     * The cache of the bitbucket repository.
+     */
+    @CheckForNull
+    private transient BitbucketRepository bitbucketRepository = null;
+
+    /**
      * Constructor.
      *
      * @param repoOwner  the repository owner.
@@ -497,7 +503,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     public BitbucketRepositoryType getRepositoryType() throws IOException, InterruptedException {
         if (repositoryType == null) {
-            BitbucketRepository r = buildBitbucketClient().getRepository();
+            BitbucketRepository r = getBitbucketRepository();
             repositoryType = BitbucketRepositoryType.fromString(r.getScm());
             Map<String, List<BitbucketHref>> links = r.getLinks();
             if (links != null && links.containsKey("clone")) {
@@ -517,6 +523,13 @@ public class BitbucketSCMSource extends SCMSource {
 
     public BitbucketApi buildBitbucketClient(String repoOwner, String repository) {
         return BitbucketApiFactory.newInstance(getServerUrl(), authenticator(), repoOwner, repository);
+    }
+
+    private BitbucketRepository getBitbucketRepository() throws IOException, InterruptedException {
+        if(bitbucketRepository==null) {
+            bitbucketRepository = buildBitbucketClient().getRepository();
+        }
+        return bitbucketRepository;
     }
 
     @Override
@@ -766,7 +779,7 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().println("Looking up " + fullName + " for branches");
 
         final BitbucketApi bitbucket = buildBitbucketClient();
-        Map<String, List<BitbucketHref>> links = bitbucket.getRepository().getLinks();
+        Map<String, List<BitbucketHref>> links = getBitbucketRepository().getLinks();
         if (links != null && links.containsKey("clone")) {
             cloneLinks = links.get("clone");
         }
@@ -794,7 +807,7 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().println("Looking up " + fullName + " for tags");
 
         final BitbucketApi bitbucket = buildBitbucketClient();
-        Map<String, List<BitbucketHref>> links = bitbucket.getRepository().getLinks();
+        Map<String, List<BitbucketHref>> links = getBitbucketRepository().getLinks();
         if (links != null && links.containsKey("clone")) {
             cloneLinks = links.get("clone");
         }
@@ -950,7 +963,7 @@ public class BitbucketSCMSource extends SCMSource {
         if (cloneLinks == null) {
             BitbucketApi bitbucket = buildBitbucketClient();
             try {
-                BitbucketRepository r = bitbucket.getRepository();
+                BitbucketRepository r = getBitbucketRepository();
                 Map<String, List<BitbucketHref>> links = r.getLinks();
                 if (links != null && links.containsKey("clone")) {
                     cloneLinks = links.get("clone");
@@ -1044,7 +1057,7 @@ public class BitbucketSCMSource extends SCMSource {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
         List<Action> result = new ArrayList<>();
         final BitbucketApi bitbucket = buildBitbucketClient();
-        BitbucketRepository r = bitbucket.getRepository();
+        BitbucketRepository r = getBitbucketRepository();
         Map<String, List<BitbucketHref>> links = r.getLinks();
         if (links != null && links.containsKey("clone")) {
             cloneLinks = links.get("clone");
