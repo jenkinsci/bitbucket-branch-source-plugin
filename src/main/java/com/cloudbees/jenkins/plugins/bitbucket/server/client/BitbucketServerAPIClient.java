@@ -1203,7 +1203,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             throws IOException {
         CloseableHttpClient client = getHttpClient(httpMethod);
         CloseableHttpResponse response = client.execute(httpMethod, context);
-        while (response.getStatusLine().getStatusCode() == TOO_MANY_REQUESTS_HTTP_STATUS) {
+        int count = 0;
+        while (response.getStatusLine().getStatusCode() == TOO_MANY_REQUESTS_HTTP_STATUS && count<300) {
             response.close();
             httpMethod.releaseConnection();
 
@@ -1212,13 +1213,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
              * sec wait and put code to wait till expiration time is over. It should also
              * fix the wait for ever loop.
              */
-            LOGGER.fine("Bitbucket server API rate limit reached, sleeping for 5 sec then retry...");
+            LOGGER.fine("Bitbucket server API rate limit reached, sleeping for " + REQUEST_WAIT_TIME_DEFAULT + " milliseconds before retrying...");
             try {
                 Thread.sleep(REQUEST_WAIT_TIME_DEFAULT);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+            count++;
             response = client.execute(httpMethod, context);
         }
         return response;
