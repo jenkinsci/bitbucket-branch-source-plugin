@@ -565,7 +565,8 @@ public class BitbucketSCMSource extends SCMSource {
                         CredentialsNameProvider.name(scanCredentials));
             }
             // this has the side effect of ensuring that repository type is always populated.
-            listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
+            final BitbucketRepositoryType repositoryType = getRepositoryType();
+            listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(repositoryType != null ? repositoryType.name() : "Unknown"));
 
             // populate the request with its data sources
             if (request.isFetchPRs()) {
