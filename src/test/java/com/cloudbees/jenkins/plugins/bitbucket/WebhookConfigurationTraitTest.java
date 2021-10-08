@@ -11,10 +11,6 @@ public class WebhookConfigurationTraitTest {
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
 
-    /**
-     * Test the default empty value
-     * @throws Exception
-     */
     @Test
     public void ignoredCommittersDefault()
             throws Exception {
@@ -25,10 +21,6 @@ public class WebhookConfigurationTraitTest {
         assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), "");
     }
 
-    /**
-     * Test a set value
-     * @throws Exception
-     */
     @Test
     public void ignoredCommittersWithValue()
             throws Exception {
