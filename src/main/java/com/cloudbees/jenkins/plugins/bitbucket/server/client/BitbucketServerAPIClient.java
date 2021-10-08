@@ -532,7 +532,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         int status = getRequestStatus(url);
         if (HttpStatus.SC_OK == status) {
             return true;
-            // BitBucket returns UNAUTHORIZED when no credentials are provided
+            // Bitbucket returns UNAUTHORIZED when no credentials are provided
             // https://support.atlassian.com/bitbucket-cloud/docs/use-bitbucket-rest-api-version-1/
         } else if (HttpStatus.SC_NOT_FOUND == status || HttpStatus.SC_UNAUTHORIZED == status) {
             return false;

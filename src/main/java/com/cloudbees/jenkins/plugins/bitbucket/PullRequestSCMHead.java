@@ -41,7 +41,7 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
- * {@link SCMHead} for a BitBucket Pull request
+ * {@link SCMHead} for a Bitbucket pull request
  *
  * @since 2.0.0
  */

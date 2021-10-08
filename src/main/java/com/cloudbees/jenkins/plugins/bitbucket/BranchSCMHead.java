@@ -30,7 +30,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
 /**
- * {@link SCMHead} for a BitBucket branch.
+ * {@link SCMHead} for a Bitbucket branch.
  *
  * @since 2.0.0
  */

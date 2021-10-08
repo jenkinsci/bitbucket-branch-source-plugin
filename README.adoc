@@ -1,4 +1,4 @@
-== BitBucket Branch Source Plugin
+== Bitbucket Branch Source Plugin
 
 image:https://img.shields.io/jenkins/plugin/v/cloudbees-bitbucket-branch-source["Jenkins Plugin", link="https://plugins.jenkins.io/cloudbees-bitbucket-branch-source"]
 image:https://img.shields.io/jenkins/plugin/i/cloudbees-bitbucket-branch-source?color=blue["Jenkins Plugin Installs", link="https://plugins.jenkins.io/cloudbees-bitbucket-branch-source"]
@@ -11,7 +11,7 @@ link:./docs/USER_GUIDE.adoc[Browse the user guide here]
 
 === Notes
 
-* Unlike GitHub, in BitBucket, https://bitbucket.org/site/master/issues/4828/team-admins-dont-have-read-access-to-forks[team admins do not have access to forks].
+* Unlike GitHub, in Bitbucket, https://bitbucket.org/site/master/issues/4828/team-admins-dont-have-read-access-to-forks[team admins do not have access to forks].
 This means that when you have a private repository, or a private fork of a public repository, the team admin will not be able to see the PRs within the fork.
 
 === How-to run and test with Bitbucket Server locally
