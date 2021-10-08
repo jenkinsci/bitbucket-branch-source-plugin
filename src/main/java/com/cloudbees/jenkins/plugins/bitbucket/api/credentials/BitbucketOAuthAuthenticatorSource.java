@@ -40,7 +40,7 @@ public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource
      * BitbucketServer instances make sense
      *
      * @param ctx the context
-     * @return whether or not this can authenticate given the context
+     * @return whether this can authenticate given the context
      */
     @Override
     public boolean isFit(AuthenticationTokenContext ctx) {

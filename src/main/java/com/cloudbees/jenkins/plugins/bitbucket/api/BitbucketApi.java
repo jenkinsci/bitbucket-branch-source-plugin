@@ -295,7 +295,7 @@ public interface BitbucketApi {
      * Returns a list of all children file for the given folder.
      *
      * @param parent to list
-     * @return a iterable of {@link SCMFile} children of the given folder.
+     * @return an iterable of {@link SCMFile} children of the given folder.
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */

@@ -141,7 +141,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
 
     /**
      * Returns the {@link BitbucketSCMSource} that this request is against (primarily to allow resolving credentials
-     * against {@link SCMSource#getOwner()}.
+     * against {@link SCMSource#getOwner()}).
      *
      * @return the {@link BitbucketSCMSource} that this request is against
      */
@@ -168,7 +168,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
      *                      the {@link #remote()} or {@code null} to let the git client choose between providing its own
      *                      credentials or connecting anonymously.
      * @param protocol the {@link BitbucketRepositoryProtocol} of the {@link Credentials} to use or {@code null}
-     *                 to detect the the protocol based on the credentialsId. Defaults to HTTP if credentials are
+     *                 to detect the protocol based on the credentialsId. Defaults to HTTP if credentials are
      *                 {@code null}.  Enables support for blank SSH credentials.
      * @return {@code this} for method chaining.
      */

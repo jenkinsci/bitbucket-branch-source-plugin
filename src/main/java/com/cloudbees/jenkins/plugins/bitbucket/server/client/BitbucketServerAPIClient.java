@@ -343,7 +343,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private void setupPullRequest(BitbucketServerPullRequest pullRequest, BitbucketServerEndpoint endpoint) throws IOException {
-        // set commit closure to make commit information available when need, in a similar way to when request branches
+        // set commit closure to make commit information available when needed, in a similar way to when request branches
         setupClosureForPRBranch(pullRequest);
 
         if (endpoint != null) {
@@ -381,7 +381,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     /**
-     * Make available commit informations in a lazy way.
+     * Make available commit information in a lazy way.
      *
      * @author Nikolas Falco
      */
@@ -532,7 +532,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         int status = getRequestStatus(url);
         if (HttpStatus.SC_OK == status) {
             return true;
-            // BitBucket return UNAUTHORIZED when no credentials are provided
+            // BitBucket returns UNAUTHORIZED when no credentials are provided
             // https://support.atlassian.com/bitbucket-cloud/docs/use-bitbucket-rest-api-version-1/
         } else if (HttpStatus.SC_NOT_FOUND == status || HttpStatus.SC_UNAUTHORIZED == status) {
             return false;

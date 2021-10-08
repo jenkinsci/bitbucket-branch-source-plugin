@@ -321,7 +321,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     /**
-     * Make available commit informations in a lazy way.
+     * Make available commit information in a lazy way.
      *
      * @author Nikolas Falco
      */

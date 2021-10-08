@@ -115,7 +115,7 @@ public class AvatarCache implements UnprotectedRootAction {
 
     /**
      * The time this service was started (used as the last modified for generated
-     * avatars.
+     * avatars).
      */
     private final long startedTime;
 
@@ -347,7 +347,7 @@ public class AvatarCache implements UnprotectedRootAction {
         final CacheEntry avatar = getCacheEntry(key, null);
         final long since = req.getDateHeader("If-Modified-Since");
 
-        // If no avatar, all it unmodified
+        // If no avatar, all is unmodified
         if (avatar == null || !avatar.canFetch()) {
             if (startedTime <= since) {
                 return new HttpResponse() {

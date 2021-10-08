@@ -2,11 +2,11 @@
 
 [IMPORTANT]
 =====================================================================
-On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7] which removed some undocumented features with regards to pull requests.
+On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7] which removed some undocumented features in regard to pull requests.
 
 . BitBucket Server Pipeline jobs can no longer perform a lightweight checkout of the Jenkinsfile if you are using the merge strategy for builds.
 .. BitBucket Server no longer stores the merged result of a PR to link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&[improve performance]
-.. BitBucket Server Pipeline jobs will automatically fallback to heavyweight checkout
+.. BitBucket Server Pipeline jobs will automatically fall back to heavyweight checkout
 . BitBucket Server 7.x no longer automatically creates the required refs for pull requests
 .. For Bitbucket Server Pipeline jobs to function for pull requests on BitBucket Server 7.x you need to enable "Call Changes api" option in the plugin configuration
 
@@ -83,12 +83,12 @@ image::images/screenshot-9.png[scaledwidth=90%]
 == Webhooks registering
 
 The use of https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html[Bitbucket webhooks]
-allows to trigger builds on branches and pull requests just when a new commit is done. Bitbucket plugin expose a special
+allows to trigger builds on branches and pull requests just when a new commit is done. Bitbucket plugin exposes a special
 service to listen to this webhook requests and acts accordingly by triggering a new reindex and finally
 triggering builds on matching branches or pull requests.
 
 For both _Bitbucket Multibranch_ projects and _Bitbucket Team_ projects there is an option in the configuration page
-to let Jenkins to automatically register the webhooks in all involved repositories.
+to let Jenkins automatically register the webhooks in all involved repositories.
 
 image::images/screenshot-4.png[scaledwidth=90%]
 
@@ -104,7 +104,7 @@ two credentials to configure:
 . *Scan Credentials*: credentials used to access Bitbucket API in order to discover repositories, branches and pull requests.
 If not set then anonymous access is used, so only public repositories, branches and pull requests are discovered and managed. Note that the
 Webhooks auto-register feature requires scan credentials to be set. Only HTTP or OAuth credentials are accepted in this field.
-. *Checkout Credentials*: credentials used to checkout sources once the repository, branch or pull request is discovered. HTTP, SSH and OAuthcredentials
+. *Checkout Credentials*: credentials used to check out sources once the repository, branch or pull request is discovered. HTTP, SSH and OAuth credentials
 are allowed. If not set then _Scan Credentials_ are used.
 
 image::images/screenshot-3.png[scaledwidth=90%]
