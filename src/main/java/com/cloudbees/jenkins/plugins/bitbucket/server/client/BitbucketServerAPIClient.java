@@ -850,6 +850,10 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     protected String getRequest(String path) throws IOException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
+        if (path.startsWith("/rest/api") && System.getProperty("BITBUCKET_HTTP_CACHE_URL") != null) {
+            // System.setProperty("BITBUCKET_HTTP_CACHE_URL","http://{service_name}.{namespace}.svc.cluster.local:<service-port>")
+            httpget = new HttpGet(System.getProperty("BITBUCKET_HTTP_CACHE_URL") + path);
+        }
 
         if (authenticator != null) {
             authenticator.configureRequest(httpget);
