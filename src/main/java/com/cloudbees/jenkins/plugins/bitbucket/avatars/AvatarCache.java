@@ -505,7 +505,7 @@ public class AvatarCache implements UnprotectedRootAction {
         /**
          * Check if this entry is fetch-able
          *
-         * @return
+         * @return whether the entry can be fetched
          */
         public boolean canFetch() {
             return (source != null && source.canFetch());

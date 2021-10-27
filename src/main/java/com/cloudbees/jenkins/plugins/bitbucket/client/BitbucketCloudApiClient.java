@@ -311,7 +311,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      * PRs with missing source / destination branch are invalid and should be ignored.
      *
      * @param pr a {@link BitbucketPullRequest}
-     * @return
+     * @return whether the PR should be ignored
      */
     private boolean shouldIgnore(BitbucketPullRequest pr) {
         return pr.getSource().getRepository() == null
