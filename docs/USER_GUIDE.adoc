@@ -2,13 +2,14 @@
 
 [IMPORTANT]
 =====================================================================
-On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7] which removed some undocumented features in regard to pull requests.
+On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7] which removed some undocumented features related to pull requests.
 
-. Bitbucket Server Pipeline jobs can no longer perform a lightweight checkout of the Jenkinsfile if you are using the merge strategy for builds.
-.. Bitbucket Server no longer stores the merged result of a PR to link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&[improve performance]
-.. Bitbucket Server Pipeline jobs will automatically fall back to heavyweight checkout
-. Bitbucket Server 7.x no longer automatically creates the required refs for pull requests
-.. For Bitbucket Server Pipeline jobs to function for pull requests on Bitbucket Server 7.x you need to enable "Call Changes api" option in the plugin configuration
+. With Bitbucket Server 7.x, Jenkins Pipeline jobs can no longer perform a lightweight checkout of the `Jenkinsfile` if you are using the merge strategy for builds.
+.. This is due to Bitbucket Server 7.x no longer storing the merge commit for PRs to `refs/pull-requests/*/merge` which was a prerequisite for lightweight checkout.
+.. Bitbucket Server Pipeline jobs will automatically fall back to heavyweight checkout.
+.. link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-2389584[Atlassian has explained their reasons for making this change] and has made it clear they will not be re-adding this behavior.
+. For Jenkins Pipeline jobs to function for pull requests on Bitbucket Server 7.x, you need to enable "Call Changes api" option in the plugin configuration.
+.. Bitbucket Server 7.x no longer automatically creates the required refs for pull requests. Calls to this new API are required to trigger ref creation.
 
 =====================================================================
 
