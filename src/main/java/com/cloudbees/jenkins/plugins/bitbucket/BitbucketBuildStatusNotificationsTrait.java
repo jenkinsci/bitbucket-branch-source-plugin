@@ -46,6 +46,11 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
+     * Should {@code NOT_BUILT} builds be communicated as failed to Bitbucket
+     */
+    private boolean sendFailureNotificationForNotBuiltBuild;
+
+    /**
      * Constructor.
      *
      */
@@ -68,12 +73,26 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
         return this.sendSuccessNotificationForUnstableBuild;
     }
 
+    @DataBoundSetter
+    public void setSendFailureNotificationForNotBuiltBuild(boolean isSendFailure) {
+        sendFailureNotificationForNotBuiltBuild = isSendFailure;
+    }
+
+    /**
+     * @return if {@code NOT_BUILT} builds will be communicated as failed
+     */
+    public boolean getSendFailureNotificationForNotBuiltBuild() {
+        return this.sendFailureNotificationForNotBuiltBuild;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
+        ((BitbucketSCMSourceContext) context)
+                .withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild())
+                .withSendFailureNotificationForNotBuiltBuild(getSendFailureNotificationForNotBuiltBuild());
     }
 
     /**

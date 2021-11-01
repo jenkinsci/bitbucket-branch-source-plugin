@@ -147,8 +147,15 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "There was a failure building this commit.");
             state = FAILED_STATE;
         } else if (Result.NOT_BUILT.equals(result)) {
-            // Bitbucket Cloud and Server support different build states.
-            state = (bitbucket instanceof BitbucketCloudApiClient) ? STOPPED_STATE : SUCCESSFUL_STATE;
+            BitbucketSCMSource source = (BitbucketSCMSource) s;
+            BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
+                    .withTraits(source.getTraits());
+            if (sourceContext.sendFailureNotificationForNotBuiltBuild()) {
+                state = FAILED_STATE;
+            } else {
+                // Bitbucket Cloud and Server support different build states.
+                state = (bitbucket instanceof BitbucketCloudApiClient) ? STOPPED_STATE : SUCCESSFUL_STATE;
+            }
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
         } else if (result != null) { // ABORTED etc.
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");

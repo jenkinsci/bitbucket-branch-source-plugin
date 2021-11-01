@@ -3,4 +3,7 @@
   <f:entry title="${%Communicate Unstable builds to Bitbucket as Successful}" field="sendSuccessNotificationForUnstableBuild">
     <f:checkbox/>
   </f:entry>
+  <f:entry title="${%Communicate NOT_BUILT builds to Bitbucket as Failed}" field="sendFailureNotificationForNotBuiltBuild">
+    <f:checkbox/>
+  </f:entry>
 </j:jelly>

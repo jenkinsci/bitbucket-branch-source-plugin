@@ -92,6 +92,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
+     * {@code true} if {@code NOT_BUILT} builds should be considered as failed by Bitbucket.
+     */
+    private boolean sendFailureNotificationForNotBuiltBuild;
+
+    /**
      * Constructor.
      *
      * @param criteria (optional) criteria.
@@ -213,6 +218,15 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean sendSuccessNotificationForUnstableBuild() {
         return sendSuccessNotificationForUnstableBuild;
+    }
+
+    /**
+     * Returns {@code true} if {@code NOT_BUILT} builds should be considered as failed by Bitbucket.
+     *
+     * @return {@code true} if {@code NOT_BUILT} builds should be considered as failed by Bitbucket.
+     */
+    public final boolean sendFailureNotificationForNotBuiltBuild() {
+        return sendFailureNotificationForNotBuiltBuild;
     }
 
     /**
@@ -349,6 +363,18 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final BitbucketSCMSourceContext withSendSuccessNotificationForUnstableBuild(boolean isUnstableBuildSuccess) {
         this.sendSuccessNotificationForUnstableBuild = isUnstableBuildSuccess;
+        return this;
+    }
+
+    /**
+     * Defines behaviour of {@code NOT_BUILT} builds in Bitbucket.
+     *
+     * @param isNotBuiltBuildFailure {@code true} to consider {@code NOT_BUILT} builds failed when notifying Bitbucket.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext withSendFailureNotificationForNotBuiltBuild(boolean isNotBuiltBuildFailure) {
+        this.sendFailureNotificationForNotBuiltBuild = isNotBuiltBuildFailure;
         return this;
     }
 
