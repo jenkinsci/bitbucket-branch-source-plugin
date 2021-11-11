@@ -1,0 +1,27 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:entry title="${%Branch Include}" field="includes">
+    <f:textbox default="*"/>
+  </f:entry>
+  <f:entry title="${%Branch Exclude}" field="excludes">
+    <f:textbox default=""/>
+  </f:entry>
+  <f:entry title="${%Tag Include}" field="tagIncludes">
+    <f:textbox default=""/>
+  </f:entry>
+  <f:entry title="${%Tag Exclude}" field="tagExcludes">
+    <f:textbox default=""/>
+  </f:entry>
+  <f:entry title="${%PR Origin Include}" field="prOriginIncludes">
+    <f:textbox default=""/>
+  </f:entry>
+  <f:entry title="${%PR Origin Exclude}" field="prOriginExcludes">
+    <f:textbox default=""/>
+  </f:entry>
+  <f:entry title="${%PR Destination Include}" field="prDestinationIncludes">
+    <f:textbox default=""/>
+  </f:entry>
+  <f:entry title="${%PR Destination Exclude}" field="prDestinationExcludes">
+    <f:textbox default=""/>
+  </f:entry>
+</j:jelly>
