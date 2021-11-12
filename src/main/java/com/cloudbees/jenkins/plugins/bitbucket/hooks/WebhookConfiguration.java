@@ -58,9 +58,9 @@ public class WebhookConfiguration {
     ));
 
     /**
-     * The list of events available in Bitbucket Server v7.x.
+     * The list of events available in Bitbucket Server.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(Arrays.asList(
+    private static final List<String> NATIVE_SERVER_EVENTS = Collections.unmodifiableList(Arrays.asList(
             HookEventType.SERVER_REFS_CHANGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
@@ -74,14 +74,19 @@ public class WebhookConfiguration {
     ));
 
     /**
+     * The list of events available in Bitbucket Server v7.x.
+     */
+    private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS.subList(0, 2));
+
+    /**
      * The list of events available in Bitbucket Server v6.x.  Applies to v5.10+.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v6 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 7));
+    private static final List<String> NATIVE_SERVER_EVENTS_v6 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS.subList(0, 7));
 
     /**
      * The list of events available in Bitbucket Server v5.9-.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 5));
+    private static final List<String> NATIVE_SERVER_EVENTS_v5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS.subList(0, 5));
 
     /**
      * The title of the webhook.

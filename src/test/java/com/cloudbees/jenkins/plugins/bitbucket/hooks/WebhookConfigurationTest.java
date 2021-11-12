@@ -77,7 +77,9 @@ public class WebhookConfigurationTest {
         when(owner.getServerUrl()).thenReturn(server);
         when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
         BitbucketWebHook hook = whc.getHook(owner);
-        assertTrue(hook.getEvents().contains(HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()));
+        assertTrue(hook.getEvents().size() == 2);
+        assertTrue(hook.getEvents().contains(HookEventType.SERVER_REFS_CHANGED.getKey()));
+        assertTrue(hook.getEvents().contains(HookEventType.SERVER_PULL_REQUEST_OPENED.getKey()));
     }
 
 }
