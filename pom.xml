@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.19</version>
+    <version>4.30</version>
     <relativePath />
   </parent>
 
@@ -49,7 +49,7 @@
   </licenses>
 
   <properties>
-    <revision>2.9.10</revision>
+    <revision>2.9.12</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.version>2.277.4</jenkins.version>
@@ -131,6 +131,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-basic-steps</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>handy-uri-templates-2-api</artifactId>
       <version>2.1.8-1.0</version>
@@ -204,7 +209,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>8.44</version>
+              <version>9.1</version>
             </dependency>
           </dependencies>
         </plugin>

@@ -86,7 +86,7 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
     @Override
     public String getAuthorEmail() {
-        // return null because BitBucket Cloud hides users emails
+        // return null because Bitbucket Cloud hides users emails
         return null;
     }
 

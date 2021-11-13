@@ -191,7 +191,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     if (endpoint != null && endpoint.getServerVersion() != BitbucketServerVersion.VERSION_7) {
                         ref = "pull-requests/" + pr.getId() + "/merge";
                     } else {
-                        // returning null to fallback to heavyweight checkout
+                        // returning null to fall back to heavyweight checkout
                         return null;
                     }
                 }
