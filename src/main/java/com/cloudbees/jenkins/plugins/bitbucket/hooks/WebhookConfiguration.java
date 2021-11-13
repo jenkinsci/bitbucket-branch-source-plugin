@@ -76,7 +76,7 @@ public class WebhookConfiguration {
     /**
      * The list of events available in Bitbucket Server v7.x.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS.subList(0, 5));
+    private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS.subList(0, 7));
 
     /**
      * The list of events available in Bitbucket Server v6.x.  Applies to v5.10+.
