@@ -31,7 +31,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.TagSCMHead;
 
 /**
- * {@link SCMHead} for a BitBucket tags.
+ * {@link SCMHead} for a Bitbucket tags.
  *
  * @since 2.2.11
  */
@@ -84,6 +84,6 @@ public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
      */
     @Override
     public String getPronoun() {
-        return Messages.BitBucketTagSCMHead_Pronoun();
+        return Messages.BitbucketTagSCMHead_Pronoun();
     }
 }

@@ -260,7 +260,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
 
     /**
      * We need a single thread executor to run webhooks operations in background but in order.
-     * Registrations and removals need to be done in the same order than they were called by the item listener.
+     * Registrations and removals need to be done in the same order as they were called by the item listener.
      */
     private static synchronized ExecutorService getExecutorService() {
         if (executorService == null) {
