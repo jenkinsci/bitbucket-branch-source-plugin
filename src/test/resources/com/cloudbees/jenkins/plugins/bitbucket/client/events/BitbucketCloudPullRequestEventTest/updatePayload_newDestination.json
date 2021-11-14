@@ -79,7 +79,7 @@
         }
       },
       "branch": {
-        "name": "master"
+        "name": "main"
       },
       "repository": {
         "links": {

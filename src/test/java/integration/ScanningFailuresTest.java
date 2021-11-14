@@ -106,7 +106,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -145,7 +145,7 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
 
         // an error in getBranches()
@@ -162,7 +162,7 @@ public class ScanningFailuresTest {
             assertThat(mp.getIndexing().getResult(), is(expectedResult));
             assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), containsString(message));
         }
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
     }
@@ -181,7 +181,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -220,7 +220,7 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
 
         // an error in checkPathExists(...)
@@ -229,7 +229,7 @@ public class ScanningFailuresTest {
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.FAILURE));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), containsString(message));
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
     }
@@ -248,7 +248,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -287,7 +287,7 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(master.getLastBuild(), notNullValue());
         assertThat(master.getNextBuildNumber(), is(2));
@@ -298,7 +298,7 @@ public class ScanningFailuresTest {
 
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
         assertThat(master.getLastBuild(), notNullValue());
@@ -319,7 +319,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -358,7 +358,7 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(master.getLastBuild(), notNullValue());
         assertThat(master.getNextBuildNumber(), is(2));
@@ -369,7 +369,7 @@ public class ScanningFailuresTest {
 
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, nullValue());
     }
 }

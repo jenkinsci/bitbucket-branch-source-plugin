@@ -278,7 +278,7 @@ public class BitbucketSCMSourceTest {
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("*")),
-                                hasProperty("excludes", is("master"))
+                                hasProperty("excludes", is("main"))
                         ),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
@@ -290,7 +290,7 @@ public class BitbucketSCMSourceTest {
         assertThat(instance.getBitbucketServerUrl(), is(nullValue()));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
         assertThat(instance.getIncludes(), is("*"));
-        assertThat(instance.getExcludes(), is("master"));
+        assertThat(instance.getExcludes(), is("main"));
         assertThat(instance.isAutoRegisterHook(), is(false));
     }
 

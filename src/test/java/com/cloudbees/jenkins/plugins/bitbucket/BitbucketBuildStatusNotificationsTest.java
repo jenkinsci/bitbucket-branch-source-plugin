@@ -100,7 +100,7 @@ public class BitbucketBuildStatusNotificationsTest {
     private WorkflowMultiBranchProject prepareFirstCheckoutCompletedInvisibleActionTest(String dsl) throws Exception {
         String repoOwner = "bob";
         String repositoryName = "foo";
-        String branchName = "master";
+        String branchName = "main";
         String jenkinsfile = "Jenkinsfile";
         sampleRepo.init();
         sampleRepo.write(jenkinsfile, dsl);
@@ -157,7 +157,7 @@ public class BitbucketBuildStatusNotificationsTest {
         owner.getComputation().writeWholeLogTo(System.out);
         assertThat(owner.getIndexing().getResult(), is(Result.SUCCESS));
         r.waitUntilNoActivity();
-        WorkflowJob master = owner.getItem("master");
+        WorkflowJob master = owner.getItem("main");
         WorkflowRun run = master.getLastBuild();
         run.writeWholeLogTo(System.out);
         assertThat(run.getResult(), is(Result.SUCCESS));
@@ -175,7 +175,7 @@ public class BitbucketBuildStatusNotificationsTest {
         owner.getComputation().writeWholeLogTo(System.out);
         assertThat(owner.getIndexing().getResult(), is(Result.SUCCESS));
         r.waitUntilNoActivity();
-        WorkflowJob master = owner.getItem("master");
+        WorkflowJob master = owner.getItem("main");
         WorkflowRun run = master.getLastBuild();
         run.writeWholeLogTo(System.out);
         assertThat(run.getResult(), is(Result.SUCCESS));
