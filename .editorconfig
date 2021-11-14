@@ -12,7 +12,7 @@ indent_style = space
 indent_size = 4
 indent_style = tab
 
-[*.java]
+[*.{java,html}]
 indent_size = 4
 
 [*.md]
