@@ -1,3 +1,7 @@
+.DS_Store
+*~
+
+# Eclipse
 .project
 .classpath
 .settings
@@ -5,8 +9,8 @@ target
 work
 .checkstyle
 
-# INTELLIJ
-.idea
+# IntelliJ
+/.idea/
 *.iml
 *.iws
 *.ipr
