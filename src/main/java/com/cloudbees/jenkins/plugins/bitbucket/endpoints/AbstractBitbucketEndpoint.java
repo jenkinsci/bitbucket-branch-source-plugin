@@ -98,7 +98,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     /**
      * A Jenkins Server Root URL should end with a slash to use with webhooks.
      *
-     * @param rootUrl the original value of an URL which would be normalized
+     * @param rootUrl the original value of a URL which would be normalized
      * @return the normalized URL ending with a slash
      */
     @NonNull

@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
@@ -46,7 +47,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullR
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHooks;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositorySource;
@@ -128,7 +128,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
     private static final HttpHost API_HOST = HttpHost.create("https://api.bitbucket.org");
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
-    private static final String V2_TEAMS_API_BASE_URL = "https://api.bitbucket.org/2.0/teams";
+    private static final String V2_WORKSPACES_API_BASE_URL = "https://api.bitbucket.org/2.0/workspaces";
     private static final String REPO_URL_TEMPLATE = V2_API_BASE_URL + "{/owner,repo}";
     private static final int API_RATE_LIMIT_CODE = 429;
     // Limit images to 16k
@@ -298,10 +298,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         } while (page.getNext() != null);
 
         // PRs with missing destination branch are invalid and should be ignored.
-        pullRequests.removeIf(pr -> pr.getSource().getRepository() == null
-                || pr.getSource().getCommit() == null
-                || pr.getDestination().getBranch() == null
-                || pr.getDestination().getCommit() == null);
+        pullRequests.removeIf(this::shouldIgnore);
 
         for (BitbucketPullRequestValue pullRequest : pullRequests) {
             setupClosureForPRBranch(pullRequest);
@@ -311,7 +308,20 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     /**
-     * Make available commit informations in a lazy way.
+     * PRs with missing source / destination branch are invalid and should be ignored.
+     *
+     * @param pr a {@link BitbucketPullRequest}
+     * @return whether the PR should be ignored
+     */
+    private boolean shouldIgnore(BitbucketPullRequest pr) {
+        return pr.getSource().getRepository() == null
+            || pr.getSource().getCommit() == null
+            || pr.getDestination().getBranch() == null
+            || pr.getDestination().getCommit() == null;
+    }
+
+    /**
+     * Make available commit information in a lazy way.
      *
      * @author Nikolas Falco
      */
@@ -665,14 +675,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Override
     @CheckForNull
     public BitbucketTeam getTeam() throws IOException, InterruptedException {
-        final String url = UriTemplate.fromTemplate(V2_TEAMS_API_BASE_URL + "{/owner}")
+        final String url = UriTemplate.fromTemplate(V2_WORKSPACES_API_BASE_URL + "{/owner}")
                 .set("owner", owner)
                 .expand();
 
         Callable<BitbucketTeam> request = () -> {
             try {
                 String response = getRequest(url);
-                return JsonParser.toJava(response, BitbucketCloudTeam.class);
+                return JsonParser.toJava(response, BitbucketCloudWorkspace.class);
             } catch (FileNotFoundException e) {
                 return null;
             } catch (IOException e) {

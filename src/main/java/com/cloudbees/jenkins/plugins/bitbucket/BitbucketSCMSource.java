@@ -40,6 +40,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -198,7 +199,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     /**
      * Bitbucket Server URL.
-     * An specific HTTP client is used if this field is not null.
+     * A specific HTTP client is used if this field is not null.
      * This value (or serverUrl if this is null) is used in particular
      * to find the current endpoint configuration for this server.
      */
@@ -357,7 +358,7 @@ public class BitbucketSCMSource extends SCMSource {
             setServerUrl(endpoint.getServerUrl());
             return;
         }
-        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring an url missing "
+        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
                 + "from the global configuration.", url);
         setServerUrl(url);
     }
@@ -541,7 +542,7 @@ public class BitbucketSCMSource extends SCMSource {
                 listener.getLogger().format("Connecting to %s using %s%n", getServerUrl(),
                         CredentialsNameProvider.name(scanCredentials));
             }
-            // this has the side-effect of ensuring that repository type is always populated.
+            // this has the side effect of ensuring that repository type is always populated.
             listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
 
             // populate the request with its data sources
@@ -550,6 +551,11 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketPullRequest> create() {
                         try {
+                            if (event instanceof HasPullRequests) {
+                                HasPullRequests hasPrEvent = (HasPullRequests) event;
+                                return hasPrEvent.getPullRequests(BitbucketSCMSource.this);
+                            }
+
                             return (Iterable<BitbucketPullRequest>) buildBitbucketClient().getPullRequests();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
@@ -802,8 +808,13 @@ public class BitbucketSCMSource extends SCMSource {
                         : buildBitbucketClient(h).getBranches();
                 sourceRevision = findCommit(h.getBranchName(), branches, listener);
             } else {
-                final List<? extends BitbucketPullRequest> pullRequests = bitbucket.getPullRequests();
-                sourceRevision = findPRCommit(h.getId(), pullRequests, listener);
+                try {
+                    BitbucketPullRequest pr = bitbucket.getPullRequestById(Integer.parseInt(h.getId()));
+                    sourceRevision = findPRCommit(pr, listener);
+                } catch (NumberFormatException nfe) {
+                    LOGGER.log(Level.WARNING, "Cannot parse the PR id {0}", h.getId());
+                    sourceRevision = null;
+                }
             }
             if (sourceRevision == null) {
                 LOGGER.log(Level.WARNING, "No revision found in {0}/{1} for PR-{2} [{3}]",
@@ -840,7 +851,7 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
-    private BitbucketCommit findCommit(String branchName, List<? extends BitbucketBranch> branches, TaskListener listener) {
+    private BitbucketCommit findCommit(@NonNull String branchName, List<? extends BitbucketBranch> branches, TaskListener listener) {
         for (final BitbucketBranch b : branches) {
             if (branchName.equals(b.getName())) {
                 String revision = b.getRawNode();
@@ -862,28 +873,22 @@ public class BitbucketSCMSource extends SCMSource {
         return null;
     }
 
-    private BitbucketCommit findPRCommit(String prId, List<? extends BitbucketPullRequest> pullRequests, TaskListener listener) {
-        for (BitbucketPullRequest pr : pullRequests) {
-            if (prId.equals(pr.getId())) {
-                // if I use getCommit() the branch closure is trigger immediately
-                BitbucketBranch branch = pr.getSource().getBranch();
-                String hash = branch.getRawNode();
-                if (hash == null) {
-                    if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
-                        listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s%n",
-                                prId);
-                    } else {
-                        listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s. "
-                                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
-                                prId);
-                    }
-                    return null;
-                }
-                return new BranchHeadCommit(branch);
+    private BitbucketCommit findPRCommit(BitbucketPullRequest pr, TaskListener listener) {
+        // if I use getCommit() the branch closure is trigger immediately
+        BitbucketBranch branch = pr.getSource().getBranch();
+        String hash = branch.getRawNode();
+        if (hash == null) {
+            if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
+                listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s%n",
+                    pr.getId());
+            } else {
+                listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s. "
+                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
+                    pr.getId());
             }
+            return null;
         }
-        listener.getLogger().format("Cannot find the PR-%s%n", prId);
-        return null;
+        return new BranchHeadCommit(branch);
     }
 
     @Override
