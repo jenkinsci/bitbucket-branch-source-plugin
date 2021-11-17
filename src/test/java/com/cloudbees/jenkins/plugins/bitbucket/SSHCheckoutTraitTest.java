@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import hudson.model.Item;
 import hudson.model.User;
 import hudson.security.ACL;
@@ -36,7 +35,7 @@ public class SSHCheckoutTraitTest {
         SSHCheckoutTrait instance = new SSHCheckoutTrait("keyId");
         BitbucketGitSCMBuilder probe =
                 new BitbucketGitSCMBuilder(new BitbucketSCMSource("example", "does-not-exist"),
-                        new BranchSCMHead("master", BitbucketRepositoryType.GIT), null, "scanId");
+                        new BranchSCMHead("master"), null, "scanId");
         assumeThat(probe.credentialsId(), is("scanId"));
         instance.decorateBuilder(probe);
         assertThat(probe.credentialsId(), is("keyId"));
@@ -47,7 +46,7 @@ public class SSHCheckoutTraitTest {
         SSHCheckoutTrait instance = new SSHCheckoutTrait(null);
         BitbucketGitSCMBuilder probe =
                 new BitbucketGitSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"),
-                        new BranchSCMHead("master", BitbucketRepositoryType.GIT), null, "scanId");
+                        new BranchSCMHead("master"), null, "scanId");
         assumeThat(probe.credentialsId(), is("scanId"));
         instance.decorateBuilder(probe);
         assertThat(probe.credentialsId(), is(nullValue()));

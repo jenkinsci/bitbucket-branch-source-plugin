@@ -95,8 +95,7 @@ public class ScanningFailuresTest {
     private void getBranchesFails(Callable<Throwable> exception, Result expectedResult) throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -115,10 +114,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -169,8 +165,7 @@ public class ScanningFailuresTest {
     public void checkPathExistsFails() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -189,10 +184,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -235,8 +227,7 @@ public class ScanningFailuresTest {
     public void resolveCommitFails() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -255,10 +246,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -289,7 +277,6 @@ public class ScanningFailuresTest {
         assertThat(master.getNextBuildNumber(), is(2));
 
         // an error in resolveCommit(...)
-
         when(api.resolveCommit(sampleRepo.head())).thenThrow(new IOException(message));
 
         mp.scheduleBuild2(0).getFuture().get();
@@ -305,8 +292,7 @@ public class ScanningFailuresTest {
     public void branchRemoved() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -325,10 +311,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -359,7 +342,6 @@ public class ScanningFailuresTest {
         assertThat(master.getNextBuildNumber(), is(2));
 
         // the branch is actually removed
-
         when(api.getBranches()).thenAnswer(new Returns(Collections.emptyList()));
 
         mp.scheduleBuild2(0).getFuture().get();
