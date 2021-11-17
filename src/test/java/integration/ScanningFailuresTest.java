@@ -10,7 +10,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import hudson.model.Result;
 import hudson.model.TopLevelItem;
@@ -115,8 +114,7 @@ public class ScanningFailuresTest {
 
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
-        when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
-                any(BitbucketRepositoryProtocol.class),
+        when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
                 anyString(),
                 eq("bob"),
                 eq("foo")))
@@ -190,8 +188,7 @@ public class ScanningFailuresTest {
 
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
-        when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
-                any(BitbucketRepositoryProtocol.class),
+        when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
                 anyString(),
                 eq("bob"),
                 eq("foo")))
@@ -257,8 +254,7 @@ public class ScanningFailuresTest {
 
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
-        when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
-                any(BitbucketRepositoryProtocol.class),
+        when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
                 anyString(),
                 eq("bob"),
                 eq("foo")))
@@ -328,8 +324,7 @@ public class ScanningFailuresTest {
 
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
-        when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
-                any(BitbucketRepositoryProtocol.class),
+        when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
                 anyString(),
                 eq("bob"),
                 eq("foo")))
