@@ -918,6 +918,7 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         assert type != null;
+
         if (cloneLinks == null) {
             BitbucketApi bitbucket = buildBitbucketClient();
             try {
@@ -934,7 +935,6 @@ public class BitbucketSCMSource extends SCMSource {
                 cloneLinks = new ArrayList<>();
                 cloneLinks.add(new BitbucketHref("ssh",
                         bitbucket.getRepositoryUri(
-                                type,
                                 BitbucketRepositoryProtocol.SSH,
                                 null,
                                 getRepoOwner(),
@@ -943,7 +943,6 @@ public class BitbucketSCMSource extends SCMSource {
                 ));
                 cloneLinks.add(new BitbucketHref("https",
                         bitbucket.getRepositoryUri(
-                                type,
                                 BitbucketRepositoryProtocol.HTTP,
                                 null,
                                 getRepoOwner(),

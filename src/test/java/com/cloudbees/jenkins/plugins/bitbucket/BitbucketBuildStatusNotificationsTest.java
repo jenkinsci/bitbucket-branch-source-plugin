@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import hudson.model.Action;
@@ -68,9 +67,9 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class BitbucketBuildStatusNotificationsTest {
@@ -117,8 +116,7 @@ public class BitbucketBuildStatusNotificationsTest {
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
         when(api.checkPathExists(Mockito.anyString(), eq(jenkinsfile))).thenReturn(true);
-        when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
-                any(BitbucketRepositoryProtocol.class),
+        when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
                 anyString(),
                 eq(repoOwner),
                 eq(repositoryName)))
