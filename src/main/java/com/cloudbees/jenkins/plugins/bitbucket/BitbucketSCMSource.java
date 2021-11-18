@@ -599,7 +599,7 @@ public class BitbucketSCMSource extends SCMSource {
             }
             if (request.isFetchTags() && !request.isComplete()) {
                 // Search tags
-                retrieveTags(request);
+                retrieveTags(request, event.getTimestamp());
             }
         } catch (WrappedException e) {
             e.unwrap();
@@ -762,8 +762,9 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().format("%n  %d branches were processed%n", count);
     }
 
-
-    private void retrieveTags(final BitbucketSCMSourceRequest request)
+    // tagTimestamp is used to detect the tag event creation time rather then the associated
+    // commit's time. Relates to JENKINS-57772
+    private void retrieveTags(final BitbucketSCMSourceRequest request, long tagTimestamp)
             throws IOException, InterruptedException {
         String fullName = repoOwner + "/" + repository;
         request.listener().getLogger().println("Looking up " + fullName + " for tags");
@@ -777,7 +778,7 @@ public class BitbucketSCMSource extends SCMSource {
         for (final BitbucketBranch tag : request.getTags()) {
             request.listener().getLogger().println("Checking tag " + tag.getName() + " from " + fullName);
             count++;
-            if (request.process(new BitbucketTagSCMHead(tag.getName(), tag.getDateMillis(), repositoryType), //
+            if (request.process(new BitbucketTagSCMHead(tag.getName(), (tagTimestamp == 0?tag.getDateMillis():tagTimestamp), repositoryType), //
                 tag::getRawNode, //
                     new BitbucketProbeFactory<>(bitbucket, request), //
                     new BitbucketRevisionFactory<>(bitbucket), //
