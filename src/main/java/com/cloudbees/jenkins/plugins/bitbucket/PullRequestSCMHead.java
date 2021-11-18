@@ -41,7 +41,7 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
- * {@link SCMHead} for a BitBucket Pull request
+ * {@link SCMHead} for a Bitbucket pull request
  *
  * @since 2.0.0
  */
@@ -261,7 +261,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                                    @NonNull AbstractGitSCMSource.SCMRevisionImpl revision) {
             PullRequestSCMHead head = migrate(source, (FixLegacy) revision.getHead());
             return head != null ? new PullRequestSCMRevision<>(head,
-                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
+                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision,
                     // so we can leave it null as a placeholder
                     new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), null),
                     new AbstractGitSCMSource.SCMRevisionImpl(head, revision.getHash()

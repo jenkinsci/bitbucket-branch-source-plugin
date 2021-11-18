@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import java.io.IOException;
@@ -49,7 +48,7 @@ public class SCMNavigatorTest {
     @Test
     public void teamRepositoriesDiscovering() throws IOException, InterruptedException {
         BitbucketMockApiFactory.add("http://bitbucket.test",
-                BitbucketClientMockUtils.getAPIClientMock(BitbucketRepositoryType.GIT, true));
+                BitbucketClientMockUtils.getAPIClientMock(true, false));
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam", null, null);
         navigator.setPattern("repo(.*)");
         navigator.setBitbucketServerUrl("http://bitbucket.test");

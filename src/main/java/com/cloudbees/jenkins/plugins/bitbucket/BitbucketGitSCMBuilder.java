@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
@@ -141,7 +140,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
 
     /**
      * Returns the {@link BitbucketSCMSource} that this request is against (primarily to allow resolving credentials
-     * against {@link SCMSource#getOwner()}.
+     * against {@link SCMSource#getOwner()}).
      *
      * @return the {@link BitbucketSCMSource} that this request is against
      */
@@ -168,7 +167,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
      *                      the {@link #remote()} or {@code null} to let the git client choose between providing its own
      *                      credentials or connecting anonymously.
      * @param protocol the {@link BitbucketRepositoryProtocol} of the {@link Credentials} to use or {@code null}
-     *                 to detect the the protocol based on the credentialsId. Defaults to HTTP if credentials are
+     *                 to detect the protocol based on the credentialsId. Defaults to HTTP if credentials are
      *                 {@code null}.  Enables support for blank SSH credentials.
      * @return {@code this} for method chaining.
      */
@@ -229,7 +228,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             }
         }
         withRemote(bitbucket.getRepositoryUri(
-                BitbucketRepositoryType.GIT,
                 protocol,
                 cloneLink,
                 repoOwner,
@@ -256,7 +254,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                 String remoteName = remoteName().equals("upstream") ? "upstream-upstream" : "upstream";
                 withAdditionalRemote(remoteName,
                         bitbucket.getRepositoryUri(
-                                BitbucketRepositoryType.GIT,
                                 protocol,
                                 cloneLink,
                                 scmSource().getRepoOwner(),

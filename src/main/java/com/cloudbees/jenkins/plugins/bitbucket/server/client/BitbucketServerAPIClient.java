@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
@@ -239,54 +238,48 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      */
     @NonNull
     @Override
-    public String getRepositoryUri(@NonNull BitbucketRepositoryType type,
-                                   @NonNull BitbucketRepositoryProtocol protocol,
+    public String getRepositoryUri(@NonNull BitbucketRepositoryProtocol protocol,
                                    @CheckForNull String cloneLink,
                                    @NonNull String owner,
                                    @NonNull String repository) {
-        switch (type) {
-            case GIT:
-                URI baseUri;
-                try {
-                    baseUri = new URI(baseURL);
-                } catch (URISyntaxException e) {
-                    throw new IllegalStateException("Server URL is not a valid URI", e);
-                }
-
-                UriTemplate template = UriTemplate.fromTemplate("{scheme}://{+authority}{+path}{/owner,repository}.git");
-                template.set("owner", owner);
-                template.set("repository", repository);
-
-                switch (protocol) {
-                    case HTTP:
-                        template.set("scheme", baseUri.getScheme());
-                        template.set("authority", baseUri.getRawAuthority());
-                        template.set("path", Objects.toString(baseUri.getRawPath(), "") + "/scm");
-                        break;
-                    case SSH:
-                        template.set("scheme", BitbucketRepositoryProtocol.SSH.getType());
-                        template.set("authority", "git@" + baseUri.getHost());
-                        if (cloneLink != null) {
-                            try {
-                                URI cloneLinkUri = new URI(cloneLink);
-                                if (cloneLinkUri.getScheme() != null) {
-                                    template.set("scheme", cloneLinkUri.getScheme());
-                                }
-                                if (cloneLinkUri.getRawAuthority() != null) {
-                                    template.set("authority", cloneLinkUri.getRawAuthority());
-                                }
-                            } catch (@SuppressWarnings("unused") URISyntaxException ignored) {
-                                // fall through
-                            }
-                        }
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
-                }
-                return template.expand();
-                default:
-                    throw new IllegalArgumentException("Unsupported repository type: " + type);
+        URI baseUri;
+        try {
+            baseUri = new URI(baseURL);
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("Server URL is not a valid URI", e);
         }
+
+        UriTemplate template = UriTemplate.fromTemplate("{scheme}://{+authority}{+path}{/owner,repository}.git");
+        template.set("owner", owner);
+        template.set("repository", repository);
+
+        switch (protocol) {
+            case HTTP:
+                template.set("scheme", baseUri.getScheme());
+                template.set("authority", baseUri.getRawAuthority());
+                template.set("path", Objects.toString(baseUri.getRawPath(), "") + "/scm");
+                break;
+            case SSH:
+                template.set("scheme", BitbucketRepositoryProtocol.SSH.getType());
+                template.set("authority", "git@" + baseUri.getHost());
+                if (cloneLink != null) {
+                    try {
+                        URI cloneLinkUri = new URI(cloneLink);
+                        if (cloneLinkUri.getScheme() != null) {
+                            template.set("scheme", cloneLinkUri.getScheme());
+                        }
+                        if (cloneLinkUri.getRawAuthority() != null) {
+                            template.set("authority", cloneLinkUri.getRawAuthority());
+                        }
+                    } catch (@SuppressWarnings("unused") URISyntaxException ignored) {
+                        // fall through
+                    }
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
+        }
+        return template.expand();
     }
 
     /**
@@ -343,7 +336,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private void setupPullRequest(BitbucketServerPullRequest pullRequest, BitbucketServerEndpoint endpoint) throws IOException {
-        // set commit closure to make commit information available when need, in a similar way to when request branches
+        // set commit closure to make commit information available when needed, in a similar way to when request branches
         setupClosureForPRBranch(pullRequest);
 
         if (endpoint != null) {
@@ -372,7 +365,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * PRs with missing source / destination branch are invalid and should be ignored.
      *
      * @param pullRequest a {@link BitbucketPullRequest}
-     * @return
+     * @return whether the PR should be ignored
      */
     private boolean shouldIgnore(BitbucketPullRequest pullRequest) {
         return pullRequest.getSource().getRepository() == null
@@ -381,7 +374,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     /**
-     * Make available commit informations in a lazy way.
+     * Make available commit information in a lazy way.
      *
      * @author Nikolas Falco
      */
@@ -532,7 +525,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         int status = getRequestStatus(url);
         if (HttpStatus.SC_OK == status) {
             return true;
-            // BitBucket return UNAUTHORIZED when no credentials are provided
+            // Bitbucket returns UNAUTHORIZED when no credentials are provided
             // https://support.atlassian.com/bitbucket-cloud/docs/use-bitbucket-rest-api-version-1/
         } else if (HttpStatus.SC_NOT_FOUND == status || HttpStatus.SC_UNAUTHORIZED == status) {
             return false;

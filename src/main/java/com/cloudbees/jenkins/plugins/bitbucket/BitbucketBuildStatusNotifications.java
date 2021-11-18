@@ -54,7 +54,7 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 /**
  * This class encapsulates all Bitbucket notifications logic.
  * {@link JobCompletedListener} sends a notification to Bitbucket after a build finishes.
- * Only builds derived from a job that was created as part of a multi branch project will be processed by this listener.
+ * Only builds derived from a job that was created as part of a multi-branch project will be processed by this listener.
  */
 public class BitbucketBuildStatusNotifications {
 

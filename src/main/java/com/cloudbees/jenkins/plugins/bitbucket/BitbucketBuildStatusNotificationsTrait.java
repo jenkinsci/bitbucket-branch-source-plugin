@@ -51,7 +51,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public BitbucketBuildStatusNotificationsTrait() {
-        /**
+        /*
          * empty constructor
          */
     }

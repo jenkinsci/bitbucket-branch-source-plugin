@@ -222,7 +222,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     /**
      * Sets the behavioural traits that are applied to this navigator and any {@link BitbucketSCMSource} instances it
-     * discovers. The new traits will take affect on the next navigation through any of the
+     * discovers. The new traits will take effect on the next navigation through any of the
      * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
      *
      * @param traits the new behavioural traits.
@@ -241,7 +241,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     /**
      * Sets the behavioural traits that are applied to this navigator and any {@link BitbucketSCMSource} instances it
-     * discovers. The new traits will take affect on the next navigation through any of the
+     * discovers. The new traits will take effect on the next navigation through any of the
      * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
      *
      * @param traits the new behavioural traits.
@@ -358,7 +358,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             setServerUrl(url);
             return;
         }
-        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring an url missing "
+        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
                 + "from the global configuration.", url);
         setServerUrl(url);
     }

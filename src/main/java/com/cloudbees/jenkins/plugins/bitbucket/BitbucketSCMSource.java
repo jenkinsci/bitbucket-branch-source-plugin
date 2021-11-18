@@ -201,7 +201,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     /**
      * Bitbucket Server URL.
-     * An specific HTTP client is used if this field is not null.
+     * A specific HTTP client is used if this field is not null.
      * This value (or serverUrl if this is null) is used in particular
      * to find the current endpoint configuration for this server.
      */
@@ -366,7 +366,7 @@ public class BitbucketSCMSource extends SCMSource {
             setServerUrl(endpoint.getServerUrl());
             return;
         }
-        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring an url missing "
+        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
                 + "from the global configuration.", url);
         setServerUrl(url);
     }
@@ -557,7 +557,7 @@ public class BitbucketSCMSource extends SCMSource {
                 listener.getLogger().format("Connecting to %s using %s%n", getServerUrl(),
                         CredentialsNameProvider.name(scanCredentials));
             }
-            // this has the side-effect of ensuring that repository type is always populated.
+            // this has the side effect of ensuring that repository type is always populated.
             listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
 
             // populate the request with its data sources
@@ -960,6 +960,7 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         assert type != null;
+
         if (cloneLinks == null) {
             BitbucketApi bitbucket = buildBitbucketClient();
             try {
@@ -976,7 +977,6 @@ public class BitbucketSCMSource extends SCMSource {
                 cloneLinks = new ArrayList<>();
                 cloneLinks.add(new BitbucketHref("ssh",
                         bitbucket.getRepositoryUri(
-                                type,
                                 BitbucketRepositoryProtocol.SSH,
                                 null,
                                 getRepoOwner(),
@@ -985,7 +985,6 @@ public class BitbucketSCMSource extends SCMSource {
                 ));
                 cloneLinks.add(new BitbucketHref("https",
                         bitbucket.getRepositoryUri(
-                                type,
                                 BitbucketRepositoryProtocol.HTTP,
                                 null,
                                 getRepoOwner(),
