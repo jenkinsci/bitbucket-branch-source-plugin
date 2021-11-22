@@ -54,7 +54,7 @@
   "created_on": "2018-09-20T12:49:08.541926+00:00",
   "mainbranch": {
     "type": "branch",
-    "name": "master"
+    "name": "main"
   },
   "full_name": "amuniz/test-repos",
   "has_issues": false,

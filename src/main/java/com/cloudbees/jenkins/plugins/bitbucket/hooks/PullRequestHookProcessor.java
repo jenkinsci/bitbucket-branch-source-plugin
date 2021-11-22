@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
@@ -47,7 +46,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
@@ -174,13 +172,7 @@ public class PullRequestHookProcessor extends HookProcessor {
             if (!src.getRepository().equalsIgnoreCase(getPayload().getRepository().getRepositoryName())) {
                 return Collections.emptyMap();
             }
-            BitbucketRepositoryType type =
-                    BitbucketRepositoryType.fromString(getPayload().getRepository().getScm());
-            if (type == null) {
-                LOGGER.log(Level.INFO, "Received event for unknown repository type: {0}",
-                        getPayload().getRepository().getScm());
-                return Collections.emptyMap();
-            }
+
             BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
                     .withTraits(src.getTraits());
             if (!ctx.wantPRs()) {
@@ -208,7 +200,6 @@ public class PullRequestHookProcessor extends HookProcessor {
                             branchName,
                             pullRepoOwner,
                             pullRepository,
-                            type,
                             originalBranchName,
                             pull,
                             headOrigin,
@@ -219,7 +210,6 @@ public class PullRequestHookProcessor extends HookProcessor {
                             branchName,
                             src.getRepoOwner(),
                             src.getRepository(),
-                            type,
                             originalBranchName,
                             pull,
                             headOrigin,
@@ -230,28 +220,14 @@ public class PullRequestHookProcessor extends HookProcessor {
                     // special case for repo being deleted
                     result.put(head, null);
                 } else {
-                    String targetHash =
-                            pull.getDestination().getCommit().getHash();
+                    String targetHash = pull.getDestination().getCommit().getHash();
                     String pullHash = pull.getSource().getCommit().getHash();
-                    switch (type) {
-                        case GIT:
-                            result.put(head, new PullRequestSCMRevision<>(
-                                            head,
-                                            new AbstractGitSCMSource.SCMRevisionImpl(
-                                                    head.getTarget(),
-                                                    targetHash
-                                            ),
-                                            new AbstractGitSCMSource.SCMRevisionImpl(
-                                                    head,
-                                                    pullHash
-                                            )
-                                    )
-                            );
-                            break;
-                        default:
-                            LOGGER.log(Level.INFO, "Received event for unknown repository type: {0}", type);
-                            break;
-                    }
+
+                    SCMRevision revision = new PullRequestSCMRevision<>(head,
+                        new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), targetHash),
+                        new AbstractGitSCMSource.SCMRevisionImpl(head, pullHash)
+                    );
+                    result.put(head, revision);
                 }
             }
             return result;

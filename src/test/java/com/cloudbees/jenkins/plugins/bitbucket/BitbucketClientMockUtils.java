@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
@@ -55,10 +54,12 @@ import static org.mockito.Mockito.when;
 
 public class BitbucketClientMockUtils {
 
-    public static BitbucketCloudApiClient getAPIClientMock(BitbucketRepositoryType type, boolean includePullRequests,
+    public static BitbucketCloudApiClient getAPIClientMock(boolean includePullRequests,
             boolean includeWebHooks) throws IOException, InterruptedException {
         BitbucketCloudApiClient bitbucket = mock(BitbucketCloudApiClient.class);
-        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryType.class), any(BitbucketRepositoryProtocol.class), nullable(String.class), anyString(), anyString())).thenCallRealMethod();
+        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryProtocol.class), nullable(String.class),
+            anyString(), anyString())).thenCallRealMethod();
+
         // mock branch list
         List<BitbucketCloudBranch> branches = new ArrayList<>();
         branches.add(getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"));
@@ -88,7 +89,7 @@ public class BitbucketClientMockUtils {
 
         // Team discovering mocks
         when(bitbucket.getTeam()).thenReturn(getTeam());
-        when(bitbucket.getRepositories()).thenReturn(getRepositories(type));
+        when(bitbucket.getRepositories()).thenReturn(getRepositories());
 
         // Auto-registering hooks
         if (includeWebHooks) {
@@ -101,19 +102,13 @@ public class BitbucketClientMockUtils {
         return bitbucket;
     }
 
-    public static BitbucketCloudApiClient getAPIClientMock(BitbucketRepositoryType type, boolean includePullRequests)
-            throws IOException, InterruptedException {
-        return getAPIClientMock(type, includePullRequests, false);
-    }
-
     private static List<BitbucketRepositoryHook> getWebHooks() {
         BitbucketRepositoryHook hook = new BitbucketRepositoryHook();
         hook.setUrl(Jenkins.get().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
         return Collections.singletonList(hook);
     }
 
-    private static List<BitbucketCloudRepository> getRepositories(
-            BitbucketRepositoryType type) {
+    private static List<BitbucketCloudRepository> getRepositories() {
         BitbucketCloudRepository r1 = new BitbucketCloudRepository();
         r1.setFullName("myteam/repo1");
         HashMap<String, List<BitbucketHref>> links = new HashMap<>();
