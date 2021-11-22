@@ -31,14 +31,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
@@ -113,6 +111,7 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
@@ -242,54 +241,48 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      */
     @NonNull
     @Override
-    public String getRepositoryUri(@NonNull BitbucketRepositoryType type,
-                                   @NonNull BitbucketRepositoryProtocol protocol,
+    public String getRepositoryUri(@NonNull BitbucketRepositoryProtocol protocol,
                                    @CheckForNull String cloneLink,
                                    @NonNull String owner,
                                    @NonNull String repository) {
-        switch (type) {
-            case GIT:
-                URI baseUri;
-                try {
-                    baseUri = new URI(baseURL);
-                } catch (URISyntaxException e) {
-                    throw new IllegalStateException("Server URL is not a valid URI", e);
-                }
-
-                UriTemplate template = UriTemplate.fromTemplate("{scheme}://{+authority}{+path}{/owner,repository}.git");
-                template.set("owner", owner);
-                template.set("repository", repository);
-
-                switch (protocol) {
-                    case HTTP:
-                        template.set("scheme", baseUri.getScheme());
-                        template.set("authority", baseUri.getRawAuthority());
-                        template.set("path", Objects.toString(baseUri.getRawPath(), "") + "/scm");
-                        break;
-                    case SSH:
-                        template.set("scheme", BitbucketRepositoryProtocol.SSH.getType());
-                        template.set("authority", "git@" + baseUri.getHost());
-                        if (cloneLink != null) {
-                            try {
-                                URI cloneLinkUri = new URI(cloneLink);
-                                if (cloneLinkUri.getScheme() != null) {
-                                    template.set("scheme", cloneLinkUri.getScheme());
-                                }
-                                if (cloneLinkUri.getRawAuthority() != null) {
-                                    template.set("authority", cloneLinkUri.getRawAuthority());
-                                }
-                            } catch (@SuppressWarnings("unused") URISyntaxException ignored) {
-                                // fall through
-                            }
-                        }
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
-                }
-                return template.expand();
-                default:
-                    throw new IllegalArgumentException("Unsupported repository type: " + type);
+        URI baseUri;
+        try {
+            baseUri = new URI(baseURL);
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("Server URL is not a valid URI", e);
         }
+
+        UriTemplate template = UriTemplate.fromTemplate("{scheme}://{+authority}{+path}{/owner,repository}.git");
+        template.set("owner", owner);
+        template.set("repository", repository);
+
+        switch (protocol) {
+            case HTTP:
+                template.set("scheme", baseUri.getScheme());
+                template.set("authority", baseUri.getRawAuthority());
+                template.set("path", Objects.toString(baseUri.getRawPath(), "") + "/scm");
+                break;
+            case SSH:
+                template.set("scheme", BitbucketRepositoryProtocol.SSH.getType());
+                template.set("authority", "git@" + baseUri.getHost());
+                if (cloneLink != null) {
+                    try {
+                        URI cloneLinkUri = new URI(cloneLink);
+                        if (cloneLinkUri.getScheme() != null) {
+                            template.set("scheme", cloneLinkUri.getScheme());
+                        }
+                        if (cloneLinkUri.getRawAuthority() != null) {
+                            template.set("authority", cloneLinkUri.getRawAuthority());
+                        }
+                    } catch (@SuppressWarnings("unused") URISyntaxException ignored) {
+                        // fall through
+                    }
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
+        }
+        return template.expand();
     }
 
     /**
@@ -330,49 +323,61 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private List<BitbucketServerPullRequest> getPullRequests(UriTemplate template)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         List<BitbucketServerPullRequest> pullRequests = getResources(template, BitbucketServerPullRequests.class);
 
-        // PRs with missing destination branch are invalid and should be ignored.
-        pullRequests.removeIf(pr -> pr.getSource().getRepository() == null
-                || pr.getSource().getBranch() == null
-                || pr.getDestination().getBranch() == null);
+        pullRequests.removeIf(this::shouldIgnore);
 
-        AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(baseURL);
-        final BitbucketServerEndpoint endpoint = endpointConfig instanceof BitbucketServerEndpoint ?
-            (BitbucketServerEndpoint) endpointConfig : null;
+        BitbucketServerEndpoint endpoint = (BitbucketServerEndpoint) BitbucketEndpointConfiguration.get().
+            findEndpoint(this.baseURL, BitbucketServerEndpoint.class).orElse(null);
 
         for (BitbucketServerPullRequest pullRequest : pullRequests) {
-            // set commit closure to make commit informations available when need, in a similar way to when request branches
-            setupClosureForPRBranch(pullRequest);
-
-            if (endpoint != null) {
-                // This is required for Bitbucket Server to update the refs/pull-requests/* references
-                // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
-                if (endpoint.isCallCanMerge()) {
-                    try {
-                        pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
-                    } catch (BitbucketRequestException e) {
-                        // see JENKINS-65718 https://docs.atlassian.com/bitbucket-server/rest/7.2.1/bitbucket-rest.html#errors-and-validation
-                        // in this case we just say cannot merge this one
-                        if(e.getHttpCode()==409){
-                            pullRequest.setCanMerge(false);
-                        } else {
-                            throw e;
-                        }
-                    }
-                }
-                if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
-                    callPullRequestChangesById(pullRequest.getId());
-                }
-            }
+            setupPullRequest(pullRequest, endpoint);
         }
 
         return pullRequests;
     }
 
+    private void setupPullRequest(BitbucketServerPullRequest pullRequest, BitbucketServerEndpoint endpoint) throws IOException {
+        // set commit closure to make commit information available when needed, in a similar way to when request branches
+        setupClosureForPRBranch(pullRequest);
+
+        if (endpoint != null) {
+            // This is required for Bitbucket Server to update the refs/pull-requests/* references
+            // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
+            if (endpoint.isCallCanMerge()) {
+                try {
+                    pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
+                } catch (BitbucketRequestException e) {
+                    // see JENKINS-65718 https://docs.atlassian.com/bitbucket-server/rest/7.2.1/bitbucket-rest.html#errors-and-validation
+                    // in this case we just say cannot merge this one
+                    if(e.getHttpCode()==409){
+                        pullRequest.setCanMerge(false);
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+            if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
+                callPullRequestChangesById(pullRequest.getId());
+            }
+        }
+    }
+
     /**
-     * Make available commit informations in a lazy way.
+     * PRs with missing source / destination branch are invalid and should be ignored.
+     *
+     * @param pullRequest a {@link BitbucketPullRequest}
+     * @return whether the PR should be ignored
+     */
+    private boolean shouldIgnore(BitbucketPullRequest pullRequest) {
+        return pullRequest.getSource().getRepository() == null
+            || pullRequest.getSource().getBranch() == null
+            || pullRequest.getDestination().getBranch() == null;
+    }
+
+    /**
+     * Make available commit information in a lazy way.
      *
      * @author Nikolas Falco
      */
@@ -444,9 +449,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         String response = getRequest(url);
         try {
             BitbucketServerPullRequest pr = JsonParser.toJava(response, BitbucketServerPullRequest.class);
-
             setupClosureForPRBranch(pr);
-
+            setupPullRequest(pr, (BitbucketServerEndpoint) BitbucketEndpointConfiguration.get().
+                findEndpoint(this.baseURL, BitbucketServerEndpoint.class).orElse(null));
             return pr;
         } catch (IOException e) {
             throw new IOException("I/O error when accessing URL: " + url, e);
@@ -523,7 +528,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         int status = getRequestStatus(url);
         if (HttpStatus.SC_OK == status) {
             return true;
-            // BitBucket return UNAUTHORIZED when no credentials are provided
+            // Bitbucket returns UNAUTHORIZED when no credentials are provided
             // https://support.atlassian.com/bitbucket-cloud/docs/use-bitbucket-rest-api-version-1/
         } else if (HttpStatus.SC_NOT_FOUND == status || HttpStatus.SC_UNAUTHORIZED == status) {
             return false;
@@ -961,6 +966,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private CloseableHttpClient getHttpClient(final HttpRequestBase request) {
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         httpClientBuilder.useSystemProperties();
+        httpClientBuilder.setRetryHandler(new StandardHttpRequestRetryHandler());
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
         String connectTimeout = System.getProperty("http.connect.timeout", "10");

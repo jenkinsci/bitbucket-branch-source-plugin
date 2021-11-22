@@ -38,7 +38,7 @@ import org.junit.rules.TestName;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketCloudPushEventTest {
     @Rule
@@ -73,7 +73,7 @@ public class BitbucketCloudPushEventTest {
         assertThat(change.isCreated(), is(true));
         assertThat(change.isClosed(), is(false));
         assertThat(change.getNew(), notNullValue());
-        assertThat(change.getNew().getName(), is("master"));
+        assertThat(change.getNew().getName(), is("main"));
         assertThat(change.getNew().getType(), is("branch"));
         assertThat(change.getNew().getTarget(), notNullValue());
         assertThat(change.getNew().getTarget().getHash(), is("501bf5b99365d1d870882254b9360c17172bda0e"));
@@ -151,14 +151,14 @@ public class BitbucketCloudPushEventTest {
         assertThat(event.getChanges().size(), is(3));
         BitbucketPushEvent.Change change = event.getChanges().get(0);
         assertThat(change.getOld(), notNullValue());
-        assertThat(change.getOld().getName(), is("master"));
+        assertThat(change.getOld().getName(), is("main"));
         assertThat(change.getOld().getType(), is("branch"));
         assertThat(change.getOld().getTarget(), notNullValue());
         assertThat(change.getOld().getTarget().getHash(), is("fc4d1ce2853b6f1ac0d0dbad643d17ef4a6e0be7"));
         assertThat(change.isCreated(), is(false));
         assertThat(change.isClosed(), is(false));
         assertThat(change.getNew(), notNullValue());
-        assertThat(change.getNew().getName(), is("master"));
+        assertThat(change.getNew().getName(), is("main"));
         assertThat(change.getNew().getType(), is("branch"));
         assertThat(change.getNew().getTarget(), notNullValue());
         assertThat(change.getNew().getTarget().getHash(), is("325d37697849f4b1fe42cb19c20134af08e03a82"));

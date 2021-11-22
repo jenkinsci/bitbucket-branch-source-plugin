@@ -5,6 +5,6 @@
   <pattern>.*</pattern>
   <autoRegisterHooks>false</autoRegisterHooks>
   <includes>*</includes>
-  <excludes>master</excludes>
+  <excludes>main</excludes>
   <sshPort>-1</sshPort>
 </com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator>

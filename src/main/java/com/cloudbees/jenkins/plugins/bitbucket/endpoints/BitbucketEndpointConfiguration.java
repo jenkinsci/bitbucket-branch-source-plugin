@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
@@ -263,6 +264,21 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             }
         }
         return null;
+    }
+
+    /**
+     * Checks to see if the supplied server URL is defined in the global configuration.
+     *
+     * @param serverUrl the server url to check.
+     * @param clazz the class to check.
+     * @return the global configuration for the specified server url or {@code null} if not defined.
+     */
+    public synchronized Optional<AbstractBitbucketEndpoint> findEndpoint(@CheckForNull String serverUrl,
+                                                                         Class<? extends AbstractBitbucketEndpoint> clazz) {
+        return getEndpoints().stream()
+            .filter(clazz::isInstance)
+            .filter(endpoint -> normalizeServerUrl(serverUrl).equals(endpoint.getServerUrl()))
+            .findFirst();
     }
 
     /**

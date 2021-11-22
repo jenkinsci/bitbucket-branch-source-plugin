@@ -25,7 +25,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketSCMSourceTest {
     @ClassRule
@@ -278,7 +278,7 @@ public class BitbucketSCMSourceTest {
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("*")),
-                                hasProperty("excludes", is("master"))
+                                hasProperty("excludes", is("main"))
                         ),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
@@ -290,7 +290,7 @@ public class BitbucketSCMSourceTest {
         assertThat(instance.getBitbucketServerUrl(), is(nullValue()));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
         assertThat(instance.getIncludes(), is("*"));
-        assertThat(instance.getExcludes(), is("master"));
+        assertThat(instance.getExcludes(), is("main"));
         assertThat(instance.isAutoRegisterHook(), is(false));
     }
 

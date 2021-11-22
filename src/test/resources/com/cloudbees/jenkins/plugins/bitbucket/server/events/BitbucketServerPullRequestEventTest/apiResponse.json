@@ -9,8 +9,8 @@
   "createdDate": 1488549656836,
   "updatedDate": 1488550788045,
   "fromRef": {
-    "id": "refs/heads/master",
-    "displayId": "master",
+    "id": "refs/heads/main",
+    "displayId": "main",
     "latestCommit": "feb8d676cd70406cecd4128c8fd1bee30282db11",
     "repository": {
       "slug": "rep_1",
@@ -112,8 +112,8 @@
     }
   },
   "toRef": {
-    "id": "refs/heads/master",
-    "displayId": "master",
+    "id": "refs/heads/main",
+    "displayId": "main",
     "latestCommit": "d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49",
     "repository": {
       "slug": "rep_1",

@@ -19,7 +19,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
     /**
      * Tests if the supplied URL is supported by this factory.
      *
-     * @param serverUrl the server URL (may be {@code null}, e.g. for BitBucket Cloud)
+     * @param serverUrl the server URL (may be {@code null}, e.g. for Bitbucket Cloud)
      * @return {@code true} if this factory can connect to the specified URL.
      */
     protected abstract boolean isMatch(@Nullable String serverUrl);

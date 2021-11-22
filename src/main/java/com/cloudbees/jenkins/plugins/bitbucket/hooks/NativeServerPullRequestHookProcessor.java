@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License
  *
  * Copyright (c) 2016-2018, Yieldlab AG
@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerPullRequestEvent;
 import com.google.common.base.Ascii;
@@ -93,7 +92,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
         SCMHeadEvent.fireNow(new HeadEvent(serverUrl, eventType, pullRequestEvent, origin));
     }
 
-    private static final class HeadEvent extends NativeServerHeadEvent<NativeServerPullRequestEvent> {
+    private static final class HeadEvent extends NativeServerHeadEvent<NativeServerPullRequestEvent> implements HasPullRequests {
         private HeadEvent(String serverUrl, Type type, NativeServerPullRequestEvent payload, String origin) {
             super(serverUrl, type, payload, origin);
         }
@@ -126,8 +125,8 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 final String originalBranchName = pullRequest.getSource().getBranch().getName();
                 final String branchName = String.format("PR-%s%s", pullRequest.getId(),
                     strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
-                final PullRequestSCMHead head = new PullRequestSCMHead(branchName, source.getRepoOwner(), source.getRepository(),
-                    BitbucketRepositoryType.GIT, originalBranchName, pullRequest, headOrigin, strategy);
+                final PullRequestSCMHead head = new PullRequestSCMHead(branchName, source.getRepoOwner(),
+                    source.getRepository(), originalBranchName, pullRequest, headOrigin, strategy);
 
                 switch (getType()) {
                     case CREATED:
@@ -151,6 +150,14 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
             }
 
             return result;
+        }
+
+        @Override
+        public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+            if (Type.REMOVED.equals(getType())) {
+                return Collections.emptySet();
+            }
+            return Collections.singleton(getPayload().getPullRequest());
         }
     }
 }
