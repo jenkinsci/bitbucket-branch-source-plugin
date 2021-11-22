@@ -146,8 +146,8 @@ public class ScanningFailuresTest {
 
         when(api.getBranches()).thenThrow(exception.call());
 
-        if (Result.NOT_BUILT.equals(expectedResult)) {
-            // when not built the future will never complete and the log may not contain the exception stack trace
+        if (Result.NOT_BUILT.equals(expectedResult) || Result.ABORTED.equals(expectedResult)) {
+            // when not built or aborted the future will never complete and the log may not contain the exception stack trace
             mp.scheduleBuild2(0);
             j.waitUntilNoActivity();
             assertThat(mp.getIndexing().getResult(), is(expectedResult));
