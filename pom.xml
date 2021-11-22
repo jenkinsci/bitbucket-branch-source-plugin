@@ -28,7 +28,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
-    <jenkins.version>2.263.4</jenkins.version>
+    <jenkins.version>2.289.1</jenkins.version>
     <java.level>8</java.level>
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
   </properties>
@@ -63,8 +63,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.263.x</artifactId>
-        <version>950.v396cb834de1e</version>
+        <artifactId>bom-2.289.x</artifactId>
+        <version>1013.vf8058992a042</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -135,7 +135,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-multibranch</artifactId>
-      <version>2.22</version>
       <scope>test</scope>
     </dependency>
     <dependency>

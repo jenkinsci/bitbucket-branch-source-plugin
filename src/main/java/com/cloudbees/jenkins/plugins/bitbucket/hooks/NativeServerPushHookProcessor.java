@@ -32,7 +32,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
@@ -152,13 +151,12 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 String refType = change.getRef().getType();
 
                 if ("BRANCH".equals(refType)) {
-                    final BranchSCMHead head = new BranchSCMHead(change.getRef().getDisplayId(),
-                            BitbucketRepositoryType.GIT);
+                    final BranchSCMHead head = new BranchSCMHead(change.getRef().getDisplayId());
                     final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
                             : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
                     result.put(head, revision);
                 } else if ("TAG".equals(refType)) {
-                    SCMHead head = new BitbucketTagSCMHead(change.getRef().getDisplayId(), 0, BitbucketRepositoryType.GIT);
+                    SCMHead head = new BitbucketTagSCMHead(change.getRef().getDisplayId(), 0);
                     final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
                             : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
                     result.put(head, revision);
@@ -212,8 +210,8 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                         final String branchName = String.format("PR-%s%s", pullRequest.getId(),
                             strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
 
-                        final PullRequestSCMHead head = new PullRequestSCMHead(branchName, sourceOwnerName, sourceRepoName,
-                            BitbucketRepositoryType.GIT, originalBranchName, pullRequest, headOrigin, strategy);
+                        final PullRequestSCMHead head = new PullRequestSCMHead(branchName, sourceOwnerName,
+                            sourceRepoName, originalBranchName, pullRequest, headOrigin, strategy);
 
                         final String targetHash = pullRequest.getDestination().getCommit().getHash();
                         final String pullHash = pullRequest.getSource().getCommit().getHash();

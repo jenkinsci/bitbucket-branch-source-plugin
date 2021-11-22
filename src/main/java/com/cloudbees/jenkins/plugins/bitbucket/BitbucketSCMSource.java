@@ -698,7 +698,6 @@ public class BitbucketSCMSource extends SCMSource {
                                 branchName, //
                                 pullRepoOwner, //
                                 pullRepository, //
-                                repositoryType, //
                                 originalBranchName, //
                                 pull, //
                                 originOf(pullRepoOwner, pullRepository), //
@@ -708,7 +707,6 @@ public class BitbucketSCMSource extends SCMSource {
                                 branchName, //
                                 repoOwner, //
                                 repository, //
-                                repositoryType, //
                                 originalBranchName, //
                                 pull, //
                                 originOf(pullRepoOwner, pullRepository), //
@@ -787,8 +785,7 @@ public class BitbucketSCMSource extends SCMSource {
         for (final BitbucketBranch branch : request.getBranches()) {
             request.listener().getLogger().println("Checking branch " + branch.getName() + " from " + fullName);
             count++;
-            if (request.process( //
-                    new BranchSCMHead(branch.getName(), repositoryType), //
+            if (request.process(new BranchSCMHead(branch.getName()), //
                 (IntermediateLambda<BitbucketCommit>) () -> new BranchHeadCommit(branch), //
                     new BitbucketProbeFactory<>(bitbucket, request), //
                     new BitbucketRevisionFactory<>(bitbucket), //
@@ -801,8 +798,7 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
 
-    private void retrieveTags(final BitbucketSCMSourceRequest request)
-            throws IOException, InterruptedException {
+    private void retrieveTags(final BitbucketSCMSourceRequest request) throws IOException, InterruptedException {
         String fullName = repoOwner + "/" + repository;
         request.listener().getLogger().println("Looking up " + fullName + " for tags");
 
@@ -815,7 +811,7 @@ public class BitbucketSCMSource extends SCMSource {
         for (final BitbucketBranch tag : request.getTags()) {
             request.listener().getLogger().println("Checking tag " + tag.getName() + " from " + fullName);
             count++;
-            if (request.process(new BitbucketTagSCMHead(tag.getName(), tag.getDateMillis(), repositoryType), //
+            if (request.process(new BitbucketTagSCMHead(tag.getName(), tag.getDateMillis()), //
                 tag::getRawNode, //
                     new BitbucketProbeFactory<>(bitbucket, request), //
                     new BitbucketRevisionFactory<>(bitbucket), //
@@ -976,20 +972,12 @@ public class BitbucketSCMSource extends SCMSource {
                         e);
                 cloneLinks = new ArrayList<>();
                 cloneLinks.add(new BitbucketHref("ssh",
-                        bitbucket.getRepositoryUri(
-                                BitbucketRepositoryProtocol.SSH,
-                                null,
-                                getRepoOwner(),
-                                getRepository()
-                        )
+                        bitbucket.getRepositoryUri(BitbucketRepositoryProtocol.SSH, null,
+                            getRepoOwner(), getRepository())
                 ));
                 cloneLinks.add(new BitbucketHref("https",
-                        bitbucket.getRepositoryUri(
-                                BitbucketRepositoryProtocol.HTTP,
-                                null,
-                                getRepoOwner(),
-                                getRepository()
-                        )
+                        bitbucket.getRepositoryUri(BitbucketRepositoryProtocol.HTTP, null,
+                            getRepoOwner(), getRepository())
                 ));
             }
         }

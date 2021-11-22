@@ -874,7 +874,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     @Restricted(ProtectedExternally.class)
     protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws InterruptedException, IOException {
-
         HttpClientContext requestContext = null;
         if (API_HOST.equals(host)) {
             requestContext = context;
