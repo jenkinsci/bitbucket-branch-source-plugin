@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import java.io.IOException;
@@ -76,9 +75,9 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
             // then the temporary PR class will be resolved by GitMigrationImpl when the
             // context to look up the correct target is (hopefully) available. If the context is not available
             // then worst case  we will end up triggering a rebuild on next index / event via take-over
-            return new PR(repoOwner, repoName, getName(), metadata.getId(), new BranchSCMHead("\u0000", null));
+            return new PR(repoOwner, repoName, getName(), metadata.getId(), new BranchSCMHead("\u0000"));
         }
-        return new BranchSCMHead(getName(), null);
+        return new BranchSCMHead(getName());
     }
 
     /**
@@ -150,7 +149,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                     head.getBranchName(),
                     head.getId(),
                     head.getTitle(),
-                    new BranchSCMHead(target, BitbucketRepositoryType.GIT),
+                    new BranchSCMHead(target),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD
             );

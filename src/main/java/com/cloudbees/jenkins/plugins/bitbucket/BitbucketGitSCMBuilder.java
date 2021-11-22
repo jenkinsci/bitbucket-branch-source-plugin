@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
@@ -229,7 +228,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             }
         }
         withRemote(bitbucket.getRepositoryUri(
-                BitbucketRepositoryType.GIT,
                 protocol,
                 cloneLink,
                 repoOwner,
@@ -256,7 +254,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                 String remoteName = remoteName().equals("upstream") ? "upstream-upstream" : "upstream";
                 withAdditionalRemote(remoteName,
                         bitbucket.getRepositoryUri(
-                                BitbucketRepositoryType.GIT,
                                 protocol,
                                 cloneLink,
                                 scmSource().getRepoOwner(),
