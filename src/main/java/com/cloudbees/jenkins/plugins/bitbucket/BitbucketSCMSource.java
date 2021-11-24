@@ -32,7 +32,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
@@ -83,7 +82,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
@@ -113,7 +111,6 @@ import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
@@ -218,21 +215,17 @@ public class BitbucketSCMSource extends SCMSource {
     private transient String bitbucketServerUrl;
 
     /**
-     * The cache of the repository type.
-     */
-    @CheckForNull
-    private transient BitbucketRepositoryType repositoryType;
-
-    /**
      * The cache of pull request titles for each open PR.
      */
     @CheckForNull
     private transient /*effectively final*/ Map<String, String> pullRequestTitleCache;
+
     /**
      * The cache of pull request contributors for each open PR.
      */
     @CheckForNull
     private transient /*effectively final*/ Map<String, ContributorMetadataAction> pullRequestContributorCache;
+
     /**
      * The cache of the clone links.
      */
@@ -508,18 +501,6 @@ public class BitbucketSCMSource extends SCMSource {
         return true;
     }
 
-    public BitbucketRepositoryType getRepositoryType() throws IOException, InterruptedException {
-        if (repositoryType == null) {
-            BitbucketRepository r = getBitbucketRepository();
-            repositoryType = BitbucketRepositoryType.fromString(r.getScm());
-            Map<String, List<BitbucketHref>> links = r.getLinks();
-            if (links != null && links.containsKey("clone")) {
-                cloneLinks = links.get("clone");
-            }
-        }
-        return repositoryType;
-    }
-
     public BitbucketApi buildBitbucketClient() {
         return buildBitbucketClient(repoOwner, repository);
     }
@@ -542,11 +523,17 @@ public class BitbucketSCMSource extends SCMSource {
     @Override
     public void afterSave() {
         try {
-            getRepositoryType();
+            if(cloneLinks == null) {
+                BitbucketRepository r = buildBitbucketClient().getRepository();
+                Map<String, List<BitbucketHref>> links = r.getLinks();
+                if (links != null && links.containsKey("clone")) {
+                    cloneLinks = links.get("clone");
+                }
+            }
         } catch (InterruptedException | IOException e) {
-            LOGGER.log(Level.FINE,
-                    "Could not determine repository type of " + getRepoOwner() + "/" + getRepository() + " on "
-                            + getServerUrl() + " for " + getOwner(), e);
+            LOGGER.log(Level.SEVERE,
+                "Could not determine clone links of " + getRepoOwner() + "/" + getRepository() +
+                " on " + getServerUrl() + " for " + getOwner() + " falling back to generated links", e);
         }
     }
 
@@ -564,8 +551,14 @@ public class BitbucketSCMSource extends SCMSource {
                 listener.getLogger().format("Connecting to %s using %s%n", getServerUrl(),
                         CredentialsNameProvider.name(scanCredentials));
             }
-            // this has the side effect of ensuring that repository type is always populated.
-            listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
+
+            if(cloneLinks == null) {
+                BitbucketRepository r = buildBitbucketClient().getRepository();
+                Map<String, List<BitbucketHref>> links = r.getLinks();
+                if (links != null && links.containsKey("clone")) {
+                    cloneLinks = links.get("clone");
+                }
+            }
 
             // populate the request with its data sources
             if (request.isFetchPRs()) {
@@ -938,32 +931,6 @@ public class BitbucketSCMSource extends SCMSource {
 
     @Override
     public SCM build(SCMHead head, SCMRevision revision) {
-        BitbucketRepositoryType type;
-        if (head instanceof PullRequestSCMHead) {
-            type = ((PullRequestSCMHead) head).getRepositoryType();
-        } else if (head instanceof BranchSCMHead) {
-            type = ((BranchSCMHead) head).getRepositoryType();
-        } else if (head instanceof BitbucketTagSCMHead) {
-            type = ((BitbucketTagSCMHead) head).getRepositoryType();
-        } else {
-            throw new IllegalArgumentException("Either PullRequestSCMHead, BitbucketTagSCMHead or BranchSCMHead required as parameter");
-        }
-        if (type == null) {
-            if (revision instanceof SCMRevisionImpl) {
-                type = BitbucketRepositoryType.GIT;
-            } else {
-                try {
-                    type = getRepositoryType();
-                } catch (IOException | InterruptedException e) {
-                    type = BitbucketRepositoryType.GIT;
-                    LOGGER.log(Level.SEVERE,
-                            "Could not determine repository type of " + getRepoOwner() + "/" + getRepository()
-                                    + " on " + getServerUrl() + " for " + getOwner() + " assuming " + type, e);
-                }
-            }
-        }
-        assert type != null;
-
         if (cloneLinks == null) {
             BitbucketApi bitbucket = buildBitbucketClient();
             try {
@@ -974,9 +941,8 @@ public class BitbucketSCMSource extends SCMSource {
                 }
             } catch (IOException | InterruptedException e) {
                 LOGGER.log(Level.SEVERE,
-                        "Could not determine clone links of " + getRepoOwner() + "/" + getRepository()
-                                + " on " + getServerUrl() + " for " + getOwner() + " falling back to generated links",
-                        e);
+                        "Could not determine clone links of " + getRepoOwner() + "/" + getRepository() +
+                        " on " + getServerUrl() + " for " + getOwner() + " falling back to generated links", e);
                 cloneLinks = new ArrayList<>();
                 cloneLinks.add(new BitbucketHref("ssh",
                         bitbucket.getRepositoryUri(BitbucketRepositoryProtocol.SSH, null,
@@ -988,15 +954,8 @@ public class BitbucketSCMSource extends SCMSource {
                 ));
             }
         }
-        switch (type) {
-            case GIT:
-            default:
-                return new BitbucketGitSCMBuilder(this, head, revision, getCredentialsId())
-                        .withCloneLinks(cloneLinks)
-                        .withTraits(traits)
-                        .build();
-
-        }
+        return new BitbucketGitSCMBuilder(this, head, revision, getCredentialsId())
+            .withCloneLinks(cloneLinks).withTraits(traits).build();
     }
 
     @NonNull
@@ -1045,8 +1004,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @NonNull
     @Override
-    protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event,
-                                           @NonNull TaskListener listener)
+    protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
         List<Action> result = new ArrayList<>();
