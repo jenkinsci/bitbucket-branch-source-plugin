@@ -1,0 +1,12 @@
+<div>
+    Prevents a prematurely successful state of not fully tested PRs.
+    <br/>
+    <strong>"Exclude branches that are also filed as PRs"</strong> strategy implies that branch and PR builds
+    do share the same key while publishing the build status to Bitbucket, thus can overwrite statuses of each other.
+    Usually, it happens when the branch build finishes in the middle of a running PR build
+    so Bitbucket has been already notified about the branch status and
+    (in case this status was a success) we can merge the PR until the PR build is completed.
+
+    <br/>
+    <strong>NOTE:</strong> this option is only applicable when <strong>"Exclude branches that are also filed as PRs"</strong> strategy in multibranch configuration is used.
+</div>
