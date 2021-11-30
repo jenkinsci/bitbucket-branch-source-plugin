@@ -45,6 +45,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -86,7 +87,7 @@ public class PushHookProcessor extends HookProcessor {
                             type = SCMEvent.Type.UPDATED;
                         }
                     }
-                    SCMHeadEvent.fireNow(new SCMHeadEvent<BitbucketPushEvent>(type, push, origin) {
+                    SCMHeadEvent.fireLater(new SCMHeadEvent<BitbucketPushEvent>(type, push, origin) {
                         @Override
                         public boolean isMatch(@NonNull SCMNavigator navigator) {
                             if (!(navigator instanceof BitbucketSCMNavigator)) {
@@ -187,7 +188,7 @@ public class PushHookProcessor extends HookProcessor {
                             // TODO
                             return false;
                         }
-                    });
+                    }, BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
                 }
             }
         }
