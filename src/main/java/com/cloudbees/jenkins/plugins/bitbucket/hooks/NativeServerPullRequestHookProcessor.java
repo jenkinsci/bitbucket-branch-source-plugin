@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -89,7 +90,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 return;
         }
 
-        SCMHeadEvent.fireNow(new HeadEvent(serverUrl, eventType, pullRequestEvent, origin));
+        SCMHeadEvent.fireLater(new HeadEvent(serverUrl, eventType, pullRequestEvent, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
     }
 
     private static final class HeadEvent extends NativeServerHeadEvent<NativeServerPullRequestEvent> implements HasPullRequests {

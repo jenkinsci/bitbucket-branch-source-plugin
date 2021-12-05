@@ -135,6 +135,13 @@ public class BitbucketSCMSource extends SCMSource {
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
     private static final String SERVER_REPO_TEMPLATE = "/projects{/owner}/repos{/repo}";
 
+    /** How long to delay events received from Bitbucket in order to allow the API caches to sync. */
+    private static /*mostly final*/ int eventDelaySeconds =
+        Math.min(
+            300,
+            Math.max(
+                0, Integer.getInteger(BitbucketSCMSource.class.getName() + ".eventDelaySeconds", 5)));
+
     /**
      * Bitbucket URL.
      */
@@ -1153,6 +1160,27 @@ public class BitbucketSCMSource extends SCMSource {
             return new SCMHeadOrigin.Fork(repoOwner);
         }
         return new SCMHeadOrigin.Fork(repoOwner + "/" + repository);
+    }
+
+
+    /**
+     * Returns how long to delay events received from Bitbucket in order to allow the API caches to sync.
+     *
+     * @return how long to delay events received from Bitbucket in order to allow the API caches to sync.
+     */
+    public static int getEventDelaySeconds() {
+        return eventDelaySeconds;
+    }
+
+    /**
+     * Sets how long to delay events received from Bitbucket in order to allow the API caches to sync.
+     *
+     * @param eventDelaySeconds number of seconds to delay, will be restricted into a value within the
+     *     range {@code [0,300]} inclusive
+     */
+    @Restricted(NoExternalUse.class) // to allow configuration from system groovy console
+    public static void setEventDelaySeconds(int eventDelaySeconds) {
+        BitbucketSCMSource.eventDelaySeconds = Math.min(300, Math.max(0, eventDelaySeconds));
     }
 
     @Symbol("bitbucket")

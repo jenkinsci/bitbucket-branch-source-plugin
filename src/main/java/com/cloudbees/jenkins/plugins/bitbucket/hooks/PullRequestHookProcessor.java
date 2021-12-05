@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
@@ -90,7 +91,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                         break;
                 }
                 // assume updated as a catch-all type
-                SCMHeadEvent.fireNow(new HeadEvent(eventType, pull, origin, hookEvent, instanceType));
+                SCMHeadEvent.fireLater(new HeadEvent(eventType, pull, origin, hookEvent, instanceType), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
             }
         }
     }
