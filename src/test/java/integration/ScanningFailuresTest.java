@@ -43,7 +43,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -67,7 +67,8 @@ public class ScanningFailuresTest {
             i.delete();
         }
         BitbucketMockApiFactory.clear();
-        message = "We gonna Boom Boom Boom 'til the break of Boom. "+ Long.toHexString(entropy.nextLong())+ " Who's the Boom King? Who? I'm the Boom King!" ;
+        message = "We gonna Boom Boom Boom 'til the break of Boom. " + Long.toHexString(entropy.nextLong()) +
+            " Who's the Boom King? Who? I'm the Boom King!" ;
     }
 
     @Test
@@ -95,8 +96,7 @@ public class ScanningFailuresTest {
     private void getBranchesFails(Callable<Throwable> exception, Result expectedResult) throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -105,7 +105,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -115,10 +115,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -143,15 +140,15 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
 
         // an error in getBranches()
 
         when(api.getBranches()).thenThrow(exception.call());
 
-        if (Result.NOT_BUILT.equals(expectedResult)) {
-            // when not built the future will never complete and the log may not contain the exception stack trace
+        if (Result.NOT_BUILT.equals(expectedResult) || Result.ABORTED.equals(expectedResult)) {
+            // when not built or aborted the future will never complete and the log may not contain the exception stack trace
             mp.scheduleBuild2(0);
             j.waitUntilNoActivity();
             assertThat(mp.getIndexing().getResult(), is(expectedResult));
@@ -160,7 +157,7 @@ public class ScanningFailuresTest {
             assertThat(mp.getIndexing().getResult(), is(expectedResult));
             assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), containsString(message));
         }
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
     }
@@ -169,8 +166,7 @@ public class ScanningFailuresTest {
     public void checkPathExistsFails() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -179,7 +175,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -189,10 +185,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -217,7 +210,7 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
 
         // an error in checkPathExists(...)
@@ -226,7 +219,7 @@ public class ScanningFailuresTest {
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.FAILURE));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), containsString(message));
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
     }
@@ -235,8 +228,7 @@ public class ScanningFailuresTest {
     public void resolveCommitFails() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -245,7 +237,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -255,10 +247,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -283,18 +272,17 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(master.getLastBuild(), notNullValue());
         assertThat(master.getNextBuildNumber(), is(2));
 
         // an error in resolveCommit(...)
-
         when(api.resolveCommit(sampleRepo.head())).thenThrow(new IOException(message));
 
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
         assertThat(master.getLastBuild(), notNullValue());
@@ -305,8 +293,7 @@ public class ScanningFailuresTest {
     public void branchRemoved() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
-        sampleRepo
-                .write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
@@ -315,7 +302,7 @@ public class ScanningFailuresTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
-        when(branch.getName()).thenReturn("master");
+        when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
@@ -325,10 +312,7 @@ public class ScanningFailuresTest {
         when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         when(api.getRepositoryUri(any(BitbucketRepositoryProtocol.class),
-                anyString(),
-                eq("bob"),
-                eq("foo")))
-                .thenReturn(sampleRepo.fileUrl());
+                anyString(), eq("bob"), eq("foo"))).thenReturn(sampleRepo.fileUrl());
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -353,18 +337,17 @@ public class ScanningFailuresTest {
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
         assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
         j.waitUntilNoActivity();
-        WorkflowJob master = mp.getItem("master");
+        WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
         assertThat(master.getLastBuild(), notNullValue());
         assertThat(master.getNextBuildNumber(), is(2));
 
         // the branch is actually removed
-
         when(api.getBranches()).thenAnswer(new Returns(Collections.emptyList()));
 
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        master = mp.getItem("master");
+        master = mp.getItem("main");
         assertThat(master, nullValue());
     }
 }

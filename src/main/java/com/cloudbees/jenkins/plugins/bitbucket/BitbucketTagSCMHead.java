@@ -55,19 +55,8 @@ public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
      * @param timestamp      the timestamp of tag
      */
     public BitbucketTagSCMHead(@NonNull String tagName, long timestamp) {
-        this(tagName, timestamp, BitbucketRepositoryType.GIT);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param tagName        the tag name
-     * @param timestamp      the timestamp of tag
-     * @param repositoryType the repository type.
-     */
-    public BitbucketTagSCMHead(String tagName, long timestamp, BitbucketRepositoryType repositoryType) {
         super(tagName, timestamp);
-        this.repositoryType = repositoryType;
+        this.repositoryType = BitbucketRepositoryType.GIT;
     }
 
     /**
