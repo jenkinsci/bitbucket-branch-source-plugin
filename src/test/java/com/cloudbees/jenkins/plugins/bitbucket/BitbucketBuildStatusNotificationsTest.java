@@ -110,6 +110,7 @@ public class BitbucketBuildStatusNotificationsTest {
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
+        when(api.getBranchesByFilterText("master")).thenAnswer(new Returns(branchList));
         when(branch.getName()).thenReturn(branchName);
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);

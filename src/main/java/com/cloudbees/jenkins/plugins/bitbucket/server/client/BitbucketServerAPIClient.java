@@ -131,8 +131,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_REPOSITORIES_PATH = API_BASE_PATH + "/projects/{owner}/repos{?start,limit}";
     private static final String API_REPOSITORY_PATH = API_BASE_PATH + "/projects/{owner}/repos/{repo}";
     private static final String API_DEFAULT_BRANCH_PATH = API_REPOSITORY_PATH + "/branches/default";
-    private static final String API_BRANCHES_PATH = API_REPOSITORY_PATH + "/branches{?start,limit}";
-    private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit}";
+    private static final String API_BRANCHES_PATH = API_REPOSITORY_PATH + "/branches{?start,limit,filterText}";
+    private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit,filterText}";
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
@@ -560,7 +560,16 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @Override
     @NonNull
     public List<BitbucketServerBranch> getTags() throws IOException, InterruptedException {
-        return getServerBranches(API_TAGS_PATH);
+        return getServerBranches(API_TAGS_PATH, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @NonNull
+    public List<BitbucketServerBranch> getTagsByFilterText(String filterText) throws IOException, InterruptedException {
+        return getServerBranches(API_TAGS_PATH, filterText);
     }
 
     /**
@@ -569,14 +578,27 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @Override
     @NonNull
     public List<BitbucketServerBranch> getBranches() throws IOException, InterruptedException {
-        return getServerBranches(API_BRANCHES_PATH);
+        return getServerBranches(API_BRANCHES_PATH, null);
     }
 
-    private List<BitbucketServerBranch> getServerBranches(String apiPath) throws IOException, InterruptedException {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @NonNull
+    public List<BitbucketServerBranch> getBranchesByFilterText(String filterText) throws IOException, InterruptedException {
+        return getServerBranches(API_BRANCHES_PATH, filterText);
+    }
+
+    private List<BitbucketServerBranch> getServerBranches(String apiPath, String filterText) throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
                 .fromTemplate(apiPath)
                 .set("owner", getUserCentricOwner())
                 .set("repo", repositoryName);
+
+        if (filterText != null) {
+            template.set("filterText", filterText);
+        }
 
         List<BitbucketServerBranch> branches = getResources(template, BitbucketServerBranches.class);
         for (final BitbucketServerBranch branch : branches) {
