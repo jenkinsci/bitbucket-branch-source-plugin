@@ -46,6 +46,11 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
+     * Include Jenkins URL as a status key/name
+     */
+    private boolean includeJenkinsURL;
+
+    /**
      * Constructor.
      *
      */
@@ -68,12 +73,26 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
         return this.sendSuccessNotificationForUnstableBuild;
     }
 
+    @DataBoundSetter
+    public void setIncludeJenkinsURL(boolean isIncludeJenkinsURL) {
+        includeJenkinsURL = isIncludeJenkinsURL;
+    }
+
+    /**
+     * @return {@code true} if commit status should include Jenkins URL
+     */
+    public boolean getIncludeJenkinsURL() {
+        return this.includeJenkinsURL;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
+        ((BitbucketSCMSourceContext) context)
+                .withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild())
+                .withBuildStatusIncludeJenkinsURL(getIncludeJenkinsURL());
     }
 
     /**
