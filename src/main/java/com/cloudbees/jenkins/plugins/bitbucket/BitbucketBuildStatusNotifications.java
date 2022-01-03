@@ -42,12 +42,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.regex.Pattern;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
@@ -62,6 +65,7 @@ public class BitbucketBuildStatusNotifications {
     private static final String FAILED_STATE = "FAILED";
     private static final String STOPPED_STATE = "STOPPED";
     private static final String INPROGRESS_STATE = "INPROGRESS";
+    private static final Pattern PR_BUILD_PATTERN = Pattern.compile("^.*/job/PR-(\\d+)/(\\d+)/.*$");
 
     private static String getRootURL(@NonNull Run<?, ?> build) {
         JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
@@ -157,7 +161,7 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "The build is in progress...");
             state = INPROGRESS_STATE;
         }
-        status = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name);
+        status = new BitbucketBuildStatus(hash, statusDescription, state, url, DigestUtils.md5Hex(key), name);
         new BitbucketChangesetCommentNotifier(bitbucket).buildStatus(status);
         if (result != null) {
             listener.getLogger().println("[Bitbucket] Build result notified");
@@ -184,6 +188,7 @@ public class BitbucketBuildStatusNotifications {
         if (hash == null) {
             return;
         }
+
         boolean shareBuildKeyBetweenBranchAndPR = sourceContext
             .filters().stream()
             .anyMatch(filter -> filter instanceof ExcludeOriginPRBranchesSCMHeadFilter);
@@ -199,6 +204,15 @@ public class BitbucketBuildStatusNotifications {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
             key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
             bitbucket = source.buildBitbucketClient();
+            if (sourceContext.doNotOverridePrBuildStatuses()) {
+                List<BitbucketBuildStatus> buildStatuses = bitbucket.getBuildStatus(hash).getValues();
+                for (final BitbucketBuildStatus bs : buildStatuses) {
+                    if (DigestUtils.md5Hex(key).equals(bs.getKey()) && PR_BUILD_PATTERN.matcher(bs.getUrl()).matches()) {
+                        listener.getLogger().println("[Bitbucket] Skip branch notification as this revision has PR build status");
+                        return;
+                    }
+                }
+            }
         }
         createStatus(build, listener, bitbucket, key, hash);
     }
