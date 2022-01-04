@@ -23,8 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import jenkins.scm.api.SCMHead;
 
 /**
@@ -37,31 +35,12 @@ public class BranchSCMHead extends SCMHead {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Cache of the repository type. Will only be {@code null} for data loaded from pre-2.1.0 releases
-     *
-     * @since 2.1.0
-     */
-    // The repository type should be immutable for any SCMSource.
-    @CheckForNull
-    private final BitbucketRepositoryType repositoryType;
-
-    /**
      * Constructor.
      *
      * @param branchName the branch name
      */
     public BranchSCMHead(String branchName) {
         super(branchName);
-        this.repositoryType = BitbucketRepositoryType.GIT;
-    }
-
-    /**
-     * Gets the repository type.
-     * @return the repository type or {@code null} if this is a legacy branch instance.
-     */
-    @CheckForNull
-    public BitbucketRepositoryType getRepositoryType() {
-        return repositoryType;
     }
 
     /**

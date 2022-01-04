@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
@@ -163,10 +162,6 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     public String getBranchName() {
         return branchName;
-    }
-
-    public BitbucketRepositoryType getRepositoryType() {
-        return target.getRepositoryType();
     }
 
     @NonNull

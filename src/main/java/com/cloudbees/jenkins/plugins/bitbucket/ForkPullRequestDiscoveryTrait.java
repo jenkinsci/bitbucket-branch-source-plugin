@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -286,8 +285,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull BitbucketSCMSourceRequest request, @NonNull PullRequestSCMHead head)
-                throws IOException, InterruptedException {
+        protected boolean checkTrusted(@NonNull BitbucketSCMSourceRequest request, @NonNull PullRequestSCMHead head) {
             if (!head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
                 return head.getRepoOwner().equalsIgnoreCase(request.getRepoOwner());
             }
