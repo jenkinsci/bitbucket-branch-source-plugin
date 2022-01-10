@@ -146,18 +146,7 @@ public interface BitbucketApi {
     @NonNull
     List<? extends BitbucketBranch> getBranches() throws IOException, InterruptedException;
 
-    /**
-     * Returns the branches in the repository matching the filter.
-     *
-     * @param filterText the text to match on
-     * @return the list of branches in the repository.
-     * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
-     */
-    @NonNull
-    List<? extends BitbucketBranch> getBranchesByFilterText(String filterText) throws IOException, InterruptedException;
-
-    /**
+     /**
      * Returns the tags in the repository.
      *
      * @return the list of tags in the repository.
@@ -166,17 +155,6 @@ public interface BitbucketApi {
      */
     @NonNull
     List<? extends BitbucketBranch> getTags() throws IOException, InterruptedException;
-
-    /**
-     * Returns the tags in the repository matching the filter.
-     *
-     * @param filterText the text to match on
-     * @return the list of tags in the repository.
-     * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
-     */
-    @NonNull
-    List<? extends BitbucketBranch> getTagsByFilterText(String filterText) throws IOException, InterruptedException;
 
     /**
      * Resolve the commit object given its hash.
