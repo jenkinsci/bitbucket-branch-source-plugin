@@ -67,7 +67,8 @@ public class ScanningFailuresTest {
             i.delete();
         }
         BitbucketMockApiFactory.clear();
-        message = "We gonna Boom Boom Boom 'til the break of Boom. "+ Long.toHexString(entropy.nextLong())+ " Who's the Boom King? Who? I'm the Boom King!" ;
+        message = "We gonna Boom Boom Boom 'til the break of Boom. " + Long.toHexString(entropy.nextLong()) +
+            " Who's the Boom King? Who? I'm the Boom King!" ;
     }
 
     @Test

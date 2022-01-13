@@ -60,6 +60,7 @@ import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
+import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -120,6 +121,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * SCM source implementation for Bitbucket.
@@ -132,6 +134,13 @@ public class BitbucketSCMSource extends SCMSource {
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
     private static final String SERVER_REPO_TEMPLATE = "/projects{/owner}/repos{/repo}";
+
+    /** How long to delay events received from Bitbucket in order to allow the API caches to sync. */
+    private static /*mostly final*/ int eventDelaySeconds =
+        Math.min(
+            300,
+            Math.max(
+                0, Integer.getInteger(BitbucketSCMSource.class.getName() + ".eventDelaySeconds", 5)));
 
     /**
      * Bitbucket URL.
@@ -543,7 +552,8 @@ public class BitbucketSCMSource extends SCMSource {
                         CredentialsNameProvider.name(scanCredentials));
             }
             // this has the side effect of ensuring that repository type is always populated.
-            listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
+            final BitbucketRepositoryType repositoryType = getRepositoryType();
+            listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(repositoryType != null ? repositoryType.name() : "Unknown"));
 
             // populate the request with its data sources
             if (request.isFetchPRs()) {
@@ -1113,6 +1123,27 @@ public class BitbucketSCMSource extends SCMSource {
         return new SCMHeadOrigin.Fork(repoOwner + "/" + repository);
     }
 
+
+    /**
+     * Returns how long to delay events received from Bitbucket in order to allow the API caches to sync.
+     *
+     * @return how long to delay events received from Bitbucket in order to allow the API caches to sync.
+     */
+    public static int getEventDelaySeconds() {
+        return eventDelaySeconds;
+    }
+
+    /**
+     * Sets how long to delay events received from Bitbucket in order to allow the API caches to sync.
+     *
+     * @param eventDelaySeconds number of seconds to delay, will be restricted into a value within the
+     *     range {@code [0,300]} inclusive
+     */
+    @Restricted(NoExternalUse.class) // to allow configuration from system groovy console
+    public static void setEventDelaySeconds(int eventDelaySeconds) {
+        BitbucketSCMSource.eventDelaySeconds = Math.min(300, Math.max(0, eventDelaySeconds));
+    }
+
     @Symbol("bitbucket")
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor {
@@ -1133,7 +1164,9 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         @SuppressWarnings("unused") // used By stapler
-        public static FormValidation doCheckServerUrl(@QueryParameter String value) {
+        public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
+            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+            contextToCheck.checkPermission(Item.CONFIGURE);
             if (BitbucketEndpointConfiguration.get().findEndpoint(value) == null) {
                 return FormValidation.error("Unregistered Server: " + value);
             }
@@ -1146,7 +1179,11 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         @SuppressWarnings("unused") // used By stapler
-        public ListBoxModel doFillServerUrlItems() {
+        public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
+            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+            if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             return BitbucketEndpointConfiguration.get().getEndpointItems();
         }
 
@@ -1156,6 +1193,7 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         @SuppressWarnings("unused") // used By stapler
+        @RequirePOST
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
                                                   @QueryParameter String credentialsId,
