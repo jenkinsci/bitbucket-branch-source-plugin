@@ -41,7 +41,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasRefsChangedRequest;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -61,6 +60,7 @@ import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
+import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -77,7 +77,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -122,6 +121,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * SCM source implementation for Bitbucket.
@@ -238,12 +238,6 @@ public class BitbucketSCMSource extends SCMSource {
      */
     @CheckForNull
     private transient List<BitbucketHref> cloneLinks = null;
-
-    /**
-     * The cache of the bitbucket repository.
-     */
-    @CheckForNull
-    private transient BitbucketRepository bitbucketRepository = null;
 
     /**
      * Constructor.
@@ -510,7 +504,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     public BitbucketRepositoryType getRepositoryType() throws IOException, InterruptedException {
         if (repositoryType == null) {
-            BitbucketRepository r = getBitbucketRepository();
+            BitbucketRepository r = buildBitbucketClient().getRepository();
             repositoryType = BitbucketRepositoryType.fromString(r.getScm());
             Map<String, List<BitbucketHref>> links = r.getLinks();
             if (links != null && links.containsKey("clone")) {
@@ -530,13 +524,6 @@ public class BitbucketSCMSource extends SCMSource {
 
     public BitbucketApi buildBitbucketClient(String repoOwner, String repository) {
         return BitbucketApiFactory.newInstance(getServerUrl(), authenticator(), repoOwner, repository);
-    }
-
-    private BitbucketRepository getBitbucketRepository() throws IOException, InterruptedException {
-        if(bitbucketRepository==null) {
-            bitbucketRepository = buildBitbucketClient().getRepository();
-        }
-        return bitbucketRepository;
     }
 
     @Override
@@ -590,24 +577,6 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
-                            if (event != null) {
-                                Set<BitbucketBranch> branches = new TreeSet<>((a, b) -> a.getName().compareTo(b.getName()));
-                                if (event instanceof HasRefsChangedRequest) {
-                                    HasRefsChangedRequest hasRefsChangedRequest = (HasRefsChangedRequest) event;
-                                    hasRefsChangedRequest.getBranches(BitbucketSCMSource.this).forEach((b) -> branches.add(b));
-                                }
-
-                                if (event instanceof HasPullRequests) {
-                                    HasPullRequests hasPrEvent = (HasPullRequests) event;
-                                    hasPrEvent.getPullRequests(BitbucketSCMSource.this).forEach((pr) -> {
-                                        branches.add(pr.getSource().getBranch());
-                                        branches.add(pr.getDestination().getBranch());
-                                    });
-                                }
-
-                                return branches;
-                            }
-
                             return (Iterable<BitbucketBranch>) buildBitbucketClient().getBranches();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
@@ -620,11 +589,6 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
-                            if (event instanceof HasRefsChangedRequest) {
-                                HasRefsChangedRequest hasRefsChangedRequest = (HasRefsChangedRequest) event;
-                                return hasRefsChangedRequest.getTags(BitbucketSCMSource.this);
-                            }
-
                             return (Iterable<BitbucketBranch>) buildBitbucketClient().getTags();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
@@ -784,7 +748,7 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().println("Looking up " + fullName + " for branches");
 
         final BitbucketApi bitbucket = buildBitbucketClient();
-        Map<String, List<BitbucketHref>> links = getBitbucketRepository().getLinks();
+        Map<String, List<BitbucketHref>> links = bitbucket.getRepository().getLinks();
         if (links != null && links.containsKey("clone")) {
             cloneLinks = links.get("clone");
         }
@@ -810,7 +774,7 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().println("Looking up " + fullName + " for tags");
 
         final BitbucketApi bitbucket = buildBitbucketClient();
-        Map<String, List<BitbucketHref>> links = getBitbucketRepository().getLinks();
+        Map<String, List<BitbucketHref>> links = bitbucket.getRepository().getLinks();
         if (links != null && links.containsKey("clone")) {
             cloneLinks = links.get("clone");
         }
@@ -833,11 +797,9 @@ public class BitbucketSCMSource extends SCMSource {
     @Override
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
         final BitbucketApi bitbucket = buildBitbucketClient();
+        List<? extends BitbucketBranch> branches = bitbucket.getBranches();
         if (head instanceof PullRequestSCMHead) {
             PullRequestSCMHead h = (PullRequestSCMHead) head;
-            List<BitbucketBranch> branches = new ArrayList<>();
-            branches.addAll(bitbucket.getBranchesByFilterText(h.getBranchName()));
-            branches.addAll(bitbucket.getBranchesByFilterText(h.getTarget().getName()));
             BitbucketCommit targetRevision = findCommit(h.getTarget().getName(), branches, listener);
             if (targetRevision == null) {
                 LOGGER.log(Level.WARNING, "No branch found in {0}/{1} with name [{2}]",
@@ -846,10 +808,9 @@ public class BitbucketSCMSource extends SCMSource {
             }
             BitbucketCommit sourceRevision;
             if (bitbucket instanceof BitbucketCloudApiClient) {
-                if (head.getOrigin() != SCMHeadOrigin.DEFAULT) {
-                    branches.clear();
-                    branches.addAll(buildBitbucketClient(h).getBranchesByFilterText(h.getBranchName()));
-                }
+                branches = head.getOrigin() == SCMHeadOrigin.DEFAULT
+                        ? branches
+                        : buildBitbucketClient(h).getBranches();
                 sourceRevision = findCommit(h.getBranchName(), branches, listener);
             } else {
                 try {
@@ -877,7 +838,7 @@ public class BitbucketSCMSource extends SCMSource {
             );
         } else if(head instanceof BitbucketTagSCMHead) {
             BitbucketTagSCMHead tagHead = (BitbucketTagSCMHead) head;
-            List<? extends BitbucketBranch> tags = bitbucket.getTagsByFilterText(head.getName());
+            List<? extends BitbucketBranch> tags = bitbucket.getTags();
             BitbucketCommit revision = findCommit(head.getName(), tags, listener);
             if (revision == null) {
                 LOGGER.log(Level.WARNING, "No tag found in {0}/{1} with name [{2}]", new Object[] { repoOwner, repository, head.getName() });
@@ -885,7 +846,6 @@ public class BitbucketSCMSource extends SCMSource {
             }
             return new BitbucketTagSCMRevision(tagHead, revision);
         } else {
-            List<? extends BitbucketBranch> branches = bitbucket.getBranchesByFilterText(head.getName());
             BitbucketCommit revision = findCommit(head.getName(), branches, listener);
             if (revision == null) {
                 LOGGER.log(Level.WARNING, "No branch found in {0}/{1} with name [{2}]",
@@ -967,7 +927,7 @@ public class BitbucketSCMSource extends SCMSource {
         if (cloneLinks == null) {
             BitbucketApi bitbucket = buildBitbucketClient();
             try {
-                BitbucketRepository r = getBitbucketRepository();
+                BitbucketRepository r = bitbucket.getRepository();
                 Map<String, List<BitbucketHref>> links = r.getLinks();
                 if (links != null && links.containsKey("clone")) {
                     cloneLinks = links.get("clone");
@@ -1051,7 +1011,7 @@ public class BitbucketSCMSource extends SCMSource {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
         List<Action> result = new ArrayList<>();
         final BitbucketApi bitbucket = buildBitbucketClient();
-        BitbucketRepository r = getBitbucketRepository();
+        BitbucketRepository r = bitbucket.getRepository();
         Map<String, List<BitbucketHref>> links = r.getLinks();
         if (links != null && links.containsKey("clone")) {
             cloneLinks = links.get("clone");
@@ -1203,7 +1163,9 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         @SuppressWarnings("unused") // used By stapler
-        public static FormValidation doCheckServerUrl(@QueryParameter String value) {
+        public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
+            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+            contextToCheck.checkPermission(Item.CONFIGURE);
             if (BitbucketEndpointConfiguration.get().findEndpoint(value) == null) {
                 return FormValidation.error("Unregistered Server: " + value);
             }
@@ -1216,7 +1178,11 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         @SuppressWarnings("unused") // used By stapler
-        public ListBoxModel doFillServerUrlItems() {
+        public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
+            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+            if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             return BitbucketEndpointConfiguration.get().getEndpointItems();
         }
 
@@ -1226,6 +1192,7 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         @SuppressWarnings("unused") // used By stapler
+        @RequirePOST
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
                                                   @QueryParameter String credentialsId,
