@@ -590,7 +590,7 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
-                            if (event != null) {
+                            if (event instanceof HasRefsChangedRequest || event instanceof HasPullRequests) {
                                 Set<BitbucketBranch> branches = new TreeSet<>((a, b) -> a.getName().compareTo(b.getName()));
                                 if (event instanceof HasRefsChangedRequest) {
                                     HasRefsChangedRequest hasRefsChangedRequest = (HasRefsChangedRequest) event;
