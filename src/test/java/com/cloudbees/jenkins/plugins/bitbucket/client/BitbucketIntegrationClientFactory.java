@@ -86,7 +86,7 @@ public class BitbucketIntegrationClientFactory {
         protected String getRequest(String path) throws IOException {
             audit.request(path);
 
-            String payloadPath = path.replace("/rest/api/", "").replace('/', '-').replaceAll("%2F", "-").replaceAll("[=%&?]", "_");
+            String payloadPath = path.replace("/rest/api/", "").replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";
 
             try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {

@@ -35,9 +35,11 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
@@ -80,6 +82,10 @@ class BitbucketCredentials {
         @QueryParameter String serverUrl) {
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeEmptyValue();
+        AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+        if (!contextToCheck.hasPermission(CredentialsProvider.VIEW)) {
+            return result;
+        }
         result.includeMatchingAs(
                 context instanceof Queue.Task
                         ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
@@ -97,6 +103,8 @@ class BitbucketCredentials {
         @QueryParameter String value,
         @QueryParameter String serverUrl) {
         if (!value.isEmpty()) {
+            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+            contextToCheck.checkPermission(CredentialsProvider.VIEW);
             if (CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
                             StandardCertificateCredentials.class,
