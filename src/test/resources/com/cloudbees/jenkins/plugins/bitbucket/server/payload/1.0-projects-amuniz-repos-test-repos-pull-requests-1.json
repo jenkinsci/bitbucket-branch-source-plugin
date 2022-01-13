@@ -49,8 +49,8 @@
     }
   },
   "toRef": {
-    "id": "refs/heads/master",
-    "displayId": "master",
+    "id": "refs/heads/main",
+    "displayId": "main",
     "latestCommit": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
     "repository": {
       "slug": "test-repos",

@@ -54,7 +54,7 @@
         }
       },
       "branch": {
-        "name": "master"
+        "name": "main"
       },
       "repository": {
         "full_name": "cloudbeers/temp",

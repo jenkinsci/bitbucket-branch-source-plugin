@@ -36,7 +36,6 @@ import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
-import javax.annotation.Nonnull;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
@@ -233,7 +232,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         /**
          * {@inheritDoc}
          */
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.BitbucketServerEndpoint_displayName();
