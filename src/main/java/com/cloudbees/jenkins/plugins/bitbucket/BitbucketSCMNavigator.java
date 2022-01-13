@@ -43,10 +43,10 @@ import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
 import hudson.model.Action;
+import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.mercurial.MercurialSCM;
-import hudson.plugins.mercurial.traits.MercurialBrowserSCMSourceTrait;
+import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
@@ -224,7 +224,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     /**
      * Sets the behavioural traits that are applied to this navigator and any {@link BitbucketSCMSource} instances it
-     * discovers. The new traits will take affect on the next navigation through any of the
+     * discovers. The new traits will take effect on the next navigation through any of the
      * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
      *
      * @param traits the new behavioural traits.
@@ -243,7 +243,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     /**
      * Sets the behavioural traits that are applied to this navigator and any {@link BitbucketSCMSource} instances it
-     * discovers. The new traits will take affect on the next navigation through any of the
+     * discovers. The new traits will take effect on the next navigation through any of the
      * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
      *
      * @param traits the new behavioural traits.
@@ -360,7 +360,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             setServerUrl(url);
             return;
         }
-        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring an url missing "
+        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
                 + "from the global configuration.", url);
         setServerUrl(url);
     }
@@ -495,7 +495,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             } else {
                 // Navigate the repositories of the repoOwner as a user
                 listener.getLogger().format("Looking up repositories of user %s%n", repoOwner);
-                request.withRepositories(bitbucket.getRepositories(UserRoleInRepository.OWNER));
+                request.withRepositories(bitbucket.getRepositories(UserRoleInRepository.ADMIN));
             }
             for (BitbucketRepository repo : request.repositories()) {
                 if (request.process(repo.getRepositoryName(), sourceFactory, null, witness)) {
@@ -609,7 +609,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         @SuppressWarnings("unused") // used By stapler
-        public ListBoxModel doFillServerUrlItems() {
+        public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
+            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+            if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             return BitbucketEndpointConfiguration.get().getEndpointItems();
         }
 
@@ -632,12 +636,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     SCMNavigatorTrait._for(this, BitbucketSCMNavigatorContext.class, BitbucketSCMSourceBuilder.class));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, BitbucketSCMSourceContext.class, null));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, null, BitbucketGitSCMBuilder.class));
-            all.addAll(SCMSourceTrait._for(sourceDescriptor, null, BitbucketHgSCMBuilder.class));
             Set<SCMTraitDescriptor<?>> dedup = new HashSet<>();
             for (Iterator<SCMTraitDescriptor<?>> iterator = all.iterator(); iterator.hasNext(); ) {
                 SCMTraitDescriptor<?> d = iterator.next();
                 if (dedup.contains(d)
-                        || d instanceof MercurialBrowserSCMSourceTrait.DescriptorImpl
                         || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
                     // remove any we have seen already and ban the browser configuration as it will always be bitbucket
                     iterator.remove();
@@ -653,7 +655,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     true, result);
             int insertionPoint = result.size();
             NamedArrayList.select(all, "Git", it -> GitSCM.class.isAssignableFrom(it.getScmClass()), true, result);
-            NamedArrayList.select(all, "Mercurial", it -> MercurialSCM.class.isAssignableFrom(it.getScmClass()), true, result);
             NamedArrayList.select(all, "General", null, true, result, insertionPoint);
             return result;
         }
@@ -745,23 +746,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             IconSet.icons.addIcon(
                     new Icon("icon-bitbucket-repo-git icon-xlg",
                             "plugin/cloudbees-bitbucket-branch-source/images/48x48/bitbucket-repository-git.png",
-                            Icon.ICON_XLARGE_STYLE));
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-sm",
-                            "plugin/cloudbees-bitbucket-branch-source/images/16x16/bitbucket-repository-hg.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-md",
-                            "plugin/cloudbees-bitbucket-branch-source/images/24x24/bitbucket-repository-hg.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-lg",
-                            "plugin/cloudbees-bitbucket-branch-source/images/32x32/bitbucket-repository-hg.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-bitbucket-repo-hg icon-xlg",
-                            "plugin/cloudbees-bitbucket-branch-source/images/48x48/bitbucket-repository-hg.png",
                             Icon.ICON_XLARGE_STYLE));
 
             IconSet.icons.addIcon(

@@ -25,7 +25,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketSCMSourceTest {
     @ClassRule
@@ -92,46 +92,6 @@ public class BitbucketSCMSourceTest {
         assertThat(instance.getServerUrl(), is("https://bitbucket.org"));
         assertThat(instance.getRepoOwner(), is("cloudbeers"));
         assertThat(instance.getRepository(), is("stunning-adventure"));
-        assertThat(instance.getCredentialsId(), is("bitbucket-cloud"));
-        assertThat(instance.getTraits(),
-                containsInAnyOrder(
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(BranchDiscoveryTrait.class),
-                                hasProperty("buildBranch", is(true)),
-                                hasProperty("buildBranchesWithPR", is(true))
-                        ),
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(OriginPullRequestDiscoveryTrait.class),
-                                hasProperty("strategyId", is(2))
-                        ),
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(ForkPullRequestDiscoveryTrait.class),
-                                hasProperty("strategyId", is(2)),
-                                hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
-                        ),
-                        Matchers.<SCMSourceTrait>instanceOf(PublicRepoPullRequestFilterTrait.class),
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(WebhookRegistrationTrait.class),
-                                hasProperty("mode", is(WebhookRegistration.DISABLE))
-                        )
-                )
-        );
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl(), is(nullValue()));
-        assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
-        assertThat(instance.getIncludes(), is("*"));
-        assertThat(instance.getExcludes(), is(""));
-        assertThat(instance.isAutoRegisterHook(), is(false));
-    }
-
-    @Test
-    public void basic_cloud_hg() throws Exception {
-        BitbucketSCMSource instance = load();
-        assertThat(instance.getId(), is("com.cloudbees.jenkins.plugins.bitbucket"
-                + ".BitbucketSCMNavigator::https://bitbucket.org::cloudbeers::shiny-telegram"));
-        assertThat(instance.getServerUrl(), is("https://bitbucket.org"));
-        assertThat(instance.getRepoOwner(), is("cloudbeers"));
-        assertThat(instance.getRepository(), is("shiny-telegram"));
         assertThat(instance.getCredentialsId(), is("bitbucket-cloud"));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
@@ -318,7 +278,7 @@ public class BitbucketSCMSourceTest {
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("*")),
-                                hasProperty("excludes", is("master"))
+                                hasProperty("excludes", is("main"))
                         ),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
@@ -330,7 +290,7 @@ public class BitbucketSCMSourceTest {
         assertThat(instance.getBitbucketServerUrl(), is(nullValue()));
         assertThat(instance.getCheckoutCredentialsId(), is(BitbucketSCMSource.DescriptorImpl.SAME));
         assertThat(instance.getIncludes(), is("*"));
-        assertThat(instance.getExcludes(), is("master"));
+        assertThat(instance.getExcludes(), is("main"));
         assertThat(instance.isAutoRegisterHook(), is(false));
     }
 

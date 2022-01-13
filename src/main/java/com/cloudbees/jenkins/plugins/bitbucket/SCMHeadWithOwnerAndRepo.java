@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import java.io.IOException;
@@ -73,19 +72,19 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
     private Object readResolve() throws ObjectStreamException {
         if (metadata != null) {
             // we just want to flag this as a PR, the legacy data did not contain the required information
-            // then the temporary PR class will be resolved by HgMigrationImpl or GitMigrationImpl when the
-            // context to look-up the correct target is (hopefully) available. If the context is not available
+            // then the temporary PR class will be resolved by GitMigrationImpl when the
+            // context to look up the correct target is (hopefully) available. If the context is not available
             // then worst case  we will end up triggering a rebuild on next index / event via take-over
-            return new PR(repoOwner, repoName, getName(), metadata.getId(), new BranchSCMHead("\u0000", null));
+            return new PR(repoOwner, repoName, getName(), metadata.getId(), new BranchSCMHead("\u0000"));
         }
-        return new BranchSCMHead(getName(), null);
+        return new BranchSCMHead(getName());
     }
 
     /**
-     * Marker class to ensure that we do not attempt apply an {@link SCMHeadMigration} on all
+     * Marker class to ensure that we do not attempt to apply a {@link SCMHeadMigration} on all
      * {@link PullRequestSCMHead} instances, rather we only apply it on ones that need migration. We need to use a
      * {@link ChangeRequestSCMHead} in order to retain the correct categorization of {@link SCMHead} instances
-     * in the event that the {@link HgMigrationImpl} or {@link GitMigrationImpl} fail to resolve the target.
+     * in the event that the {@link GitMigrationImpl} fail to resolve the target.
      */
     @Deprecated
     @Restricted(NoExternalUse.class)
@@ -126,52 +125,6 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
         return targets;
     }
 
-
-    @Restricted(NoExternalUse.class)
-    @Extension
-    public static class HgMigrationImpl extends SCMHeadMigration<BitbucketSCMSource, PR, BitbucketSCMSource.MercurialRevision>{
-
-        public HgMigrationImpl() {
-            super(BitbucketSCMSource.class, PR.class, BitbucketSCMSource.MercurialRevision.class);
-        }
-
-        @Override
-        public PullRequestSCMHead migrate(@NonNull BitbucketSCMSource source, @NonNull PR head) {
-            Map<String, String> targets = getTargets(source);
-            String target = targets.get(head.getId());
-            if (target == null) {
-                LOGGER.log(Level.WARNING, "Could not determine target branch for PR {0}. This may result in a rebuild",
-                        head.getId());
-                target = "\u0000";
-            }
-            return new PullRequestSCMHead(
-                    head.getName(),
-                    head.getRepoOwner(),
-                    head.getRepository(),
-                    head.getBranchName(),
-                    head.getId(),
-                    head.getTitle(),
-                    new BranchSCMHead(target, BitbucketRepositoryType.MERCURIAL),
-                    source.originOf(head.getRepoOwner(), head.getRepository()),
-                    ChangeRequestCheckoutStrategy.HEAD
-            );
-        }
-
-        @Override
-        public SCMRevision migrate(@NonNull BitbucketSCMSource source,
-                                   @NonNull BitbucketSCMSource.MercurialRevision revision) {
-
-            PullRequestSCMHead head = migrate(source, (PR) revision.getHead());
-            return head != null ? new PullRequestSCMRevision<>(
-                    head,
-                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
-                    // so we can leave it null as a placeholder
-                    new BitbucketSCMSource.MercurialRevision(head.getTarget(), (String) null),
-                    new BitbucketSCMSource.MercurialRevision(head, revision.getHash())
-            ) : null;
-        }
-    }
-
     @Restricted(NoExternalUse.class)
     @Extension
     public static class GitMigrationImpl extends SCMHeadMigration<BitbucketSCMSource, PR, AbstractGitSCMSource.SCMRevisionImpl>{
@@ -196,7 +149,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                     head.getBranchName(),
                     head.getId(),
                     head.getTitle(),
-                    new BranchSCMHead(target, BitbucketRepositoryType.GIT),
+                    new BranchSCMHead(target),
                     source.originOf(head.getRepoOwner(), head.getRepository()),
                     ChangeRequestCheckoutStrategy.HEAD
             );
@@ -207,7 +160,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                                    @NonNull AbstractGitSCMSource.SCMRevisionImpl revision) {
             PullRequestSCMHead head = migrate(source, (PR) revision.getHead());
             return head != null ? new PullRequestSCMRevision<>(head,
-                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
+                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision,
                     // so we can leave it null as a placeholder
                     new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), null),
                     new AbstractGitSCMSource.SCMRevisionImpl(head, revision.getHash()

@@ -31,9 +31,11 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import java.util.List;
+import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Represents <a href="https://bitbucket.org">Bitbucket Cloud</a>.
@@ -152,6 +154,7 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
         }
 
         public FormValidation doShowStats() {
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
             List<String> stats = BitbucketCloudApiClient.stats();
             StringBuilder builder = new StringBuilder();
             for (String stat : stats) {
@@ -160,7 +163,9 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
             return FormValidation.okWithMarkup(builder.toString());
         }
 
+        @POST
         public FormValidation doClear() {
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
             BitbucketCloudApiClient.clearCaches();
             return FormValidation.ok("Caches cleared");
         }

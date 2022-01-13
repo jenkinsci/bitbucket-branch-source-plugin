@@ -95,7 +95,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            //TODO: Determine supported by checking if its git/hg bitbucket scm with proper credentials and non wildcard branch
+            //TODO: Determine supported by checking if its git bitbucket scm with proper credentials and non wildcard branch
             return false;
         }
 
@@ -191,7 +191,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     if (endpoint != null && endpoint.getServerVersion() != BitbucketServerVersion.VERSION_7) {
                         ref = "pull-requests/" + pr.getId() + "/merge";
                     } else {
-                        // returning null to fallback to heavyweight checkout
+                        // returning null to fall back to heavyweight checkout
                         return null;
                     }
                 }

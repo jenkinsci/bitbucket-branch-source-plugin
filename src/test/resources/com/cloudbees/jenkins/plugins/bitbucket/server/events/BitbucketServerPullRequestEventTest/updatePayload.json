@@ -38,7 +38,7 @@
         "authorTimestamp": 0
       },
       "branch": {
-        "name": "master",
+        "name": "main",
         "rawNode": "feb8d676cd70406cecd4128c8fd1bee30282db11"
       }
     },
@@ -72,7 +72,7 @@
         "authorTimestamp": 0
       },
       "branch": {
-        "name": "master",
+        "name": "main",
         "rawNode": "d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"
       }
     }

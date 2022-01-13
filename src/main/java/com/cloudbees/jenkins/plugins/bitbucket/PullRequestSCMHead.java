@@ -41,7 +41,7 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
- * {@link SCMHead} for a BitBucket Pull request
+ * {@link SCMHead} for a Bitbucket pull request
  *
  * @since 2.0.0
  */
@@ -81,16 +81,15 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         this.strategy = strategy;
     }
 
-    public PullRequestSCMHead(String name, String repoOwner, String repository, BitbucketRepositoryType repositoryType,
-                              String branchName, BitbucketPullRequest pr, SCMHeadOrigin origin,
-                              ChangeRequestCheckoutStrategy strategy) {
+    public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
+                              BitbucketPullRequest pr, SCMHeadOrigin origin, ChangeRequestCheckoutStrategy strategy) {
         super(name);
         this.repoOwner = repoOwner;
         this.repository = repository;
         this.branchName = branchName;
         this.number = pr.getId();
         this.title = pr.getTitle();
-        this.target = new BranchSCMHead(pr.getDestination().getBranch().getName(), repositoryType);
+        this.target = new BranchSCMHead(pr.getDestination().getBranch().getName());
         this.origin = origin;
         this.strategy = strategy;
     }
@@ -121,22 +120,15 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
     @Deprecated
     @Restricted(DoNotUse.class)
     public PullRequestSCMHead(String repoOwner, String repository, String branchName, BitbucketPullRequest pr) {
-        this(repoOwner, repository, null, branchName, pr, null);
+        this(repoOwner, repository, branchName, pr, null);
     }
 
     @Deprecated
     @Restricted(DoNotUse.class)
-    public PullRequestSCMHead(String repoOwner, String repository, BitbucketRepositoryType repositoryType,
-                              String branchName, BitbucketPullRequest pr) {
-        this(repoOwner, repository, repositoryType, branchName, pr, null);
-    }
-
-    @Deprecated
-    @Restricted(DoNotUse.class)
-    public PullRequestSCMHead(String repoOwner, String repository, BitbucketRepositoryType repositoryType,
-                              String branchName, BitbucketPullRequest pr, SCMHeadOrigin origin) {
-        this(PR_BRANCH_PREFIX + pr.getId(), repoOwner, repository, repositoryType, branchName, pr, origin,
-                ChangeRequestCheckoutStrategy.HEAD);
+    public PullRequestSCMHead(String repoOwner, String repository, String branchName, BitbucketPullRequest pr,
+                              SCMHeadOrigin origin) {
+        this(PR_BRANCH_PREFIX + pr.getId(), repoOwner, repository, branchName, pr, origin,
+            ChangeRequestCheckoutStrategy.HEAD);
     }
 
     @SuppressWarnings("deprecation")
@@ -215,7 +207,6 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
      * Used to handle data migration.
      *
      * @see FixLegacyMigration1
-     * @see FixLegacyMigration2
      * @deprecated used for data migration.
      */
     @Deprecated
@@ -262,54 +253,11 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                                    @NonNull AbstractGitSCMSource.SCMRevisionImpl revision) {
             PullRequestSCMHead head = migrate(source, (FixLegacy) revision.getHead());
             return head != null ? new PullRequestSCMRevision<>(head,
-                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
+                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision,
                     // so we can leave it null as a placeholder
                     new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), null),
                     new AbstractGitSCMSource.SCMRevisionImpl(head, revision.getHash()
                     )
-            ) : null;
-        }
-    }
-
-    /**
-     * Used to handle data migration.
-     *
-     * @deprecated used for data migration.
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @Extension
-    public static class FixLegacyMigration2 extends
-            SCMHeadMigration<BitbucketSCMSource, FixLegacy, BitbucketSCMSource.MercurialRevision> {
-        public FixLegacyMigration2() {
-            super(BitbucketSCMSource.class, FixLegacy.class, BitbucketSCMSource.MercurialRevision.class);
-        }
-
-        @Override
-        public PullRequestSCMHead migrate(@NonNull BitbucketSCMSource source, @NonNull FixLegacy head) {
-            return new PullRequestSCMHead(
-                    head.getName(),
-                    head.getRepoOwner(),
-                    head.getRepository(),
-                    head.getBranchName(),
-                    head.getId(),
-                    head.getTitle(),
-                    (BranchSCMHead) head.getTarget(),
-                    source.originOf(head.getRepoOwner(), head.getRepository()),
-                    ChangeRequestCheckoutStrategy.HEAD
-            );
-        }
-
-        @Override
-        public SCMRevision migrate(@NonNull BitbucketSCMSource source,
-                                   @NonNull BitbucketSCMSource.MercurialRevision revision) {
-            PullRequestSCMHead head = migrate(source, (FixLegacy) revision.getHead());
-            return head != null ? new PullRequestSCMRevision<>(
-                    head,
-                    // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision
-                    // so we can leave it null as a placeholder
-                    new BitbucketSCMSource.MercurialRevision(head.getTarget(), (String) null),
-                    new BitbucketSCMSource.MercurialRevision(head, revision.getHash())
             ) : null;
         }
     }

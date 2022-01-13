@@ -87,6 +87,16 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean notificationsDisabled;
 
     /**
+     * {@code true} if unstable builds should be considered as successful by Bitbucket.
+     */
+    private boolean sendSuccessNotificationForUnstableBuild;
+
+    /**
+     * {@code false} if not build jobs should be send to Bitbucket.
+     */
+    private boolean disableNotificationForNotBuildJobs;
+
+    /**
      * Constructor.
      *
      * @param criteria (optional) criteria.
@@ -198,6 +208,25 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
+
+    }
+
+    /**
+     * Returns {@code true} if unstable builds should be passed as successful to Bitbucket.
+     *
+     * @return {@code true} if unstable builds should be passed as successful to Bitbucket.
+     */
+    public final boolean sendSuccessNotificationForUnstableBuild() {
+        return sendSuccessNotificationForUnstableBuild;
+    }
+
+    /**
+     * Returns {@code false} if not build jobs should be passed to Bitbucket.
+     *
+     * @return {@code false} if not build jobs should be passed to Bitbucket.
+     */
+    public boolean disableNotificationForNotBuildJobs() {
+        return disableNotificationForNotBuildJobs;
     }
 
     /**
@@ -322,6 +351,30 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final BitbucketSCMSourceContext withNotificationsDisabled(boolean disabled) {
         this.notificationsDisabled = disabled;
+        return this;
+    }
+
+    /**
+     * Defines behaviour of unstable builds in Bitbucket.
+     *
+     * @param isUnstableBuildSuccess {@code true} to consider unstable builds successful when notifying Bitbucket.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext withSendSuccessNotificationForUnstableBuild(boolean isUnstableBuildSuccess) {
+        this.sendSuccessNotificationForUnstableBuild = isUnstableBuildSuccess;
+        return this;
+    }
+
+    /**
+     * Defines behaviour of unstable builds in Bitbucket.
+     *
+     * @param disabled {@code false} to report not build jobs to Bitbucket.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext withDisableNotificationForNotBuildJobs(boolean disabled) {
+        this.disableNotificationForNotBuildJobs = disabled;
         return this;
     }
 

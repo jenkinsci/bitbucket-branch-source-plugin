@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License
  *
  * Copyright (c) 2016-2018, Yieldlab AG
@@ -27,14 +27,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.scm.SCM;
 import java.util.Collections;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
@@ -114,12 +112,6 @@ abstract class NativeServerHeadEvent<P> extends SCMHeadEvent<P> {
 
         final BitbucketSCMSource src = (BitbucketSCMSource) source;
         if (!isServerUrlMatch(src.getServerUrl())) {
-            return null;
-        }
-
-        final BitbucketRepositoryType type = BitbucketRepositoryType.fromString(getRepository().getScm());
-        if (type != BitbucketRepositoryType.GIT) {
-            LOGGER.log(Level.INFO, "Received event for unknown repository type: {0}", getRepository().getScm());
             return null;
         }
 
