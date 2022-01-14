@@ -36,7 +36,7 @@ import org.junit.rules.TestName;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketCloudPullRequestEventTest {
     @Rule
@@ -88,7 +88,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
                 anyOf(is("f612156eff2c"), is("f612156eff2c958f52f8e6e20c71f396aeaeaff4")));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
@@ -154,7 +154,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
                 anyOf(is("1986c2284946"), is("1986c228494671574242f99b62d1a00a4bfb69a5")));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
@@ -175,7 +175,7 @@ public class BitbucketCloudPullRequestEventTest {
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
                 anyOf(is("1c48041a96db"), is("1c48041a96db4c98620609260c21ff5fbc9640c2")));
         assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
@@ -219,7 +219,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
                 anyOf(is("1986c2284946"), is("1986c228494671574242f99b62d1a00a4bfb69a5")));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
@@ -240,7 +240,7 @@ public class BitbucketCloudPullRequestEventTest {
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
                 anyOf(is("63e3d18dca4c"), is("63e3d18dca4c61e6b9e31eb6036802c7730fa2b3")));
         assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
@@ -305,7 +305,7 @@ public class BitbucketCloudPullRequestEventTest {
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
                 anyOf(is("63e3d18dca4c"), is("63e3d18dca4c61e6b9e31eb6036802c7730fa2b3")));
         assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
@@ -349,7 +349,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
                 anyOf(is("5449b752db4f"), is("5449b752db4fa7ca0e2329d7f70122e2a82856cc")));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
@@ -370,7 +370,7 @@ public class BitbucketCloudPullRequestEventTest {
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
                 anyOf(is("63e3d18dca4c"), is("63e3d18dca4c61e6b9e31eb6036802c7730fa2b3")));
         assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
@@ -414,7 +414,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
                 anyOf(is("5449b752db4f"), is("5449b752db4fa7ca0e2329d7f70122e2a82856cc")));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
@@ -436,7 +436,7 @@ public class BitbucketCloudPullRequestEventTest {
                 is("https://api.bitbucket.org/2.0/repositories/stephenc/temp-fork"));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
                 anyOf(is("63e3d18dca4c"), is("63e3d18dca4c61e6b9e31eb6036802c7730fa2b3")));
         assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
@@ -480,7 +480,7 @@ public class BitbucketCloudPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(),
                 anyOf(is("f612156eff2c"), is("f612156eff2c958f52f8e6e20c71f396aeaeaff4")));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());

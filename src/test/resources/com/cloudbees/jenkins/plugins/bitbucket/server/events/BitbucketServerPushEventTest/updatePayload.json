@@ -32,7 +32,7 @@
         "closed": false,
         "new": {
           "type": "branch",
-          "name": "master",
+          "name": "main",
           "target": {
             "type": "commit",
             "hash": "836d9f1f2fa7fea7831ceddcd85f0fbf1b9f8f60"
@@ -40,7 +40,7 @@
         },
         "old": {
           "type": "branch",
-          "name": "master",
+          "name": "main",
           "target": {
             "type": "commit",
             "hash": "c985ccefce4df3b0ddc45a885c4881bfd8d24a47"

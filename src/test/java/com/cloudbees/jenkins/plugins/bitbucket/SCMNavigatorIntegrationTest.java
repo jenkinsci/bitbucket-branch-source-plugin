@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import hudson.model.ItemGroup;
@@ -54,8 +53,8 @@ public class SCMNavigatorIntegrationTest {
         assumeTrue(!isWindows()); // Test is unreliable on Windows, due to file locks
         BitbucketEndpointConfiguration
                 .get().addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test", false, null));
-        BitbucketMockApiFactory.add("http://bitbucket.test",
-                BitbucketClientMockUtils.getAPIClientMock(BitbucketRepositoryType.GIT, true));
+        BitbucketMockApiFactory.add("http://bitbucket.test", BitbucketClientMockUtils.getAPIClientMock(true, false));
+
         OrganizationFolder teamFolder = j.jenkins.createProject(OrganizationFolder.class, "test");
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam", null, null);
         navigator.setPattern("test-repos");

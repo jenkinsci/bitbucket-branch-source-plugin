@@ -47,7 +47,7 @@
         }
       },
       "branch": {
-        "name": "master"
+        "name": "main"
       },
       "repository": {
         "full_name": "cloudbeers/temp",
@@ -95,7 +95,7 @@
         }
       },
       "branch": {
-        "name": "master"
+        "name": "main"
       },
       "repository": {
         "full_name": "stephenc/temp-fork",

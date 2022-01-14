@@ -9,7 +9,7 @@
             "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commits?include=501bf5b99365d1d870882254b9360c17172bda0e"
           },
           "html": {
-            "href": "https://bitbucket.org/cloudbeers/temp/branch/master"
+            "href": "https://bitbucket.org/cloudbeers/temp/branch/main"
           }
         },
         "created": true,
@@ -106,16 +106,16 @@
           },
           "links": {
             "commits": {
-              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commits/master"
+              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commits/main"
             },
             "self": {
-              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/refs/branches/master"
+              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/refs/branches/main"
             },
             "html": {
-              "href": "https://bitbucket.org/cloudbeers/temp/branch/master"
+              "href": "https://bitbucket.org/cloudbeers/temp/branch/main"
             }
           },
-          "name": "master"
+          "name": "main"
         }
       }
     ]
