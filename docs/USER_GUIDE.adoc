@@ -123,6 +123,18 @@ Then create new _Secret text credentials_ in Jenkins and enter the Bitbucket per
 
 When configuring a multi-branch project, add the _Checkout over SSH_ behavior to a branch source, as the token can only be used for the Bitbucket API.
 
+=== App Passwords
+
+Bitbucket https://community.atlassian.com/t5/Bitbucket-articles/Announcement-Bitbucket-Cloud-account-password-usage-for-Git-over/ba-p/1948231[deprecated usage of Atlassian account password] for Bitbucket API and Git over HTTPS starting from March 1st, 2022 (Bitbucket Cloud only).
+
+The plugin can make use of an app password instead of the standard username/password.
+
+First create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
+
+Then create a new _Username with password credentials_ in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created app password in the _Password_ field.
+
+ IMPORTANT: App passwords do not support email address as a username for authentication. Using the email address will raise an authentication error in scanning/checkout process.
+
 === OAuth credentials
 
 The plugin can make use of OAuth credentials (Bitbucket Cloud only) instead of the standard username/password.
