@@ -72,6 +72,8 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -152,8 +154,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits{/hash}";
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
-    private static final int TOO_MANY_REQUESTS_HTTP_STATUS = 429;
-    private static final long REQUEST_WAIT_TIME_DEFAULT = 5000;
+    private static final int API_RATE_LIMIT_STATUS_CODE = 429;
+    private static final Duration API_RATE_LIMIT_INITIAL_SLEEP = Duration.ofSeconds(5);
+    private static final Duration API_RATE_LIMIT_MAX_SLEEP = Duration.ofMinutes(30);
 
     /**
      * Repository owner.
@@ -339,7 +342,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return pullRequests;
     }
 
-    private void setupPullRequest(BitbucketServerPullRequest pullRequest, BitbucketServerEndpoint endpoint) throws IOException {
+    private void setupPullRequest(BitbucketServerPullRequest pullRequest, BitbucketServerEndpoint endpoint) throws IOException, InterruptedException {
         // set commit closure to make commit information available when needed, in a similar way to when request branches
         setupClosureForPRBranch(pullRequest);
 
@@ -410,7 +413,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
     }
 
-    private void callPullRequestChangesById(@NonNull String id) throws IOException {
+    private void callPullRequestChangesById(@NonNull String id) throws IOException, InterruptedException {
         String url = UriTemplate
                 .fromTemplate(API_PULL_REQUEST_CHANGES_PATH)
                 .set("owner", getUserCentricOwner())
@@ -420,7 +423,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         getRequest(url);
     }
 
-    private boolean getPullRequestCanMergeById(@NonNull String id) throws IOException {
+    private boolean getPullRequestCanMergeById(@NonNull String id) throws IOException, InterruptedException {
         String url = UriTemplate
                 .fromTemplate(API_PULL_REQUEST_MERGE_PATH)
                 .set("owner", getUserCentricOwner())
@@ -440,7 +443,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      */
     @Override
     @NonNull
-    public BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException {
+    public BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException {
         String url = UriTemplate
                 .fromTemplate(API_PULL_REQUEST_PATH)
                 .set("owner", getUserCentricOwner())
@@ -464,7 +467,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      */
     @Override
     @NonNull
-    public BitbucketRepository getRepository() throws IOException {
+    public BitbucketRepository getRepository() throws IOException, InterruptedException {
         if (repositoryName == null) {
             throw new UnsupportedOperationException(
                     "Cannot get a repository from an API instance that is not associated with a repository");
@@ -486,7 +489,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * {@inheritDoc}
      */
     @Override
-    public void postCommitComment(@NonNull String hash, @NonNull String comment) throws IOException {
+    public void postCommitComment(@NonNull String hash, @NonNull String comment) throws IOException, InterruptedException {
         postRequest(
             UriTemplate
                 .fromTemplate(API_COMMIT_COMMENT_PATH)
@@ -504,7 +507,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * {@inheritDoc}
      */
     @Override
-    public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException {
+    public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
         postRequest(
             UriTemplate
                 .fromTemplate(API_COMMIT_STATUS_PATH)
@@ -518,7 +521,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * {@inheritDoc}
      */
     @Override
-    public boolean checkPathExists(@NonNull String branchOrHash, @NonNull String path) throws IOException {
+    public boolean checkPathExists(@NonNull String branchOrHash, @NonNull String path) throws IOException, InterruptedException {
         String url = UriTemplate
                 .fromTemplate(API_BROWSE_PATH)
                 .set("owner", getUserCentricOwner())
@@ -540,7 +543,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     @CheckForNull
     @Override
-    public String getDefaultBranch() throws IOException {
+    public String getDefaultBranch() throws IOException, InterruptedException {
         String url = UriTemplate
                 .fromTemplate(API_DEFAULT_BRANCH_PATH)
                 .set("owner", getUserCentricOwner())
@@ -595,7 +598,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     /** {@inheritDoc} */
     @NonNull
     @Override
-    public BitbucketCommit resolveCommit(@NonNull String hash) throws IOException {
+    public BitbucketCommit resolveCommit(@NonNull String hash) throws IOException, InterruptedException {
         String url = UriTemplate
                 .fromTemplate(API_COMMITS_PATH)
                 .set("owner", getUserCentricOwner())
@@ -743,7 +746,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * There is no such Team concept in Bitbucket Server but Project.
      */
     @Override
-    public BitbucketTeam getTeam() throws IOException {
+    public BitbucketTeam getTeam() throws IOException, InterruptedException {
         if (userCentric) {
             return null;
         } else {
@@ -811,7 +814,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     @Override
-    public boolean isPrivate() throws IOException {
+    public boolean isPrivate() throws IOException, InterruptedException {
         return getRepository().isPrivate();
     }
 
@@ -845,14 +848,15 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return resources;
     }
 
-    protected String getRequest(String path) throws IOException {
+    protected String getRequest(String path) throws IOException, InterruptedException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
 
         if (authenticator != null) {
             authenticator.configureRequest(httpget);
         }
 
-        try (CloseableHttpResponse response = executeMethod(httpget)) {
+        try(CloseableHttpClient client = getHttpClient(httpget);
+                CloseableHttpResponse response = executeMethod(client, httpget)) {
             String content;
             long len = response.getEntity().getContentLength();
             if (len == 0) {
@@ -894,7 +898,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             authenticator.configureRequest(httpget);
         }
 
-        try (CloseableHttpResponse response = executeMethod(httpget)) {
+        try (CloseableHttpClient client = getHttpClient(httpget);
+                CloseableHttpResponse response = executeMethod(client, httpget)) {
             BufferedImage content;
             long len = response.getEntity().getContentLength();
             if (len == 0) {
@@ -997,13 +1002,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
     }
 
-    private int getRequestStatus(String path) throws IOException {
+    private int getRequestStatus(String path) throws IOException, InterruptedException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
         if (authenticator != null) {
             authenticator.configureRequest(httpget);
         }
 
-        try(CloseableHttpResponse response = executeMethod(httpget)) {
+        try(CloseableHttpClient client = getHttpClient(httpget);
+                CloseableHttpResponse response = executeMethod(client, httpget)) {
             EntityUtils.consume(response.getEntity());
             return response.getStatusLine().getStatusCode();
         } finally {
@@ -1017,13 +1023,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return scheme + "://" + uri.getAuthority();
     }
 
-    private String postRequest(String path, List<? extends NameValuePair> params) throws IOException {
+    private String postRequest(String path, List<? extends NameValuePair> params) throws IOException, InterruptedException {
         HttpPost request = new HttpPost(this.baseURL + path);
         request.setEntity(new UrlEncodedFormEntity(params));
         return postRequest(request);
     }
 
-    private String postRequest(String path, String content) throws IOException {
+    private String postRequest(String path, String content) throws IOException, InterruptedException {
         HttpPost request = new HttpPost(this.baseURL + path);
         request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
         LOGGER.log(Level.FINEST, content);
@@ -1038,16 +1044,17 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return o.toString();
     }
 
-    private String postRequest(HttpPost httppost) throws IOException {
+    private String postRequest(HttpPost httppost) throws IOException, InterruptedException {
         return doRequest(httppost);
     }
 
-    private String doRequest(HttpRequestBase request) throws IOException {
+    private String doRequest(HttpRequestBase request) throws IOException, InterruptedException {
         if (authenticator != null) {
             authenticator.configureRequest(request);
         }
 
-        try (CloseableHttpResponse response = executeMethod(request)) {
+        try(CloseableHttpClient client = getHttpClient(request);
+                CloseableHttpResponse response = executeMethod(client, request)) {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NO_CONTENT) {
                 EntityUtils.consume(response.getEntity());
                 // 204, no content
@@ -1093,13 +1100,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
     }
 
-    private String putRequest(String path, String content) throws IOException {
+    private String putRequest(String path, String content) throws IOException, InterruptedException {
         HttpPut request = new HttpPut(this.baseURL + path);
         request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
         return doRequest(request);
     }
 
-    private String deleteRequest(String path) throws IOException {
+    private String deleteRequest(String path) throws IOException, InterruptedException {
         HttpDelete request = new HttpDelete(this.baseURL + path);
         return doRequest(request);
     }
@@ -1192,27 +1199,29 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     @Restricted(ProtectedExternally.class)
-    protected CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws IOException {
-        CloseableHttpClient client = getHttpClient(httpMethod);
+    protected CloseableHttpResponse executeMethod(CloseableHttpClient client, HttpRequestBase httpMethod) throws IOException, InterruptedException {
         CloseableHttpResponse response = client.execute(httpMethod, context);
-        int count = 0;
-        while (response.getStatusLine().getStatusCode() == TOO_MANY_REQUESTS_HTTP_STATUS && count < 300) {
-            /*
-             * TODO: When bitbucket starts supporting rate limit expiration time, remove 5
-             * sec wait and put code to wait till expiration time is over. It should also
-             * fix the wait for ever loop.
-             */
-            LOGGER.fine("Bitbucket server API rate limit reached, sleeping for " + REQUEST_WAIT_TIME_DEFAULT
-                    + " milliseconds before retrying...");
+        Instant start = Instant.now();
+        Instant forcedEnd = start.plus(API_RATE_LIMIT_MAX_SLEEP);
+        Duration sleepDuration = API_RATE_LIMIT_INITIAL_SLEEP;
+        while (response.getStatusLine().getStatusCode() == API_RATE_LIMIT_STATUS_CODE
+                && Instant.now().plus(sleepDuration).isBefore(forcedEnd)) {
             try {
-                Thread.sleep(REQUEST_WAIT_TIME_DEFAULT);
-            } catch (InterruptedException e) {
-                return response;
+                response.close();
+            } finally {
+                httpMethod.releaseConnection();
             }
-            count++;
-
-            response.close();
-            httpMethod.releaseConnection();
+            /*
+             * TODO: If The Bitbucket Server API ever starts sending rate limit expiration time, we should
+             * change this to a more precise sleep.
+             * TODO: It would be better to log this to a context-appropriate TaskListener, e.g. an org/repo scan log.
+             */
+            LOGGER.log(Level.FINE, "Bitbucket server API rate limit reached, sleeping for {0} before retrying",
+                    sleepDuration);
+            Thread.sleep(sleepDuration.toMillis());
+            // Duration increases exponentially: 5s, 7s, 10s, 15s, 22s, ... 6m6s, 9m9s.
+            // We will retry at most 13 times and sleep for roughly 27 minutes.
+            sleepDuration = Duration.ofSeconds((int)(sleepDuration.getSeconds() * 1.5));
             response = client.execute(httpMethod, context);
         }
         return response;
