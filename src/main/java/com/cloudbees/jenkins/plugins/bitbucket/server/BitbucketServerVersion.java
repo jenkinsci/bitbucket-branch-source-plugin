@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License
  *
  * Copyright (c) 2016-2020, CloudBees Inc.

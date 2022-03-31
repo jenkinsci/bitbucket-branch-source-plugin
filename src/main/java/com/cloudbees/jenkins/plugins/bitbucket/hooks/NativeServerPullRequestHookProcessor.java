@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License
  *
  * Copyright (c) 2016-2018, Yieldlab AG
@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerPullRequestEvent;
 import com.google.common.base.Ascii;
@@ -40,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -90,7 +90,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 return;
         }
 
-        SCMHeadEvent.fireNow(new HeadEvent(serverUrl, eventType, pullRequestEvent, origin));
+        SCMHeadEvent.fireLater(new HeadEvent(serverUrl, eventType, pullRequestEvent, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
     }
 
     private static final class HeadEvent extends NativeServerHeadEvent<NativeServerPullRequestEvent> implements HasPullRequests {
@@ -126,8 +126,8 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 final String originalBranchName = pullRequest.getSource().getBranch().getName();
                 final String branchName = String.format("PR-%s%s", pullRequest.getId(),
                     strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
-                final PullRequestSCMHead head = new PullRequestSCMHead(branchName, source.getRepoOwner(), source.getRepository(),
-                    BitbucketRepositoryType.GIT, originalBranchName, pullRequest, headOrigin, strategy);
+                final PullRequestSCMHead head = new PullRequestSCMHead(branchName, source.getRepoOwner(),
+                    source.getRepository(), originalBranchName, pullRequest, headOrigin, strategy);
 
                 switch (getType()) {
                     case CREATED:

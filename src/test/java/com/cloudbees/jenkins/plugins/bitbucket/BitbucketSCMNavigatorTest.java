@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketSCMNavigatorTest {
     @ClassRule
@@ -341,7 +341,7 @@ public class BitbucketSCMNavigatorTest {
                         allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("*")),
-                                hasProperty("excludes", is("master"))
+                                hasProperty("excludes", is("main"))
                         ),
                         allOf(
                                 instanceOf(WebhookRegistrationTrait.class),
@@ -355,7 +355,7 @@ public class BitbucketSCMNavigatorTest {
         assertThat(instance.getPattern(), is(".*"));
         assertThat(instance.isAutoRegisterHooks(), is(false));
         assertThat(instance.getIncludes(), is("*"));
-        assertThat(instance.getExcludes(), is("master"));
+        assertThat(instance.getExcludes(), is("main"));
     }
 
     @Test

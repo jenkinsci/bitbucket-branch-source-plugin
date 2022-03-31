@@ -92,6 +92,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
+     * {@code false} if not build jobs should be send to Bitbucket.
+     */
+    private boolean disableNotificationForNotBuildJobs;
+
+    /**
      * Constructor.
      *
      * @param criteria (optional) criteria.
@@ -213,6 +218,15 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean sendSuccessNotificationForUnstableBuild() {
         return sendSuccessNotificationForUnstableBuild;
+    }
+
+    /**
+     * Returns {@code false} if not build jobs should be passed to Bitbucket.
+     *
+     * @return {@code false} if not build jobs should be passed to Bitbucket.
+     */
+    public boolean disableNotificationForNotBuildJobs() {
+        return disableNotificationForNotBuildJobs;
     }
 
     /**
@@ -349,6 +363,18 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final BitbucketSCMSourceContext withSendSuccessNotificationForUnstableBuild(boolean isUnstableBuildSuccess) {
         this.sendSuccessNotificationForUnstableBuild = isUnstableBuildSuccess;
+        return this;
+    }
+
+    /**
+     * Defines behaviour of not-built jobs in Bitbucket.
+     *
+     * @param disabled {@code false} to report not-built jobs to Bitbucket.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext withDisableNotificationForNotBuildJobs(boolean disabled) {
+        this.disableNotificationForNotBuildJobs = disabled;
         return this;
     }
 

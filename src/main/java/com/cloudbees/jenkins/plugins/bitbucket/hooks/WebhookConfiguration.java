@@ -214,7 +214,7 @@ public class WebhookConfiguration {
             case VERSION_5_10:
                 return NATIVE_SERVER_EVENTS_v6;
             case VERSION_6:
-                // plugin version 2.9.1 introduced VERSION_6 setting for BitBucket but it
+                // plugin version 2.9.1 introduced VERSION_6 setting for Bitbucket but it
                 // actually applies
                 // to Version 5.10+. In order to preserve backwards compatibility, rather than
                 // remove

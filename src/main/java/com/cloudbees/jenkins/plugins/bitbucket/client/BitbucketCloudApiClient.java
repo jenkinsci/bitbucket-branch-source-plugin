@@ -34,7 +34,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
@@ -235,30 +234,24 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @NonNull
     @Override
-    public String getRepositoryUri(@NonNull BitbucketRepositoryType type,
-                                   @NonNull BitbucketRepositoryProtocol protocol,
+    public String getRepositoryUri(@NonNull BitbucketRepositoryProtocol protocol,
                                    @CheckForNull String cloneLink,
                                    @NonNull String owner,
                                    @NonNull String repository) {
         // ignore port override on Cloud
-        switch (type) {
-            case GIT:
-                switch (protocol) {
-                    case HTTP:
-                        if (authenticator != null) {
-                            String username = authenticator.getUserUri();
-                            if (!username.isEmpty()) {
-                                return "https://" + username + "@bitbucket.org/" + owner + "/" + repository + ".git";
-                            }
-                        }
-                        return "https://bitbucket.org/" + owner + "/" + repository + ".git";
-                    case SSH:
-                        return "git@bitbucket.org:" + owner + "/" + repository + ".git";
-                    default:
-                        throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
+        switch (protocol) {
+            case HTTP:
+                if (authenticator != null) {
+                    String username = authenticator.getUserUri();
+                    if (!username.isEmpty()) {
+                        return "https://" + username + "@bitbucket.org/" + owner + "/" + repository + ".git";
+                    }
                 }
+                return "https://bitbucket.org/" + owner + "/" + repository + ".git";
+            case SSH:
+                return "git@bitbucket.org:" + owner + "/" + repository + ".git";
             default:
-                throw new IllegalArgumentException("Unsupported repository type: " + type);
+                throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
         }
     }
 
@@ -311,7 +304,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      * PRs with missing source / destination branch are invalid and should be ignored.
      *
      * @param pr a {@link BitbucketPullRequest}
-     * @return
+     * @return whether the PR should be ignored
      */
     private boolean shouldIgnore(BitbucketPullRequest pr) {
         return pr.getSource().getRepository() == null
@@ -321,7 +314,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     /**
-     * Make available commit informations in a lazy way.
+     * Make available commit information in a lazy way.
      *
      * @author Nikolas Falco
      */
@@ -851,7 +844,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     @Restricted(ProtectedExternally.class)
     protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws InterruptedException, IOException {
-
         HttpClientContext requestContext = null;
         if (API_HOST.equals(host)) {
             requestContext = context;
