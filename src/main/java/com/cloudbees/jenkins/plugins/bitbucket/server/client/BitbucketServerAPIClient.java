@@ -1206,11 +1206,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         Duration sleepDuration = API_RATE_LIMIT_INITIAL_SLEEP;
         while (response.getStatusLine().getStatusCode() == API_RATE_LIMIT_STATUS_CODE
                 && Instant.now().plus(sleepDuration).isBefore(forcedEnd)) {
-            try {
-                response.close();
-            } finally {
-                httpMethod.releaseConnection();
-            }
+            response.close();
+            httpMethod.releaseConnection();
             /*
              * TODO: If The Bitbucket Server API ever starts sending rate limit expiration time, we should
              * change this to a more precise sleep.
