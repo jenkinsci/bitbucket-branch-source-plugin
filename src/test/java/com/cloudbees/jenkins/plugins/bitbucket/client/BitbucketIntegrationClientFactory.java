@@ -29,12 +29,15 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.tools.ant.filters.StringInputStream;
 
 import static org.mockito.Mockito.mock;
@@ -48,6 +51,27 @@ public class BitbucketIntegrationClientFactory {
         };
 
         IRequestAudit getAudit();
+
+        default CloseableHttpResponse loadResponseFromResources(Class<?> resourceBase, String path, String payloadPath) throws IOException {
+            try (InputStream json = resourceBase.getResourceAsStream(payloadPath)) {
+                if (json == null) {
+                    throw new IllegalStateException("Payload for the REST path " + path + " could not be found: " + payloadPath);
+                }
+                HttpEntity entity = mock(HttpEntity.class);
+                String jsonString = IOUtils.toString(json);
+                when(entity.getContentLength()).thenReturn((long)jsonString.getBytes(StandardCharsets.UTF_8).length);
+                when(entity.getContent()).thenReturn(new StringInputStream(jsonString));
+
+                StatusLine statusLine = mock(StatusLine.class);
+                when(statusLine.getStatusCode()).thenReturn(200);
+
+                CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+                when(response.getEntity()).thenReturn(entity);
+                when(response.getStatusLine()).thenReturn(statusLine);
+
+                return response;
+            }
+        }
     }
 
     public static BitbucketApi getClient(String payloadRootPath, String serverURL, String owner, String repositoryName) {
@@ -63,11 +87,12 @@ public class BitbucketIntegrationClientFactory {
         return getClient(null, serverURL, owner, repositoryName);
     }
 
-    private static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient implements IRequestAudit {
+    public static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient implements IRequestAudit {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/server/payload/";
 
         private final String payloadRootPath;
         private final IRequestAudit audit;
+        private boolean rateLimitNextRequest; // TODO: Would be nice to have a better way to mock non-200 responses.
 
         private BitbucketServerIntegrationClient(String payloadRootPath, String baseURL, String owner, String repositoryName) {
             super(baseURL, owner, repositoryName, (BitbucketAuthenticator) null, false);
@@ -82,19 +107,24 @@ public class BitbucketIntegrationClientFactory {
             this.audit = mock(IRequestAudit.class);
         }
 
+        public void rateLimitNextRequest() {
+            rateLimitNextRequest = true;
+        }
+
         @Override
-        protected String getRequest(String path) throws IOException {
+        protected CloseableHttpResponse executeMethodNoRetry(CloseableHttpClient client, HttpRequestBase httpMethod, HttpClientContext context) throws IOException {
+            if (rateLimitNextRequest) {
+                rateLimitNextRequest = false;
+                return createRateLimitResponse();
+            }
+            String path = httpMethod.getURI().toString();
+            path = path.substring(path.indexOf("/rest/api/"));
             audit.request(path);
 
             String payloadPath = path.replace("/rest/api/", "").replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";
 
-            try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
-                if (json == null) {
-                    throw new IllegalStateException("Payload for the REST path " + path + " could be found");
-                }
-                return IOUtils.toString(json);
-            }
+            return loadResponseFromResources(getClass(), path, payloadPath);
         }
 
         @Override
@@ -135,22 +165,7 @@ public class BitbucketIntegrationClientFactory {
             String payloadPath = path.replace(API_ENDPOINT, "").replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";
 
-            try (InputStream json = this.getClass().getResourceAsStream(payloadPath)) {
-                if (json == null) {
-                    throw new IllegalStateException("Payload for the REST path " + path + " could be found");
-                }
-                HttpEntity entity = mock(HttpEntity.class);
-                when(entity.getContent()).thenReturn(new StringInputStream(IOUtils.toString(json)));
-
-                StatusLine statusLine = mock(StatusLine.class);
-                when(statusLine.getStatusCode()).thenReturn(200);
-
-                CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-                when(response.getEntity()).thenReturn(entity);
-                when(response.getStatusLine()).thenReturn(statusLine);
-
-                return response;
-            }
+            return loadResponseFromResources(getClass(), path, payloadPath);
         }
 
         @Override
@@ -161,5 +176,15 @@ public class BitbucketIntegrationClientFactory {
 
     public static BitbucketApi getApiMockClient(String serverURL) {
         return BitbucketIntegrationClientFactory.getClient(null, serverURL, "amuniz", "test-repos");
+    }
+
+    private static CloseableHttpResponse createRateLimitResponse() {
+        StatusLine statusLine = mock(StatusLine.class);
+        when(statusLine.getStatusCode()).thenReturn(429);
+
+        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+        when(response.getStatusLine()).thenReturn(statusLine);
+
+        return response;
     }
 }

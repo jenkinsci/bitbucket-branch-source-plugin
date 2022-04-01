@@ -59,6 +59,7 @@ import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Main;
 import hudson.ProxyConfiguration;
 import hudson.Util;
 import java.awt.image.BufferedImage;
@@ -155,7 +156,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits{/hash}";
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
     private static final int API_RATE_LIMIT_STATUS_CODE = 429;
-    private static final Duration API_RATE_LIMIT_INITIAL_SLEEP = Duration.ofSeconds(5);
+    private static final Duration API_RATE_LIMIT_INITIAL_SLEEP = Main.isUnitTest ? Duration.ofMillis(100) : Duration.ofSeconds(5);
     private static final Duration API_RATE_LIMIT_MAX_SLEEP = Duration.ofMinutes(30);
 
     /**
@@ -1198,9 +1199,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return content;
     }
 
-    @Restricted(ProtectedExternally.class)
-    protected CloseableHttpResponse executeMethod(CloseableHttpClient client, HttpRequestBase httpMethod) throws IOException, InterruptedException {
-        CloseableHttpResponse response = client.execute(httpMethod, context);
+    private CloseableHttpResponse executeMethod(CloseableHttpClient client, HttpRequestBase httpMethod) throws IOException, InterruptedException {
+        CloseableHttpResponse response = executeMethodNoRetry(client, httpMethod, context);
         Instant start = Instant.now();
         Instant forcedEnd = start.plus(API_RATE_LIMIT_MAX_SLEEP);
         Duration sleepDuration = API_RATE_LIMIT_INITIAL_SLEEP;
@@ -1219,9 +1219,15 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             // Duration increases exponentially: 5s, 7s, 10s, 15s, 22s, ... 6m6s, 9m9s.
             // We will retry at most 13 times and sleep for roughly 27 minutes.
             sleepDuration = Duration.ofSeconds((int)(sleepDuration.getSeconds() * 1.5));
-            response = client.execute(httpMethod, context);
+            response = executeMethodNoRetry(client, httpMethod, context);
         }
         return response;
+    }
+
+    // Exists just so it can be mocked in BitbucketIntegrationClientFactory.
+    @Restricted(ProtectedExternally.class)
+    protected CloseableHttpResponse executeMethodNoRetry(CloseableHttpClient client, HttpRequestBase httpMethod, HttpClientContext context) throws IOException, InterruptedException {
+        return client.execute(httpMethod, context);
     }
 
 }
