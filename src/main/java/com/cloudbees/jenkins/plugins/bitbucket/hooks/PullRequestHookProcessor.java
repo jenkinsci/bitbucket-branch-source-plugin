@@ -109,6 +109,11 @@ public class PullRequestHookProcessor extends HookProcessor {
         }
 
         @Override
+        public Cause[] asCauses() {
+            return new Cause[]{new WebhookCause(payload)};
+        }
+
+        @Override
         public boolean isMatch(@NonNull SCMNavigator navigator) {
             if (!(navigator instanceof BitbucketSCMNavigator)) {
                 return false;
