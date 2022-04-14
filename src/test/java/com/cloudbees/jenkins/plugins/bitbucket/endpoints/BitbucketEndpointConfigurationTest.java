@@ -30,7 +30,6 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import hudson.XmlFile;
 import hudson.security.ACL;
@@ -45,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -634,7 +634,7 @@ public class BitbucketEndpointConfigurationTest {
     public void given__serverConfig__without__webhookImplementation__then__usePlugin() throws Exception {
         final URL configWithoutWebhookImpl = Resources.getResource(getClass(), "config-without-webhook-impl.xml");
         final File configFile = new File(Jenkins.get().getRootDir(), BitbucketEndpointConfiguration.class.getName() + ".xml");
-        Files.copy(Resources.newInputStreamSupplier(configWithoutWebhookImpl), configFile);
+        FileUtils.copyURLToFile(configWithoutWebhookImpl, configFile);
 
         final BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
 
