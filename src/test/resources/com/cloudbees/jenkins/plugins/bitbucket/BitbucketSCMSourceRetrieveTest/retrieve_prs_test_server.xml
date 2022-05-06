@@ -1,0 +1,38 @@
+<com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
+  <id>retrieve_prs_test_server</id>
+  <credentialsId>bb-server-creds</credentialsId>
+  <checkoutCredentialsId>SAME</checkoutCredentialsId>
+  <repoOwner>DUB</repoOwner>
+  <repository>stunning-adventure</repository>
+  <includes>*</includes>
+  <excludes></excludes>
+  <autoRegisterHook>false</autoRegisterHook>
+  <bitbucketServerUrl>https://bitbucket.test</bitbucketServerUrl>
+  <sshPort>7999</sshPort>
+  <repositoryType>GIT</repositoryType>
+  <traits>
+    <jenkins.scm.impl.trait.RegexSCMHeadFilterTrait>
+      <regex>.*</regex>
+    </jenkins.scm.impl.trait.RegexSCMHeadFilterTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait>
+      <strategyId>3</strategyId>
+    </com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistrationTrait>
+      <mode>ITEM</mode>
+    </com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistrationTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.OriginPullRequestDiscoveryTrait>
+      <strategyId>1</strategyId>
+    </com.cloudbees.jenkins.plugins.bitbucket.OriginPullRequestDiscoveryTrait>
+    <jenkins.plugins.git.traits.RefSpecsSCMSourceTrait>
+      <templates>
+        <jenkins.plugins.git.traits.RefSpecsSCMSourceTrait_-RefSpecTemplate>
+          <value>+refs/heads/*:refs/remotes/@{remote}/*</value>
+        </jenkins.plugins.git.traits.RefSpecsSCMSourceTrait_-RefSpecTemplate>
+      </templates>
+    </jenkins.plugins.git.traits.RefSpecsSCMSourceTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.ForkPullRequestDiscoveryTrait>
+      <strategyId>1</strategyId>
+      <trust class="com.cloudbees.jenkins.plugins.bitbucket.ForkPullRequestDiscoveryTrait$TrustEveryone"/>
+    </com.cloudbees.jenkins.plugins.bitbucket.ForkPullRequestDiscoveryTrait>
+  </traits>
+</com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>

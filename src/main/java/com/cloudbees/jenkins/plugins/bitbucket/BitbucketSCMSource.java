@@ -68,6 +68,7 @@ import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -563,7 +564,7 @@ public class BitbucketSCMSource extends SCMSource {
                         try {
                             if (event instanceof HasPullRequests) {
                                 HasPullRequests hasPrEvent = (HasPullRequests) event;
-                                return hasPrEvent.getPullRequests(BitbucketSCMSource.this);
+                                return getBitbucketPullRequestsFromEvent(hasPrEvent, listener);
                             }
 
                             return (Iterable<BitbucketPullRequest>) buildBitbucketClient().getPullRequests();
@@ -614,6 +615,24 @@ public class BitbucketSCMSource extends SCMSource {
         } catch (WrappedException e) {
             e.unwrap();
         }
+    }
+
+    private Iterable<BitbucketPullRequest> getBitbucketPullRequestsFromEvent(@NonNull HasPullRequests incomingPrEvent, @NonNull TaskListener listener) {
+        BitbucketApi bitBucket = buildBitbucketClient();
+        Collection<BitbucketPullRequest> initializedPRs = new HashSet<>();
+        try {
+            Iterable<BitbucketPullRequest> pullRequests =
+                incomingPrEvent.getPullRequests(BitbucketSCMSource.this);
+            for (BitbucketPullRequest pr : pullRequests) {
+                // ensure that the PR is properly initialized via /changes API
+                // see BitbucketServerAPIClient.setupPullRequest()
+                initializedPRs.add(bitBucket.getPullRequestById(Integer.parseInt(pr.getId())));
+                listener.getLogger().format("Initialized PR: %s%n", pr.getLink());
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new BitbucketSCMSource.WrappedException(e);
+        }
+        return initializedPRs;
     }
 
     private void retrievePullRequests(final BitbucketSCMSourceRequest request) throws IOException, InterruptedException {
