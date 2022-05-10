@@ -51,6 +51,11 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     private boolean disableNotificationForNotBuildJobs;
 
     /**
+     * Should not send any notification to Bitbucket
+     */
+    private boolean disableNotifications;
+
+    /**
      * Constructor.
      *
      */
@@ -85,6 +90,19 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
         return this.disableNotificationForNotBuildJobs;
     }
 
+    @DataBoundSetter
+    public void setDisableNotifications(boolean isNotificationDisabled) {
+        disableNotifications = isNotificationDisabled;
+    }
+
+    /**
+     * @return if builds notifications will be communicated
+     */
+    public boolean getDisableNotifications() {
+        return this.disableNotifications;
+    }
+
+
     /**
      * {@inheritDoc}
      */
@@ -92,6 +110,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         ((BitbucketSCMSourceContext) context).withDisableNotificationForNotBuildJobs(getDisableNotificationForNotBuildJobs());
         ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
+        ((BitbucketSCMSourceContext) context).withNotificationsDisabled(getDisableNotifications());
     }
 
     /**
