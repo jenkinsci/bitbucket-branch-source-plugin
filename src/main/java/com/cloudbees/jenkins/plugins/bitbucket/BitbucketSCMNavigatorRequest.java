@@ -76,6 +76,7 @@ public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
 
     public Collection<BitbucketRepository> repositories() {
         final List<String> existingRepositories = this.observer.getContext().getSCMSources().stream()
+                                                               .filter(BitbucketSCMSource.class::isInstance)
                                                                .map(BitbucketSCMSource.class::cast)
                                                                .map(BitbucketSCMSource::getRepository)
                                                                .collect(Collectors.toList());
