@@ -31,7 +31,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.TagSCMHead;
 
 /**
- * {@link SCMHead} for a BitBucket tags.
+ * {@link SCMHead} for a Bitbucket tags.
  *
  * @since 2.2.11
  */
@@ -55,19 +55,8 @@ public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
      * @param timestamp      the timestamp of tag
      */
     public BitbucketTagSCMHead(@NonNull String tagName, long timestamp) {
-        this(tagName, timestamp, BitbucketRepositoryType.GIT);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param tagName        the tag name
-     * @param timestamp      the timestamp of tag
-     * @param repositoryType the repository type.
-     */
-    public BitbucketTagSCMHead(String tagName, long timestamp, BitbucketRepositoryType repositoryType) {
         super(tagName, timestamp);
-        this.repositoryType = repositoryType;
+        this.repositoryType = BitbucketRepositoryType.GIT;
     }
 
     /**
@@ -84,6 +73,6 @@ public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
      */
     @Override
     public String getPronoun() {
-        return Messages.BitBucketTagSCMHead_Pronoun();
+        return Messages.BitbucketTagSCMHead_Pronoun();
     }
 }

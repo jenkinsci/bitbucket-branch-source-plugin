@@ -55,16 +55,16 @@
           },
           "links": {
             "commits": {
-              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commits/master"
+              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commits/main"
             },
             "self": {
-              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/refs/branches/master"
+              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/refs/branches/main"
             },
             "html": {
-              "href": "https://bitbucket.org/cloudbeers/temp/branch/master"
+              "href": "https://bitbucket.org/cloudbeers/temp/branch/main"
             }
           },
-          "name": "master"
+          "name": "main"
         },
         "links": {
           "diff": {
@@ -197,16 +197,16 @@
           },
           "links": {
             "commits": {
-              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commits/master"
+              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/commits/main"
             },
             "self": {
-              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/refs/branches/master"
+              "href": "https://api.bitbucket.org/2.0/repositories/cloudbeers/temp/refs/branches/main"
             },
             "html": {
-              "href": "https://bitbucket.org/cloudbeers/temp/branch/master"
+              "href": "https://bitbucket.org/cloudbeers/temp/branch/main"
             }
           },
-          "name": "master"
+          "name": "main"
         }
       },
       {

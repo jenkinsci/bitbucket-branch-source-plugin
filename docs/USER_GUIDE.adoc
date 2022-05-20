@@ -1,20 +1,21 @@
-= CloudBees Bitbucket Branch Source plugin
+= Bitbucket Branch Source Plugin
 
 [IMPORTANT]
 =====================================================================
-On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7] which removed some undocumented features with regards to pull requests.
+On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7] which removed some undocumented features related to pull requests.
 
-. BitBucket Server Pipeline jobs can no longer perform a lightweight checkout of the Jenkinsfile if you are using the merge strategy for builds.
-.. BitBucket Server no longer stores the merged result of a PR to link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&[improve performance]
-.. BitBucket Server Pipeline jobs will automatically fallback to heavyweight checkout
-. BitBucket Server 7.x no longer automatically creates the required refs for pull requests
-.. For Bitbucket Server Pipeline jobs to function for pull requests on BitBucket Server 7.x you need to enable "Call Changes api" option in the plugin configuration
+. With Bitbucket Server 7.x, Jenkins Pipeline jobs can no longer perform a lightweight checkout of the `Jenkinsfile` if you are using the merge strategy for builds.
+.. This is due to Bitbucket Server 7.x no longer storing the merge commit for PRs to `refs/pull-requests/*/merge` which was a prerequisite for lightweight checkout.
+.. Bitbucket Server Pipeline jobs will automatically fall back to heavyweight checkout.
+.. link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-2389584[Atlassian has explained their reasons for making this change] and has made it clear they will not be re-adding this behavior.
+. For Jenkins Pipeline jobs to function for pull requests on Bitbucket Server 7.x, you need to enable "Call Changes api" option in the plugin configuration.
+.. Bitbucket Server 7.x no longer automatically creates the required refs for pull requests. Calls to this new API are required to trigger ref creation.
 
 =====================================================================
 
 [id=bitbucket-sect-intro]
 
-_CloudBees Bitbucket Branch Source plugin_ (_Bitbucket plugin_ up now) allows use of Bitbucket Cloud and Server
+_Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Server
 as a multi-branch project source in two different ways:
 
  * *Single repository source*: automatic creation of jobs for branches and pull requests in a specific repository.
@@ -23,9 +24,9 @@ as a multi-branch project source in two different ways:
  IMPORTANT: This plugin is not compatible with versions of Bitbucket Server previous to 4.0.
 
 [id=bitbucket-server-7]
-== BitBucket Server 7 compatibility
+== Bitbucket Server 7 compatibility
 
-_BitBucket Server 7.x_ is supported but does no longer support lightweight checkout for pull requests when merge strategy is used for build.
+_Bitbucket Server 7.x_ is supported but does no longer support lightweight checkout for pull requests when merge strategy is used for build.
 
 IMPORTANT: In order to have the pull request process working the "Call Changes api" option must be
 enabled in _Manage Jenkins_ » _Configure System_
@@ -83,12 +84,12 @@ image::images/screenshot-9.png[scaledwidth=90%]
 == Webhooks registering
 
 The use of https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html[Bitbucket webhooks]
-allows to trigger builds on branches and pull requests just when a new commit is done. Bitbucket plugin expose a special
+allows to trigger builds on branches and pull requests just when a new commit is done. Bitbucket plugin exposes a special
 service to listen to this webhook requests and acts accordingly by triggering a new reindex and finally
 triggering builds on matching branches or pull requests.
 
 For both _Bitbucket Multibranch_ projects and _Bitbucket Team_ projects there is an option in the configuration page
-to let Jenkins to automatically register the webhooks in all involved repositories.
+to let Jenkins automatically register the webhooks in all involved repositories.
 
 image::images/screenshot-4.png[scaledwidth=90%]
 
@@ -98,27 +99,52 @@ properly configured in _Manage Jenkins_ » _Configure System_
 [id=bitbucket-creds-config]
 == Credentials configuration
 
-The configuration of Bitbucket plugin (for both _Bitbucket Multibranch_ projects and _Bitbucket Team/Project_) has
+The configuration of the plugin (for both _Bitbucket Multibranch_ projects and _Bitbucket Team/Project_) has
 two credentials to configure:
 
-. *Scan Credentials*: credentials used to access Bitbucket API in order to discover repositories, branches and pull requests.
-If not set then anonymous access is used, so only public repositories, branches and pull requests are discovered and managed. Note that the
-Webhooks auto-register feature requires scan credentials to be set. Only HTTP or OAuth credentials are accepted in this field.
-. *Checkout Credentials*: credentials used to checkout sources once the repository, branch or pull request is discovered. HTTP, SSH and OAuthcredentials
-are allowed. If not set then _Scan Credentials_ are used.
+. *Scan Credentials*: Credentials used to access Bitbucket API in order to discover repositories, branches and pull requests.
+If not set then anonymous access is used, so only public repositories, branches and pull requests are discovered and managed.
+Note that the Webhooks auto-register feature requires scan credentials to be set.
+HTTP Basic Authentication, Access Token and OAuth credentials are supported.
+. *Checkout Credentials*: Credentials used to check out sources once the repository, branch or pull request is discovered.
+HTTP Basic Authentication, SSH and OAuth credentials are supported.
+If not set then _Scan Credentials_ are used.
 
 image::images/screenshot-3.png[scaledwidth=90%]
 
+=== Access Token
+
+The plugin can make use of an access token (Bitbucket Server only) instead of the standard username/password.
+
+First create a new _personal access token_ in Bitbucket as instructed in the https://confluence.atlassian.com/bitbucketserver0716/personal-access-tokens-1086402495.html[Bitbucket Personal Access Tokens Documentation].
+At least allow _read_ access for repositories. If you want the plugin to install the webhooks, allow _admin_ access for repositories.
+
+Then create new _Secret text credentials_ in Jenkins and enter the Bitbucket personal access token value in the _Secret_ field.
+
+When configuring a multi-branch project, add the _Checkout over SSH_ behavior to a branch source, as the token can only be used for the Bitbucket API.
+
+=== App Passwords
+
+Bitbucket https://community.atlassian.com/t5/Bitbucket-articles/Announcement-Bitbucket-Cloud-account-password-usage-for-Git-over/ba-p/1948231[deprecated usage of Atlassian account password] for Bitbucket API and Git over HTTPS starting from March 1st, 2022 (Bitbucket Cloud only).
+
+The plugin can make use of an app password instead of the standard username/password.
+
+First create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
+
+Then create a new _Username with password credentials_ in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created app password in the _Password_ field.
+
+ IMPORTANT: App passwords do not support email address as a username for authentication. Using the email address will raise an authentication error in scanning/checkout process.
+
 === OAuth credentials
 
-Bitbucket plugin can make use of OAuth credentials instead of the standard username/password.
+The plugin can make use of OAuth credentials (Bitbucket Cloud only) instead of the standard username/password.
 
-First create a new OAuth consumer as instructed in https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html[Bitbucket OAuth Documentation].
-Don't forget to check _This is a private consumer_ and at least allow read access to the repositories and Pull requests. If you want the Bitbucket to install the Webhooks also allow the read and write access of the Webhooks
+First create a new _OAuth consumer_ in Bitbucket as instructed in the https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html[Bitbucket OAuth Documentation].
+Don't forget to check _This is a private consumer_ and at least allow _read_ access for repositories and pull requests. If you want the plugin to install the webhooks, also allow _read_ and _write_ access for webhooks.
 
 image::images/screenshot-10.png[scaledwidth=90%]
 
-Then create new _Username with password credentials_, enter the Bitbucket OAuth consumer key in _Username_ field and the Bitbucket OAuth consumer secret in _Password_ field
+Then create new _Username with password credentials_ in Jenkins, enter the Bitbucket OAuth consumer key in the _Username_ field and the Bitbucket OAuth consumer secret in the _Password_ field.
 
 image::images/screenshot-11.png[scaledwidth=90%]
 
@@ -127,7 +153,7 @@ image::images/screenshot-12.png[scaledwidth=90%]
 [id=bitbucket-misc-config]
 == Miscellaneous configuration
 
-In case of slow network, you can increase socket timeout using the link:https://jenkins.io/doc/book/managing/script-console/[Script Console] :
+In case of slow network, you can increase socket timeout using the link:https://jenkins.io/doc/book/managing/script-console/[Script Console]:
 
 [source,groovy]
 ----

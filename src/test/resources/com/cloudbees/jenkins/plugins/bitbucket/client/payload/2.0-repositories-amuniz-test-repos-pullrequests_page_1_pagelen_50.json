@@ -69,7 +69,7 @@
         "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
       },
       "branch": {
-        "name": "master"
+        "name": "main"
       }
     },
     "created_on": "2018-11-08T13:45:13.837779+00:00",
@@ -208,7 +208,7 @@
         "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
       },
       "branch": {
-        "name": "master"
+        "name": "main"
       }
     },
     "created_on": "2018-09-21T14:57:59.455870+00:00",
@@ -485,7 +485,7 @@
           "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
         },
         "branch": {
-          "name": "master"
+          "name": "main"
         }
       },
       "created_on": "2018-11-08T13:45:13.837779+00:00",
@@ -587,7 +587,7 @@
           "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
         },
         "branch": {
-          "name": "master"
+          "name": "main"
         }
       },
       "created_on": "2018-09-21T14:57:59.455870+00:00",

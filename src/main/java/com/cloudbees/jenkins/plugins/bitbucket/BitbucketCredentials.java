@@ -36,6 +36,7 @@ import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.Serializable;
@@ -107,6 +108,10 @@ class BitbucketCredentials implements Serializable {
         @QueryParameter String serverUrl) {
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeEmptyValue();
+        AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+        if (!contextToCheck.hasPermission(CredentialsProvider.VIEW)) {
+            return result;
+        }
         result.includeMatchingAs(
                 context instanceof Queue.Task
                         ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
@@ -124,6 +129,8 @@ class BitbucketCredentials implements Serializable {
         @QueryParameter String value,
         @QueryParameter String serverUrl) {
         if (!value.isEmpty()) {
+            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
+            contextToCheck.checkPermission(CredentialsProvider.VIEW);
             if (CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
                             StandardCertificateCredentials.class,

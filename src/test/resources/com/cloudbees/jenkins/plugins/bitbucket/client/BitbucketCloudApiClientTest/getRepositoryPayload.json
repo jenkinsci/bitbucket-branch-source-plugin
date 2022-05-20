@@ -74,7 +74,7 @@
     "created_on": "2016-08-17T11:00:23.063614+00:00",
     "mainbranch": {
         "type": "branch",
-        "name": "master"
+        "name": "main"
     },
     "full_name": "acme/tds.cm.maven.plugins-java",
     "has_issues": false,
