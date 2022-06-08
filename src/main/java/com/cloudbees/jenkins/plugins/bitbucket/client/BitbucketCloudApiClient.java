@@ -28,12 +28,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
@@ -46,7 +46,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullR
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHooks;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositorySource;
@@ -128,7 +127,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Logger LOGGER = Logger.getLogger(BitbucketCloudApiClient.class.getName());
     private static final HttpHost API_HOST = HttpHost.create("https://api.bitbucket.org");
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
-    private static final String V2_TEAMS_API_BASE_URL = "https://api.bitbucket.org/2.0/teams";
+    private static final String V2_WORKSPACES_API_BASE_URL = "https://api.bitbucket.org/2.0/workspaces";
     private static final String REPO_URL_TEMPLATE = V2_API_BASE_URL + "{/owner,repo}";
     private static final int API_RATE_LIMIT_CODE = 429;
     // Limit images to 16k
@@ -235,30 +234,24 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @NonNull
     @Override
-    public String getRepositoryUri(@NonNull BitbucketRepositoryType type,
-                                   @NonNull BitbucketRepositoryProtocol protocol,
+    public String getRepositoryUri(@NonNull BitbucketRepositoryProtocol protocol,
                                    @CheckForNull String cloneLink,
                                    @NonNull String owner,
                                    @NonNull String repository) {
         // ignore port override on Cloud
-        switch (type) {
-            case GIT:
-                switch (protocol) {
-                    case HTTP:
-                        if (authenticator != null) {
-                            String username = authenticator.getUserUri();
-                            if (!username.isEmpty()) {
-                                return "https://" + username + "@bitbucket.org/" + owner + "/" + repository + ".git";
-                            }
-                        }
-                        return "https://bitbucket.org/" + owner + "/" + repository + ".git";
-                    case SSH:
-                        return "git@bitbucket.org:" + owner + "/" + repository + ".git";
-                    default:
-                        throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
+        switch (protocol) {
+            case HTTP:
+                if (authenticator != null) {
+                    String username = authenticator.getUserUri();
+                    if (!username.isEmpty()) {
+                        return "https://" + username + "@bitbucket.org/" + owner + "/" + repository + ".git";
+                    }
                 }
+                return "https://bitbucket.org/" + owner + "/" + repository + ".git";
+            case SSH:
+                return "git@bitbucket.org:" + owner + "/" + repository + ".git";
             default:
-                throw new IllegalArgumentException("Unsupported repository type: " + type);
+                throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
         }
     }
 
@@ -311,7 +304,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      * PRs with missing source / destination branch are invalid and should be ignored.
      *
      * @param pr a {@link BitbucketPullRequest}
-     * @return
+     * @return whether the PR should be ignored
      */
     private boolean shouldIgnore(BitbucketPullRequest pr) {
         return pr.getSource().getRepository() == null
@@ -321,7 +314,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     }
 
     /**
-     * Make available commit informations in a lazy way.
+     * Make available commit information in a lazy way.
      *
      * @author Nikolas Falco
      */
@@ -675,14 +668,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Override
     @CheckForNull
     public BitbucketTeam getTeam() throws IOException, InterruptedException {
-        final String url = UriTemplate.fromTemplate(V2_TEAMS_API_BASE_URL + "{/owner}")
+        final String url = UriTemplate.fromTemplate(V2_WORKSPACES_API_BASE_URL + "{/owner}")
                 .set("owner", owner)
                 .expand();
 
         Callable<BitbucketTeam> request = () -> {
             try {
                 String response = getRequest(url);
-                return JsonParser.toJava(response, BitbucketCloudTeam.class);
+                return JsonParser.toJava(response, BitbucketCloudWorkspace.class);
             } catch (FileNotFoundException e) {
                 return null;
             } catch (IOException e) {
@@ -851,7 +844,6 @@ public class BitbucketCloudApiClient implements BitbucketApi {
 
     @Restricted(ProtectedExternally.class)
     protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws InterruptedException, IOException {
-
         HttpClientContext requestContext = null;
         if (API_HOST.equals(host)) {
             requestContext = context;

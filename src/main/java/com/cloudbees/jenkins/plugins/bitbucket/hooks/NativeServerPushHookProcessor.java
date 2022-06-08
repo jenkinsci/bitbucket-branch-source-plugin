@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License
  *
  * Copyright (c) 2016-2018, Yieldlab AG
@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -50,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -110,7 +110,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         }
 
         for (final SCMEvent.Type type : events.keySet()) {
-            SCMHeadEvent.fireNow(new HeadEvent(serverUrl, type, events.get(type), origin, refsChangedEvent));
+            SCMHeadEvent.fireLater(new HeadEvent(serverUrl, type, events.get(type), origin, refsChangedEvent), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
         }
     }
 
@@ -150,13 +150,12 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 String refType = change.getRef().getType();
 
                 if ("BRANCH".equals(refType)) {
-                    final BranchSCMHead head = new BranchSCMHead(change.getRef().getDisplayId(),
-                            BitbucketRepositoryType.GIT);
+                    final BranchSCMHead head = new BranchSCMHead(change.getRef().getDisplayId());
                     final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
                             : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
                     result.put(head, revision);
                 } else if ("TAG".equals(refType)) {
-                    SCMHead head = new BitbucketTagSCMHead(change.getRef().getDisplayId(), 0, BitbucketRepositoryType.GIT);
+                    SCMHead head = new BitbucketTagSCMHead(change.getRef().getDisplayId(), 0);
                     final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
                             : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
                     result.put(head, revision);
@@ -210,8 +209,8 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                         final String branchName = String.format("PR-%s%s", pullRequest.getId(),
                             strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
 
-                        final PullRequestSCMHead head = new PullRequestSCMHead(branchName, sourceOwnerName, sourceRepoName,
-                            BitbucketRepositoryType.GIT, originalBranchName, pullRequest, headOrigin, strategy);
+                        final PullRequestSCMHead head = new PullRequestSCMHead(branchName, sourceOwnerName,
+                            sourceRepoName, originalBranchName, pullRequest, headOrigin, strategy);
 
                         final String targetHash = pullRequest.getDestination().getCommit().getHash();
                         final String pullHash = pullRequest.getSource().getCommit().getHash();

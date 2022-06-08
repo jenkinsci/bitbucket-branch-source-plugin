@@ -60,7 +60,6 @@ public interface BitbucketApi {
     /**
      * Returns the URI of the repository.
      *
-     * @param type the type of repository.
      * @param protocol the protocol to access the repository with.
      * @param cloneLink the actual clone link for the repository as sent by the server, or {@code null} if unknown.
      * @param owner the owner
@@ -68,8 +67,7 @@ public interface BitbucketApi {
      * @return the repository URI.
      */
     @NonNull
-    String getRepositoryUri(@NonNull BitbucketRepositoryType type,
-                            @NonNull BitbucketRepositoryProtocol protocol,
+    String getRepositoryUri(@NonNull BitbucketRepositoryProtocol protocol,
                             @CheckForNull String cloneLink,
                             @NonNull String owner,
                             @NonNull String repository);
@@ -295,7 +293,7 @@ public interface BitbucketApi {
      * Returns a list of all children file for the given folder.
      *
      * @param parent to list
-     * @return a iterable of {@link SCMFile} children of the given folder.
+     * @return an iterable of {@link SCMFile} children of the given folder.
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */

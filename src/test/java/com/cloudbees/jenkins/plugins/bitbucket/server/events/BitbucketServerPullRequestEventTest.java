@@ -38,7 +38,7 @@ import org.junit.rules.TestName;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketServerPullRequestEventTest {
     @Rule
@@ -89,7 +89,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
         assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(), is("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"));
         assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
         assertThat(event.getPullRequest().getDestination().getCommit().getHash(), is(
@@ -110,7 +110,7 @@ public class BitbucketServerPullRequestEventTest {
                         is("http://local.example.com:7990/bitbucket/users/user/repos/rep_1/browse")));
 
         assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("master"));
+        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("main"));
         assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
                 is("feb8d676cd70406cecd4128c8fd1bee30282db11"));
         assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
@@ -142,7 +142,7 @@ public class BitbucketServerPullRequestEventTest {
         assertThat(pullRequest.getDestination().getRepository().getLinks().get("self").get(0).getHref(),
                 is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
         assertThat(pullRequest.getDestination().getBranch(), notNullValue());
-        assertThat(pullRequest.getDestination().getBranch().getName(), is("master"));
+        assertThat(pullRequest.getDestination().getBranch().getName(), is("main"));
         assertThat(pullRequest.getDestination().getBranch().getRawNode(),
                 is("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"));
         assertThat(pullRequest.getDestination().getCommit(), notNullValue());
@@ -165,7 +165,7 @@ public class BitbucketServerPullRequestEventTest {
         );
 
         assertThat(pullRequest.getSource().getBranch(), notNullValue());
-        assertThat(pullRequest.getSource().getBranch().getName(), is("master"));
+        assertThat(pullRequest.getSource().getBranch().getName(), is("main"));
         assertThat(pullRequest.getSource().getBranch().getRawNode(),
                 is("feb8d676cd70406cecd4128c8fd1bee30282db11"));
         assertThat(pullRequest.getSource().getCommit(), notNullValue());

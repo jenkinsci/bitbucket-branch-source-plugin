@@ -5,7 +5,7 @@
   <repoOwner>cloudbeers</repoOwner>
   <repository>stunning-adventure</repository>
   <includes>*</includes>
-  <excludes>master</excludes>
+  <excludes>main</excludes>
   <autoRegisterHook>false</autoRegisterHook>
   <sshPort>-1</sshPort>
   <repositoryType>GIT</repositoryType>

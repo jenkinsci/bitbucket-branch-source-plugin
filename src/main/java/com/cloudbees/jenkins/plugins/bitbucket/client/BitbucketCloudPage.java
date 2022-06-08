@@ -25,9 +25,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Bitbucket paginated resource
@@ -43,7 +43,7 @@ public class BitbucketCloudPage<T> extends BitbucketPage<T> {
                        @JsonProperty("page") int page,
                        @JsonProperty("size") int size,
                        @Nullable @JsonProperty("next") String next,
-                       @Nonnull @JsonProperty("values") List<T> values) {
+                       @NonNull @JsonProperty("values") List<T> values) {
         this.pageLength = pageLength;
         this.page = page;
         this.size = size;

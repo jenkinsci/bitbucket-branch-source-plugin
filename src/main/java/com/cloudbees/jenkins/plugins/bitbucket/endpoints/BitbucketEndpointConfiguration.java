@@ -270,7 +270,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * Checks to see if the supplied server URL is defined in the global configuration.
      *
      * @param serverUrl the server url to check.
-     * @param clazz
+     * @param clazz the class to check.
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
     public synchronized Optional<AbstractBitbucketEndpoint> findEndpoint(@CheckForNull String serverUrl,

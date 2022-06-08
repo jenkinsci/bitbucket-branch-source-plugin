@@ -26,11 +26,9 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import jenkins.scm.api.SCMHead;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.DoNotUse;
 
 /**
- * {@link SCMHead} for a BitBucket branch.
+ * {@link SCMHead} for a Bitbucket branch.
  *
  * @since 2.0.0
  */
@@ -51,23 +49,10 @@ public class BranchSCMHead extends SCMHead {
      * Constructor.
      *
      * @param branchName the branch name
-     * @deprecated use {@link #BranchSCMHead(String, BitbucketRepositoryType)}
      */
-    @Deprecated
-    @Restricted(DoNotUse.class)
     public BranchSCMHead(String branchName) {
-        this(branchName, null);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param branchName     the branch name
-     * @param repositoryType the repository type.
-     */
-    public BranchSCMHead(String branchName, BitbucketRepositoryType repositoryType) {
         super(branchName);
-        this.repositoryType = repositoryType;
+        this.repositoryType = BitbucketRepositoryType.GIT;
     }
 
     /**

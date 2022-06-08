@@ -23,16 +23,18 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceObserver;
 import jenkins.scm.api.SCMSourceObserver.ProjectObserver;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.impl.NullSCMSource;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -40,6 +42,7 @@ import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 public class SCMNavigatorTest {
 
@@ -49,12 +52,14 @@ public class SCMNavigatorTest {
     @Test
     public void teamRepositoriesDiscovering() throws IOException, InterruptedException {
         BitbucketMockApiFactory.add("http://bitbucket.test",
-                BitbucketClientMockUtils.getAPIClientMock(BitbucketRepositoryType.GIT, true));
+                BitbucketClientMockUtils.getAPIClientMock(true, false));
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam", null, null);
         navigator.setPattern("repo(.*)");
         navigator.setBitbucketServerUrl("http://bitbucket.test");
+        final SCMSourceOwner mock = Mockito.mock(SCMSourceOwner.class);
+        when(mock.getSCMSources()).thenReturn(Collections.singletonList(new BitbucketSCMSource("myteam", "repo1")));
         SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(),
-                Mockito.mock(SCMSourceOwner.class));
+                                                                   mock);
         navigator.visitSources(observer);
 
         assertEquals("myteam", navigator.getRepoOwner());
@@ -63,8 +68,44 @@ public class SCMNavigatorTest {
         List<String> observed = observer.getObserved();
         // Only 2 repositories match the pattern
         assertEquals("There must be 2 repositories in the team", 2, observed.size());
-        assertEquals("repo1", observed.get(0));
-        assertEquals("repo2", observed.get(1));
+        assertEquals("repo2 should be first", "repo2", observed.get(0));
+        assertEquals("repo1 should be second", "repo1", observed.get(1));
+
+        List<ProjectObserver> observers = observer.getProjectObservers();
+        for (ProjectObserver obs : observers) {
+            List<SCMSource> sources = ((SCMSourceObserverImpl.ProjectObserverImpl) obs).getSources();
+            // It should contain only one source
+            assertEquals("Only one source must be created per observed repository", 1, sources.size());
+            SCMSource scmSource = sources.get(0);
+            assertTrue("BitbucketSCMSource instances must be added", scmSource instanceof BitbucketSCMSource);
+            // Check correct repoOwner (team name in this case) was set
+            assertEquals(((BitbucketSCMSource) scmSource).getRepoOwner(), "myteam");
+        }
+    }
+
+    @Test
+    public void teamRepositoriesDiscoveringNullSource() throws IOException, InterruptedException {
+        BitbucketMockApiFactory.add("http://bitbucket.test",
+                                    BitbucketClientMockUtils.getAPIClientMock(true, false));
+        BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam", null, null);
+        navigator.setPattern("repo(.*)");
+        navigator.setBitbucketServerUrl("http://bitbucket.test");
+        final SCMSourceOwner mock = Mockito.mock(SCMSourceOwner.class);
+        when(mock.getSCMSources())
+        .thenReturn(ImmutableList.of(new BitbucketSCMSource("myteam", "repo1"),
+                                     new NullSCMSource()));
+        SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(),
+                                                                   mock);
+        navigator.visitSources(observer);
+
+        assertEquals("myteam", navigator.getRepoOwner());
+        assertEquals("repo(.*)", navigator.getPattern());
+
+        List<String> observed = observer.getObserved();
+        // Only 2 repositories match the pattern
+        assertEquals("There must be 2 repositories in the team", 2, observed.size());
+        assertEquals("repo2 should be first", "repo2", observed.get(0));
+        assertEquals("repo1 should be second", "repo1", observed.get(1));
 
         List<ProjectObserver> observers = observer.getProjectObservers();
         for (ProjectObserver obs : observers) {
