@@ -26,9 +26,12 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMSourceObserver;
 import jenkins.scm.api.trait.SCMNavigatorRequest;
@@ -46,6 +49,11 @@ public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
     private final Map<String, BitbucketRepository> repositoryMap = new TreeMap<>();
 
     /**
+     * keep a reference to the observer so we can cross-reference
+     */
+    private final SCMSourceObserver observer;
+
+    /**
      * Constructor.
      *
      * @param source   the source.
@@ -56,6 +64,7 @@ public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
                                            @NonNull BitbucketSCMNavigatorContext context,
                                            @NonNull SCMSourceObserver observer) {
         super(source, context, observer);
+        this.observer = observer;
     }
 
     public void withRepositories(List<? extends BitbucketRepository> repositories) {
@@ -66,7 +75,20 @@ public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
     }
 
     public Collection<BitbucketRepository> repositories() {
-        return this.repositoryMap.values();
+        final List<String> existingRepositories = this.observer.getContext().getSCMSources().stream()
+                                                               .filter(BitbucketSCMSource.class::isInstance)
+                                                               .map(BitbucketSCMSource.class::cast)
+                                                               .map(BitbucketSCMSource::getRepository)
+                                                               .collect(Collectors.toList());
+        // process new repositories first
+        final Set<BitbucketRepository> newRepositories = this.repositoryMap.entrySet()
+                                                                           .stream()
+                                                                           .filter(e -> !existingRepositories.contains(e.getKey()))
+                                                                           .map(Map.Entry::getValue)
+                                                                           .collect(Collectors.toCollection(LinkedHashSet::new));
+        // add remaining repositories back in. duplicates will be rejected
+        newRepositories.addAll(this.repositoryMap.values());
+        return newRepositories;
     }
 
     public BitbucketRepository getBitbucketRepository(String repositoryName) {
