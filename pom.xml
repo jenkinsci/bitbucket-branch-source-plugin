@@ -29,7 +29,6 @@
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.version>2.303.3</jenkins.version>
-    <java.level>8</java.level>
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
   </properties>
 
@@ -64,7 +63,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.303.x</artifactId>
-        <version>1478.v81d3dc4f9a_43</version>
+        <version>1500.ve4d05cd32975</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
