@@ -367,9 +367,9 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     }
 
     /**
-     * Defines behaviour of unstable builds in Bitbucket.
+     * Defines behaviour of not-built jobs in Bitbucket.
      *
-     * @param disabled {@code false} to report not build jobs to Bitbucket.
+     * @param disabled {@code false} to report not-built jobs to Bitbucket.
      * @return {@code this} for method chaining.
      */
     @NonNull
