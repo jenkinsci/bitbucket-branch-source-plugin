@@ -27,9 +27,16 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCache;
 import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import hudson.model.Item;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
@@ -61,7 +68,7 @@ public class BitbucketTeamMetadataAction extends AvatarMetadataAction {
     public static class BitbucketAvatarCacheSource implements AvatarCacheSource, Serializable {
         private static final long serialVersionUID = 1L;
         private final String serverUrl;
-        private final StandardCredentials credentials;
+        private StandardCredentials credentials;
         private final String repoOwner;
 
         public BitbucketAvatarCacheSource(String serverUrl, StandardCredentials credentials, String repoOwner) {
@@ -72,18 +79,64 @@ public class BitbucketTeamMetadataAction extends AvatarMetadataAction {
         }
 
         @Override
-        public AvatarImage fetch() {
-            BitbucketAuthenticator authenticator = AuthenticationTokens
-                    .convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
-            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
+        public AvatarImage fetch(StandardCredentials credentials) {
             try {
-                return bitbucket.getTeamAvatar();
+                return doFetch(credentials);
             } catch (IOException e) {
+                if (e.getCause() instanceof BitbucketRequestException) {
+                    BitbucketRequestException bre = (BitbucketRequestException) e.getCause();
+                    if (bre.getHttpCode()==401) {
+                        // credentials not updated here maybe we need to refresh them
+                        StandardCredentials standardCredentials = findCredentials();
+                        // try again with refreshed credentials
+                        // TODO compare previous and new token if we really need to try again
+                        if (standardCredentials != null) {
+                            this.credentials = standardCredentials;
+                            try {
+                                return doFetch(this.credentials);
+                            } catch (IOException | InterruptedException ex) {
+                                LOGGER.log(Level.INFO, ex.getClass().getName()+": " + e.getMessage(), e);
+                            }
+                        }
+                    }
+                }
                 LOGGER.log(Level.INFO, "IOException: " + e.getMessage(), e);
             } catch (InterruptedException e) {
                 LOGGER.log(Level.INFO, "InterruptedException: " + e.getMessage(), e);
             }
             return null;
+        }
+
+        private StandardCredentials findCredentials() {
+            try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
+                return CredentialsMatchers.firstOrNull(
+                        CredentialsProvider.lookupCredentials(
+                                credentials.getClass(),
+                                (Item) null, // context
+                                ACL.SYSTEM,
+                                URIRequirementBuilder.fromUri(serverUrl).build()
+                        ),
+                        CredentialsMatchers.allOf(
+                                CredentialsMatchers.withId(credentials.getId()),
+                                CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(credentials.getClass()))
+                        )
+                );
+            }
+        }
+
+        private AvatarImage doFetch(StandardCredentials credentials) throws IOException, InterruptedException {
+            BitbucketAuthenticator authenticator = AuthenticationTokens
+                    .convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
+            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
+            return bitbucket.getTeamAvatar();
+        }
+
+        @Override
+        public AvatarImage fetch() {
+            if(this.credentials==null) {
+                throw new UnsupportedOperationException("this method can be used only with credentials");
+            }
+            return this.fetch(this.credentials);
         }
 
         @Override

@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.avatars;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import java.awt.image.BufferedImage;
 
 /**
@@ -49,23 +50,33 @@ public interface AvatarCacheSource {
 
     /**
      *
+     * @deprecated use {@link #fetch(StandardCredentials)}
      * Fetch image from source
      *
      * @return AvatarImage object
      */
-    public AvatarImage fetch();
+    @Deprecated
+    AvatarImage fetch();
+
+    /**
+     *
+     * Fetch image from source
+     * @param credentials the credentials to use
+     * @return AvatarImage object
+     */
+    AvatarImage fetch(StandardCredentials credentials);
 
     /**
      * Get unique hashKey for this item
      *
      * @return AvatarImage object
      */
-    public String hashKey();
+    String hashKey();
 
     /**
      * Make sure we can fetch
      *
      * @return true if can fetch
      */
-    public boolean canFetch();
+    boolean canFetch();
 }
