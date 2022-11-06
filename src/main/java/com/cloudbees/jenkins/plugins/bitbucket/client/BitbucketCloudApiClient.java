@@ -137,6 +137,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private CloseableHttpClient client;
     private HttpClientContext context;
     private final String owner;
+    private final String projectKey;
     private final String repositoryName;
     private final boolean enableCache;
     private final BitbucketAuthenticator authenticator;
@@ -167,14 +168,15 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Deprecated
     public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
                                    String owner, String repositoryName, StandardUsernamePasswordCredentials credentials) {
-        this(enableCache, teamCacheDuration, repositoriesCacheDuration, owner, repositoryName,
+        this(enableCache, teamCacheDuration, repositoriesCacheDuration, owner, null, repositoryName,
                 new BitbucketUsernamePasswordAuthenticator(credentials));
     }
 
     public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
-            String owner, String repositoryName, BitbucketAuthenticator authenticator) {
+            String owner, String projectKey, String repositoryName, BitbucketAuthenticator authenticator) {
         this.authenticator = authenticator;
         this.owner = owner;
+        this.projectKey = projectKey;
         this.repositoryName = repositoryName;
         this.enableCache = enableCache;
         if (enableCache) {
@@ -752,9 +754,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             cacheKey.append("::<anonymous>");
         }
 
-        final UriTemplate template = UriTemplate.fromTemplate(V2_API_BASE_URL + "{/owner}{?role,page,pagelen}")
+        final UriTemplate template = UriTemplate.fromTemplate(V2_API_BASE_URL + "{/owner}{?role,page,pagelen,q}")
                 .set("owner", owner)
                 .set("pagelen", MAX_PAGE_LENGTH);
+        if (StringUtils.isNotBlank(projectKey)) {
+            template.set("q", "project.key=" + "\"" + projectKey + "\""); // q=project.key="<projectKey>"
+        }
         if (role != null &&  authenticator != null) {
             template.set("role", role.getId());
             cacheKey.append("::").append(role.getId());

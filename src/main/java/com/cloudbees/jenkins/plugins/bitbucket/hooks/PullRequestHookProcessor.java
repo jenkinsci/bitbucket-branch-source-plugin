@@ -59,6 +59,7 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.apache.commons.lang.StringUtils;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_DECLINED;
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_MERGED;
@@ -113,10 +114,24 @@ public class PullRequestHookProcessor extends HookProcessor {
                 return false;
             }
             BitbucketSCMNavigator bbNav = (BitbucketSCMNavigator) navigator;
+            if (!isProjectKeyMatch(bbNav.getProjectKey())) {
+                return false;
+            }
+
             if (!isServerUrlMatch(bbNav.getServerUrl())) {
                 return false;
             }
             return bbNav.getRepoOwner().equalsIgnoreCase(getPayload().getRepository().getOwnerName());
+        }
+
+        private boolean isProjectKeyMatch(String projectKey) {
+            if (StringUtils.isBlank(projectKey)) {
+                return true;
+            }
+            if (this.getPayload().getRepository().getProject() != null) {
+                return projectKey.equals(this.getPayload().getRepository().getProject().getKey());
+            }
+            return true;
         }
 
         private boolean isServerUrlMatch(String serverUrl) {

@@ -524,7 +524,7 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     public BitbucketApi buildBitbucketClient(String repoOwner, String repository) {
-        return BitbucketApiFactory.newInstance(getServerUrl(), authenticator(), repoOwner, repository);
+        return BitbucketApiFactory.newInstance(getServerUrl(), authenticator(), repoOwner, null, repository);
     }
 
     @Override
@@ -667,6 +667,7 @@ public class BitbucketSCMSource extends SCMSource {
                     getServerUrl(),
                     authenticator(),
                     pullRepoOwner,
+                    null,
                     pullRepository
             )
                     : originBitbucket;
@@ -1261,7 +1262,7 @@ public class BitbucketSCMSource extends SCMSource {
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
             try {
-                BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
+                BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null, null);
                 BitbucketTeam team = bitbucket.getTeam();
                 List<? extends BitbucketRepository> repositories =
                         bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
