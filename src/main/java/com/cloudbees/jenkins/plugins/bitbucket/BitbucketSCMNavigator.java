@@ -552,8 +552,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             String defaultTeamUrl;
             if (team instanceof BitbucketServerProject) {
                 defaultTeamUrl = serverUrl + "/projects/" + team.getName();
+                result.add(new BitbucketServerProjectAvatarAction(owner, this));
             } else {
                 defaultTeamUrl = serverUrl + "/" + team.getName();
+                result.add(new BitbucketCloudWorkspaceAvatarAction(team.getLink("avatar")));
             }
             String teamUrl = StringUtils.defaultIfBlank(team.getLink("html"), defaultTeamUrl);
             String teamDisplayName = StringUtils.defaultIfBlank(team.getDisplayName(), team.getName());
@@ -562,7 +564,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     null,
                     teamUrl
             ));
-            result.add(new BitbucketTeamMetadataAction(serverUrl, credentials, team.getName()));
             result.add(new BitbucketLink("icon-bitbucket-logo", teamUrl));
             listener.getLogger().printf("Team: %s%n", HyperlinkNote.encodeTo(teamUrl, teamDisplayName));
         } else {
@@ -572,7 +573,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     null,
                     teamUrl
             ));
-            result.add(new BitbucketTeamMetadataAction(null, null, null));
             result.add(new BitbucketLink("icon-bitbucket-logo", teamUrl));
             listener.getLogger().println("Could not resolve team details");
         }

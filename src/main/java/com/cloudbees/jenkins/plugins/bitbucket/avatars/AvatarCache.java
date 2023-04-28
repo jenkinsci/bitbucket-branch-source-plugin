@@ -73,10 +73,12 @@ import static java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC;
 
 /**
  * An avatar cache that will serve URLs that have been recently registered
- * through {@link #buildUrl(String, String)}.
+ * through {@link #buildUrl(AvatarCacheSource, String)}.
  *
  * @since 2.2.0
+ * @deprecated Copy/Paste from SCM API plugin. Use {@link jenkins.scm.impl.avatars.AvatarCache} instead.
  */
+@Deprecated
 @Extension
 public class AvatarCache implements UnprotectedRootAction {
 
@@ -126,18 +128,6 @@ public class AvatarCache implements UnprotectedRootAction {
         service.allowCoreThreadTimeOut(true);
         // Remove any milliseconds from the started time to the nearest second
         startedTime = System.currentTimeMillis() / 1000L * 1000L;
-    }
-
-    /**
-     * Builds the URL for the cached avatar image of the required size.
-     *
-     * @param url  the URL of the source avatar image.
-     * @param size the size of the image.
-     * @return the URL of the cached image.
-     * @throws IllegalStateException if called outside of a request handling thread.
-     */
-    public static String buildUrl(@NonNull String url, @NonNull String size) {
-        return buildUrl(new UrlAvatarCacheSource(url), size);
     }
 
     /**
