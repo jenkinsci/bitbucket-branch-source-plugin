@@ -858,9 +858,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setConnectTimeout(10 * 1000);
-        requestConfig.setConnectionRequestTimeout(60 * 1000);
-        requestConfig.setSocketTimeout(60 * 1000);
+        String connectTimeout = System.getProperty("http.connect.timeout", "10");
+        requestConfig.setConnectTimeout(Integer.parseInt(connectTimeout) * 1000);
+        String connectionRequestTimeout = System.getProperty("http.connect.request.timeout", "60");
+        requestConfig.setConnectionRequestTimeout(Integer.parseInt(connectionRequestTimeout) * 1000);
+        String socketTimeout = System.getProperty("http.socket.timeout", "60");
+        requestConfig.setSocketTimeout(Integer.parseInt(socketTimeout) * 1000);
         httpMethod.setConfig(requestConfig.build());
 
         CloseableHttpResponse response = client.execute(host, httpMethod, requestContext);
