@@ -475,10 +475,46 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public BitbucketCloudBranch getTag(@NonNull String tagName) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/tags/{name}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("name", tagName)
+            .expand();
+        String response = getRequest(url);
+        try {
+            return getSingleBranch(response);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public List<BitbucketCloudBranch> getTags() throws IOException, InterruptedException {
         return getBranchesByRef("/refs/tags");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BitbucketCloudBranch getBranch(@NonNull String branchName) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/branches/{name}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("name", branchName)
+            .expand();
+        String response = getRequest(url);
+        try {
+            return getSingleBranch(response);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
     }
 
     /**
@@ -1060,6 +1096,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         return activeBranches;
+    }
+
+    private BitbucketCloudBranch getSingleBranch(String response) throws IOException {
+        return JsonParser.mapper.readValue(response, new TypeReference<BitbucketCloudBranch>(){});
     }
 
     @Override
