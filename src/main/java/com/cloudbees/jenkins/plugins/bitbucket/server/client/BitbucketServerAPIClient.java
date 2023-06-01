@@ -140,7 +140,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_BRANCHES_PATH = API_REPOSITORY_PATH + "/branches{?start,limit}";
     private static final String API_BRANCHES_FILTERED_PATH = API_REPOSITORY_PATH + "/branches/{?filterText}";
     private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit}";
-    private static final String API_TAG_PATH = API_REPOSITORY_PATH + "/tags/{tagName}";
+    private static final String API_TAGS_FILTERED_PATH = API_REPOSITORY_PATH + "/tags/{?filterText}";
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
@@ -617,12 +617,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     private BitbucketServerBranch getSingleTag(String tagName) throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
-            .fromTemplate(API_TAG_PATH)
+            .fromTemplate(API_TAGS_FILTERED_PATH)
             .set("owner", getUserCentricOwner())
             .set("repo", repositoryName)
-            .set("tagName", tagName);
+            .set("filterText", tagName);
 
-        BitbucketServerBranch tag = getResource(template, BitbucketServerBranch.class);
+        BitbucketServerBranch tag = getResource(template, BitbucketServerBranches.class,
+            branch -> tagName.equals(branch.getName()));
         if(tag != null) {
             tag.setCommitClosure(new CommitClosure(tag.getRawNode()));
         }
@@ -895,16 +896,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
 
         return resources;
-    }
-
-    private <V> V getResource(UriTemplate template, Class<? extends V> clazz) throws IOException, InterruptedException {
-        String url = template.expand();
-        String response = getRequest(url);
-        try {
-            return JsonParser.toJava(response, clazz);
-        } catch (IOException e) {
-            throw new IOException("I/O error when parsing response from URL: " + url, e);
-        }
     }
 
     private <V> V getResource(UriTemplate template, Class<? extends PagedApiResponse<V>> clazz, Predicate<V> filter) throws IOException, InterruptedException {
