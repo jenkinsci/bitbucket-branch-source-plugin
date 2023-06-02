@@ -1,0 +1,15 @@
+{
+  "size": 1,
+  "limit": 25,
+  "isLastPage": true,
+  "values": [
+    {
+      "id": "refs/tags/special-\"$;><&#_=@!|.,/test",
+      "displayId": "special-\"$;><&#_=@!|.,/test",
+      "type": "TAG",
+      "latestCommit": "046d9a3c1532acf4cf08fe93235c00e4d673c1d2",
+      "latestChangeset": "046d9a3c1532acf4cf08fe93235c00e4d673c1d2",
+      "hash": "c7208aca6fa205f115585be56a817f0cf2a43e62"
+    }
+  ]
+}
