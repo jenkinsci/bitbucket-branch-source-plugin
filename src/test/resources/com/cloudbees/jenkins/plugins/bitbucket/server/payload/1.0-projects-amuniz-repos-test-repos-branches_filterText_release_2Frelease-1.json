@@ -1,0 +1,14 @@
+{
+  "size": 1,
+  "limit": 200,
+  "isLastPage": true,
+  "values": [{
+    "id": "refs/heads/release/release-1",
+    "displayId": "release/release-1",
+    "type": "BRANCH",
+    "latestCommit": "bf0e8b7962c024026ad01ae09d3a11732e26c0d4",
+    "latestChangeset": "bf0e8b7962c024026ad01ae09d3a11732e26c0d4",
+    "isDefault": false
+  }],
+  "start": 0
+}

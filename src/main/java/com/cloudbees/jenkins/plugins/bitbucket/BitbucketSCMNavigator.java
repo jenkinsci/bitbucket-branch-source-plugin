@@ -108,6 +108,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private String credentialsId;
     @NonNull
     private final String repoOwner;
+    @CheckForNull
+    private String projectKey;
     @NonNull
     private List<SCMTrait<? extends SCMTrait<?>>> traits;
     @Deprecated
@@ -209,6 +211,15 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     public String getRepoOwner() {
         return repoOwner;
+    }
+
+    public String getProjectKey() {
+        return projectKey;
+    }
+
+    @DataBoundSetter
+    public void setProjectKey(@CheckForNull String projectKey) {
+        this.projectKey = Util.fixEmpty(projectKey);
     }
 
     @Override
@@ -486,7 +497,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
-            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
+            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, projectKey, null);
             BitbucketTeam team = bitbucket.getTeam();
             if (team != null) {
                 // Navigate repositories of the team
@@ -535,7 +546,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
-        BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
+        BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null, null);
         BitbucketTeam team = bitbucket.getTeam();
         if (team != null) {
             String defaultTeamUrl;

@@ -127,7 +127,7 @@ public class BitbucketTeamMetadataAction extends AvatarMetadataAction {
         private AvatarImage doFetch(StandardCredentials credentials) throws IOException, InterruptedException {
             BitbucketAuthenticator authenticator = AuthenticationTokens
                     .convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
-            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null);
+            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null, null);
             return bitbucket.getTeamAvatar();
         }
 

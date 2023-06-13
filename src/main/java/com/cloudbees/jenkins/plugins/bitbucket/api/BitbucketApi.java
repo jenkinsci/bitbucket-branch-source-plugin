@@ -137,6 +137,16 @@ public interface BitbucketApi {
     String getDefaultBranch() throws IOException, InterruptedException;
 
     /**
+     * Returns a branch in the repository.
+     *
+     * @return a branch in the repository.
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    @CheckForNull
+    BitbucketBranch getBranch(@NonNull String branchName) throws IOException, InterruptedException;
+
+    /**
      * Returns the branches in the repository.
      *
      * @return the list of branches in the repository.
@@ -145,6 +155,16 @@ public interface BitbucketApi {
      */
     @NonNull
     List<? extends BitbucketBranch> getBranches() throws IOException, InterruptedException;
+
+    /**
+     * Returns a tag in the repository.
+     *
+     * @return a tag in the repository.
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    @CheckForNull
+    BitbucketBranch getTag(@NonNull String tagName) throws IOException, InterruptedException;
 
      /**
      * Returns the tags in the repository.

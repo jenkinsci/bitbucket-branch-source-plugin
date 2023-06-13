@@ -1,0 +1,9 @@
+<com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator>
+  <repoOwner>cloudbeers</repoOwner>
+  <credentialsId>bcaef157-f105-407f-b150-df7722eab6c1</credentialsId>
+  <projectKey>PK</projectKey>
+  <checkoutCredentialsId>SAME</checkoutCredentialsId>
+  <pattern>.*</pattern>
+  <autoRegisterHooks>false</autoRegisterHooks>
+  <sshPort>-1</sshPort>
+</com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator>
