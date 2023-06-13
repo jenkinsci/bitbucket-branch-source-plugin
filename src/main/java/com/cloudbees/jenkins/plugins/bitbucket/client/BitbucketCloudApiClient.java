@@ -475,10 +475,46 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public BitbucketCloudBranch getTag(@NonNull String tagName) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/tags/{name}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("name", tagName)
+            .expand();
+        String response = getRequest(url);
+        try {
+            return getSingleBranch(response);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public List<BitbucketCloudBranch> getTags() throws IOException, InterruptedException {
         return getBranchesByRef("/refs/tags");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BitbucketCloudBranch getBranch(@NonNull String branchName) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/branches/{name}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("name", branchName)
+            .expand();
+        String response = getRequest(url);
+        try {
+            return getSingleBranch(response);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
     }
 
     /**
@@ -858,9 +894,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setConnectTimeout(10 * 1000);
-        requestConfig.setConnectionRequestTimeout(60 * 1000);
-        requestConfig.setSocketTimeout(60 * 1000);
+        String connectTimeout = System.getProperty("http.connect.timeout", "10");
+        requestConfig.setConnectTimeout(Integer.parseInt(connectTimeout) * 1000);
+        String connectionRequestTimeout = System.getProperty("http.connect.request.timeout", "60");
+        requestConfig.setConnectionRequestTimeout(Integer.parseInt(connectionRequestTimeout) * 1000);
+        String socketTimeout = System.getProperty("http.socket.timeout", "60");
+        requestConfig.setSocketTimeout(Integer.parseInt(socketTimeout) * 1000);
         httpMethod.setConfig(requestConfig.build());
 
         CloseableHttpResponse response = client.execute(host, httpMethod, requestContext);
@@ -1060,6 +1099,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         return activeBranches;
+    }
+
+    private BitbucketCloudBranch getSingleBranch(String response) throws IOException {
+        return JsonParser.mapper.readValue(response, new TypeReference<BitbucketCloudBranch>(){});
     }
 
     @Override
