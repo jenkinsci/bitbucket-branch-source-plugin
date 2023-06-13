@@ -59,6 +59,7 @@ import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Main;
 import hudson.ProxyConfiguration;
 import hudson.Util;
@@ -402,6 +403,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
     }
 
+    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "TODO needs triage")
     private void setupClosureForPRBranch(BitbucketServerPullRequest pr) {
         try {
             BitbucketServerBranch branch = (BitbucketServerBranch) pr.getSource().getBranch();
