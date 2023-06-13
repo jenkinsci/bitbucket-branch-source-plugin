@@ -819,40 +819,75 @@ public class BitbucketSCMSource extends SCMSource {
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
         final BitbucketApi bitbucket = buildBitbucketClient();
         try {
-            List<? extends BitbucketBranch> branches = bitbucket.getBranches();
             if (head instanceof PullRequestSCMHead) {
                 PullRequestSCMHead h = (PullRequestSCMHead) head;
-                BitbucketCommit targetRevision = findCommit(h.getTarget().getName(), branches, listener);
-                if (targetRevision == null) {
-                    LOGGER.log(Level.WARNING, "No branch found in {0}/{1} with name [{2}]",
-                        new Object[]{repoOwner, repository, h.getTarget().getName()});
-                    return null;
-                }
                 BitbucketCommit sourceRevision;
+                BitbucketCommit targetRevision;
+
                 if (bitbucket instanceof BitbucketCloudApiClient) {
-                    branches = head.getOrigin() == SCMHeadOrigin.DEFAULT
-                        ? branches
-                        : buildBitbucketClient(h).getBranches();
-                    sourceRevision = findCommit(h.getBranchName(), branches, listener);
+                    // Bitbucket Cloud /pullrequests/{id} API endpoint only returns short commit IDs of the source
+                    // and target branch. We therefore retrieve the branches directly
+                    BitbucketBranch targetBranch = bitbucket.getBranch(h.getTarget().getName());
+
+                    if(targetBranch == null) {
+                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                            repoOwner, repository, h.getTarget().getName());
+                        return null;
+                    }
+                    targetRevision = findCommit(targetBranch, listener);
+
+                    if (targetRevision == null) {
+                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                            repoOwner, repository, h.getTarget().getName());
+                        return null;
+                    }
+
+                    // Retrieve the source branch commit
+                    BitbucketBranch branch;
+                    if (head.getOrigin() == SCMHeadOrigin.DEFAULT) {
+                        branch = bitbucket.getBranch(h.getBranchName());
+                    } else {
+                        // In case of a forked branch, retrieve the branch as that owner
+                        branch = buildBitbucketClient(h).getBranch(h.getBranchName());
+                    }
+
+                    if(branch == null) {
+                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                            repoOwner, repository, head.getName());
+                        return null;
+                    }
+
+                    sourceRevision = findCommit(branch, listener);
+
                 } else {
+                    BitbucketPullRequest pr;
                     try {
-                        BitbucketPullRequest pr = bitbucket.getPullRequestById(Integer.parseInt(h.getId()));
-                        sourceRevision = findPRCommit(pr, listener);
+                        pr = bitbucket.getPullRequestById(Integer.parseInt(h.getId()));
                     } catch (NumberFormatException nfe) {
                         LOGGER.log(Level.WARNING, "Cannot parse the PR id {0}", h.getId());
-                        sourceRevision = null;
+                        return null;
                     }
+
+                    targetRevision = findPRDestinationCommit(pr, listener);
+
+                    if (targetRevision == null) {
+                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                            repoOwner, repository, h.getTarget().getName());
+                        return null;
+                    }
+
+                    sourceRevision = findPRSourceCommit(pr, listener);
                 }
+
                 if (sourceRevision == null) {
-                    LOGGER.log(Level.WARNING, "No revision found in {0}/{1} for PR-{2} [{3}]",
-                        new Object[]{
-                            h.getRepoOwner(),
-                            h.getRepository(),
-                            h.getId(),
-                            h.getBranchName()
-                        });
+                    listener.getLogger().format("No revision found in {0}/{1} for PR-{2} [{3}]",
+                        h.getRepoOwner(),
+                        h.getRepository(),
+                        h.getId(),
+                        h.getBranchName());
                     return null;
                 }
+
                 return new PullRequestSCMRevision<>(
                     h,
                     new BitbucketGitSCMRevision(h.getTarget(), targetRevision),
@@ -860,18 +895,30 @@ public class BitbucketSCMSource extends SCMSource {
                 );
             } else if (head instanceof BitbucketTagSCMHead) {
                 BitbucketTagSCMHead tagHead = (BitbucketTagSCMHead) head;
-                List<? extends BitbucketBranch> tags = bitbucket.getTags();
-                BitbucketCommit revision = findCommit(head.getName(), tags, listener);
+                BitbucketBranch tag = bitbucket.getTag(tagHead.getName());
+                if(tag == null) {
+                    listener.getLogger().format( "No tag found in {0}/{1} with name [{2}]",
+                        repoOwner, repository, head.getName());
+                    return null;
+                }
+                BitbucketCommit revision = findCommit(tag, listener);
                 if (revision == null) {
-                    LOGGER.log(Level.WARNING, "No tag found in {0}/{1} with name [{2}]", new Object[]{repoOwner, repository, head.getName()});
+                    listener.getLogger().format( "No revision found in {0}/{1} with name [{2}]",
+                        repoOwner, repository, head.getName());
                     return null;
                 }
                 return new BitbucketTagSCMRevision(tagHead, revision);
             } else {
-                BitbucketCommit revision = findCommit(head.getName(), branches, listener);
+                BitbucketBranch branch = bitbucket.getBranch(head.getName());
+                if(branch == null) {
+                    listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                        repoOwner, repository, head.getName());
+                    return null;
+                }
+                BitbucketCommit revision = findCommit(branch, listener);
                 if (revision == null) {
-                    LOGGER.log(Level.WARNING, "No branch found in {0}/{1} with name [{2}]",
-                        new Object[]{repoOwner, repository, head.getName()});
+                    listener.getLogger().format("No revision found in {0}/{1} with name [{2}]",
+                        repoOwner, repository, head.getName());
                     return null;
                 }
                 return new BitbucketGitSCMRevision(head, revision);
@@ -890,31 +937,43 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
-    private BitbucketCommit findCommit(@NonNull String branchName, List<? extends BitbucketBranch> branches, TaskListener listener) {
-        for (final BitbucketBranch b : branches) {
-            if (branchName.equals(b.getName())) {
-                String revision = b.getRawNode();
-                if (revision == null) {
-                    if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
-                        listener.getLogger().format("Cannot resolve the hash of the revision in branch %s%n",
-                                branchName);
-                    } else {
-                        listener.getLogger().format("Cannot resolve the hash of the revision in branch %s. "
-                                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
-                                branchName);
-                    }
-                    return null;
-                }
-                return new BranchHeadCommit(b);
+    private BitbucketCommit findCommit(@NonNull BitbucketBranch branch, TaskListener listener) {
+        String revision = branch.getRawNode();
+        if (revision == null) {
+            if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
+                listener.getLogger().format("Cannot resolve the hash of the revision in branch %s%n",
+                    branch.getName());
+            } else {
+                listener.getLogger().format("Cannot resolve the hash of the revision in branch %s. "
+                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
+                    branch.getName());
             }
+            return null;
         }
-        listener.getLogger().format("Cannot find the branch %s%n", branchName);
-        return null;
+        return new BranchHeadCommit(branch);
     }
 
-    private BitbucketCommit findPRCommit(BitbucketPullRequest pr, TaskListener listener) {
+    private BitbucketCommit findPRSourceCommit(BitbucketPullRequest pr, TaskListener listener) {
         // if I use getCommit() the branch closure is trigger immediately
         BitbucketBranch branch = pr.getSource().getBranch();
+        String hash = branch.getRawNode();
+        if (hash == null) {
+            if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
+                listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s%n",
+                    pr.getId());
+            } else {
+                listener.getLogger().format("Cannot resolve the hash of the revision in PR-%s. "
+                        + "Perhaps you are using Bitbucket Server previous to 4.x%n",
+                    pr.getId());
+            }
+            return null;
+        }
+        return new BranchHeadCommit(branch);
+    }
+
+    private BitbucketCommit findPRDestinationCommit(BitbucketPullRequest pr, TaskListener listener) {
+        // if I use getCommit() the branch closure is trigger immediately
+        BitbucketBranch branch = pr.getDestination().getBranch();
         String hash = branch.getRawNode();
         if (hash == null) {
             if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {

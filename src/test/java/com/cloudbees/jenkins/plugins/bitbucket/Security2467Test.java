@@ -1,8 +1,8 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.net.HttpURLConnection;
 import jenkins.model.Jenkins;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Rule;
 import org.junit.Test;
