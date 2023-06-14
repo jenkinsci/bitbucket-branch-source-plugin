@@ -141,7 +141,7 @@ public class BitbucketIntegrationClientFactory {
         private final IRequestAudit audit;
 
         private BitbucketClouldIntegrationClient(String payloadRootPath, String owner, String repositoryName) {
-            super(false, 0, 0, owner, repositoryName, (BitbucketAuthenticator) null);
+            super(false, 0, 0, owner, null, repositoryName, (BitbucketAuthenticator) null);
 
             if (payloadRootPath == null) {
                 this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;

@@ -93,13 +93,13 @@ public class AvatarCache implements UnprotectedRootAction {
     /**
      * The cache of entries. Unused entries will be removed over time.
      */
-    private final ConcurrentMap<String, CacheEntry> cache = new ConcurrentHashMap<String, CacheEntry>();
+    private final ConcurrentMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     /**
      * A background thread pool to refresh images.
      */
     private final ThreadPoolExecutor service = new ThreadPoolExecutor(CONCURRENT_REQUEST_LIMIT,
-            CONCURRENT_REQUEST_LIMIT, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+            CONCURRENT_REQUEST_LIMIT, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
             new NamingThreadFactory(new DaemonThreadFactory(), getClass().getName()));
 
     /**
@@ -552,7 +552,7 @@ public class AvatarCache implements UnprotectedRootAction {
         }
 
         private synchronized boolean isStale() {
-            return System.currentTimeMillis() - lastModified > TimeUnit.HOURS.toMillis(1);
+            return System.currentTimeMillis() - lastModified > TimeUnit.MINUTES.toMillis(Long.getLong(AvatarCache.class.getName()+".stale.ttl",60));
         }
 
         private void touch() {
@@ -560,7 +560,7 @@ public class AvatarCache implements UnprotectedRootAction {
         }
 
         private boolean isUnused() {
-            return lastAccessed > 0L && System.currentTimeMillis() - lastAccessed > TimeUnit.HOURS.toMillis(2);
+            return lastAccessed > 0L && System.currentTimeMillis() - lastAccessed > TimeUnit.MINUTES.toMillis(Long.getLong(AvatarCache.class.getName()+".unused.ttl",60));
         }
     }
 

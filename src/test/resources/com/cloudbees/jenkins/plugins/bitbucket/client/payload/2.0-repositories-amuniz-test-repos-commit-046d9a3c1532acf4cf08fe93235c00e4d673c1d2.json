@@ -1,0 +1,68 @@
+{
+  "hash": "046d9a3c1532acf4cf08fe93235c00e4d673c1d2",
+  "repository": {
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/test-repos"
+      },
+      "avatar": {
+        "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
+      }
+    },
+    "type": "repository",
+    "name": "test-repos",
+    "full_name": "amuniz/test-repos",
+    "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+    },
+    "comments": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/comments"
+    },
+    "patch": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+    },
+    "html": {
+      "href": "https://bitbucket.org/amuniz/test-repos/commits/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+    },
+    "diff": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+    },
+    "approve": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/approve"
+    },
+    "statuses": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/statuses"
+    }
+  },
+  "author": {
+    "raw": "Nikolas Falco <amuniz@acme.com>"
+  },
+  "summary": {
+    "raw": "Add one message more",
+    "markup": "markdown",
+    "html": "<p>Add one message more</p>",
+    "type": "rendered"
+  },
+  "participants": [],
+  "parents": [{
+    "hash": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+    "type": "commit",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+      }
+    }
+  }],
+  "date": "2018-09-21T14:49:23+00:00",
+  "message": "Add one message more",
+  "type": "commit"
+}

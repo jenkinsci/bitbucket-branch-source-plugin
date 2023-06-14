@@ -31,6 +31,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
      * @param serverUrl   the server URL.
      * @param authenticator the (optional) authenticator.
      * @param owner       the owner name.
+     * @param projectKey  the (optional) project key.
      * @param repository  the (optional) repository name.
      * @return the {@link BitbucketApi}.
      */
@@ -38,6 +39,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
     protected abstract BitbucketApi create(@Nullable String serverUrl,
                                            @Nullable BitbucketAuthenticator authenticator,
                                            @NonNull String owner,
+                                           @CheckForNull String projectKey,
                                            @CheckForNull String repository);
 
     @NonNull
@@ -47,7 +49,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
                                            @NonNull String owner,
                                            @CheckForNull String repository) {
         BitbucketAuthenticator auth = credentials != null ? new BitbucketUsernamePasswordAuthenticator(credentials) : null;
-        return create(serverUrl, auth, owner, repository);
+        return create(serverUrl, auth, owner, null, repository);
     }
 
     /**
@@ -57,6 +59,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
      * @param serverUrl   the server URL.
      * @param authenticator the (optional) authenticator.
      * @param owner       the owner name.
+     * @param projectKey  the (optional) project key.
      * @param repository  the (optional) repository name.
      * @return the {@link BitbucketApi}.
      * @throws IllegalArgumentException if the supplied URL is not supported.
@@ -65,10 +68,11 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
     public static BitbucketApi newInstance(@Nullable String serverUrl,
                                            @Nullable BitbucketAuthenticator authenticator,
                                            @NonNull String owner,
+                                           @CheckForNull String projectKey,
                                            @CheckForNull String repository) {
         for (BitbucketApiFactory factory : ExtensionList.lookup(BitbucketApiFactory.class)) {
             if (factory.isMatch(serverUrl)) {
-                return factory.create(serverUrl, authenticator, owner, repository);
+                return factory.create(serverUrl, authenticator, owner, projectKey, repository);
             }
         }
         throw new IllegalArgumentException("Unsupported Bitbucket server URL: " + serverUrl);
@@ -79,8 +83,9 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
     public static BitbucketApi newInstance(@Nullable String serverUrl,
                                            @Nullable StandardUsernamePasswordCredentials credentials,
                                            @NonNull String owner,
+                                           @CheckForNull String projectKey,
                                            @CheckForNull String repository) {
         BitbucketAuthenticator auth = credentials != null ? new BitbucketUsernamePasswordAuthenticator(credentials) : null;
-        return newInstance(serverUrl, auth, owner, repository);
+        return newInstance(serverUrl, auth, owner, projectKey, repository);
     }
 }

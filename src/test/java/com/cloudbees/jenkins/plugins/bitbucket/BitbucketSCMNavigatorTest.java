@@ -94,6 +94,52 @@ public class BitbucketSCMNavigatorTest {
     }
 
     @Test
+    public void cloud_project_key() throws Exception {
+        BitbucketSCMNavigator instance = load();
+        assertThat(instance.id(), is("https://bitbucket.org::cloudbeers"));
+        assertThat(instance.getRepoOwner(), is("cloudbeers"));
+        assertThat(instance.getProjectKey(), is("PK"));
+        assertThat(instance.getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+        assertThat(instance.getCredentialsId(), is("bcaef157-f105-407f-b150-df7722eab6c1"));
+        assertThat("SAME checkout credentials should mean no checkout trait",
+            instance.getTraits(),
+            not(hasItem(instanceOf(SSHCheckoutTrait.class))));
+        assertThat(".* as a pattern should mean no RegexSCMSourceFilterTrait",
+            instance.getTraits(),
+            not(hasItem(instanceOf(RegexSCMSourceFilterTrait.class))));
+        assertThat(instance.getTraits(),
+            containsInAnyOrder(
+                allOf(
+                    instanceOf(BranchDiscoveryTrait.class),
+                    hasProperty("buildBranch", is(true)),
+                    hasProperty("buildBranchesWithPR", is(true))
+                ),
+                allOf(
+                    instanceOf(OriginPullRequestDiscoveryTrait.class),
+                    hasProperty("strategyId", is(2))
+                ),
+                allOf(
+                    instanceOf(ForkPullRequestDiscoveryTrait.class),
+                    hasProperty("strategyId", is(2)),
+                    hasProperty("trust", instanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class))
+                ),
+                instanceOf(PublicRepoPullRequestFilterTrait.class),
+                allOf(
+                    instanceOf(WebhookRegistrationTrait.class),
+                    hasProperty("mode", is(WebhookRegistration.DISABLE))
+                )
+            )
+        );
+        // legacy API
+        assertThat(instance.getBitbucketServerUrl(), is(nullValue()));
+        assertThat(instance.getCheckoutCredentialsId(), is("SAME"));
+        assertThat(instance.getPattern(), is(".*"));
+        assertThat(instance.isAutoRegisterHooks(), is(false));
+        assertThat(instance.getIncludes(), is("*"));
+        assertThat(instance.getExcludes(), is(""));
+    }
+
+    @Test
     public void basic_server() throws Exception {
         BitbucketSCMNavigator instance = load();
         assertThat(instance.id(), is("https://bitbucket.test::DUB"));

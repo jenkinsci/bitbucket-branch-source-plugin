@@ -155,7 +155,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
 
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
-            BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, authenticator, owner, repository);
+            BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, authenticator, owner, null, repository);
             String ref = null;
 
             if (head instanceof BranchSCMHead) {
