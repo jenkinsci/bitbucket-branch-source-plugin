@@ -137,6 +137,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private CloseableHttpClient client;
     private HttpClientContext context;
     private final String owner;
+    private final String projectKey;
     private final String repositoryName;
     private final boolean enableCache;
     private final BitbucketAuthenticator authenticator;
@@ -167,14 +168,15 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Deprecated
     public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
                                    String owner, String repositoryName, StandardUsernamePasswordCredentials credentials) {
-        this(enableCache, teamCacheDuration, repositoriesCacheDuration, owner, repositoryName,
+        this(enableCache, teamCacheDuration, repositoriesCacheDuration, owner, null, repositoryName,
                 new BitbucketUsernamePasswordAuthenticator(credentials));
     }
 
     public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
-            String owner, String repositoryName, BitbucketAuthenticator authenticator) {
+            String owner, String projectKey, String repositoryName, BitbucketAuthenticator authenticator) {
         this.authenticator = authenticator;
         this.owner = owner;
+        this.projectKey = projectKey;
         this.repositoryName = repositoryName;
         this.enableCache = enableCache;
         if (enableCache) {
@@ -473,10 +475,46 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public BitbucketCloudBranch getTag(@NonNull String tagName) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/tags/{name}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("name", tagName)
+            .expand();
+        String response = getRequest(url);
+        try {
+            return getSingleBranch(response);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public List<BitbucketCloudBranch> getTags() throws IOException, InterruptedException {
         return getBranchesByRef("/refs/tags");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BitbucketCloudBranch getBranch(@NonNull String branchName) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/branches/{name}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("name", branchName)
+            .expand();
+        String response = getRequest(url);
+        try {
+            return getSingleBranch(response);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
     }
 
     /**
@@ -752,9 +790,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             cacheKey.append("::<anonymous>");
         }
 
-        final UriTemplate template = UriTemplate.fromTemplate(V2_API_BASE_URL + "{/owner}{?role,page,pagelen}")
+        final UriTemplate template = UriTemplate.fromTemplate(V2_API_BASE_URL + "{/owner}{?role,page,pagelen,q}")
                 .set("owner", owner)
                 .set("pagelen", MAX_PAGE_LENGTH);
+        if (StringUtils.isNotBlank(projectKey)) {
+            template.set("q", "project.key=" + "\"" + projectKey + "\""); // q=project.key="<projectKey>"
+        }
         if (role != null &&  authenticator != null) {
             template.set("role", role.getId());
             cacheKey.append("::").append(role.getId());
@@ -853,9 +894,12 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setConnectTimeout(10 * 1000);
-        requestConfig.setConnectionRequestTimeout(60 * 1000);
-        requestConfig.setSocketTimeout(60 * 1000);
+        String connectTimeout = System.getProperty("http.connect.timeout", "10");
+        requestConfig.setConnectTimeout(Integer.parseInt(connectTimeout) * 1000);
+        String connectionRequestTimeout = System.getProperty("http.connect.request.timeout", "60");
+        requestConfig.setConnectionRequestTimeout(Integer.parseInt(connectionRequestTimeout) * 1000);
+        String socketTimeout = System.getProperty("http.socket.timeout", "60");
+        requestConfig.setSocketTimeout(Integer.parseInt(socketTimeout) * 1000);
         httpMethod.setConfig(requestConfig.build());
 
         CloseableHttpResponse response = client.execute(host, httpMethod, requestContext);
@@ -1055,6 +1099,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         }
 
         return activeBranches;
+    }
+
+    private BitbucketCloudBranch getSingleBranch(String response) throws IOException {
+        return JsonParser.mapper.readValue(response, new TypeReference<BitbucketCloudBranch>(){});
     }
 
     @Override

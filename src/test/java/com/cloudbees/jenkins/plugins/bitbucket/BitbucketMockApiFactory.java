@@ -42,7 +42,7 @@ public class BitbucketMockApiFactory extends BitbucketApiFactory {
     @NonNull
     @Override
     protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
-                                  @NonNull String owner, @CheckForNull String repository) {
+                                  @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
         return mocks.get(StringUtils.defaultString(serverUrl, NULL));
     }
 }

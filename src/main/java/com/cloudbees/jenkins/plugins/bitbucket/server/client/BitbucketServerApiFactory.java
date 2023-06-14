@@ -20,7 +20,7 @@ public class BitbucketServerApiFactory extends BitbucketApiFactory {
     @NonNull
     @Override
     protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
-                                  @NonNull String owner, @CheckForNull String repository) {
+                                  @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
         if(StringUtils.isBlank(serverUrl)){
             throw new IllegalArgumentException("serverUrl is required");
         }

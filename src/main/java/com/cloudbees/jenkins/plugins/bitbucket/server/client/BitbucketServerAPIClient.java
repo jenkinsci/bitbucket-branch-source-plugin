@@ -59,6 +59,7 @@ import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Main;
 import hudson.ProxyConfiguration;
 import hudson.Util;
@@ -82,6 +83,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -137,7 +139,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_REPOSITORY_PATH = API_BASE_PATH + "/projects/{owner}/repos/{repo}";
     private static final String API_DEFAULT_BRANCH_PATH = API_REPOSITORY_PATH + "/branches/default";
     private static final String API_BRANCHES_PATH = API_REPOSITORY_PATH + "/branches{?start,limit}";
+    private static final String API_BRANCHES_FILTERED_PATH = API_REPOSITORY_PATH + "/branches{?filterText}";
     private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit}";
+    private static final String API_TAGS_FILTERED_PATH = API_REPOSITORY_PATH + "/tags{?filterText}";
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
@@ -407,6 +411,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
     }
 
+    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "TODO needs triage")
     private void setupClosureForPRBranch(BitbucketServerPullRequest pr) {
         try {
             BitbucketServerBranch branch = (BitbucketServerBranch) pr.getSource().getBranch();
@@ -574,9 +579,25 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * {@inheritDoc}
      */
     @Override
+    public BitbucketServerBranch getTag(@NonNull String tagName) throws IOException, InterruptedException {
+        return getSingleTag(tagName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     @NonNull
     public List<BitbucketServerBranch> getTags() throws IOException, InterruptedException {
         return getServerBranches(API_TAGS_PATH);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BitbucketServerBranch getBranch(@NonNull String branchName) throws IOException, InterruptedException {
+        return getSingleBranch(branchName);
     }
 
     /**
@@ -602,6 +623,36 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         }
 
         return branches;
+    }
+
+    private BitbucketServerBranch getSingleTag(String tagName) throws IOException, InterruptedException {
+        UriTemplate template = UriTemplate
+            .fromTemplate(API_TAGS_FILTERED_PATH)
+            .set("owner", getUserCentricOwner())
+            .set("repo", repositoryName)
+            .set("filterText", tagName);
+
+        BitbucketServerBranch tag = getResource(template, BitbucketServerBranches.class,
+            branch -> tagName.equals(branch.getName()));
+        if(tag != null) {
+            tag.setCommitClosure(new CommitClosure(tag.getRawNode()));
+        }
+        return tag;
+    }
+
+    private BitbucketServerBranch getSingleBranch(String branchName) throws IOException, InterruptedException {
+        UriTemplate template = UriTemplate
+            .fromTemplate(API_BRANCHES_FILTERED_PATH)
+            .set("owner", getUserCentricOwner())
+            .set("repo", repositoryName)
+            .set("filterText", branchName);
+
+        BitbucketServerBranch br = getResource(template, BitbucketServerBranches.class,
+            branch -> branchName.equals(branch.getName()));
+        if(br != null) {
+            br.setCommitClosure(new CommitClosure(br.getRawNode()));
+        }
+        return br;
     }
 
     /** {@inheritDoc} */
@@ -855,6 +906,40 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
 
         return resources;
+    }
+
+    private <V> V getResource(UriTemplate template, Class<? extends PagedApiResponse<V>> clazz, Predicate<V> filter) throws IOException, InterruptedException {
+
+        PagedApiResponse<V> page;
+        Integer pageNumber = 0;
+        Integer limit = DEFAULT_PAGE_LIMIT;
+        do {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            String url = template //
+                .set("start", pageNumber) //
+                .set("limit", limit) //
+                .expand();
+            String response = getRequest(url);
+            try {
+                page = JsonParser.toJava(response, clazz);
+            } catch (IOException e) {
+                throw new IOException("I/O error when parsing response from URL: " + url, e);
+            }
+
+            for(V item : page.getValues()) {
+                if(filter.test(item)) {
+                    return item;
+                }
+            }
+
+            limit = page.getLimit();
+            pageNumber = page.getNextPageStart();
+        } while (!page.isLastPage());
+
+
+        return null;
     }
 
     protected String getRequest(String path) throws IOException, InterruptedException {
