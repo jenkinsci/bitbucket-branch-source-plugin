@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.avatars;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -33,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -58,7 +58,7 @@ public class UrlAvatarCacheSource implements AvatarCacheSource {
     }
 
     @Override
-    public AvatarImage fetch() {
+    public AvatarImage fetch(StandardCredentials credentials) {
         LOGGER.log(Level.FINE, "Attempting to fetch remote avatar: {0}", url);
         long start = System.nanoTime();
         try {
@@ -85,10 +85,9 @@ public class UrlAvatarCacheSource implements AvatarCacheSource {
                 // buffered stream should be no more than 16k if we know the length
                 // if we don't know the length then 8k is what we will use
                 length = length > 0 ? Math.min(16384, length) : 8192;
-                InputStream is = null;
-                try {
-                    is = connection.getInputStream();
-                    BufferedInputStream bis = new BufferedInputStream(is, length);
+
+                try (InputStream is = connection.getInputStream();
+                     BufferedInputStream bis = new BufferedInputStream(is, length)) {
                     BufferedImage image = ImageIO.read(bis);
                     if (image == null) {
                         LOGGER.log(Level.FINE, "Got no remote avatar image from {0}", url);
@@ -97,8 +96,6 @@ public class UrlAvatarCacheSource implements AvatarCacheSource {
                     return new AvatarImage(image, connection.getLastModified());
                 } catch (Exception e) {
                     LOGGER.log(Level.INFO, "1:" + e.getMessage(), e);
-                } finally {
-                    IOUtils.closeQuietly(is);
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.INFO, "2:" + e.getMessage(), e);
@@ -115,6 +112,11 @@ public class UrlAvatarCacheSource implements AvatarCacheSource {
                     new Object[] { url, duration });
         }
         return AvatarImage.EMPTY;
+    }
+
+    @Override
+    public AvatarImage fetch() {
+        return fetch(null);
     }
 
     @Override
