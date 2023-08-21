@@ -853,6 +853,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         } catch (FileNotFoundException e) {
             return new ArrayList<>();
         }
+        repositories.removeIf(BitbucketServerRepository::isArchived);
         repositories.sort(Comparator.comparing(BitbucketServerRepository::getRepositoryName));
 
         return repositories;

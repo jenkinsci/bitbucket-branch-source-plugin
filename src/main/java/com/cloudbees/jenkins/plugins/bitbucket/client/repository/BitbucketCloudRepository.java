@@ -123,6 +123,11 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         return priv;
     }
 
+    @Override
+    public boolean isArchived() {
+        return false;
+    }
+
     @JsonProperty("is_private")
     public void setPrivate(Boolean priv) {
         this.priv = priv;
