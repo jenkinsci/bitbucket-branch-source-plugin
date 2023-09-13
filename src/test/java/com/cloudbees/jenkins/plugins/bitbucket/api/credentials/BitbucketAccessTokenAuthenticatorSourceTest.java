@@ -18,7 +18,9 @@ public class BitbucketAccessTokenAuthenticatorSourceTest {
         BitbucketAccessTokenAuthenticatorSource source = new BitbucketAccessTokenAuthenticatorSource();
         AuthenticationTokenContext<BitbucketAuthenticator> cloudContext = BitbucketAuthenticator.authenticationContext("https://bitbucket.org");
         AuthenticationTokenContext<BitbucketAuthenticator> serverContext = BitbucketAuthenticator.authenticationContext("https://bitbucket-server.org");
+        AuthenticationTokenContext<BitbucketAuthenticator> unsecureServerContext = BitbucketAuthenticator.authenticationContext("http://bitbucket-server.org");
         assertThat(source.isFit(cloudContext), is(true));
         assertThat(source.isFit(serverContext), is(true));
+        assertThat(source.isFit(unsecureServerContext), is(false));
     }
 }
