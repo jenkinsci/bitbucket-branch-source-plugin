@@ -28,6 +28,7 @@ import hudson.model.UnprotectedRootAction;
 import hudson.security.csrf.CrumbExclusion;
 import hudson.util.HttpResponses;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.FilterChain;
@@ -77,7 +78,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
      */
     public HttpResponse doNotify(StaplerRequest req) throws IOException {
         String origin = SCMEvent.originOf(req);
-        String body = IOUtils.toString(req.getInputStream());
+        String body = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
         String eventKey = req.getHeader("X-Event-Key");
         if (eventKey == null) {
             return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST, "X-Event-Key HTTP header not found");
