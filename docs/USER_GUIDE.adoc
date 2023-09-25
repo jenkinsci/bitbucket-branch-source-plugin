@@ -19,7 +19,7 @@ _Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Server
 as a multi-branch project source in two different ways:
 
  * *Single repository source*: automatic creation of jobs for branches and pull requests in a specific repository.
- * *Team/Project folders*: automatic creation of multi-branch projects for each visible repository in a specific Bitbucket Team or Project.
+ * *Organization folders*: automatic creation of multi-branch projects for each visible repository in a specific Bitbucket Team or Project.
 
  IMPORTANT: This plugin is not compatible with versions of Bitbucket Server previous to 4.0.
 
@@ -39,8 +39,9 @@ Once configured, branches and pull requests are automatically created and built 
 
 Follow these steps to create a multi-branch project with Bitbucket as a source:
 
+. If using Bitbucket Server, the server base URL needs to be added to the Bitbucket Endpoints first in the "Manage Jenkins" > "System" configuration.
 . Create the multi-branch project. This step depends on which multi-branch plugin is installed.
-For example, "Multibranch Pipeline" should be available as project type if Pipeline Multibranch plugin is installed.
+For example, "Multibranch Pipeline" should be available as a project type if Pipeline Multibranch plugin is installed.
 +
 image::images/screenshot-1.png[scaledwidth=90%]
 
@@ -50,7 +51,6 @@ image::images/screenshot-2.png[scaledwidth=90%]
 
 . Set credentials to access Bitbucket API and checkout sources (see "Credentials configuration" section below).
 . Set the repository owner and name that will be monitored for branches and pull requests.
-. If using Bitbucket Server the server base URL needs to be configured (expand the _Advanced_ section to do it).
 +
 image::images/screenshot-4.png[scaledwidth=90%]
 
@@ -59,23 +59,24 @@ image::images/screenshot-4.png[scaledwidth=90%]
 image::images/screenshot-5.png[scaledwidth=90%]
 
 [id=bitbucket-scm-navigator]
-== Team folders
+== Organization folders
 
-Bitbucket _Team/Project Folders_ project type can be used to automatically track branches and pull requests in all repositories
-in a Bitbucket Team or Project.
+_Bitbucket Team/Project_ repository source can be used in Organization Folder to automatically track branches and pull requests in all Bitbucket Team or Project repositories.
 
-. Create a project of type _Bitbucket Team/Project_. The project name will be proposed automatically as default _Owner_ (or _Team_) name.
+. Create a project of type _Organization Folder_.
 +
 image::images/screenshot-6.png[scaledwidth=90%]
 
-. Configure the repository owner (if the proposed value does not match with the actual team or username). It could be:
-.. A Bitbucket Cloud Team name: all repositories in the team are imported as Multibranch projects.
+. Add _Bitbucket Team/Project_ repository source
+. If you configured more than one _Bitbucket Endpoint_, choose the _Server_ and appropriate _Credential_
+. Configure the repository owner. It could be:
+.. A Bitbucket Cloud Workspace ID (slug): all repositories in the workspace are imported as Multibranch projects.
 .. A Bitbucket Server Project ID: all repositories in the project are imported as Multibranch projects. *Note that the project ID needs to be used instead of the project name*.
 .. A regular username: all repositories which the username is owner of are imported.
 +
 image::images/screenshot-8.png[scaledwidth=90%]
 
-. Save the configuration and an initial indexing process starts, once it finishes a Multibranch
+. Save the configuration. The initial indexing process starts. Once it finishes, a Multibranch
 project is created for each repository.
 +
 image::images/screenshot-9.png[scaledwidth=90%]
@@ -85,11 +86,15 @@ image::images/screenshot-9.png[scaledwidth=90%]
 
 The use of https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html[Bitbucket webhooks]
 allows to trigger builds on branches and pull requests just when a new commit is done. Bitbucket plugin exposes a special
-service to listen to this webhook requests and acts accordingly by triggering a new reindex and finally
+service to listen to these webhook requests and acts accordingly by triggering a new reindex and finally
 triggering builds on matching branches or pull requests.
 
-For both _Bitbucket Multibranch_ projects and _Bitbucket Team_ projects there is an option in the configuration page
-to let Jenkins automatically register the webhooks in all involved repositories.
+Go to "Manage Jenkins" / "Configure System" and locate _Bitbucket Endpoints_. For every endpoint where you want webhooks registered automatically,
+check "Manage hooks" and select a "Credential" with enough access to add webhooks to repositories. Since the Credential is used at the system level, 
+it can be a System scoped credential, which will restrict its usage from Pipelines.
+
+For both Bitbucket _Multibranch Pipelines_ and _Organization folders_ there is an "Override hook management" behavior 
+to opt out or adjust system-wide settings.
 
 image::images/screenshot-4.png[scaledwidth=90%]
 
@@ -99,29 +104,26 @@ properly configured in _Manage Jenkins_ » _Configure System_
 [id=bitbucket-creds-config]
 == Credentials configuration
 
-The configuration of the plugin (for both _Bitbucket Multibranch_ projects and _Bitbucket Team/Project_) has
+The configuration of the plugin (for both _Bitbucket multibranch pipelines_ and _Bitbucket Workspace/Project organization folders_) has
 two credentials to configure:
 
 . *Scan Credentials*: Credentials used to access Bitbucket API in order to discover repositories, branches and pull requests.
 If not set then anonymous access is used, so only public repositories, branches and pull requests are discovered and managed.
-Note that the Webhooks auto-register feature requires scan credentials to be set.
 HTTP Basic Authentication, Access Token and OAuth credentials are supported.
 . *Checkout Credentials*: Credentials used to check out sources once the repository, branch or pull request is discovered.
 HTTP Basic Authentication, SSH and OAuth credentials are supported.
-If not set then _Scan Credentials_ are used.
+If not set, then _Scan Credentials_ are used.
 
 image::images/screenshot-3.png[scaledwidth=90%]
 
 === Access Token
 
-The plugin can make use of an access token (Bitbucket Server only) instead of the standard username/password.
+The plugin can make use of a personal access token (Bitbucket Server only) instead of the standard username/password.
 
-First create a new _personal access token_ in Bitbucket as instructed in the https://confluence.atlassian.com/bitbucketserver0716/personal-access-tokens-1086402495.html[Bitbucket Personal Access Tokens Documentation].
+First, create a new _personal access token_ in Bitbucket as instructed in the link:https://confluence.atlassian.com/bitbucketserver080/http-access-tokens-1115142284.html[HTTP access tokens | Bitbucket Data Center and Server 8.0 | Atlassian Documentation].
 At least allow _read_ access for repositories. If you want the plugin to install the webhooks, allow _admin_ access for repositories.
 
-Then create new _Secret text credentials_ in Jenkins and enter the Bitbucket personal access token value in the _Secret_ field.
-
-When configuring a multi-branch project, add the _Checkout over SSH_ behavior to a branch source, as the token can only be used for the Bitbucket API.
+Then create a new _Username with password_ credential in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created access token in the _Password_ field.
 
 === App Passwords
 
@@ -129,7 +131,7 @@ Bitbucket https://community.atlassian.com/t5/Bitbucket-articles/Announcement-Bit
 
 The plugin can make use of an app password instead of the standard username/password.
 
-First create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
+First, create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
 
 Then create a new _Username with password credentials_ in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created app password in the _Password_ field.
 
