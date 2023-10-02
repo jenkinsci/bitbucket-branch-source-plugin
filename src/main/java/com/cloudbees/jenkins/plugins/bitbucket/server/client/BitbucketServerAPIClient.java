@@ -344,6 +344,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             setupPullRequest(pullRequest, endpoint);
         }
 
+        if (endpoint != null) {
+            // Get PRs again as revisions could be changed by other events during setupPullRequest
+            if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
+                pullRequests = getResources(template, BitbucketServerPullRequests.class);
+                pullRequests.removeIf(this::shouldIgnore);
+            }
+        }
+
         return pullRequests;
     }
 
