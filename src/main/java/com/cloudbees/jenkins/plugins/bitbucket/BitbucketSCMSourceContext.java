@@ -97,6 +97,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean disableNotificationForNotBuildJobs;
 
     /**
+     * {@code false} if aborted jobs should be sent to Bitbucket.
+     */
+    private boolean disableNotificationForAbortedJobs;
+
+    /**
      * Constructor.
      *
      * @param criteria (optional) criteria.
@@ -227,6 +232,13 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public boolean disableNotificationForNotBuildJobs() {
         return disableNotificationForNotBuildJobs;
+    }
+
+    /**
+     * @return {@code false} if aborted jobs should be passed to Bitbucket.
+     */
+    public boolean disableNotificationForAbortedJobs() {
+        return disableNotificationForAbortedJobs;
     }
 
     /**
@@ -375,6 +387,18 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final BitbucketSCMSourceContext withDisableNotificationForNotBuildJobs(boolean disabled) {
         this.disableNotificationForNotBuildJobs = disabled;
+        return this;
+    }
+
+    /**
+     * Defines behaviour of aborted jobs in Bitbucket.
+     *
+     * @param disabled {@code false} to report not-built jobs to Bitbucket.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext withDisableNotificationForAbortedJobs(boolean disabled) {
+        this.disableNotificationForAbortedJobs = disabled;
         return this;
     }
 
