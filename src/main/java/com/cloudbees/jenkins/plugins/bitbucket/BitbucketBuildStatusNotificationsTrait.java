@@ -51,6 +51,11 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     private boolean disableNotificationForNotBuildJobs;
 
     /**
+     * Should aborted jobs be communicated to Bitbucket
+     */
+    private boolean disableNotificationForAbortedJobs;
+
+    /**
      * Constructor.
      *
      */
@@ -78,6 +83,11 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
         disableNotificationForNotBuildJobs = isNotificationDisabled;
     }
 
+    @DataBoundSetter
+    public void setDisableNotificationForAbortedJobs(boolean isNotificationDisabled) {
+        disableNotificationForAbortedJobs = isNotificationDisabled;
+    }
+
     /**
      * @return if unstable builds will be communicated
      */
@@ -86,11 +96,19 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     }
 
     /**
+     * @return if aborted builds will be communicated
+     */
+    public boolean getDisableNotificationForAbortedJobs() {
+        return this.disableNotificationForAbortedJobs;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         ((BitbucketSCMSourceContext) context).withDisableNotificationForNotBuildJobs(getDisableNotificationForNotBuildJobs());
+        ((BitbucketSCMSourceContext) context).withDisableNotificationForAbortedJobs(getDisableNotificationForAbortedJobs());
         ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
     }
 
