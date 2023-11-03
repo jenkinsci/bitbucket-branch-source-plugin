@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import hudson.util.Secret;
 import org.apache.http.HttpRequest;
 import org.scribe.model.OAuthConfig;
 import org.scribe.model.OAuthConstants;
@@ -20,7 +19,7 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
     public BitbucketOAuthAuthenticator(StandardUsernamePasswordCredentials credentials) {
         super(credentials);
 
-        OAuthConfig config = new OAuthConfig(credentials.getUsername(), Secret.toString(credentials.getPassword()));
+        OAuthConfig config = new OAuthConfig(credentials.getUsername(), credentials.getPassword().getPlainText());
 
         BitbucketOAuthService OAuthService = (BitbucketOAuthService) new BitbucketOAuth().createService(config);
 

@@ -41,6 +41,7 @@ public class BitbucketAccessTokenAuthenticatorSource extends AuthenticationToken
     @Override
     public boolean isFit(AuthenticationTokenContext ctx) {
         return ctx.mustHave(BitbucketAuthenticator.SCHEME, "https")
-            && ctx.mustHave(BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_SERVER);
+            && (ctx.mustHave(BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_SERVER)
+            || ctx.mustHave(BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_CLOUD));
     }
 }

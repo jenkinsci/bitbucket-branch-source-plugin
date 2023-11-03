@@ -223,6 +223,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                                 endpoint.getServerUrl(),
                                 endpoint.authenticator(),
                                 source.getRepoOwner(),
+                                null,
                                 source.getRepository()
                         );
             case ITEM:

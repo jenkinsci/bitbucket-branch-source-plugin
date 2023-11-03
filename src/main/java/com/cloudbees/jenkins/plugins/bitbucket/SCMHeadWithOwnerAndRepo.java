@@ -110,6 +110,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
                     source.getServerUrl(),
                     source.authenticator(),
                     source.getRepoOwner(),
+                    null,
                     source.getRepository()
             );
             for (BitbucketPullRequest pr : bitbucket.getPullRequests()) {

@@ -1,0 +1,85 @@
+{
+  "name": "feature/BB-1",
+  "links": {
+    "commits": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits/feature/BB-1"
+    },
+    "self": {
+      "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches/feature/BB-1"
+    },
+    "html": {
+      "href": "https://bitbucket.org/amuniz/test-repos/branch/feature/BB-1"
+    }
+  },
+  "default_merge_strategy": "merge_commit",
+  "merge_strategies": [
+    "merge_commit",
+    "squash",
+    "fast_forward"
+  ],
+  "type": "branch",
+  "target": {
+    "hash": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+    "repository": {
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+        },
+        "html": {
+          "href": "https://bitbucket.org/amuniz/test-repos"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default"
+        }
+      },
+      "type": "repository",
+      "name": "test-repos",
+      "full_name": "amuniz/test-repos",
+      "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+    },
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/fb522a6f08c7c7df337312e4e65ec1b57710672e"
+      },
+      "comments": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/fb522a6f08c7c7df337312e4e65ec1b57710672e/comments"
+      },
+      "patch": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/fb522a6f08c7c7df337312e4e65ec1b57710672e"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/test-repos/commits/fb522a6f08c7c7df337312e4e65ec1b57710672e"
+      },
+      "diff": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/fb522a6f08c7c7df337312e4e65ec1b57710672e"
+      },
+      "approve": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/fb522a6f08c7c7df337312e4e65ec1b57710672e/approve"
+      },
+      "statuses": {
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/fb522a6f08c7c7df337312e4e65ec1b57710672e/statuses"
+      }
+    },
+    "author": {
+      "raw": "Antonio Muniz <amuniz@example.com>",
+      "type": "author"
+    },
+    "parents": [
+      {
+        "hash": "ae995d7a37069d0988462a9c92828971e8a42b5d",
+        "type": "commit",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/ae995d7a37069d0988462a9c92828971e8a42b5d"
+          },
+          "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos/commits/ae995d7a37069d0988462a9c92828971e8a42b5d"
+          }
+        }
+      }
+    ],
+    "date": "2018-09-21T14:09:51+00:00",
+    "message": "Suppress echo command part",
+    "type": "commit"
+  }
+}

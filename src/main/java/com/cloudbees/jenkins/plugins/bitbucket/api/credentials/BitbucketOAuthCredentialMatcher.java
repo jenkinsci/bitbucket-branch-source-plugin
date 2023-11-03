@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import hudson.util.Secret;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +29,7 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
             UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
             String username = usernamePasswordCredential.getUsername();
             boolean isEMail = username.contains(".") && username.contains("@");
-            boolean validSecretLength = Secret.toString(usernamePasswordCredential.getPassword()).length() == secretLength;
+            boolean validSecretLength = usernamePasswordCredential.getPassword().getPlainText().length() == secretLength;
             boolean validKeyLength = username.length() == keyLength;
 
             return !isEMail && validKeyLength && validSecretLength;

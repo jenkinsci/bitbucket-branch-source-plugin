@@ -1,11 +1,14 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,6 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 public class BitbucketServerAPIClientTest {
 
@@ -58,6 +63,23 @@ public class BitbucketServerAPIClientTest {
         ((BitbucketServerIntegrationClient)client).rateLimitNextRequest();
         assertThat(client.getRepository().getProject().getKey(), equalTo("AMUNIZ"));
         assertThat(logger.getMessages(), hasItem(containsString("Bitbucket server API rate limit reached")));
+    }
+
+    @Test
+    public void filterArchivedRepositories() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "foo", "test-repos");;
+        List<? extends BitbucketRepository> repos = client.getRepositories();
+        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).collect(Collectors.toList());
+        assertThat(names, not(hasItem("bar-archived")));
+        assertThat(names, is(List.of("bar-active")));
+    }
+
+    @Test
+    public void sortRepositoriesByName() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "amuniz", "test-repos");;
+        List<? extends BitbucketRepository> repos = client.getRepositories();
+        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).collect(Collectors.toList());
+        assertThat(names, is(List.of("another-repo", "dogs-repo", "test-repos")));
     }
 
 }

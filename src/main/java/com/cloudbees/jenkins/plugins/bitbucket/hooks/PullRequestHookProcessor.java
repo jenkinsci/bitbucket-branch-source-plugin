@@ -37,6 +37,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPullRequestEvent;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.scm.SCM;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -59,6 +60,7 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.apache.commons.lang.StringUtils;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_DECLINED;
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_MERGED;
@@ -113,10 +115,24 @@ public class PullRequestHookProcessor extends HookProcessor {
                 return false;
             }
             BitbucketSCMNavigator bbNav = (BitbucketSCMNavigator) navigator;
+            if (!isProjectKeyMatch(bbNav.getProjectKey())) {
+                return false;
+            }
+
             if (!isServerUrlMatch(bbNav.getServerUrl())) {
                 return false;
             }
             return bbNav.getRepoOwner().equalsIgnoreCase(getPayload().getRepository().getOwnerName());
+        }
+
+        private boolean isProjectKeyMatch(String projectKey) {
+            if (StringUtils.isBlank(projectKey)) {
+                return true;
+            }
+            if (this.getPayload().getRepository().getProject() != null) {
+                return projectKey.equals(this.getPayload().getRepository().getProject().getKey());
+            }
+            return true;
         }
 
         private boolean isServerUrlMatch(String serverUrl) {
@@ -159,6 +175,7 @@ public class PullRequestHookProcessor extends HookProcessor {
 
         @NonNull
         @Override
+        @SuppressFBWarnings(value = "SBSC_USE_STRINGBUFFER_CONCATENATION", justification = "TODO needs triage")
         public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
             if (!(source instanceof BitbucketSCMSource)) {
                 return Collections.emptyMap();

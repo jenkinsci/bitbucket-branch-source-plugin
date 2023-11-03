@@ -39,7 +39,6 @@ import jenkins.scm.api.mixin.ChangeRequestSCMHead2;
 import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMHeadAuthorityDescriptor;
 import jenkins.scm.api.trait.SCMSourceContext;
-import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
@@ -72,6 +71,13 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
      * @param trust      the authority to use.
      */
     @DataBoundConstructor
+    public ForkPullRequestDiscoveryTrait(int strategyId,
+                                         @NonNull BitbucketForkTrustPolicy trust) {
+        this.strategyId = strategyId;
+        this.trust = trust;
+    }
+
+    @Deprecated
     public ForkPullRequestDiscoveryTrait(int strategyId,
                                          @NonNull SCMHeadAuthority<? super BitbucketSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
         this.strategyId = strategyId;
@@ -223,11 +229,19 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
         }
     }
 
+    /**
+     * Trust policy for forked pull requests.
+     * <p>
+     * This reduces generics in the databound constructor method signature as a workaround for JENKINS-26535
+     */
+    @SuppressWarnings("rawtypes")
+    public static abstract class BitbucketForkTrustPolicy extends SCMHeadAuthority<BitbucketSCMSourceRequest, PullRequestSCMHead, PullRequestSCMRevision> {
+    }
 
     /**
      * An {@link SCMHeadAuthority} that trusts nothing.
      */
-    public static class TrustNobody extends SCMHeadAuthority<SCMSourceRequest, PullRequestSCMHead, PullRequestSCMRevision> {
+    public static class TrustNobody extends BitbucketForkTrustPolicy {
 
         /**
          * Constructor.
@@ -240,7 +254,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        public boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull PullRequestSCMHead head) {
+        public boolean checkTrusted(@NonNull BitbucketSCMSourceRequest request, @NonNull PullRequestSCMHead head) {
             return false;
         }
 
@@ -272,8 +286,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
     /**
      * An {@link SCMHeadAuthority} that trusts forks belonging to the same account.
      */
-    public static class TrustTeamForks
-            extends SCMHeadAuthority<BitbucketSCMSourceRequest, PullRequestSCMHead, PullRequestSCMRevision> {
+    public static class TrustTeamForks extends BitbucketForkTrustPolicy {
 
         /**
          * Constructor.
@@ -322,7 +335,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
     /**
      * An {@link SCMHeadAuthority} that trusts everyone.
      */
-    public static class TrustEveryone extends SCMHeadAuthority<SCMSourceRequest, PullRequestSCMHead, PullRequestSCMRevision> {
+    public static class TrustEveryone extends BitbucketForkTrustPolicy {
         /**
          * Constructor.
          */
@@ -334,7 +347,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull PullRequestSCMHead head) {
+        protected boolean checkTrusted(@NonNull BitbucketSCMSourceRequest request, @NonNull PullRequestSCMHead head) {
             return true;
         }
 
