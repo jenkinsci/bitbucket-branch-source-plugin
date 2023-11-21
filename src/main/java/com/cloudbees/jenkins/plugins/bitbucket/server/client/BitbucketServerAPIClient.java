@@ -1210,12 +1210,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public Iterable<SCMFile> getDirectoryContent(BitbucketSCMFile directory) throws IOException, InterruptedException {
         List<SCMFile> files = new ArrayList<>();
         int start=0;
+        String branchOrHash = directory.getHash().contains("+") ? directory.getRef() : directory.getHash();
         UriTemplate template = UriTemplate
                 .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
                 .set("owner", getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", directory.getPath().split(Operator.PATH.getSeparator()))
-                .set("at", directory.getRef())
+                .set("at", branchOrHash)
                 .set("start", start)
                 .set("limit", 500);
         String url = template.expand();
@@ -1258,12 +1259,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
         List<String> lines = new ArrayList<>();
         int start=0;
+        String branchOrHash = file.getHash().contains("+") ? file.getRef() : file.getHash();
         UriTemplate template = UriTemplate
                 .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
                 .set("owner", getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", file.getPath().split(Operator.PATH.getSeparator()))
-                .set("at", file.getRef())
+                .set("at", branchOrHash)
                 .set("start", start)
                 .set("limit", 500);
         String url = template.expand();
