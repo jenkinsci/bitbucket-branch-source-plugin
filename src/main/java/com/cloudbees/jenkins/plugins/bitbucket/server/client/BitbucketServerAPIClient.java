@@ -139,9 +139,9 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_REPOSITORY_PATH = API_BASE_PATH + "/projects/{owner}/repos/{repo}";
     private static final String API_DEFAULT_BRANCH_PATH = API_REPOSITORY_PATH + "/branches/default";
     private static final String API_BRANCHES_PATH = API_REPOSITORY_PATH + "/branches{?start,limit}";
-    private static final String API_BRANCHES_FILTERED_PATH = API_REPOSITORY_PATH + "/branches{?filterText}";
+    private static final String API_BRANCHES_FILTERED_PATH = API_REPOSITORY_PATH + "/branches{?filterText,start,limit}";
     private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit}";
-    private static final String API_TAGS_FILTERED_PATH = API_REPOSITORY_PATH + "/tags{?filterText}";
+    private static final String API_TAGS_FILTERED_PATH = API_REPOSITORY_PATH + "/tags{?filterText,start,limit}";
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
@@ -342,6 +342,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         for (BitbucketServerPullRequest pullRequest : pullRequests) {
             setupPullRequest(pullRequest, endpoint);
+        }
+
+        if (endpoint != null) {
+            // Get PRs again as revisions could be changed by other events during setupPullRequest
+            if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
+                pullRequests = getResources(template, BitbucketServerPullRequests.class);
+                pullRequests.removeIf(this::shouldIgnore);
+            }
         }
 
         return pullRequests;
@@ -853,6 +861,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         } catch (FileNotFoundException e) {
             return new ArrayList<>();
         }
+        repositories.removeIf(BitbucketServerRepository::isArchived);
         repositories.sort(Comparator.comparing(BitbucketServerRepository::getRepositoryName));
 
         return repositories;
@@ -1201,12 +1210,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public Iterable<SCMFile> getDirectoryContent(BitbucketSCMFile directory) throws IOException, InterruptedException {
         List<SCMFile> files = new ArrayList<>();
         int start=0;
+        String branchOrHash = directory.getHash().contains("+") ? directory.getRef() : directory.getHash();
         UriTemplate template = UriTemplate
                 .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
                 .set("owner", getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", directory.getPath().split(Operator.PATH.getSeparator()))
-                .set("at", directory.getRef())
+                .set("at", branchOrHash)
                 .set("start", start)
                 .set("limit", 500);
         String url = template.expand();
@@ -1249,12 +1259,13 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
         List<String> lines = new ArrayList<>();
         int start=0;
+        String branchOrHash = file.getHash().contains("+") ? file.getRef() : file.getHash();
         UriTemplate template = UriTemplate
                 .fromTemplate(API_BROWSE_PATH + "{&start,limit}")
                 .set("owner", getUserCentricOwner())
                 .set("repo", repositoryName)
                 .set("path", file.getPath().split(Operator.PATH.getSeparator()))
-                .set("at", file.getRef())
+                .set("at", branchOrHash)
                 .set("start", start)
                 .set("limit", 500);
         String url = template.expand();

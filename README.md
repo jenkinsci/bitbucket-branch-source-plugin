@@ -3,7 +3,6 @@
 [![Build](https://ci.jenkins.io/job/Plugins/job/bitbucket-branch-source-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/bitbucket-branch-source-plugin/job/master/)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/bitbucket-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/releases/latest)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/cloudbees-bitbucket-branch-source?color=blue)](https://plugins.jenkins.io/cloudbees-bitbucket-branch-source)
-[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/jenkinsci/bitbucket-branch-source-plugin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/jenkinsci/bitbucket-branch-source-plugin/context:java)
 [![Contributors](https://img.shields.io/github/contributors/jenkinsci/bitbucket-branch-source-plugin.svg)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/contributors)
 [![Join the chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jenkinsci/bitbucket-branch-source-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 

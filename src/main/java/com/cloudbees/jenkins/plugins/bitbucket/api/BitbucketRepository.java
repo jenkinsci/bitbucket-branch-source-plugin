@@ -70,6 +70,13 @@ public interface BitbucketRepository {
     boolean isPrivate();
 
     /**
+     * Is the repository marked as archived. Bitbucket 8.0 introduced the ability to "Archive" a repository which
+     * makes the repository read-only and distinguishable from "Active" repositories.
+     * @return true if the repository is marked as archived, false otherwise
+     */
+    boolean isArchived();
+
+    /**
      * Gets the links for this repository.
      * @return the links for this repository.
      */
