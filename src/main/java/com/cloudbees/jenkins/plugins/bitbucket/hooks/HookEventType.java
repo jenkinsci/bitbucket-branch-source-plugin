@@ -68,6 +68,12 @@ public enum HookEventType {
     SERVER_REFS_CHANGED("repo:refs_changed", NativeServerPushHookProcessor.class),
 
     /**
+     * @see <a href="https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html#Eventpayload-repo-mirr-syn">Eventpayload-repo-mirr-syn</a>
+     * @since Bitbucket Server 6.5
+     */
+    SERVER_MIRROR_REPO_SYNCHRONIZED("mirror:repo_synchronized", NativeServerPushHookProcessor.class),
+
+    /**
      * @see <a href="https://confluence.atlassian.com/bitbucketserver054/event-payload-939508609.html#Eventpayload-Opened">Eventpayload-Opened</a>
      * @since Bitbucket Server 5.4
      */

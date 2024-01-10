@@ -32,6 +32,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -47,6 +49,7 @@ import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.security.AccessControlled;
+import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
@@ -98,6 +101,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import static com.cloudbees.jenkins.plugins.bitbucket.BitbucketApiUtils.getFromBitbucket;
+
 public class BitbucketSCMNavigator extends SCMNavigator {
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
@@ -106,6 +111,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private String serverUrl;
     @CheckForNull
     private String credentialsId;
+    @CheckForNull
+    private String mirrorId;
     @NonNull
     private final String repoOwner;
     @CheckForNull
@@ -209,6 +216,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         return credentialsId;
     }
 
+    @CheckForNull
+    public String getMirrorId() {
+        return mirrorId;
+    }
+
     public String getRepoOwner() {
         return repoOwner;
     }
@@ -231,6 +243,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @DataBoundSetter
     public void setCredentialsId(@CheckForNull String credentialsId) {
         this.credentialsId = Util.fixEmpty(credentialsId);
+    }
+
+    @DataBoundSetter
+    public void setMirrorId(String mirrorId) {
+        this.mirrorId = Util.fixEmpty(mirrorId);
     }
 
     /**
@@ -634,9 +651,30 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         @SuppressWarnings("unused") // used By stapler
+        public static FormValidation doCheckMirrorId(@QueryParameter String value, @QueryParameter String serverUrl) {
+            if (!value.isEmpty()) {
+                BitbucketServerWebhookImplementation webhookImplementation =
+                    BitbucketServerEndpoint.findWebhookImplementation(serverUrl);
+                if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
+                    return FormValidation.error("Mirror can only be used with native webhooks");
+                }
+            }
+            return FormValidation.ok();
+        }
+
+        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter String serverUrl) {
             return BitbucketCredentials.fillCredentialsIdItems(context, serverUrl);
+        }
+
+        @SuppressWarnings("unused") // used By stapler
+        public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
+                                                @QueryParameter String serverUrl,
+                                                @QueryParameter String credentialsId,
+                                                @QueryParameter String repoOwner)
+            throws FormFillFailure {
+            return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, null, MirrorListSupplier.INSTANCE);
         }
 
         public List<NamedArrayList<? extends SCMTraitDescriptor<?>>> getTraitsDescriptorLists() {
@@ -821,7 +859,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     serverUrl,
                     credentialsId,
                     repoOwner,
-                    projectName)
+                    projectName,
+                    mirrorId)
                     .withRequest(request)
                     .build();
         }

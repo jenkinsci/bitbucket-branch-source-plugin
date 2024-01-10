@@ -57,16 +57,22 @@ unclassified:
         serverUrl: "http://bitbucket.example.com:8088"
         callCanMerge: false
         callChanges: true
-        serverVersion: VERSION_6
+        serverVersion: VERSION_6_5
     - bitbucketServerEndpoint:
         displayName: "Example Inc"
         serverUrl: "http://bitbucket.example.com:8089"
         callCanMerge: false
         callChanges: true
-        serverVersion: VERSION_5_10
+        serverVersion: VERSION_6
     - bitbucketServerEndpoint:
         displayName: "Example Inc"
         serverUrl: "http://bitbucket.example.com:8090"
+        callCanMerge: false
+        callChanges: true
+        serverVersion: VERSION_5_10
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8091"
         callCanMerge: false
         callChanges: true
         serverVersion: VERSION_5

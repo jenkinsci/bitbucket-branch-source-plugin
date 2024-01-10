@@ -37,6 +37,19 @@ public class WebhookConfigurationTest {
     }
 
     @Test
+    public void given_instanceWithServerVersion6_5_when_getHooks_SERVER_MIRROR_REPO_SYNC_EVENT_exists() {
+        WebhookConfiguration whc = new WebhookConfiguration();
+        BitbucketSCMSource owner = Mockito.mock(BitbucketSCMSource.class);
+        final String server = "http://bitbucket.example.com:8091";
+        when(owner.getServerUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getMirrorId()).thenReturn("dummy-mirror-id");
+        BitbucketWebHook hook = whc.getHook(owner);
+        assertTrue(hook.getEvents().contains(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey()));
+    }
+
+    @Test
     public void given_instanceWithServerVersion510_when_getHooks_SERVER_PR_RVWR_UPDATE_EVENT_exists() {
         WebhookConfiguration whc = new WebhookConfiguration();
         BitbucketSCMSource owner = Mockito.mock(BitbucketSCMSource.class);

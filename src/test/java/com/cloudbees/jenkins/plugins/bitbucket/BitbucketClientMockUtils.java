@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
@@ -46,9 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import jenkins.model.Jenkins;
 
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -57,8 +54,6 @@ public class BitbucketClientMockUtils {
     public static BitbucketCloudApiClient getAPIClientMock(boolean includePullRequests,
             boolean includeWebHooks) throws IOException, InterruptedException {
         BitbucketCloudApiClient bitbucket = mock(BitbucketCloudApiClient.class);
-        when(bitbucket.getRepositoryUri(any(BitbucketRepositoryProtocol.class), nullable(String.class),
-            anyString(), anyString())).thenCallRealMethod();
 
         // mock branches
         BitbucketCloudBranch branch1 = getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a");
@@ -122,7 +117,7 @@ public class BitbucketClientMockUtils {
                 new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/repo1")
         ));
         links.put("clone", Arrays.asList(
-                new BitbucketHref("https","https://bitbucket.org/amuniz/repo1.git"),
+                new BitbucketHref("http","https://bitbucket.org/amuniz/repo1.git"),
                 new BitbucketHref("ssh","ssh://git@bitbucket.org/amuniz/repo1.git")
         ));
         r1.setLinks(links);
@@ -133,10 +128,10 @@ public class BitbucketClientMockUtils {
                 new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/repo2")
         ));
         links.put("clone", Arrays.asList(
-                new BitbucketHref("https", "https://bitbucket.org/amuniz/repo2.git"),
+                new BitbucketHref("http", "https://bitbucket.org/amuniz/repo2.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/amuniz/repo2.git")
         ));
-        r1.setLinks(links);
+        r2.setLinks(links);
         BitbucketCloudRepository r3 = new BitbucketCloudRepository();
         // test mock hack to avoid a lot of harness code
         r3.setFullName("amuniz/test-repos");
@@ -145,10 +140,10 @@ public class BitbucketClientMockUtils {
                 new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos")
         ));
         links.put("clone", Arrays.asList(
-                new BitbucketHref("https", "https://bitbucket.org/amuniz/test-repos.git"),
+                new BitbucketHref("http", "https://bitbucket.org/amuniz/test-repos.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/amuniz/test-repos.git")
         ));
-        r1.setLinks(links);
+        r3.setLinks(links);
         return Arrays.asList(r1, r2, r3);
     }
 
@@ -164,6 +159,15 @@ public class BitbucketClientMockUtils {
         repo.setScm("git");
         repo.setFullName("amuniz/test-repos");
         repo.setPrivate(true);
+        HashMap<String, List<BitbucketHref>> links = new HashMap<>();
+        links.put("self", Collections.singletonList(
+            new BitbucketHref("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos")
+        ));
+        links.put("clone", Arrays.asList(
+            new BitbucketHref("http", "https://bitbucket.org/amuniz/test-repos.git"),
+            new BitbucketHref("ssh", "ssh://git@bitbucket.org/amuniz/test-repos.git")
+        ));
+        repo.setLinks(links);
         when(bitbucket.getRepository()).thenReturn(repo);
     }
 

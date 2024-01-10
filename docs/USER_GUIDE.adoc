@@ -90,10 +90,10 @@ service to listen to these webhook requests and acts accordingly by triggering a
 triggering builds on matching branches or pull requests.
 
 Go to "Manage Jenkins" / "Configure System" and locate _Bitbucket Endpoints_. For every endpoint where you want webhooks registered automatically,
-check "Manage hooks" and select a "Credential" with enough access to add webhooks to repositories. Since the Credential is used at the system level, 
+check "Manage hooks" and select a "Credential" with enough access to add webhooks to repositories. Since the Credential is used at the system level,
 it can be a System scoped credential, which will restrict its usage from Pipelines.
 
-For both Bitbucket _Multibranch Pipelines_ and _Organization folders_ there is an "Override hook management" behavior 
+For both Bitbucket _Multibranch Pipelines_ and _Organization folders_ there is an "Override hook management" behavior
 to opt out or adjust system-wide settings.
 
 image::images/screenshot-4.png[scaledwidth=90%]
@@ -151,6 +151,23 @@ Then create new _Username with password credentials_ in Jenkins, enter the Bitbu
 image::images/screenshot-11.png[scaledwidth=90%]
 
 image::images/screenshot-12.png[scaledwidth=90%]
+
+[id=bitbucket-mirror-support]
+== Mirror support
+
+A mirrored Git repository can be configured for fetching references.
+
+The mirror is not used in the following cases:
+
+- If the source branch in a pull request resides in a different repository, the source branch is fetched from the primary repository while the target branch is fetched from the mirror.
+
+- During initial pull request scanning, the mirror isn't used because of the current design limitations.
+
+Cloning from the mirror can only be used with native web-hooks since plugin web-hooks don't provide a mirror identifier.
+
+For branches and tags, the mirror sync event is used. Thus, at cloning time, the mirror is already synchronized. However, in the case of a pull request event, there is no such guarantee. The plugin optimistically assumes that the mirror is synced and the required commit hashes exist in the mirrored repository at cloning time. If the plugin can't find the required hashes, it falls back to the primary repository.
+
+image::images/screenshot-13.png[scaledwidth=90%]
 
 [id=bitbucket-misc-config]
 == Miscellaneous configuration

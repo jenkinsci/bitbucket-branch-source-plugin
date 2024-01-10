@@ -22,6 +22,9 @@
   <f:entry title="${%Project Key}" field="projectKey">
     <f:textbox/>
   </f:entry>
+  <f:entry title="${%Clone from}" field="mirrorId">
+    <f:select/>
+  </f:entry>
   <f:entry title="${%Behaviours}" field="traits">
     <scm:traits field="traits"/>
   </f:entry>

@@ -28,9 +28,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirrorServer;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirroredRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirroredRepositoryDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
@@ -45,6 +47,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImpl
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.mirror.BitbucketMirrorServerDescriptors;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.mirror.BitbucketMirroredRepositoryDescriptors;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequestCanMerge;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequests;
@@ -72,7 +76,6 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -81,7 +84,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -158,6 +160,10 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String WEBHOOK_REPOSITORY_CONFIG_PATH = WEBHOOK_REPOSITORY_PATH + "/{id}";
 
     private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits{/hash}";
+
+    private static final String API_MIRRORS_FOR_REPO_PATH = "/rest/mirroring/1.0/repos/{id}/mirrors";
+    private static final String API_MIRRORS_PATH = "/rest/mirroring/1.0/mirrorServers";
+
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
     private static final int API_RATE_LIMIT_STATUS_CODE = 429;
     private static final Duration API_RATE_LIMIT_INITIAL_SLEEP = Main.isUnitTest ? Duration.ofMillis(100) : Duration.ofSeconds(5);
@@ -243,55 +249,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @CheckForNull
     public String getRepositoryName() {
         return repositoryName;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public String getRepositoryUri(@NonNull BitbucketRepositoryProtocol protocol,
-                                   @CheckForNull String cloneLink,
-                                   @NonNull String owner,
-                                   @NonNull String repository) {
-        URI baseUri;
-        try {
-            baseUri = new URI(baseURL);
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("Server URL is not a valid URI", e);
-        }
-
-        UriTemplate template = UriTemplate.fromTemplate("{scheme}://{+authority}{+path}{/owner,repository}.git");
-        template.set("owner", owner);
-        template.set("repository", repository);
-
-        switch (protocol) {
-            case HTTP:
-                template.set("scheme", baseUri.getScheme());
-                template.set("authority", baseUri.getRawAuthority());
-                template.set("path", Objects.toString(baseUri.getRawPath(), "") + "/scm");
-                break;
-            case SSH:
-                template.set("scheme", BitbucketRepositoryProtocol.SSH.getType());
-                template.set("authority", "git@" + baseUri.getHost());
-                if (cloneLink != null) {
-                    try {
-                        URI cloneLinkUri = new URI(cloneLink);
-                        if (cloneLinkUri.getScheme() != null) {
-                            template.set("scheme", cloneLinkUri.getScheme());
-                        }
-                        if (cloneLinkUri.getRawAuthority() != null) {
-                            template.set("authority", cloneLinkUri.getRawAuthority());
-                        }
-                    } catch (@SuppressWarnings("unused") URISyntaxException ignored) {
-                        // fall through
-                    }
-                }
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
-        }
-        return template.expand();
     }
 
     /**
@@ -494,6 +451,54 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         String response = getRequest(url);
         try {
             return JsonParser.toJava(response, BitbucketServerRepository.class);
+        } catch (IOException e) {
+            throw new IOException("I/O error when accessing URL: " + url, e);
+        }
+    }
+
+    /**
+     * Returns the mirror servers.
+     *
+     * @return the mirror servers
+     * @throws IOException          if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    @NonNull
+    public List<BitbucketMirrorServer> getMirrors() throws IOException, InterruptedException {
+        UriTemplate uriTemplate = UriTemplate
+                .fromTemplate(API_MIRRORS_PATH);
+        return getResources(uriTemplate, BitbucketMirrorServerDescriptors.class);
+    }
+
+    /**
+     * Returns the repository mirror descriptors.
+     *
+     * @return the repository mirror descriptors for given repository id.
+     * @throws IOException          if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    @NonNull
+    public List<BitbucketMirroredRepositoryDescriptor> getMirrors(@NonNull Long repositoryId) throws IOException, InterruptedException {
+        UriTemplate uriTemplate = UriTemplate
+                .fromTemplate(API_MIRRORS_FOR_REPO_PATH)
+                .set("id", repositoryId);
+        return getResources(uriTemplate, BitbucketMirroredRepositoryDescriptors.class);
+    }
+
+    /**
+     * Retrieves all available clone urls for the specified repository.
+     *
+     * @param url mirror repository self-url
+     * @return all available clone urls for the specified repository.
+     * @throws IOException          if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    @NonNull
+    public BitbucketMirroredRepository getMirroredRepository(@NonNull String url) throws IOException, InterruptedException {
+        HttpGet httpget = new HttpGet(url);
+        var response = getRequest(httpget);
+        try {
+            return JsonParser.toJava(response, BitbucketMirroredRepository.class);
         } catch (IOException e) {
             throw new IOException("I/O error when accessing URL: " + url, e);
         }
@@ -945,6 +950,10 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     protected String getRequest(String path) throws IOException, InterruptedException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
+        return getRequest(httpget);
+    }
+
+    private String getRequest(HttpGet httpget) throws IOException, InterruptedException {
 
         if (authenticator != null) {
             authenticator.configureRequest(httpget);
@@ -970,7 +979,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             }
             EntityUtils.consume(response.getEntity());
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-                throw new FileNotFoundException("URL: " + path);
+                throw new FileNotFoundException("Request: " + httpget);
             }
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 throw new BitbucketRequestException(response.getStatusLine().getStatusCode(),
@@ -981,7 +990,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         } catch (BitbucketRequestException | FileNotFoundException e) {
             throw e;
         } catch (IOException e) {
-            throw new IOException("Communication error for url: " + path, e);
+            throw new IOException("Communication error for request: " + httpget, e);
         } finally {
             httpget.releaseConnection();
         }

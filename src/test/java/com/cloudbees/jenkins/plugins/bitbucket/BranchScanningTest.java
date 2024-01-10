@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -42,7 +43,6 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -74,18 +74,18 @@ public class BranchScanningTest {
     public void uriResolverTest() throws Exception {
 
         // When there is no checkout credentials set, https must be resolved
-        assertThat(new BitbucketGitSCMBuilder(getBitbucketSCMSourceMock(false),
-                new BranchSCMHead("branch1"), null,
-                null).withBitbucketRemote().remote(), is("https://bitbucket.org/amuniz/test-repos.git"));
-    }
-
-    @Test
-    public void remoteConfigsTest() throws Exception {
-        BitbucketSCMSource source = getBitbucketSCMSourceMock(false);
-        BitbucketGitSCMBuilder builder =
-                new BitbucketGitSCMBuilder(source, new BranchSCMHead("branch1"), null,
-                        null);
-        assertThat(builder.refSpecs(), Matchers.contains("+refs/heads/branch1:refs/remotes/@{remote}/branch1"));
+        BitbucketGitSCMBuilder builder = new BitbucketGitSCMBuilder(
+            getBitbucketSCMSourceMock(false),
+            new BranchSCMHead("branch1"), null,
+            null
+        ).withCloneLinks(
+            List.of(
+                new BitbucketHref("http", "https://bitbucket.org/amuniz/test-repos.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.org/amuniz/test-repo.git")
+            ),
+            List.of()
+        );
+        assertThat(builder.remote(), is("https://bitbucket.org/amuniz/test-repos.git"));
     }
 
     @Test
