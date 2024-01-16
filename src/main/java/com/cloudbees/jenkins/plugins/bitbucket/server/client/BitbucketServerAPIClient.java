@@ -1047,6 +1047,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         httpClientBuilder.useSystemProperties();
         httpClientBuilder.setRetryHandler(new StandardHttpRequestRetryHandler());
+        httpClientBuilder.disableCookieManagement();
 
         RequestConfig.Builder requestConfig = RequestConfig.custom();
         String connectTimeout = System.getProperty("http.connect.timeout", "10");
