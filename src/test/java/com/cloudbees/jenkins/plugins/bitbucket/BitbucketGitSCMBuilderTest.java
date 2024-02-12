@@ -93,7 +93,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -153,7 +153,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -213,7 +213,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -271,7 +271,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -317,7 +317,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -363,7 +363,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -915,7 +915,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -979,7 +979,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1042,7 +1042,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1106,7 +1106,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1176,7 +1176,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1246,7 +1246,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1316,7 +1316,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1386,7 +1386,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1456,7 +1456,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1522,7 +1522,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1570,7 +1570,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -1618,7 +1618,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -2484,7 +2484,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -2568,7 +2568,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -2652,7 +2652,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -2732,7 +2732,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
@@ -2800,7 +2800,7 @@ public class BitbucketGitSCMBuilderTest {
 
         instance.withCloneLinks(
             List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
+                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
                 new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
             ),
             List.of()
