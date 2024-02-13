@@ -126,8 +126,15 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 final String originalBranchName = pullRequest.getSource().getBranch().getName();
                 final String branchName = String.format("PR-%s%s", pullRequest.getId(),
                     strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
-                final PullRequestSCMHead head = new PullRequestSCMHead(branchName, source.getRepoOwner(),
-                    source.getRepository(), originalBranchName, pullRequest, headOrigin, strategy);
+                final PullRequestSCMHead head = new PullRequestSCMHead(
+                    branchName,
+                    sourceRepo.getOwnerName(),
+                    sourceRepo.getRepositoryName(),
+                    originalBranchName,
+                    pullRequest,
+                    headOrigin,
+                    strategy
+                );
 
                 switch (getType()) {
                     case CREATED:
@@ -135,7 +142,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                         final String targetHash = pullRequest.getDestination().getCommit().getHash();
                         final String pullHash = pullRequest.getSource().getCommit().getHash();
                         result.put(head,
-                            new PullRequestSCMRevision<>(head,
+                            new PullRequestSCMRevision(head,
                                 new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), targetHash),
                                 new AbstractGitSCMSource.SCMRevisionImpl(head, pullHash)));
                         break;

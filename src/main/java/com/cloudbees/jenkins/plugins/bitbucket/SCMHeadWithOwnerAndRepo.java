@@ -160,7 +160,7 @@ public class SCMHeadWithOwnerAndRepo extends SCMHead {
         public SCMRevision migrate(@NonNull BitbucketSCMSource source,
                                    @NonNull AbstractGitSCMSource.SCMRevisionImpl revision) {
             PullRequestSCMHead head = migrate(source, (PR) revision.getHead());
-            return head != null ? new PullRequestSCMRevision<>(head,
+            return head != null ? new PullRequestSCMRevision(head,
                     // ChangeRequestCheckoutStrategy.HEAD means we ignore the target revision,
                     // so we can leave it null as a placeholder
                     new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), null),

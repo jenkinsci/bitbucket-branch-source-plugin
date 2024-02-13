@@ -99,8 +99,8 @@ public class BitbucketGitSCMRevisionTest {
                 assertRevision(revision);
             } else if (head instanceof PullRequestSCMHead) {
                 @SuppressWarnings("unchecked")
-                PullRequestSCMRevision<BitbucketGitSCMRevision> revision = (PullRequestSCMRevision<BitbucketGitSCMRevision>) source.retrieve(head, listener);
-                assertRevision(revision.getPull());
+                PullRequestSCMRevision revision = (PullRequestSCMRevision) source.retrieve(head, listener);
+                assertRevision((BitbucketGitSCMRevision) revision.getPull());
                 assertRevision((BitbucketGitSCMRevision) revision.getTarget());
             } else if(head instanceof TagSCMHead) {
                 BitbucketTagSCMRevision revision = (BitbucketTagSCMRevision) source.retrieve(head, listener);

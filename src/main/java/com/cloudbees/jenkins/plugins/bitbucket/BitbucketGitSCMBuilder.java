@@ -23,11 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
@@ -40,12 +38,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.BitbucketWeb;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMBuilder;
-import jenkins.plugins.git.MergeWithGitSCMExtension;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
@@ -68,11 +62,16 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     private final BitbucketSCMSource scmSource;
 
     /**
-     * The clone links for cloning the source repository and origin pull requests (but links will need tweaks for
-     * fork pull requests)
+     * The clone links for primary repository
      */
     @NonNull
-    private List<BitbucketHref> cloneLinks = Collections.emptyList();
+    private List<BitbucketHref> primaryCloneLinks = List.of();
+
+    /**
+     * The clone links for mirror repository if it's configured
+     */
+    @NonNull
+    private List<BitbucketHref> mirrorCloneLinks = List.of();
 
     /**
      * The {@link BitbucketRepositoryProtocol} that should be used.
@@ -96,21 +95,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         // we provide a dummy repository URL to the super constructor and then fix is afterwards once we have
         // the clone links
         super(head, revision, /*dummy value*/scmSource.getServerUrl(), credentialsId);
-        withoutRefSpecs();
-        if (head instanceof PullRequestSCMHead) {
-            if (scmSource.buildBitbucketClient() instanceof BitbucketCloudApiClient) {
-                // TODO fix once Bitbucket Cloud has a fix for https://bitbucket.org/site/master/issues/5814
-                String branchName = ((PullRequestSCMHead) head).getBranchName();
-                withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + head.getName());
-            } else {
-                String pullId = ((PullRequestSCMHead) head).getId();
-                withRefSpec("+refs/pull-requests/" + pullId + "/from:refs/remotes/@{remote}/" + head.getName());
-            }
-        } else if (head instanceof TagSCMHead ){
-            withRefSpec("+refs/tags/" + head.getName() + ":refs/tags/" + head.getName());
-        } else {
-            withRefSpec("+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
-        }
         this.scmSource = scmSource;
         AbstractBitbucketEndpoint endpoint =
                 BitbucketEndpointConfiguration.get().findEndpoint(scmSource.getServerUrl());
@@ -130,11 +114,19 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     /**
      * Provides the clone links from the {@link BitbucketRepository} to allow inference of ports for different protocols.
      *
-     * @param cloneLinks the clone links.
+     * @param primaryCloneLinks the clone links for primary repository.
+     * @param mirrorCloneLinks the clone links for mirror repository if it's configured.
      * @return {@code this} for method chaining.
      */
-    public BitbucketGitSCMBuilder withCloneLinks(List<BitbucketHref> cloneLinks) {
-        this.cloneLinks = new ArrayList<>(Util.fixNull(cloneLinks));
+    public BitbucketGitSCMBuilder withCloneLinks(
+        @CheckForNull List<BitbucketHref> primaryCloneLinks,
+        @CheckForNull List<BitbucketHref> mirrorCloneLinks
+    ) {
+        if (primaryCloneLinks == null) {
+            throw new IllegalArgumentException("Primary clone links shouldn't be null");
+        }
+        this.primaryCloneLinks = primaryCloneLinks;
+        this.mirrorCloneLinks = Util.fixNull(mirrorCloneLinks);
         return withBitbucketRemote();
     }
 
@@ -147,16 +139,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     @NonNull
     public BitbucketSCMSource scmSource() {
         return scmSource;
-    }
-
-    /**
-     * Returns the clone links (possibly empty).
-     *
-     * @return the clone links (possibly empty).
-     */
-    @NonNull
-    public List<BitbucketHref> cloneLinks() {
-        return Collections.unmodifiableList(cloneLinks);
     }
 
     /**
@@ -206,70 +188,130 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
      */
     @NonNull
     public BitbucketGitSCMBuilder withBitbucketRemote() {
-        SCMHead h = head();
-        String repoOwner;
-        String repository;
-        BitbucketApi bitbucket = scmSource().buildBitbucketClient();
-        if (h instanceof PullRequestSCMHead && bitbucket instanceof BitbucketCloudApiClient) {
-            // TODO fix once Bitbucket Cloud has a fix for https://bitbucket.org/site/master/issues/5814
-            repoOwner = ((PullRequestSCMHead) h).getRepoOwner();
-            repository = ((PullRequestSCMHead) h).getRepository();
+        SCMHead head = head();
+        withoutRefSpecs();
+        String headName = head.getName();
+        if (head instanceof PullRequestSCMHead) {
+            withPullRequestRemote((PullRequestSCMHead) head, headName);
+        } else if (head instanceof TagSCMHead) {
+            withTagRemote(headName);
         } else {
-            // head instanceof BranchSCMHead
-            repoOwner = scmSource.getRepoOwner();
-            repository = scmSource.getRepository();
-        }
-
-        String cloneLink = null;
-        for (BitbucketHref link : cloneLinks()) {
-            if (protocol.getType().equals(link.getName())) {
-                cloneLink = link.getHref();
-                break;
-            }
-        }
-        withRemote(bitbucket.getRepositoryUri(
-                protocol,
-                cloneLink,
-                repoOwner,
-                repository));
-        AbstractBitbucketEndpoint endpoint =
-                BitbucketEndpointConfiguration.get().findEndpoint(scmSource.getServerUrl());
-        if (endpoint == null) {
-            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null);
-        }
-        withBrowser(new BitbucketWeb(
-                endpoint.getRepositoryUrl(
-                        repoOwner,
-                        repository
-                )));
-
-        // now, if we have to build a merge commit, let's ensure we build the merge commit!
-        SCMRevision r = revision();
-        if (h instanceof PullRequestSCMHead) {
-            PullRequestSCMHead head = (PullRequestSCMHead) h;
-            if (head.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-                String name = head.getTarget().getName();
-                String localName = head.getBranchName().equals(name) ? "upstream-" + name : name;
-
-                String remoteName = remoteName().equals("upstream") ? "upstream-upstream" : "upstream";
-                withAdditionalRemote(remoteName,
-                        bitbucket.getRepositoryUri(
-                                protocol,
-                                cloneLink,
-                                scmSource().getRepoOwner(),
-                                scmSource().getRepository()),
-                        "+refs/heads/" + name + ":refs/remotes/@{remote}/" + localName);
-                if ((r instanceof PullRequestSCMRevision)
-                        && ((PullRequestSCMRevision) r).getTarget() instanceof AbstractGitSCMSource.SCMRevisionImpl) {
-                    withExtension(new MergeWithGitSCMExtension("remotes/" + remoteName + "/" + localName,
-                            ((AbstractGitSCMSource.SCMRevisionImpl) ((PullRequestSCMRevision) r).getTarget())
-                                    .getHash()));
-                } else {
-                    withExtension(new MergeWithGitSCMExtension("remotes/" + remoteName + "/" + localName, null));
-                }
-            }
+            withBranchRemote(headName);
         }
         return this;
+    }
+
+    private void withPullRequestRemote(PullRequestSCMHead head, String headName) {
+        String scmSourceRepoOwner = scmSource.getRepoOwner();
+        String scmSourceRepository = scmSource.getRepository();
+        String pullRequestRepoOwner = head.getRepoOwner();
+        String pullRequestRepository = head.getRepository();
+        boolean prFromTargetRepository = pullRequestRepoOwner.equals(scmSourceRepoOwner)
+            && pullRequestRepository.equals(scmSourceRepository);
+        SCMRevision revision = revision();
+        ChangeRequestCheckoutStrategy checkoutStrategy = head.getCheckoutStrategy();
+        // PullRequestSCMHead should be refactored to add references to target and source commit hashes.
+        // So revision should not be used here. There is a hack to use revision to get hashes.
+        boolean cloneFromMirror = prFromTargetRepository
+            && !mirrorCloneLinks.isEmpty()
+            && revision instanceof PullRequestSCMRevision;
+        String targetBranch = head.getTarget().getName();
+        String branchName = head.getBranchName();
+        if (prFromTargetRepository) {
+            withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + branchName);
+            if (cloneFromMirror) {
+                PullRequestSCMRevision pullRequestSCMRevision = (PullRequestSCMRevision) revision;
+                String primaryRemoteName = remoteName().equals("primary") ? "primary-primary" : "primary";
+                String cloneLink = getCloneLink(primaryCloneLinks);
+                List<BranchWithHash> branchWithHashes;
+                if (checkoutStrategy == ChangeRequestCheckoutStrategy.MERGE) {
+                    branchWithHashes = List.of(
+                        new BranchWithHash(branchName, pullRequestSCMRevision.getPull().getHash()),
+                        new BranchWithHash(targetBranch, pullRequestSCMRevision.getTargetImpl().getHash())
+                    );
+                } else {
+                    branchWithHashes = List.of(
+                        new BranchWithHash(branchName, pullRequestSCMRevision.getPull().getHash())
+                    );
+                }
+                withExtension(new FallbackToOtherRepositoryGitSCMExtension(cloneLink, primaryRemoteName, branchWithHashes));
+                withMirrorRemote();
+            } else {
+                withPrimaryRemote();
+            }
+        } else {
+            if (scmSource.isCloud()) {
+                withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + headName);
+                String cloneLink = getCloudRepositoryUri(pullRequestRepoOwner, pullRequestRepository);
+                withRemote(cloneLink);
+            } else {
+                String pullId = head.getId();
+                withRefSpec("+refs/pull-requests/" + pullId + "/from:refs/remotes/@{remote}/" + headName);
+                withPrimaryRemote();
+            }
+        }
+        if (head.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
+            String hash = revision instanceof PullRequestSCMRevision
+                ? ((PullRequestSCMRevision) revision).getTargetImpl().getHash()
+                : null;
+            String refSpec = "+refs/heads/" + targetBranch + ":refs/remotes/@{remote}/" + targetBranch;
+            if (!prFromTargetRepository && scmSource.isCloud()) {
+                String upstreamRemoteName = remoteName().equals("upstream") ? "upstream-upstream" : "upstream";
+                withAdditionalRemote(upstreamRemoteName, getCloneLink(primaryCloneLinks), refSpec);
+                withExtension(new MergeWithGitSCMExtension("remotes/" + upstreamRemoteName + "/" + targetBranch, hash));
+            } else {
+                withRefSpec(refSpec);
+                withExtension(new MergeWithGitSCMExtension("remotes/" + remoteName() + "/" + targetBranch, hash));
+            }
+        }
+    }
+
+    @NonNull
+    public String getCloudRepositoryUri(@NonNull String owner, @NonNull String repository) {
+        switch (protocol) {
+            case HTTP:
+                return "https://bitbucket.org/" + owner + "/" + repository + ".git";
+            case SSH:
+                return "ssh://git@bitbucket.org/" + owner + "/" + repository + ".git";
+            default:
+                throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
+        }
+    }
+
+    private void withTagRemote(String headName) {
+        withRefSpec("+refs/tags/" + headName + ":refs/tags/" + headName);
+        if (mirrorCloneLinks.isEmpty()) {
+            withPrimaryRemote();
+        } else {
+            withMirrorRemote();
+        }
+    }
+
+    private void withBranchRemote(String headName) {
+        withRefSpec("+refs/heads/" + headName + ":refs/remotes/@{remote}/" + headName);
+        if (mirrorCloneLinks.isEmpty()) {
+            withPrimaryRemote();
+        } else {
+            withMirrorRemote();
+        }
+    }
+
+    private void withPrimaryRemote() {
+        String cloneLink = getCloneLink(primaryCloneLinks);
+        withRemote(cloneLink);
+    }
+
+    private void withMirrorRemote() {
+        String cloneLink = getCloneLink(mirrorCloneLinks);
+        withRemote(cloneLink);
+    }
+
+    private String getCloneLink(List<BitbucketHref> cloneLinks) {
+        return cloneLinks.stream()
+            .filter(link -> protocol.matches(link.getName()))
+            .findAny()
+            .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol))
+            .getHref();
     }
 
     /**

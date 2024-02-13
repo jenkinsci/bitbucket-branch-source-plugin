@@ -58,21 +58,6 @@ public interface BitbucketApi {
     String getRepositoryName();
 
     /**
-     * Returns the URI of the repository.
-     *
-     * @param protocol the protocol to access the repository with.
-     * @param cloneLink the actual clone link for the repository as sent by the server, or {@code null} if unknown.
-     * @param owner the owner
-     * @param repository the repository.
-     * @return the repository URI.
-     */
-    @NonNull
-    String getRepositoryUri(@NonNull BitbucketRepositoryProtocol protocol,
-                            @CheckForNull String cloneLink,
-                            @NonNull String owner,
-                            @NonNull String repository);
-
-    /**
      * Returns the pull requests in the repository.
      *
      * @return the list of pull requests in the repository.
