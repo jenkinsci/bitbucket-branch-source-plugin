@@ -108,14 +108,13 @@ public abstract class BitbucketAuthenticator {
     }
 
     /**
-     * Return the user to be used in the clone Uri. Override this if your
-     * authentication method needs to set the user in the repository Uri
+     * Add authentication token to clone link if
+     * authentication method requires it
      *
-     * @return user name to use in the repository Uri
+     * @return updated clone link
      */
-    public String getUserUri() {
-        // override to return a user
-        return "";
+    public BitbucketHref addAuthToken(BitbucketHref bitbucketHref) {
+        return bitbucketHref;
     }
 
     /**

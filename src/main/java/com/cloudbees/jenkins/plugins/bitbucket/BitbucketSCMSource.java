@@ -86,6 +86,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
@@ -536,7 +537,7 @@ public class BitbucketSCMSource extends SCMSource {
             repositoryType = BitbucketRepositoryType.fromString(r.getScm());
             Map<String, List<BitbucketHref>> links = r.getLinks();
             if (links != null && links.containsKey("clone")) {
-                primaryCloneLinks = links.get("clone");
+                setPrimaryCloneLinks(links.get("clone"));
             }
         }
         return repositoryType;
@@ -1037,6 +1038,15 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
+    private void setPrimaryCloneLinks(List<BitbucketHref> links) {
+        BitbucketAuthenticator authenticator = authenticator();
+        if (authenticator == null) {
+            primaryCloneLinks = links;
+        } else {
+            primaryCloneLinks = links.stream().map(authenticator::addAuthToken).collect(Collectors.toList());
+        }
+    }
+
     @NonNull
     @Override
     public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener)
@@ -1092,7 +1102,7 @@ public class BitbucketSCMSource extends SCMSource {
         BitbucketRepository r = bitbucket.getRepository();
         Map<String, List<BitbucketHref>> links = r.getLinks();
         if (links != null && links.containsKey("clone")) {
-            primaryCloneLinks = links.get("clone");
+            setPrimaryCloneLinks(links.get("clone"));
         }
         result.add(new BitbucketRepoMetadataAction(r));
         String defaultBranch = bitbucket.getDefaultBranch();
@@ -1288,7 +1298,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     private void initPrimaryCloneLinks(BitbucketApi bitbucket) {
         try {
-            primaryCloneLinks = getCloneLinksFromPrimary(bitbucket);
+            setPrimaryCloneLinks(getCloneLinksFromPrimary(bitbucket));
         } catch (Exception e) {
             throw new IllegalStateException(
                 "Could not determine clone links of " + getRepoOwner() + "/" + getRepository()
