@@ -308,7 +308,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
 
     private String getCloneLink(List<BitbucketHref> cloneLinks) {
         return cloneLinks.stream()
-            .filter(link -> protocol.getType().equals(link.getName()))
+            .filter(link -> protocol.matches(link.getName()))
             .findAny()
             .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol))
             .getHref();

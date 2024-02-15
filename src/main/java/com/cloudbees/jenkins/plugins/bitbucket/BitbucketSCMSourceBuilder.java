@@ -81,6 +81,25 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
     }
 
     /**
+     * Backward compatible constructor.
+     *
+     * @deprecated Added only for backward compatibility with BitbucketPipelineCreateRequest from
+     * <a href="https://github.com/jenkinsci/blueocean-plugin">Blue Ocean</a>. Will be removed soon.
+     *
+     * @param id            the {@link BitbucketSCMSource#getId()}
+     * @param serverUrl     the {@link BitbucketSCMSource#getServerUrl()}
+     * @param credentialsId the credentials id.
+     * @param repoOwner     the repository owner.
+     * @param repoName      the project name.
+     */
+    @Deprecated
+    public BitbucketSCMSourceBuilder(@CheckForNull String id, @NonNull String serverUrl,
+                                     @CheckForNull String credentialsId, @NonNull String repoOwner,
+                                     @NonNull String repoName) {
+        this(id, serverUrl, credentialsId, repoOwner, repoName, null);
+    }
+
+    /**
      * The id of the {@link BitbucketSCMSource} that is being built.
      *
      * @return the id of the {@link BitbucketSCMSource} that is being built.
