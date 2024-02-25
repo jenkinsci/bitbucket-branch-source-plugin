@@ -189,7 +189,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     @NonNull
     public BitbucketGitSCMBuilder withBitbucketRemote() {
         SCMHead head = head();
-        withoutRefSpecs();
         String headName = head.getName();
         if (head instanceof PullRequestSCMHead) {
             withPullRequestRemote((PullRequestSCMHead) head, headName);

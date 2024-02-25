@@ -25,6 +25,7 @@ import jenkins.branch.BranchSource;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMSourceDefaults;
 import jenkins.plugins.git.MergeWithGitSCMExtension;
+import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
@@ -439,6 +440,76 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/test-branch"));
         assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
         assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(false));
+        assertThat(actual.getExtensions(), containsInAnyOrder(
+                instanceOf(GitSCMSourceDefaults.class),
+                instanceOf(BuildChooserSetting.class)
+        ));
+        BuildChooserSetting chooser = getExtension(actual, BuildChooserSetting.class);
+        assertThat(chooser.getBuildChooser(), instanceOf(AbstractGitSCMSource.SpecificRevisionBuildChooser.class));
+        AbstractGitSCMSource.SpecificRevisionBuildChooser revChooser =
+                (AbstractGitSCMSource.SpecificRevisionBuildChooser) chooser.getBuildChooser();
+        Collection<Revision> revisions = revChooser
+                .getCandidateRevisions(false, "test-branch", Mockito.mock(GitClient.class), new LogTaskListener(
+                        Logger.getAnonymousLogger(), Level.FINEST), null, null);
+        assertThat(revisions, hasSize(1));
+        assertThat(revisions.iterator().next().getSha1String(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
+    }
+
+    @Test
+    public void given__server_branch_rev_anon_with_extra_refSpec_when__build__then__scmBuilt() throws Exception {
+        source.setServerUrl("https://bitbucket.test");
+        BranchSCMHead head = new BranchSCMHead("test-branch");
+        AbstractGitSCMSource.SCMRevisionImpl revision =
+                new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
+                head, revision, null);
+        instance.withTrait(new RefSpecsSCMSourceTrait("+refs/heads/*:refs/remotes/@{remote}/*"));
+        assertThat(instance.credentialsId(), is(nullValue()));
+        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.scmSource(), is(source));
+        assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
+                instance.remote(), is("https://bitbucket.test"));
+        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
+        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
+
+        instance.withCloneLinks(
+            List.of(
+                new BitbucketHref("http", "https://bitbucket.test/scm/tester/test-repo.git"),
+                new BitbucketHref("ssh", "ssh://git@bitbucket.test:7999/tester/test-repo.git")
+            ),
+            List.of()
+        );
+        assertThat(instance.remote(), is("https://bitbucket.test/scm/tester/test-repo.git"));
+        assertThat(instance.refSpecs(), hasSize(2));
+        assertThat(instance.refSpecs(), contains(
+            "+refs/heads/*:refs/remotes/@{remote}/*",
+            "+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"
+        ));
+
+        GitSCM actual = instance.build();
+        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
+        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
+        assertThat(actual.getGitTool(), nullValue());
+        assertThat(actual.getUserRemoteConfigs(), hasSize(1));
+        UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
+        assertThat(config.getName(), is("origin"));
+        assertThat(config.getRefspec(), is("+refs/heads/*:refs/remotes/origin/* +refs/heads/test-branch:refs/remotes/origin/test-branch"));
+        assertThat(config.getUrl(), is("https://bitbucket.test/scm/tester/test-repo.git"));
+        assertThat(config.getCredentialsId(), is(nullValue()));
+        RemoteConfig origin = actual.getRepositoryByName("origin");
+        assertThat(origin, notNullValue());
+        assertThat(origin.getURIs(), hasSize(1));
+        assertThat(origin.getURIs().get(0).toString(), is("https://bitbucket.test/scm/tester/test-repo.git"));
+        assertThat(origin.getFetchRefSpecs(), hasSize(2));
+        assertThat(origin.getFetchRefSpecs().get(0).getSource(), is("refs/heads/*"));
+        assertThat(origin.getFetchRefSpecs().get(0).getDestination(), is("refs/remotes/origin/*"));
+        assertThat(origin.getFetchRefSpecs().get(0).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(0).isWildcard(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(1).getSource(), is("refs/heads/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(1).getDestination(), is("refs/remotes/origin/test-branch"));
+        assertThat(origin.getFetchRefSpecs().get(1).isForceUpdate(), is(true));
+        assertThat(origin.getFetchRefSpecs().get(1).isWildcard(), is(false));
         assertThat(actual.getExtensions(), containsInAnyOrder(
                 instanceOf(GitSCMSourceDefaults.class),
                 instanceOf(BuildChooserSetting.class)
