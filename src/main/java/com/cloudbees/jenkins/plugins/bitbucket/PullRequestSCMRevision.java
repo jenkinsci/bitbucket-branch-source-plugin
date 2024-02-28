@@ -24,8 +24,10 @@
 
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.plugins.git.AbstractGitSCMSource;
+import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
 
@@ -64,7 +66,7 @@ public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequest
      *
      * @return the pull revision.
      */
-    @NonNull
+    @NonNull @WithBridgeMethods(SCMRevision.class)
     public AbstractGitSCMSource.SCMRevisionImpl getPull() {
         return pull;
     }

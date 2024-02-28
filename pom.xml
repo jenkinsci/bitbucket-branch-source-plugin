@@ -154,6 +154,11 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>com.infradna.tool</groupId>
+      <artifactId>bridge-method-annotation</artifactId>
+      <version>1.29</version>
+    </dependency>
   </dependencies>
 
   <repositories>
@@ -215,6 +220,18 @@
           <execution>
             <id>default-enforce</id>
             <phase /> <!-- https://stackoverflow.com/a/19540026/12916 -->
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.infradna.tool</groupId>
+        <artifactId>bridge-method-injector</artifactId>
+        <version>1.29</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
