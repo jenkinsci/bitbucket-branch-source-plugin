@@ -39,6 +39,7 @@ import hudson.Util;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.BitbucketWeb;
 import java.util.List;
+import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
@@ -223,14 +224,15 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                 String primaryRemoteName = remoteName().equals("primary") ? "primary-primary" : "primary";
                 String cloneLink = getCloneLink(primaryCloneLinks);
                 List<BranchWithHash> branchWithHashes;
+                AbstractGitSCMSource.SCMRevisionImpl pullRevision = (AbstractGitSCMSource.SCMRevisionImpl) pullRequestSCMRevision.getPull();
                 if (checkoutStrategy == ChangeRequestCheckoutStrategy.MERGE) {
                     branchWithHashes = List.of(
-                        new BranchWithHash(branchName, pullRequestSCMRevision.getPull().getHash()),
+                        new BranchWithHash(branchName, pullRevision.getHash()),
                         new BranchWithHash(targetBranch, pullRequestSCMRevision.getTargetImpl().getHash())
                     );
                 } else {
                     branchWithHashes = List.of(
-                        new BranchWithHash(branchName, pullRequestSCMRevision.getPull().getHash())
+                        new BranchWithHash(branchName, pullRevision.getHash())
                     );
                 }
                 withExtension(new FallbackToOtherRepositoryGitSCMExtension(cloneLink, primaryRemoteName, branchWithHashes));
