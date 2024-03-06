@@ -1346,7 +1346,7 @@ public class BitbucketSCMSource extends SCMSource {
         @SuppressWarnings("unused") // used By stapler
         public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
-            contextToCheck.checkPermission(Item.CONFIGURE);
+            contextToCheck.checkAnyPermission(Item.CONFIGURE, Item.EXTENDED_READ);
             if (BitbucketEndpointConfiguration.get().findEndpoint(value) == null) {
                 return FormValidation.error("Unregistered Server: " + value);
             }
@@ -1373,7 +1373,7 @@ public class BitbucketSCMSource extends SCMSource {
         @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
-            if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
+            if (!contextToCheck.hasAnyPermission(Item.CONFIGURE, Item.EXTENDED_READ)) {
                 return new ListBoxModel();
             }
             return BitbucketEndpointConfiguration.get().getEndpointItems();
