@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
@@ -309,6 +310,13 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         return cloneLinks.stream()
             .filter(link -> protocol.matches(link.getName()))
             .findAny()
+            .map(bitbucketHref -> {
+                BitbucketAuthenticator authenticator = scmSource().authenticator();
+                if (authenticator == null) {
+                    return bitbucketHref;
+                }
+                return authenticator.addAuthToken(bitbucketHref);
+            })
             .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol))
             .getHref();
     }

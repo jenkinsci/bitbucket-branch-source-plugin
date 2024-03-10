@@ -86,7 +86,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
@@ -1039,12 +1038,7 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     private void setPrimaryCloneLinks(List<BitbucketHref> links) {
-        BitbucketAuthenticator authenticator = authenticator();
-        if (authenticator == null) {
-            primaryCloneLinks = links;
-        } else {
-            primaryCloneLinks = links.stream().map(authenticator::addAuthToken).collect(Collectors.toList());
-        }
+        primaryCloneLinks = links;
     }
 
     @NonNull
