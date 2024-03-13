@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource.DescriptorImpl;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
@@ -160,7 +161,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
                 scmSource.getServerUrl(),
                 scmSource.getOwner(),
-                credentialsId,
+                DescriptorImpl.SAME.equals(scmSource.getCheckoutCredentialsId()) ? credentialsId : scmSource.getCheckoutCredentialsId(),
                 StandardCredentials.class
             );
 
