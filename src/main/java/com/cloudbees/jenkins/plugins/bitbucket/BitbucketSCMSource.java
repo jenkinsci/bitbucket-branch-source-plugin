@@ -48,6 +48,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImpl
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
@@ -62,6 +63,7 @@ import hudson.console.HyperlinkNote;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
@@ -569,6 +571,8 @@ public class BitbucketSCMSource extends SCMSource {
     protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer,
                             @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
+
+        trackCredentialsUsage();
         try (BitbucketSCMSourceRequest request = new BitbucketSCMSourceContext(criteria, observer)
                 .withTraits(traits)
                 .newRequest(this, listener)) {
@@ -823,9 +827,19 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().format("%n  %d tags were processed%n", count);
     }
 
+    private void trackCredentialsUsage() {
+        final SCMSourceOwner owner = getOwner();
+        if (owner != null) {
+            CredentialsProvider.track(owner, credentials());
+        }
+    }
+
     @Override
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
         final BitbucketApi bitbucket = buildBitbucketClient();
+
+        trackCredentialsUsage();
+
         try {
             if (head instanceof PullRequestSCMHead) {
                 PullRequestSCMHead h = (PullRequestSCMHead) head;
@@ -1223,6 +1237,11 @@ public class BitbucketSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class) // to allow configuration from system groovy console
     public static void setEventDelaySeconds(int eventDelaySeconds) {
         BitbucketSCMSource.eventDelaySeconds = Math.min(300, Math.max(0, eventDelaySeconds));
+    }
+
+    public static BitbucketSCMSource findForRun(Run<?, ?> run) {
+        SCMSource s = SCMSource.SourceByItem.findSource(run.getParent());
+        return s instanceof BitbucketSCMSource ? (BitbucketSCMSource) s : null;
     }
 
     private void initCloneLinks() {
