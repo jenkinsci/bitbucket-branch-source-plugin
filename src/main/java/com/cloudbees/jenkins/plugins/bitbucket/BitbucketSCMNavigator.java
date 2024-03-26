@@ -639,7 +639,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
-            if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
+            if (!contextToCheck.hasAnyPermission(Item.CONFIGURE, Item.EXTENDED_READ)) {
                 return new ListBoxModel();
             }
             return BitbucketEndpointConfiguration.get().getEndpointItems();
