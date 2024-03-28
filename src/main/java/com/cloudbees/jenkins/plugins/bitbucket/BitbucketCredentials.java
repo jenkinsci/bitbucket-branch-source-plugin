@@ -35,7 +35,6 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Item;
 import hudson.model.Queue;
-import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
@@ -46,6 +45,7 @@ import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
+import org.springframework.security.core.Authentication;
 
 /**
  * Utility class for common code accessing credentials
@@ -66,12 +66,10 @@ class BitbucketCredentials {
                                                                             @NonNull Class<T> type) {
         if (StringUtils.isNotBlank(id) && context != null) {
             final T credentials = CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(
+                CredentialsProvider.lookupCredentialsInItem(
                     type,
                     context,
-                    context instanceof Queue.Task
-                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                        : ACL.SYSTEM,
+                    getAuthenticationForContext(context),
                     URIRequirementBuilder.fromUri(serverUrl).build()
                 ),
                 CredentialsMatchers.allOf(
@@ -97,9 +95,7 @@ class BitbucketCredentials {
             return result;
         }
         result.includeMatchingAs(
-            context instanceof Queue.Task
-                ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                : ACL.SYSTEM,
+            getAuthenticationForContext(context),
             context,
             StandardCredentials.class,
             URIRequirementBuilder.fromUri(serverUrl).build(),
@@ -116,10 +112,10 @@ class BitbucketCredentials {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             contextToCheck.checkPermission(CredentialsProvider.VIEW);
             if (CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(
+                CredentialsProvider.lookupCredentialsInItem(
                     StandardCertificateCredentials.class,
                     context,
-                    context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
+                    getAuthenticationForContext(context),
                     URIRequirementBuilder.fromUri(serverUrl).build()),
                 CredentialsMatchers.allOf(
                     CredentialsMatchers.withId(value),
@@ -132,5 +128,11 @@ class BitbucketCredentials {
         } else {
             return FormValidation.warning("Credentials are required for build notifications");
         }
+    }
+
+    private static Authentication getAuthenticationForContext(SCMSourceOwner context) {
+        return context instanceof Queue.Task
+            ? ((Queue.Task) context).getDefaultAuthentication2()
+            : ACL.SYSTEM2;
     }
 }
