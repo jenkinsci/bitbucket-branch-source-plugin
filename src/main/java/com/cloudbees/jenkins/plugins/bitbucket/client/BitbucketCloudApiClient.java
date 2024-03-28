@@ -143,6 +143,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     private static final Cache<String, BitbucketTeam> cachedTeam = new Cache<>(6, HOURS);
     private static final Cache<String, AvatarImage> cachedAvatar = new Cache<>(6, HOURS);
     private static final Cache<String, List<BitbucketCloudRepository>> cachedRepositories = new Cache<>(3, HOURS);
+    private static final Cache<String, BitbucketCloudCommit> cachedCommits = new Cache<>(24, HOURS);
     private transient BitbucketRepository cachedRepository;
     private transient String cachedDefaultBranch;
 
@@ -156,12 +157,14 @@ public class BitbucketCloudApiClient implements BitbucketApi {
         List<String> stats = new ArrayList<>();
         stats.add("Team: " + cachedTeam.stats().toString());
         stats.add("Repositories : " + cachedRepositories.stats().toString());
+        stats.add("Commits: " + cachedCommits.stats().toString());
         return stats;
     }
 
     public static void clearCaches() {
         cachedTeam.evictAll();
         cachedRepositories.evictAll();
+        cachedCommits.evictAll();
     }
 
     @Deprecated
@@ -519,21 +522,34 @@ public class BitbucketCloudApiClient implements BitbucketApi {
     @Override
     @CheckForNull
     public BitbucketCommit resolveCommit(@NonNull String hash) throws IOException, InterruptedException {
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commit/{hash}")
-                .set("owner", owner)
-                .set("repo", repositoryName)
-                .set("hash", hash)
-                .expand();
-        String response;
+        final String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commit/{hash}")
+            .set("owner", owner)
+            .set("repo", repositoryName)
+            .set("hash", hash)
+            .expand();
+
+        Callable<BitbucketCloudCommit> request = () -> {
+            String response;
+            try {
+                response = getRequest(url);
+            } catch (FileNotFoundException e) {
+                return null;
+            }
+            try {
+                return JsonParser.toJava(response, BitbucketCloudCommit.class);
+            } catch (IOException e) {
+                throw new IOException("I/O error when parsing response from URL: " + url, e);
+            }
+        };
+
         try {
-            response = getRequest(url);
-        } catch (FileNotFoundException e) {
+            if (enableCache) {
+                return cachedCommits.get(hash, request);
+            } else {
+                return request.call();
+            }
+        } catch (Exception ex) {
             return null;
-        }
-        try {
-            return JsonParser.toJava(response, BitbucketCloudCommit.class);
-        } catch (IOException e) {
-            throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
     }
 
