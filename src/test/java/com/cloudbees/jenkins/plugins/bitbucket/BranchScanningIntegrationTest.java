@@ -115,7 +115,7 @@ public class BranchScanningIntegrationTest {
         CredentialsProvider.lookupStores(j.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
 
-        StandardCredentials creds = BitbucketCredentials.lookupCredentials(
+        StandardCredentials creds = BitbucketCredentials.lookupCredentialsAndTrackUsage(
                 null ,
                 source.getOwner(),
                 c.getId(),
@@ -127,7 +127,7 @@ public class BranchScanningIntegrationTest {
         CredentialsProvider.lookupStores(j.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
 
-        creds = BitbucketCredentials.lookupCredentials(
+        creds = BitbucketCredentials.lookupCredentialsAndTrackUsage(
                 null,
                 source.getOwner(),
                 c.getId(),

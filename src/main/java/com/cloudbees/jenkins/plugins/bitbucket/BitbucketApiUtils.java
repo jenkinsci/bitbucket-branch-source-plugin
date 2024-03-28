@@ -50,7 +50,7 @@ public class BitbucketApiUtils {
         }
 
         serverUrl = StringUtils.defaultIfBlank(serverUrl, serverUrlFallback);
-        StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
+        StandardCredentials credentials = BitbucketCredentials.lookupCredentialsAndTrackUsage(
             serverUrl,
             context,
             credentialsId,
