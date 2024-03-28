@@ -1073,7 +1073,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @CheckForNull
     /* package */ StandardCredentials credentials() {
-        return BitbucketCredentials.lookupCredentials(
+        return BitbucketCredentials.lookupCredentialsAndTrackUsage(
                 getServerUrl(),
                 getOwner(),
                 getCredentialsId(),
