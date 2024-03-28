@@ -48,7 +48,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImpl
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
@@ -571,8 +570,6 @@ public class BitbucketSCMSource extends SCMSource {
     protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer,
                             @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-
-        trackCredentialsUsage();
         try (BitbucketSCMSourceRequest request = new BitbucketSCMSourceContext(criteria, observer)
                 .withTraits(traits)
                 .newRequest(this, listener)) {
@@ -827,19 +824,9 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().format("%n  %d tags were processed%n", count);
     }
 
-    private void trackCredentialsUsage() {
-        final SCMSourceOwner owner = getOwner();
-        if (owner != null) {
-            CredentialsProvider.track(owner, credentials());
-        }
-    }
-
     @Override
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
         final BitbucketApi bitbucket = buildBitbucketClient();
-
-        trackCredentialsUsage();
-
         try {
             if (head instanceof PullRequestSCMHead) {
                 PullRequestSCMHead h = (PullRequestSCMHead) head;
@@ -1241,7 +1228,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     public static BitbucketSCMSource findForRun(Run<?, ?> run) {
         SCMSource s = SCMSource.SourceByItem.findSource(run.getParent());
-        return s instanceof BitbucketSCMSource ? (BitbucketSCMSource) s : null;
+        return s instanceof BitbucketSCMSource ?  (BitbucketSCMSource) s : null;
     }
 
     private void initCloneLinks() {
