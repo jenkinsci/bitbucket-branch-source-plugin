@@ -60,10 +60,10 @@ class BitbucketCredentials {
      * given {@link SCMSourceOwner} via {@link CredentialsProvider#track(Item, Credentials)}
      */
     @CheckForNull
-    static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverUrl,
-                                                               @CheckForNull SCMSourceOwner context,
-                                                               @CheckForNull String id,
-                                                               @NonNull Class<T> type) {
+    static <T extends StandardCredentials> T lookupCredentialsAndTrackUsage(@CheckForNull String serverUrl,
+                                                                            @CheckForNull SCMSourceOwner context,
+                                                                            @CheckForNull String id,
+                                                                            @NonNull Class<T> type) {
         if (StringUtils.isNotBlank(id) && context != null) {
             final T credentials = CredentialsMatchers.firstOrNull(
                 CredentialsProvider.lookupCredentials(
