@@ -496,7 +496,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @NonNull
     public BitbucketMirroredRepository getMirroredRepository(@NonNull String url) throws IOException, InterruptedException {
         HttpGet httpget = new HttpGet(url);
-        var response = getRequest(httpget);
+        var response = getRequest(httpget, false);
         try {
             return JsonParser.toJava(response, BitbucketMirroredRepository.class);
         } catch (IOException e) {
@@ -954,12 +954,16 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private String getRequest(HttpGet httpget) throws IOException, InterruptedException {
+        return getRequest(httpget, true);
+    }
 
-        if (authenticator != null) {
+    private String getRequest(HttpGet httpget, boolean configureAuthentication) throws IOException, InterruptedException {
+
+        if (authenticator != null && configureAuthentication) {
             authenticator.configureRequest(httpget);
         }
 
-        try(CloseableHttpClient client = getHttpClient(httpget);
+        try(CloseableHttpClient client = getHttpClient(httpget, configureAuthentication);
                 CloseableHttpResponse response = executeMethod(client, httpget)) {
             String content;
             long len = response.getEntity().getContentLength();
@@ -1044,6 +1048,10 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * @return CloseableHttpClient
      */
     private CloseableHttpClient getHttpClient(final HttpRequestBase request) {
+        return getHttpClient(request, true);
+    }
+
+    private CloseableHttpClient getHttpClient(final HttpRequestBase request, boolean configureAuthentication) {
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         httpClientBuilder.useSystemProperties();
         httpClientBuilder.setRetryHandler(new StandardHttpRequestRetryHandler());
@@ -1060,7 +1068,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         final String host = getMethodHost(request);
 
-        if (authenticator != null) {
+        if (authenticator != null && configureAuthentication) {
             authenticator.configureBuilder(httpClientBuilder);
 
             context = HttpClientContext.create();
