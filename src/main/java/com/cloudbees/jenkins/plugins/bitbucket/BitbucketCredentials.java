@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
@@ -32,6 +33,7 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
@@ -53,26 +55,34 @@ class BitbucketCredentials {
         throw new IllegalAccessError("Utility class");
     }
 
+    /**
+     * Performs a lookup of credentials for the given context. Additionally, usage of the credentials is tracked for the
+     * given {@link SCMSourceOwner} via {@link CredentialsProvider#track(Item, Credentials)}
+     */
     @CheckForNull
     static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverUrl,
                                                                @CheckForNull SCMSourceOwner context,
                                                                @CheckForNull String id,
                                                                @NonNull Class<T> type) {
         if (StringUtils.isNotBlank(id) && context != null) {
-            return CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
-                            type,
-                            context,
-                            context instanceof Queue.Task
-                                    ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                                    : ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(serverUrl).build()
-                    ),
-                    CredentialsMatchers.allOf(
-                            CredentialsMatchers.withId(id),
-                            CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(type))
-                    )
+            final T credentials = CredentialsMatchers.firstOrNull(
+                CredentialsProvider.lookupCredentials(
+                    type,
+                    context,
+                    context instanceof Queue.Task
+                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                        : ACL.SYSTEM,
+                    URIRequirementBuilder.fromUri(serverUrl).build()
+                ),
+                CredentialsMatchers.allOf(
+                    CredentialsMatchers.withId(id),
+                    CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(type))
+                )
             );
+
+            CredentialsProvider.track(context, credentials);
+
+            return credentials;
         }
         return null;
     }
@@ -87,13 +97,13 @@ class BitbucketCredentials {
             return result;
         }
         result.includeMatchingAs(
-                context instanceof Queue.Task
-                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                        : ACL.SYSTEM,
-                context,
-                StandardCredentials.class,
-                URIRequirementBuilder.fromUri(serverUrl).build(),
-                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+            context instanceof Queue.Task
+                ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                : ACL.SYSTEM,
+            context,
+            StandardCredentials.class,
+            URIRequirementBuilder.fromUri(serverUrl).build(),
+            AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
         );
         return result;
     }
@@ -106,15 +116,15 @@ class BitbucketCredentials {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             contextToCheck.checkPermission(CredentialsProvider.VIEW);
             if (CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
-                            StandardCertificateCredentials.class,
-                            context,
-                            context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(serverUrl).build()),
-                    CredentialsMatchers.allOf(
-                            CredentialsMatchers.withId(value),
-                            AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
-                    )
+                CredentialsProvider.lookupCredentials(
+                    StandardCertificateCredentials.class,
+                    context,
+                    context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
+                    URIRequirementBuilder.fromUri(serverUrl).build()),
+                CredentialsMatchers.allOf(
+                    CredentialsMatchers.withId(value),
+                    AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+                )
             ) != null) {
                 return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
             }
