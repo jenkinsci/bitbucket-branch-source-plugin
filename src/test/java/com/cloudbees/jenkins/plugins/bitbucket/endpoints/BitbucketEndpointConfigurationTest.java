@@ -32,10 +32,12 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.io.Resources;
 import hudson.XmlFile;
+import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
+import hudson.security.SecurityRealm;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import java.io.File;
@@ -49,7 +51,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
@@ -129,6 +133,31 @@ public class BitbucketEndpointConfigurationTest {
     }
 
     @Test
+    public void given__newInstance__when__configuredAsManage__then__OK() {
+        BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
+        SecurityRealm realm = j.jenkins.getSecurityRealm();
+        AuthorizationStrategy strategy = j.jenkins.getAuthorizationStrategy();
+        try {
+            j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+            MockAuthorizationStrategy mockStrategy = new MockAuthorizationStrategy();
+            mockStrategy.grant(Jenkins.MANAGE).onRoot().to("admin");
+            j.jenkins.setAuthorizationStrategy(mockStrategy);
+            try (ACLContext context = ACL.as(User.get("admin"))) {
+                instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(
+                    new BitbucketCloudEndpoint(true, "first"),
+                    new BitbucketCloudEndpoint(true, "second"),
+                    new BitbucketCloudEndpoint(true, "third")));
+                assertThat(instance.getEndpoints(), contains(instanceOf(BitbucketCloudEndpoint.class)));
+                assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
+            } catch (RuntimeException x) {
+                Assertions.fail("No exception should be thrown");
+            }
+        } finally {
+            j.jenkins.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED);
+        }
+    }
+
+        @Test
     public void given__newInstance__when__configuredWithServerUsingCloudUrl__then__convertedToCloud() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeThat(instance.getEndpoints().get(0).getCredentialsId(), not(is("dummy")));
