@@ -155,7 +155,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @param endpoints the list of endpoints.
      */
     public synchronized void setEndpoints(@CheckForNull List<? extends AbstractBitbucketEndpoint> endpoints) {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
         List<AbstractBitbucketEndpoint> eps = new ArrayList<>(Util.fixNull(endpoints));
         // remove duplicates and empty urls
         Set<String> serverUrls = new HashSet<>();

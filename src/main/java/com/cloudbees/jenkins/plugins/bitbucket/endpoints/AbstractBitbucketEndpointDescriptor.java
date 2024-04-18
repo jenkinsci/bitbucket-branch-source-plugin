@@ -56,7 +56,7 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
     @SuppressWarnings("unused")
     public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl) {
         Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(Jenkins.ADMINISTER);
+        jenkins.checkPermission(Jenkins.MANAGE);
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeMatchingAs(
                 ACL.SYSTEM,
