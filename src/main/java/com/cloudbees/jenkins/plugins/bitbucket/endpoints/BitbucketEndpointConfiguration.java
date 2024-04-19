@@ -29,6 +29,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
 import hudson.security.ACL;
+import hudson.security.Permission;
 import hudson.util.ListBoxModel;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -79,6 +80,11 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
         return ExtensionList.lookup(GlobalConfiguration.class).get(BitbucketEndpointConfiguration.class);
     }
 
+    @NonNull
+    @Override
+    public Permission getRequiredGlobalConfigPagePermission() {
+        return Jenkins.MANAGE;
+    }
     /**
      * Called from a {@code readResolve()} method only to convert the old {@code bitbucketServerUrl} field into the new
      * {@code serverUrl} field. When called from {@link ACL#SYSTEM} this will update the configuration with the
