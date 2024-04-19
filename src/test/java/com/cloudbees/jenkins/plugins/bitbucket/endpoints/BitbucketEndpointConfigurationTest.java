@@ -37,7 +37,6 @@ import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
-import hudson.security.SecurityRealm;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import java.io.File;
