@@ -135,8 +135,6 @@ public class BitbucketEndpointConfigurationTest {
     @Test
     public void given__newInstance__when__configuredAsManage__then__OK() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        SecurityRealm realm = j.jenkins.getSecurityRealm();
-        AuthorizationStrategy strategy = j.jenkins.getAuthorizationStrategy();
         try {
             j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
             MockAuthorizationStrategy mockStrategy = new MockAuthorizationStrategy();
