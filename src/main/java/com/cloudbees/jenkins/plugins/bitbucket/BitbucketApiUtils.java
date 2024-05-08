@@ -35,7 +35,7 @@ public class BitbucketApiUtils {
         if (repoOwner == null) {
             return new ListBoxModel();
         }
-        if (context == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
+        if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE) ||
             context != null && !context.hasPermission(Item.EXTENDED_READ)) {
             return new ListBoxModel(); // not supposed to be seeing this form
         }
