@@ -548,7 +548,10 @@ public class BitbucketCloudApiClient implements BitbucketApi {
             } else {
                 return request.call();
             }
-        } catch (Exception ex) {
+        } catch (IOException | InterruptedException ex) {
+            throw ex;
+        }
+        catch (Exception ex) {
             return null;
         }
     }
