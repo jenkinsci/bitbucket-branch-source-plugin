@@ -245,6 +245,12 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                     BitbucketRepository source = pullRequest.getSource().getRepository();
                     if (fullName.equalsIgnoreCase(source.getFullName())
                             && pullRequest.getSource().getBranch().getName().equals(head.getName())) {
+                        // End the format with newline to avoid logging this
+                        // result blocked together with a later indexed branch
+                        request.listener().getLogger().format(
+                                "Ignoring %s because current strategy excludes branches "
+                                + "that ARE also filed as a pull request%n"
+                                , head.toString());
                         return true;
                     }
                 }
@@ -272,6 +278,10 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                         return false;
                     }
                 }
+                request.listener().getLogger().format(
+                        "Ignoring %s because current strategy excludes branches "
+                        + "that ARE NOT also filed as a pull request%n"
+                        , head.toString());
                 return true;
             }
             return false;
