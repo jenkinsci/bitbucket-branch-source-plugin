@@ -1,10 +1,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import java.net.URI;
-import java.net.URISyntaxException;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpRequest;
 import org.scribe.model.OAuthConfig;
 import org.scribe.model.OAuthConstants;
@@ -38,27 +39,8 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
     }
 
     @Override
-    public BitbucketHref addAuthToken(BitbucketHref bitbucketHref) {
-        String link = bitbucketHref.getHref();
-        if (!link.startsWith("http")) {
-            return bitbucketHref;
-        }
-        try {
-            URI uri = new URI(link);
-            String userInfo = "x-token-auth:{" + token.getToken() + "}";
-            String newLink = new URI(
-                uri.getScheme(),
-                userInfo,
-                uri.getHost(),
-                uri.getPort(),
-                uri.getPath(),
-                uri.getQuery(),
-                uri.getFragment()
-            ).toString();
-            return new BitbucketHref(bitbucketHref.getName(), newLink);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+    public StandardUsernameCredentials getCredentialsForScm() {
+        return new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, null, null, StringUtils.EMPTY, token.getToken());
     }
-
 }

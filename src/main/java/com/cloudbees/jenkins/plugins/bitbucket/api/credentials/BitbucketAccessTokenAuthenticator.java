@@ -1,7 +1,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.util.Secret;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -30,5 +34,11 @@ public class BitbucketAccessTokenAuthenticator extends BitbucketAuthenticator {
      */
     public void configureRequest(HttpRequest request) {
         request.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token.getPlainText());
+    }
+
+    @Override
+    public StandardUsernameCredentials getCredentialsForScm() {
+        return new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, null, null, StringUtils.EMPTY, token.getPlainText());
     }
 }

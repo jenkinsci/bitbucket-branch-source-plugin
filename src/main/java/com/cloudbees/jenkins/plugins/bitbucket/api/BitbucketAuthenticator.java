@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -105,6 +106,16 @@ public abstract class BitbucketAuthenticator {
      */
     public void configureRequest(HttpRequest request) {
         // override to configure HttpRequest
+    }
+
+
+    /**
+     * Provides credentials that can be used for authenticated interactions with SCM.
+     *
+     * @return credentials to be passed to {@link org.jenkinsci.plugins.gitclient.GitClient#setCredentials(StandardUsernameCredentials)}
+     */
+    public StandardUsernameCredentials getCredentialsForScm() {
+        return null;
     }
 
     /**
