@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matchers;
@@ -58,7 +59,9 @@ public class BitbucketGitSCMRevisionTest {
             { "PR on cloud", new OriginPullRequestDiscoveryTrait(2), BitbucketCloudEndpoint.SERVER_URL }, //
             { "PR on server", new OriginPullRequestDiscoveryTrait(2), "localhost" }, //
             { "forked on cloud", new ForkPullRequestDiscoveryTrait(2, Mockito.mock(SCMHeadAuthority.class)), BitbucketCloudEndpoint.SERVER_URL }, //
-            { "forked on server", new ForkPullRequestDiscoveryTrait(2, Mockito.mock(SCMHeadAuthority.class)), "localhost" } //
+            { "forked on server", new ForkPullRequestDiscoveryTrait(2, Mockito.mock(SCMHeadAuthority.class)), "localhost" }, //
+            { "Tags on cloud", new TagDiscoveryTrait(), BitbucketCloudEndpoint.SERVER_URL }, //
+            { "Tags on server", new TagDiscoveryTrait(), "localhost" } //
         });
     }
 
@@ -96,9 +99,12 @@ public class BitbucketGitSCMRevisionTest {
                 assertRevision(revision);
             } else if (head instanceof PullRequestSCMHead) {
                 @SuppressWarnings("unchecked")
-                PullRequestSCMRevision<BitbucketGitSCMRevision> revision = (PullRequestSCMRevision<BitbucketGitSCMRevision>) source.retrieve(head, listener);
-                assertRevision(revision.getPull());
+                PullRequestSCMRevision revision = (PullRequestSCMRevision) source.retrieve(head, listener);
+                assertRevision((BitbucketGitSCMRevision) revision.getPull());
                 assertRevision((BitbucketGitSCMRevision) revision.getTarget());
+            } else if(head instanceof TagSCMHead) {
+                BitbucketTagSCMRevision revision = (BitbucketTagSCMRevision) source.retrieve(head, listener);
+                assertRevision(revision);
             }
         }
     }

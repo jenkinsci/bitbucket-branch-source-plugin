@@ -1,7 +1,11 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpRequest;
 import org.scribe.model.OAuthConfig;
 import org.scribe.model.OAuthConstants;
@@ -35,8 +39,8 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
     }
 
     @Override
-    public String getUserUri() {
-        return "x-token-auth:{" + token.getToken() + "}";
+    public StandardUsernameCredentials getCredentialsForScm() {
+        return new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, null, null, StringUtils.EMPTY, token.getToken());
     }
-
 }

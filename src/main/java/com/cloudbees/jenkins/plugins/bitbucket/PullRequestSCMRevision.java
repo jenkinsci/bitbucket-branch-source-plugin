@@ -24,7 +24,9 @@
 
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
@@ -34,7 +36,7 @@ import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
  *
  * @since 2.2.0
  */
-public class PullRequestSCMRevision<R extends SCMRevision> extends ChangeRequestSCMRevision<PullRequestSCMHead> {
+public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequestSCMHead> {
 
     /**
      * Standardize serialization.
@@ -45,7 +47,7 @@ public class PullRequestSCMRevision<R extends SCMRevision> extends ChangeRequest
      * The pull head revision.
      */
     @NonNull
-    private final R pull;
+    private final AbstractGitSCMSource.SCMRevisionImpl pull;
 
     /**
      * Constructor.
@@ -54,7 +56,7 @@ public class PullRequestSCMRevision<R extends SCMRevision> extends ChangeRequest
      * @param target the target revision.
      * @param pull   the pull revision.
      */
-    public PullRequestSCMRevision(@NonNull PullRequestSCMHead head, @NonNull R target, @NonNull R pull) {
+    public PullRequestSCMRevision(@NonNull PullRequestSCMHead head, @NonNull AbstractGitSCMSource.SCMRevisionImpl target, @NonNull AbstractGitSCMSource.SCMRevisionImpl pull) {
         super(head, target);
         this.pull = pull;
     }
@@ -64,8 +66,8 @@ public class PullRequestSCMRevision<R extends SCMRevision> extends ChangeRequest
      *
      * @return the pull revision.
      */
-    @NonNull
-    public R getPull() {
+    @NonNull @WithBridgeMethods(SCMRevision.class)
+    public AbstractGitSCMSource.SCMRevisionImpl getPull() {
         return pull;
     }
 
@@ -79,6 +81,10 @@ public class PullRequestSCMRevision<R extends SCMRevision> extends ChangeRequest
         }
         PullRequestSCMRevision other = (PullRequestSCMRevision) o;
         return getHead().equals(other.getHead()) && pull.equals(other.pull);
+    }
+
+    public AbstractGitSCMSource.SCMRevisionImpl getTargetImpl() {
+        return (AbstractGitSCMSource.SCMRevisionImpl) getTarget();
     }
 
     /**

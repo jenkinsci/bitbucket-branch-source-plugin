@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -107,15 +108,24 @@ public abstract class BitbucketAuthenticator {
         // override to configure HttpRequest
     }
 
+
     /**
-     * Return the user to be used in the clone Uri. Override this if your
-     * authentication method needs to set the user in the repository Uri
+     * Provides credentials that can be used for authenticated interactions with SCM.
      *
-     * @return user name to use in the repository Uri
+     * @return credentials to be passed to {@link org.jenkinsci.plugins.gitclient.GitClient#setCredentials(StandardUsernameCredentials)}
      */
-    public String getUserUri() {
-        // override to return a user
-        return "";
+    public StandardUsernameCredentials getCredentialsForScm() {
+        return null;
+    }
+
+    /**
+     * Add authentication token to clone link if
+     * authentication method requires it
+     *
+     * @return updated clone link
+     */
+    public BitbucketHref addAuthToken(BitbucketHref bitbucketHref) {
+        return bitbucketHref;
     }
 
     /**

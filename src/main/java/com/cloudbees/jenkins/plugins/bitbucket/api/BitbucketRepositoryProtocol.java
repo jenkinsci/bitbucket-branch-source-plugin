@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public enum BitbucketRepositoryProtocol {
@@ -44,18 +43,16 @@ public enum BitbucketRepositoryProtocol {
         this.type = type;
     }
 
-    public String getType() {
-        return type;
+    /**
+     * Check if link name matches protocol.
+     * In Bitbucket Server "http" and "ssh" are used as link names.
+     * In Bitbucket Cloud "https" and "ssh" are used.
+     *
+     * @param linkName link name to check
+     * @return if link name matches
+     */
+    public boolean matches(@NonNull String linkName) {
+        return linkName.startsWith(type);
     }
 
-    @CheckForNull
-    public static BitbucketRepositoryProtocol fromString(String type) {
-        if (SSH.type.equals(type)) {
-            return SSH;
-        } else if (HTTP.type.equals(type)) {
-            return HTTP;
-        } else {
-            return null;
-        }
-    }
 }

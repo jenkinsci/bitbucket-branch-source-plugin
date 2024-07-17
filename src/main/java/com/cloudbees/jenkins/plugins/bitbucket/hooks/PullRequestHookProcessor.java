@@ -37,6 +37,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPullRequestEvent;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.scm.SCM;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -174,6 +175,7 @@ public class PullRequestHookProcessor extends HookProcessor {
 
         @NonNull
         @Override
+        @SuppressFBWarnings(value = "SBSC_USE_STRINGBUFFER_CONCATENATION", justification = "TODO needs triage")
         public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
             if (!(source instanceof BitbucketSCMSource)) {
                 return Collections.emptyMap();
@@ -210,28 +212,15 @@ public class PullRequestHookProcessor extends HookProcessor {
                     branchName = branchName + "-" + strategy.name().toLowerCase(Locale.ENGLISH);
                 }
                 String originalBranchName = pull.getSource().getBranch().getName();
-                PullRequestSCMHead head;
-                if (instanceType == BitbucketType.CLOUD) {
-                    head = new PullRequestSCMHead(
-                            branchName,
-                            pullRepoOwner,
-                            pullRepository,
-                            originalBranchName,
-                            pull,
-                            headOrigin,
-                            strategy
-                    );
-                } else {
-                    head = new PullRequestSCMHead(
-                            branchName,
-                            src.getRepoOwner(),
-                            src.getRepository(),
-                            originalBranchName,
-                            pull,
-                            headOrigin,
-                            strategy
-                    );
-                }
+                PullRequestSCMHead head = new PullRequestSCMHead(
+                    branchName,
+                    pullRepoOwner,
+                    pullRepository,
+                    originalBranchName,
+                    pull,
+                    headOrigin,
+                    strategy
+                );
                 if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
                     // special case for repo being deleted
                     result.put(head, null);
@@ -239,7 +228,7 @@ public class PullRequestHookProcessor extends HookProcessor {
                     String targetHash = pull.getDestination().getCommit().getHash();
                     String pullHash = pull.getSource().getCommit().getHash();
 
-                    SCMRevision revision = new PullRequestSCMRevision<>(head,
+                    SCMRevision revision = new PullRequestSCMRevision(head,
                         new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), targetHash),
                         new AbstractGitSCMSource.SCMRevisionImpl(head, pullHash)
                     );

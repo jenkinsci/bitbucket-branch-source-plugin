@@ -69,9 +69,16 @@ public class WebhookConfiguration {
             // only on v5.10 and above
             HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey(),
+            // only on v6.5 and above
+            HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey(),
             // only on v7.x and above
             HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()
     ));
+
+    /**
+     * The list of events available in Bitbucket Server v6.5+.
+     */
+    private static final List<String> NATIVE_SERVER_EVENTS_v6_5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 8));
 
     /**
      * The list of events available in Bitbucket Server v6.x.  Applies to v5.10+.
@@ -222,6 +229,8 @@ public class WebhookConfiguration {
                 // for it to have its
                 // own list
                 return NATIVE_SERVER_EVENTS_v6;
+            case VERSION_6_5:
+                return NATIVE_SERVER_EVENTS_v6_5;
             case VERSION_7:
             default:
                 return NATIVE_SERVER_EVENTS_v7;

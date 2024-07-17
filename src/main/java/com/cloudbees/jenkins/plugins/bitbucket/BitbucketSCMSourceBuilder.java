@@ -50,6 +50,11 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
     @CheckForNull
     private final String credentialsId;
     /**
+     * The mirror name or {@code null} to use.
+     */
+    @CheckForNull
+    private final String mirrorId;
+    /**
      * The repository owner.
      */
     @NonNull
@@ -66,12 +71,32 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
      */
     public BitbucketSCMSourceBuilder(@CheckForNull String id, @NonNull String serverUrl,
                                      @CheckForNull String credentialsId, @NonNull String repoOwner,
-                                     @NonNull String repoName) {
+                                     @NonNull String repoName, @CheckForNull String mirrorId) {
         super(BitbucketSCMSource.class, repoName);
         this.id = id;
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
         this.credentialsId = credentialsId;
+        this.mirrorId = mirrorId;
         this.repoOwner = repoOwner;
+    }
+
+    /**
+     * Backward compatible constructor.
+     *
+     * @deprecated Added only for backward compatibility with BitbucketPipelineCreateRequest from
+     * <a href="https://github.com/jenkinsci/blueocean-plugin">Blue Ocean</a>. Will be removed soon.
+     *
+     * @param id            the {@link BitbucketSCMSource#getId()}
+     * @param serverUrl     the {@link BitbucketSCMSource#getServerUrl()}
+     * @param credentialsId the credentials id.
+     * @param repoOwner     the repository owner.
+     * @param repoName      the project name.
+     */
+    @Deprecated
+    public BitbucketSCMSourceBuilder(@CheckForNull String id, @NonNull String serverUrl,
+                                     @CheckForNull String credentialsId, @NonNull String repoOwner,
+                                     @NonNull String repoName) {
+        this(id, serverUrl, credentialsId, repoOwner, repoName, null);
     }
 
     /**
@@ -92,6 +117,16 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
     @NonNull
     public final String serverUrl() {
         return serverUrl;
+    }
+
+    /**
+     * The mirror id that the {@link BitbucketSCMSource} will use.
+     *
+     * @return the mirror id that the {@link BitbucketSCMSource} will use.
+     */
+    @CheckForNull
+    public final String mirrorId() {
+        return mirrorId;
     }
 
     /**
@@ -124,6 +159,7 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
         result.setId(id());
         result.setServerUrl(serverUrl());
         result.setCredentialsId(credentialsId());
+        result.setMirrorId(mirrorId());
         result.setTraits(traits());
         return result;
     }

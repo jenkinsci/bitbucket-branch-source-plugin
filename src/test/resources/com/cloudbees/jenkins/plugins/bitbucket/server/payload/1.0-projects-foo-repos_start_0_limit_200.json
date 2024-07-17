@@ -1,0 +1,80 @@
+{
+  "size": 1,
+  "limit": 200,
+  "isLastPage": true,
+  "values": [
+    {
+      "slug": "bar-active",
+      "id": 1,
+      "name": "bar-active",
+      "scmId": "git",
+      "state": "AVAILABLE",
+      "statusMessage": "Available",
+      "forkable": false,
+      "project": {
+        "key": "FOO",
+        "id": 1,
+        "name": "prj",
+        "description": "This is a test repo",
+        "public": true,
+        "type": "NORMAL",
+        "links": {
+          "self": [{
+            "href": "http://localhost:7990/projects/FOO"
+          }]
+        }
+      },
+      "public": false,
+      "archived": false,
+      "links": {
+        "clone": [{
+          "href": "ssh://git@localhost:7999/foo/bar-active.git",
+          "name": "ssh"
+        }, {
+          "href": "http://localhost:7990/scm/foo/bar-active.git",
+          "name": "http"
+        }],
+        "self": [{
+          "href": "http://localhost:7990/projects/FOO/repos/bar-active/browse"
+        }]
+      }
+    },
+    {
+      "slug": "bar-archived",
+      "id": 1,
+      "name": "test-repos",
+      "scmId": "git",
+      "state": "AVAILABLE",
+      "statusMessage": "Available",
+      "forkable": false,
+      "project": {
+        "key": "FOO",
+        "id": 1,
+        "name": "prj",
+        "description": "This is a test repo",
+        "public": true,
+        "type": "NORMAL",
+        "links": {
+          "self": [{
+            "href": "http://localhost:7990/projects/FOO"
+          }]
+        }
+      },
+      "public": false,
+      "archived": true,
+      "links": {
+        "clone": [{
+          "href": "ssh://git@localhost:7999/foo/bar-archived.git",
+          "name": "ssh"
+        }, {
+          "href": "http://localhost:7990/scm/foo/bar-archived.git",
+          "name": "http"
+        }],
+        "self": [{
+          "href": "http://localhost:7990/projects/FOO/repos/bar-archived/browse"
+        }]
+      }
+    }
+  ],
+  "start": 0
+}

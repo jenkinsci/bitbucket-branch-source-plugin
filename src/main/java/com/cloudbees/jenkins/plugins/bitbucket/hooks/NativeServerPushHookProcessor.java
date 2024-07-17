@@ -34,6 +34,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerChange;
+import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerMirrorRepoSynchronizedEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerRefsChangedEvent;
 import com.google.common.base.Ascii;
 import com.google.common.collect.HashMultimap;
@@ -78,25 +80,39 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             return;
         }
 
-        final NativeServerRefsChangedEvent refsChangedEvent;
+        final BitbucketServerRepository repository;
+        final List<NativeServerChange> changes;
+        final String mirrorId;
         try {
-            refsChangedEvent = JsonParser.toJava(payload, NativeServerRefsChangedEvent.class);
+            if (hookEvent == HookEventType.SERVER_REFS_CHANGED) {
+                final NativeServerRefsChangedEvent event = JsonParser.toJava(payload, NativeServerRefsChangedEvent.class);
+                repository = event.getRepository();
+                changes = event.getChanges();
+                mirrorId = null;
+            } else if (hookEvent == HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED) {
+                final NativeServerMirrorRepoSynchronizedEvent event = JsonParser.toJava(payload, NativeServerMirrorRepoSynchronizedEvent.class);
+                repository = event.getRepository();
+                changes = event.getChanges();
+                mirrorId = event.getMirrorServer().getId();
+            } else {
+                throw new UnsupportedOperationException("Unsupported hook event " + hookEvent);
+            }
         } catch (final IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
             return;
         }
 
-        final String owner = refsChangedEvent.getRepository().getOwnerName();
-        final String repository = refsChangedEvent.getRepository().getRepositoryName();
-        if (refsChangedEvent.getChanges().isEmpty()) {
+        if (changes.isEmpty()) {
+            final String owner = repository.getOwnerName();
+            final String repositoryName = repository.getRepositoryName();
             LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
-                new Object[] { owner, repository });
-            scmSourceReIndex(owner, repository);
+                new Object[] { owner, repositoryName });
+            scmSourceReIndex(owner, repositoryName);
             return;
         }
 
-        final Multimap<SCMEvent.Type, NativeServerRefsChangedEvent.Change> events = HashMultimap.create();
-        for (final NativeServerRefsChangedEvent.Change change : refsChangedEvent.getChanges()) {
+        final Multimap<SCMEvent.Type, NativeServerChange> events = HashMultimap.create();
+        for (final NativeServerChange change : changes) {
             final String type = change.getType();
             if ("UPDATE".equals(type)) {
                 events.put(SCMEvent.Type.UPDATED, change);
@@ -110,23 +126,26 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         }
 
         for (final SCMEvent.Type type : events.keySet()) {
-            SCMHeadEvent.fireLater(new HeadEvent(serverUrl, type, events.get(type), origin, refsChangedEvent), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
+            HeadEvent headEvent = new HeadEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
+            SCMHeadEvent.fireLater(headEvent, BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
         }
     }
 
-    private static final class HeadEvent extends NativeServerHeadEvent<Collection<NativeServerRefsChangedEvent.Change>> implements HasPullRequests {
-        private final NativeServerRefsChangedEvent refsChangedEvent;
+    private static final class HeadEvent extends NativeServerHeadEvent<Collection<NativeServerChange>> implements HasPullRequests {
+        private final BitbucketServerRepository repository;
         private final Map<CacheKey, Map<String, BitbucketServerPullRequest>> cachedPullRequests = new HashMap<>();
+        private final String mirrorId;
 
-        HeadEvent(String serverUrl, Type type, Collection<NativeServerRefsChangedEvent.Change> payload, String origin,
-            NativeServerRefsChangedEvent refsChangedEvent) {
+        HeadEvent(String serverUrl, Type type, Collection<NativeServerChange> payload, String origin,
+                  BitbucketServerRepository repository, String mirrorId) {
             super(serverUrl, type, payload, origin);
-            this.refsChangedEvent = refsChangedEvent;
+            this.repository = repository;
+            this.mirrorId = mirrorId;
         }
 
         @Override
         protected BitbucketServerRepository getRepository() {
-            return refsChangedEvent.getRepository();
+            return repository;
         }
 
         @Override
@@ -146,7 +165,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         }
 
         private void addBranchesAndTags(BitbucketSCMSource src, Map<SCMHead, SCMRevision> result) {
-            for (final NativeServerRefsChangedEvent.Change change : getPayload()) {
+            for (final NativeServerChange change : getPayload()) {
                 String refType = change.getRef().getType();
 
                 if ("BRANCH".equals(refType)) {
@@ -179,12 +198,12 @@ public class NativeServerPushHookProcessor extends HookProcessor {
 
             final String sourceOwnerName = src.getRepoOwner();
             final String sourceRepoName = src.getRepository();
-            final BitbucketServerRepository eventRepo = refsChangedEvent.getRepository();
+            final BitbucketServerRepository eventRepo = repository;
             final SCMHeadOrigin headOrigin = src.originOf(eventRepo.getOwnerName(), eventRepo.getRepositoryName());
             final Set<ChangeRequestCheckoutStrategy> strategies = headOrigin == SCMHeadOrigin.DEFAULT
                 ? ctx.originPRStrategies() : ctx.forkPRStrategies();
 
-            for (final NativeServerRefsChangedEvent.Change change : getPayload()) {
+            for (final NativeServerChange change : getPayload()) {
                 if (!"BRANCH".equals(change.getRef().getType())) {
                     LOGGER.log(Level.INFO, "Received event for unknown ref type {0} of ref {1}",
                         new Object[] { change.getRef().getType(), change.getRef().getDisplayId() });
@@ -209,14 +228,22 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                         final String branchName = String.format("PR-%s%s", pullRequest.getId(),
                             strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
 
-                        final PullRequestSCMHead head = new PullRequestSCMHead(branchName, sourceOwnerName,
-                            sourceRepoName, originalBranchName, pullRequest, headOrigin, strategy);
+                        final BitbucketServerRepository pullRequestRepository = pullRequest.getSource().getRepository();
+                        final PullRequestSCMHead head = new PullRequestSCMHead(
+                            branchName,
+                            pullRequestRepository.getOwnerName(),
+                            pullRequestRepository.getRepositoryName(),
+                            originalBranchName,
+                            pullRequest,
+                            headOrigin,
+                            strategy
+                        );
 
                         final String targetHash = pullRequest.getDestination().getCommit().getHash();
                         final String pullHash = pullRequest.getSource().getCommit().getHash();
 
                         result.put(head,
-                            new PullRequestSCMRevision<>(head,
+                            new PullRequestSCMRevision(head,
                                 new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), targetHash),
                                 new AbstractGitSCMSource.SCMRevisionImpl(head, pullHash)));
                     }
@@ -224,7 +251,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             }
         }
 
-        private Map<String, BitbucketServerPullRequest> getPullRequests(BitbucketSCMSource src, NativeServerRefsChangedEvent.Change change)
+        private Map<String, BitbucketServerPullRequest> getPullRequests(BitbucketSCMSource src, NativeServerChange change)
             throws InterruptedException {
 
             Map<String, BitbucketServerPullRequest> pullRequests;
@@ -240,9 +267,9 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         }
 
         private Map<String, BitbucketServerPullRequest> loadPullRequests(BitbucketSCMSource src,
-            NativeServerRefsChangedEvent.Change change) throws InterruptedException {
+            NativeServerChange change) throws InterruptedException {
 
-            final BitbucketServerRepository eventRepo = refsChangedEvent.getRepository();
+            final BitbucketServerRepository eventRepo = repository;
             final BitbucketServerAPIClient api = (BitbucketServerAPIClient) src
                 .buildBitbucketClient(eventRepo.getOwnerName(), eventRepo.getRepositoryName());
 
@@ -278,13 +305,19 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         @Override
         public Collection<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
             List<BitbucketPullRequest> prs = new ArrayList<>();
-            for (final NativeServerRefsChangedEvent.Change change : getPayload()) {
+            for (final NativeServerChange change : getPayload()) {
                 Map<String, BitbucketServerPullRequest> prsForChange = getPullRequests(src, change);
                 prs.addAll(prsForChange.values());
             }
 
             return prs;
         }
+
+        @Override
+        protected boolean eventMatchesRepo(BitbucketSCMSource source) {
+            return Objects.equals(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
+        }
+
     }
 
     private static final class CacheKey {
@@ -293,7 +326,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         @CheckForNull
         private final String credentialsId;
 
-        CacheKey(BitbucketSCMSource src, NativeServerRefsChangedEvent.Change change) {
+        CacheKey(BitbucketSCMSource src, NativeServerChange change) {
             this.refId = requireNonNull(change.getRefId());
             this.credentialsId = src.getCredentialsId();
         }

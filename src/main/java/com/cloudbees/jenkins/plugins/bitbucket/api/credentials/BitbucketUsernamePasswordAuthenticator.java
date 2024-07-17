@@ -26,7 +26,10 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpHost;
@@ -73,5 +76,11 @@ public class BitbucketUsernamePasswordAuthenticator extends BitbucketAuthenticat
         authCache.put(host, new BasicScheme());
         context.setCredentialsProvider(credentialsProvider);
         context.setAuthCache(authCache);
+    }
+
+    @Override
+    public StandardUsernameCredentials getCredentialsForScm() {
+        return new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, null, null, httpCredentials.getUserName(), httpCredentials.getPassword());
     }
 }

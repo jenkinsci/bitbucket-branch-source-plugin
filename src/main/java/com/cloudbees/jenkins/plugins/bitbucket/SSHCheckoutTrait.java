@@ -171,7 +171,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
                                                      @QueryParameter String serverUrl,
                                                      @QueryParameter String credentialsId) {
             if (context == null
-                    ? !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    ? !Jenkins.get().hasPermission(Jenkins.MANAGE)
                     : !context.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
@@ -202,7 +202,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
                                                    @QueryParameter String serverUrl,
                                                    @QueryParameter String value) {
             if (context == null
-                    ? !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    ? !Jenkins.get().hasPermission(Jenkins.MANAGE)
                     : !context.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }

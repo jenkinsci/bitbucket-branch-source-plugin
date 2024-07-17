@@ -32,6 +32,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.io.Resources;
 import hudson.XmlFile;
+import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.security.AuthorizationStrategy;
@@ -49,7 +50,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
@@ -129,6 +132,29 @@ public class BitbucketEndpointConfigurationTest {
     }
 
     @Test
+    public void given__newInstance__when__configuredAsManage__then__OK() {
+        BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
+        try {
+            j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+            MockAuthorizationStrategy mockStrategy = new MockAuthorizationStrategy();
+            mockStrategy.grant(Jenkins.MANAGE).onRoot().to("admin");
+            j.jenkins.setAuthorizationStrategy(mockStrategy);
+            try (ACLContext context = ACL.as(User.get("admin"))) {
+                instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(
+                    new BitbucketCloudEndpoint(true, "first"),
+                    new BitbucketCloudEndpoint(true, "second"),
+                    new BitbucketCloudEndpoint(true, "third")));
+                assertThat(instance.getEndpoints(), contains(instanceOf(BitbucketCloudEndpoint.class)));
+                assertThat(instance.getEndpoints().get(0).getCredentialsId(), is("first"));
+            } catch (RuntimeException x) {
+                Assertions.fail("No exception should be thrown");
+            }
+        } finally {
+            j.jenkins.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED);
+        }
+    }
+
+        @Test
     public void given__newInstance__when__configuredWithServerUsingCloudUrl__then__convertedToCloud() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeThat(instance.getEndpoints().get(0).getCredentialsId(), not(is("dummy")));
@@ -650,7 +676,7 @@ public class BitbucketEndpointConfigurationTest {
 
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
 
-        assertThat(instance.getEndpoints(), hasSize(11));
+        assertThat(instance.getEndpoints(), hasSize(12));
 
         BitbucketCloudEndpoint endpoint1 = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
         assertThat(endpoint1.getDisplayName(), is(Messages.BitbucketCloudEndpoint_displayName()));
@@ -740,7 +766,7 @@ public class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.isCallCanMerge(), is(false));
         assertThat(serverEndpoint.isCallChanges(), is(true));
         assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
-        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_6));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_6_5));
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(9);
         assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
@@ -750,11 +776,21 @@ public class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.isCallCanMerge(), is(false));
         assertThat(serverEndpoint.isCallChanges(), is(true));
         assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
-        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_5_10));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_6));
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(10);
         assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
         assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8090"));
+        assertThat(serverEndpoint.isManageHooks(), is(false));
+        assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
+        assertThat(serverEndpoint.isCallCanMerge(), is(false));
+        assertThat(serverEndpoint.isCallChanges(), is(true));
+        assertThat(serverEndpoint.getWebhookImplementation(), is(BitbucketServerWebhookImplementation.PLUGIN));
+        assertThat(serverEndpoint.getServerVersion(), is(BitbucketServerVersion.VERSION_5_10));
+
+        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(11);
+        assertThat(serverEndpoint.getDisplayName(), is("Example Inc"));
+        assertThat(serverEndpoint.getServerUrl(), is("http://bitbucket.example.com:8091"));
         assertThat(serverEndpoint.isManageHooks(), is(false));
         assertThat(serverEndpoint.getCredentialsId(), is(nullValue()));
         assertThat(serverEndpoint.isCallCanMerge(), is(false));
