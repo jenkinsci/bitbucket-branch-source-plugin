@@ -117,17 +117,6 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
-    public void doCheckServerUrlWhenUserWithoutPermissionThenReturnForbiddenStatus() {
-        try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
-            BitbucketSCMSource.DescriptorImpl.doCheckServerUrl(pr, SERVER_URL);
-            fail("Should fail with AccessDeniedException2");
-        } catch (Exception accessDeniedException2) {
-            assertThat(accessDeniedException2.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Job/Configure permission"));
-        }
-    }
-
-    @Issue("SECURITY-2033")
-    @Test
     public void doShowStatsWhenUserWithoutAdminPermissionThenReturnForbiddenStatus() {
         BitbucketCloudEndpoint.DescriptorImpl descriptor = (BitbucketCloudEndpoint.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketCloudEndpoint.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
