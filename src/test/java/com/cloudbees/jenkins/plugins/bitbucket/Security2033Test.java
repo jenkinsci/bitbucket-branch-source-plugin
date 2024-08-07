@@ -9,6 +9,7 @@ import hudson.model.Item;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -35,6 +36,7 @@ public class Security2033Test {
 
     private static final String PROJECT_NAME = "p";
     private static final String NOT_AUTHORIZED_USER = "userNoPermission";
+    private static final String NO_ITEM_READ_USER = "userNoReadPermission";
     private static final String SERVER_URL = "server.url";
 
     @Rule
@@ -97,6 +99,17 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
+    public void doCheckServerUrlWhenUserWithoutPermissionThenReturnForbiddenMessage() {
+        ((MockAuthorizationStrategy) j.jenkins.getAuthorizationStrategy())
+            .grant(Jenkins.READ, Item.READ).everywhere().to(NOT_AUTHORIZED_USER);
+        try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NO_ITEM_READ_USER))) {
+            FormValidation formValidation = BitbucketSCMSource.DescriptorImpl.doCheckServerUrl(pr, SERVER_URL);
+            assertThat(formValidation.getMessage(), is("Unauthorized to validate Server URL"));
+        }
+    }
+
+    @Issue("SECURITY-2033")
+    @Test
     public void doFillServerUrlItemsSCMNavigatorWhenUserWithoutPermissionThenReturnEmptyList() {
         BitbucketSCMNavigator.DescriptorImpl descriptor = (BitbucketSCMNavigator.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketSCMNavigator.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
@@ -112,17 +125,6 @@ public class Security2033Test {
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
             ListBoxModel actual = descriptor.doFillServerUrlItems(pr);
             assertThat(actual, is(empty()));
-        }
-    }
-
-    @Issue("SECURITY-2033")
-    @Test
-    public void doCheckServerUrlWhenUserWithoutPermissionThenReturnForbiddenStatus() {
-        try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
-            BitbucketSCMSource.DescriptorImpl.doCheckServerUrl(pr, SERVER_URL);
-            fail("Should fail with AccessDeniedException2");
-        } catch (Exception accessDeniedException2) {
-            assertThat(accessDeniedException2.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Job/Configure permission"));
         }
     }
 
