@@ -6,4 +6,7 @@
   <f:entry title="${%Do not communicate not-built jobs to Bitbucket}" field="disableNotificationForNotBuildJobs">
     <f:checkbox/>
   </f:entry>
+  <f:entry title="${%Do not communicate aborted jobs to Bitbucket}" field="disableNotificationForAbortedJobs">
+    <f:checkbox/>
+  </f:entry>
 </j:jelly>

@@ -146,6 +146,14 @@ public class BitbucketBuildStatusNotifications {
             } else {
                 state = BitbucketBuildStatus.Status.SUCCESSFUL;
             }
+        } else if (Result.ABORTED.equals(result)) {
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit build was aborted");
+            BitbucketSCMSourceContext context = new BitbucketSCMSourceContext(null, SCMHeadObserver.none()).withTraits(source.getTraits());
+            if (context.disableNotificationForAbortedJobs()) {
+                state = null;
+            } else {
+                state = BitbucketBuildStatus.Status.FAILED;
+            }
         } else if (result != null) { // ABORTED etc.
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
             state = BitbucketBuildStatus.Status.FAILED;
