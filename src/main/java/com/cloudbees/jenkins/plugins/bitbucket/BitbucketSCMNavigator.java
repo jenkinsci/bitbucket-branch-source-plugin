@@ -494,7 +494,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             listener.getLogger().format("Must specify a repository owner%n");
             return;
         }
-        StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
+        StandardCredentials credentials = BitbucketCredentials.lookupCredentialsAndTrackUsage(
                 serverUrl,
                 observer.getContext(),
                 credentialsId,
@@ -545,7 +545,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
         listener.getLogger().printf("Looking up team details of %s...%n", getRepoOwner());
         List<Action> result = new ArrayList<>();
-        StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
+        StandardCredentials credentials = BitbucketCredentials.lookupCredentialsAndTrackUsage(
                 serverUrl,
                 owner,
                 credentialsId,
