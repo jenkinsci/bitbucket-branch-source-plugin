@@ -72,7 +72,8 @@ public class WebhookConfiguration {
             // only on v6.5 and above
             HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey(),
             // only on v7.x and above
-            HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()
+            HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_APPROVED.getKey()
     ));
 
     /**
