@@ -29,6 +29,7 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
     @Override
     public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
         throws IOException, InterruptedException, GitException {
+        // TODO: remove if/when https://issues.jenkins.io/browse/JENKINS-73677 is eventually fixed
         if (credentials != null) {
             git.setCredentials(credentials);
         }
