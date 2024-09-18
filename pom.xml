@@ -68,6 +68,12 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+      <!-- TODO: remove when in bom -->
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>git</artifactId>
+        <version>5.5.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>

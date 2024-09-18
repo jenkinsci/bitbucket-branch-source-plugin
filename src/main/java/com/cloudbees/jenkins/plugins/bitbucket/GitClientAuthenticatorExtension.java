@@ -1,12 +1,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
-import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 public class GitClientAuthenticatorExtension extends GitSCMExtension {
@@ -24,14 +21,5 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
         }
 
         return git;
-    }
-
-    @Override
-    public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener)
-        throws IOException, InterruptedException, GitException {
-        // TODO: remove if/when https://issues.jenkins.io/browse/JENKINS-73677 is eventually fixed
-        if (credentials != null) {
-            git.setCredentials(credentials);
-        }
     }
 }
