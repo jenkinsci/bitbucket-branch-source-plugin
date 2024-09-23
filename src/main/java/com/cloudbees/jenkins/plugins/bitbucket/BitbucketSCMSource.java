@@ -1031,7 +1031,9 @@ public class BitbucketSCMSource extends SCMSource {
             default:
                 BitbucketAuthenticator authenticator = authenticator();
                 return new BitbucketGitSCMBuilder(this, head, revision, credentialsId)
-                        .withExtension(authenticator == null ? null : new GitClientAuthenticatorExtension(authenticator.getCredentialsForScm()))
+                        .withExtension((authenticator == null || traits.stream().anyMatch(trait -> trait instanceof SSHCheckoutTrait))
+                            ? null
+                            : new GitClientAuthenticatorExtension(authenticator.getCredentialsForScm()))
                         .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                         .withTraits(traits)
                         .build();
