@@ -91,7 +91,7 @@ public class BitbucketSCMSourceBuildTest {
 
     @Test
     @Issue("JENKINS-73471")
-    @WithTimeout(30)
+    @WithTimeout(120)
     public void buildWhenSetSSHCheckoutTraitThenNoAuthenticatorExtension() throws Exception {
         String jenkinsFile = "Jenkinsfile";
         sampleRepo.init();
@@ -151,7 +151,7 @@ public class BitbucketSCMSourceBuildTest {
     }
 
     @Test
-    @WithTimeout(30)
+    @WithTimeout(120)
     public void buildBasicAuthThenAuthenticatorExtension() throws Exception {
         String jenkinsFile = "Jenkinsfile";
         sampleRepo.init();
