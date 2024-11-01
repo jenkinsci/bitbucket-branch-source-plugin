@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.81</version>
+    <version>4.86</version>
     <relativePath />
   </parent>
 
@@ -28,7 +28,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
-    <jenkins.version>2.401.3</jenkins.version>
+    <jenkins.version>2.440.3</jenkins.version>
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
     <useBeta>true</useBeta> <!-- Jenkins.MANAGE -->
   </properties>
@@ -63,8 +63,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.401.x</artifactId>
-        <version>2745.vc7b_fe4c876fa_</version>
+        <artifactId>bom-2.440.x</artifactId>
+        <version>3221.ve8f7b_fdd149d</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -176,12 +176,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.3.1</version>
+          <version>3.6.0</version>
           <dependencies>
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.15.0</version>
+              <version>10.19.0</version>
             </dependency>
           </dependencies>
         </plugin>

@@ -104,17 +104,13 @@ properly configured in _Manage Jenkins_ » _Configure System_
 [id=bitbucket-creds-config]
 == Credentials configuration
 
-The configuration of the plugin (for both _Bitbucket multibranch pipelines_ and _Bitbucket Workspace/Project organization folders_) has
-two credentials to configure:
-
-. *Scan Credentials*: Credentials used to access Bitbucket API in order to discover repositories, branches and pull requests.
-If not set then anonymous access is used, so only public repositories, branches and pull requests are discovered and managed.
-HTTP Basic Authentication, Access Token and OAuth credentials are supported.
-. *Checkout Credentials*: Credentials used to check out sources once the repository, branch or pull request is discovered.
-HTTP Basic Authentication, SSH and OAuth credentials are supported.
-If not set, then _Scan Credentials_ are used.
+The plugin (for both _Bitbucket multibranch pipelines_ and _Bitbucket Workspace/Project organization folders_) requires a credential to be configured to scan branches. It will also be the default credential to use when checking out sources.
 
 image::images/screenshot-3.png[scaledwidth=90%]
+
+As the `Checkout Credential` configuration was removed in commit (link:https://github.com/jenkinsci/bitbucket-branch-source-plugin/commit/a4c6bf39b83168ff62fc622bd4084ef90cf810c0[a4c6bf3]), you can alternatively add a `Checkout over SSH` behavior in the configuration of Behaviours, so that to configure a seperate SSH credential for checking out sources.
+
+image::images/screenshot-7.png[scaledwidth=90%]
 
 === Access Token
 
