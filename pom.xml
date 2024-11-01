@@ -64,9 +64,15 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.440.x</artifactId>
-        <version>3221.ve8f7b_fdd149d</version>
+        <version>3358.vea_fa_1f41504d</version>
         <scope>import</scope>
         <type>pom</type>
+      </dependency>
+      <!-- TODO: remove when in bom -->
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>git</artifactId>
+        <version>5.5.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

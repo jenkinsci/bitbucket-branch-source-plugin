@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import hudson.model.Action;
+import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -183,7 +184,11 @@ public class BitbucketBuildStatusNotificationsTest {
 
         @Override
         protected FlowDefinition createDefinition() {
-            return new CpsFlowDefinition(dsl, true);
+            try {
+                return new CpsFlowDefinition(dsl, true);
+            } catch (Descriptor.FormException e) {
+                return null;
+            }
         }
 
         @Override
