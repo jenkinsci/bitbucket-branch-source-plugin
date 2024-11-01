@@ -29,22 +29,20 @@ import java.awt.image.BufferedImage;
 /**
  *
  * Interface for Avatar Cache Item Source
- *
+ * @deprecated Copy/Paste from SCM API plugin. Implement {@link jenkins.scm.impl.avatars.AvatarImageSource} instead.
  */
+@Deprecated
 public interface AvatarCacheSource {
 
     /**
      * Holds Image and lastModified date
+     * @deprecated Copy/Paste from SCM API plugin. Use {@link jenkins.scm.impl.avatars.AvatarImage} directly instead.
      */
-    public static class AvatarImage {
-        public final BufferedImage image;
-        public final long lastModified;
-
+    @Deprecated
+    class AvatarImage extends jenkins.scm.impl.avatars.AvatarImage {
         public static final AvatarImage EMPTY = new AvatarImage(null, 0);
-
-        public AvatarImage(final BufferedImage image, final long lastModified) {
-            this.image = image;
-            this.lastModified = lastModified;
+        public AvatarImage(BufferedImage image, long lastModified) {
+            super(image, lastModified);
         }
     }
 
