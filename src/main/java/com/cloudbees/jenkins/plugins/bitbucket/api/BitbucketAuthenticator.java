@@ -70,7 +70,7 @@ public abstract class BitbucketAuthenticator {
      *
      * @param credentials credentials instance this authenticator will use
      */
-    public BitbucketAuthenticator(StandardCredentials credentials) {
+    protected BitbucketAuthenticator(StandardCredentials credentials) {
         id = credentials.getId();
     }
 
@@ -116,16 +116,6 @@ public abstract class BitbucketAuthenticator {
      */
     public StandardUsernameCredentials getCredentialsForScm() {
         return null;
-    }
-
-    /**
-     * Add authentication token to clone link if
-     * authentication method requires it
-     *
-     * @return updated clone link
-     */
-    public BitbucketHref addAuthToken(BitbucketHref bitbucketHref) {
-        return bitbucketHref;
     }
 
     /**

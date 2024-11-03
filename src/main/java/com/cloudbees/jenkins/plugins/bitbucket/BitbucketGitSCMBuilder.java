@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource.DescriptorImpl;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
@@ -42,6 +41,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.BitbucketWeb;
 import java.util.List;
 import jenkins.plugins.git.GitSCMBuilder;
+import jenkins.plugins.git.MergeWithGitSCMExtension;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
@@ -311,13 +311,6 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         return cloneLinks.stream()
             .filter(link -> protocol.matches(link.getName()))
             .findAny()
-            .map(bitbucketHref -> {
-                BitbucketAuthenticator authenticator = scmSource().authenticator();
-                if (authenticator == null) {
-                    return bitbucketHref;
-                }
-                return authenticator.addAuthToken(bitbucketHref);
-            })
             .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol))
             .getHref();
     }
