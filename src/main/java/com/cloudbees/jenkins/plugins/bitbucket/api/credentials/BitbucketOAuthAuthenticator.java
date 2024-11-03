@@ -40,10 +40,10 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
     }
 
     @Override
-    public StandardUsernameCredentials getCredentialsForScm() {
+    public StandardUsernameCredentials getCredentialsForSCM() {
         try {
             return new UsernamePasswordCredentialsImpl(
-                    CredentialsScope.GLOBAL, null, null, StringUtils.EMPTY, token.getToken());
+                    CredentialsScope.GLOBAL, getId(), null, StringUtils.EMPTY, token.getToken());
         } catch (FormException e) {
             throw new RuntimeException(e);
         }

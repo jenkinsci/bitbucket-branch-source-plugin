@@ -114,7 +114,7 @@ public abstract class BitbucketAuthenticator {
      *
      * @return credentials to be passed to {@link org.jenkinsci.plugins.gitclient.GitClient#setCredentials(StandardUsernameCredentials)}
      */
-    public StandardUsernameCredentials getCredentialsForScm() {
+    public StandardUsernameCredentials getCredentialsForSCM() {
         return null;
     }
 
