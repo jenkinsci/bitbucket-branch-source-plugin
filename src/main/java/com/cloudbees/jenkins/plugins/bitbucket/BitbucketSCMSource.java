@@ -969,7 +969,7 @@ public class BitbucketSCMSource extends SCMSource {
                 .anyMatch(SSHCheckoutTrait.class::isInstance);
 
         BitbucketAuthenticator authenticator = authenticator();
-        return new BitbucketGitSCMBuilder(this, head, revision, null)
+        return new BitbucketGitSCMBuilder(this, head, revision, credentialsId)
                 .withExtension(authenticator == null || sshAuth ? null : new GitClientAuthenticatorExtension(authenticator.getCredentialsForSCM()))
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                 .withTraits(traits)
