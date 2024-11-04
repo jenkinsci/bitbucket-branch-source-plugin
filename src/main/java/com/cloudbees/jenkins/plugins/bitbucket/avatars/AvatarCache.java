@@ -35,6 +35,8 @@ import hudson.model.UnprotectedRootAction;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.HttpResponses;
 import hudson.util.NamingThreadFactory;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -57,14 +59,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 import static java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION;
 import static java.awt.RenderingHints.KEY_INTERPOLATION;
@@ -318,7 +318,7 @@ public class AvatarCache implements UnprotectedRootAction {
      * @param requestedSize the requested size (defaults to {@code 48x48} if unspecified).
      * @return the response.
      */
-    public HttpResponse doDynamic(StaplerRequest req, @QueryParameter String requestedSize) {
+    public HttpResponse doDynamic(StaplerRequest2 req, @QueryParameter String requestedSize) {
         if (StringUtils.isBlank(req.getRestOfPath())) {
             return HttpResponses.notFound();
         }
@@ -352,7 +352,7 @@ public class AvatarCache implements UnprotectedRootAction {
             if (startedTime <= since) {
                 return new HttpResponse() {
                     @Override
-                    public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
+                    public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node)
                             throws IOException, ServletException {
                         rsp.addDateHeader("Last-Modified", startedTime);
                         rsp.addHeader("Cache-control", "max-age=365000000, immutable, public");
@@ -378,7 +378,7 @@ public class AvatarCache implements UnprotectedRootAction {
             return new HttpResponse() {
 
                 @Override
-                public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
+                public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node)
                         throws IOException, ServletException {
                     rsp.addDateHeader("Last-Modified", avatar.lastModified);
                     rsp.addHeader("Cache-control", "max-age=3600, public");
@@ -585,7 +585,7 @@ public class AvatarCache implements UnprotectedRootAction {
          * {@inheritDoc}
          */
         @Override
-        public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
+        public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node)
                 throws IOException, ServletException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
