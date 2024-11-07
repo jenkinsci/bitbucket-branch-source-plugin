@@ -23,11 +23,17 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import java.io.ObjectStreamException;
+
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import java.io.ObjectStreamException;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadMigration;
@@ -35,9 +41,6 @@ import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead2;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.DoNotUse;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * {@link SCMHead} for a Bitbucket pull request
@@ -62,9 +65,9 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     private final BranchSCMHead target;
 
-    private final SCMHeadOrigin origin;
+    private SCMHeadOrigin origin;
 
-    private final ChangeRequestCheckoutStrategy strategy;
+    private ChangeRequestCheckoutStrategy strategy;
 
     public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
                               String number, String title, BranchSCMHead target, SCMHeadOrigin origin,
@@ -76,8 +79,8 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         this.number = number;
         this.title = title;
         this.target = target;
-        this.origin = origin;
-        this.strategy = strategy;
+        this.origin = origin != null ? origin : SCMHeadOrigin.DEFAULT;  // Set default if null
+        this.strategy = strategy != null ? strategy : ChangeRequestCheckoutStrategy.HEAD;  // Default to HEAD
     }
 
     public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
@@ -139,6 +142,12 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
         }
         if (origin == null || strategy == null) {
             // this was a pre-2.2.0 head, let's see if we can populate the origin / strategy details
+            if (origin == null) {
+                origin = SCMHeadOrigin.DEFAULT;  // Default to `DEFAULT` if null
+            }
+            if (strategy == null) {
+                strategy = ChangeRequestCheckoutStrategy.HEAD;  // Default to `HEAD` if null
+            }
             return new FixLegacy(this);
         }
         return this;
@@ -210,7 +219,9 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
         FixLegacy(PullRequestSCMHead copy) {
             super(copy.getName(), copy.repoOwner, copy.repository, copy.branchName, copy.number,
-                    copy.getTitle(), copy.target, copy.getOrigin(), ChangeRequestCheckoutStrategy.HEAD);
+                    copy.getTitle(), copy.target,
+                    copy.getOrigin() != null ? copy.getOrigin() : SCMHeadOrigin.DEFAULT,
+                    copy.getCheckoutStrategy() != null ? copy.getCheckoutStrategy() : ChangeRequestCheckoutStrategy.HEAD);
         }
     }
 
@@ -230,6 +241,21 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
         @Override
         public PullRequestSCMHead migrate(@NonNull BitbucketSCMSource source, @NonNull FixLegacy head) {
+            SCMHead target = head.getTarget();
+            if (!(target instanceof BranchSCMHead)) {
+                throw new IllegalStateException("Target is not a BranchSCMHead");
+            }
+            BranchSCMHead branchTarget = (BranchSCMHead) target;
+
+            // Handle null origin
+            SCMHeadOrigin origin = source.originOf(head.getRepoOwner(), head.getRepository());
+            if (origin == null) {
+                origin = SCMHeadOrigin.DEFAULT;
+            }
+
+            // Handle null checkout strategy
+            ChangeRequestCheckoutStrategy checkoutStrategy = head.getCheckoutStrategy() != null ? head.getCheckoutStrategy() : ChangeRequestCheckoutStrategy.HEAD;
+
             return new PullRequestSCMHead(
                     head.getName(),
                     head.getRepoOwner(),
@@ -237,9 +263,9 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
                     head.getBranchName(),
                     head.getId(),
                     head.getTitle(),
-                    (BranchSCMHead) head.getTarget(),
-                    source.originOf(head.getRepoOwner(), head.getRepository()),
-                    ChangeRequestCheckoutStrategy.HEAD // legacy is always HEAD
+                    branchTarget,
+                    origin,
+                    checkoutStrategy
             );
         }
 
