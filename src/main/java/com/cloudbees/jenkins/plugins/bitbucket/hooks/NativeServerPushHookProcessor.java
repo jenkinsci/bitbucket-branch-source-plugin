@@ -102,15 +102,6 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             return;
         }
 
-        if (changes.isEmpty()) {
-            final String owner = repository.getOwnerName();
-            final String repositoryName = repository.getRepositoryName();
-            LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
-                new Object[] { owner, repositoryName });
-            scmSourceReIndex(owner, repositoryName);
-            return;
-        }
-
         final Multimap<SCMEvent.Type, NativeServerChange> events = HashMultimap.create();
         for (final NativeServerChange change : changes) {
             final String type = change.getType();

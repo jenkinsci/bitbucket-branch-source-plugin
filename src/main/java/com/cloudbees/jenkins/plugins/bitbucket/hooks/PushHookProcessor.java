@@ -46,7 +46,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
@@ -71,13 +70,6 @@ public class PushHookProcessor extends HookProcessor {
                 push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
             }
             if (push != null) {
-                String owner = push.getRepository().getOwnerName();
-                final String repository = push.getRepository().getRepositoryName();
-                if (push.getChanges().isEmpty()) {
-                    LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
-                            new Object[]{owner, repository});
-                    scmSourceReIndex(owner, repository);
-                } else {
                     SCMHeadEvent.Type type = null;
                     for (BitbucketPushEvent.Change change: push.getChanges()) {
                         if ((type == null || type == SCMEvent.Type.CREATED) && change.isCreated()) {
@@ -203,7 +195,6 @@ public class PushHookProcessor extends HookProcessor {
                             return false;
                         }
                     }, BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
-                }
             }
         }
     }
