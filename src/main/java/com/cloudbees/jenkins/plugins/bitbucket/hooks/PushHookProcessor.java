@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import hudson.RestrictedSince;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
@@ -52,13 +51,6 @@ public class PushHookProcessor extends HookProcessor {
                 push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
             }
             if (push != null) {
-                String owner = push.getRepository().getOwnerName();
-                final String repository = push.getRepository().getRepositoryName();
-                if (push.getChanges().isEmpty()) {
-                    LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
-                            new Object[]{owner, repository});
-                    scmSourceReIndex(owner, repository);
-                } else {
                     SCMHeadEvent.Type type = null;
                     for (BitbucketPushEvent.Change change: push.getChanges()) {
                         if ((type == null || type == SCMEvent.Type.CREATED) && change.isCreated()) {
