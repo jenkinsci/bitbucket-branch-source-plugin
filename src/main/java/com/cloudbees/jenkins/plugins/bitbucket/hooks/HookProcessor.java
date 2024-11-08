@@ -34,6 +34,7 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -41,10 +42,12 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * Abstract hook processor.
  *
  * Add new hook processors by extending this class and implement {@link #process(HookEventType, String, BitbucketType, String)},
- * extract owner and repository name from the hook payload and then call {@link #scmSourceReIndex(String, String)}
- * to launch a branch/PR reindexing on the matching SCMSource.
+ * extract details from the hook payload and then fire an {@link jenkins.scm.api.SCMEvent} to dispatch it to the SCM API.
  */
 public abstract class HookProcessor {
+
+    protected static final String SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME = "bitbucket.hooks.processor.scanOnEmptyChanges";
+    protected static final boolean SCAN_ON_EMPTY_CHANGES = SystemProperties.getBoolean(SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME, true);
 
     private static final Logger LOGGER = Logger.getLogger(HookProcessor.class.getName());
 
@@ -90,8 +93,9 @@ public abstract class HookProcessor {
      *
      * @param owner the repository owner as configured in the SCMSource
      * @param repository the repository name as configured in the SCMSource
+     * @param mirrorId the mirror id if applicable, may be null
      */
-    protected void scmSourceReIndex(final String owner, final String repository) {
+    protected void scmSourceReIndex(final String owner, final String repository, final String mirrorId) {
         try (ACLContext context = ACL.as2(ACL.SYSTEM2)) {
             boolean reindexed = false;
             for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
@@ -100,8 +104,11 @@ public abstract class HookProcessor {
                     // Search for the correct SCM source
                     if (source instanceof BitbucketSCMSource scmSource
                             && scmSource.getRepoOwner().equalsIgnoreCase(owner)
-                            && scmSource.getRepository().equals(repository)) {
+                            && scmSource.getRepository().equals(repository)
+                            && (mirrorId == null || mirrorId.equalsIgnoreCase(scmSource.getMirrorId()))) {
                         LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
+                        // TODO: SCMSourceOwner.onSCMSourceUpdated is deprecated. We may explore options with an
+                        //  SCMEventListener extension and firing SCMSourceEvents.
                         scmOwner.onSCMSourceUpdated(source);
                         reindexed = true;
                     }

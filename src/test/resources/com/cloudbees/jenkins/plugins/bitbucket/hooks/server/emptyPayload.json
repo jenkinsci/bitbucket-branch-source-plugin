@@ -1,0 +1,45 @@
+{
+  "actor": {
+    "active": true,
+    "displayName": "Antonio Muniz",
+    "emailAddress": "amuniz@acme.com",
+    "id": 2,
+    "links": {
+      "self": [
+        {
+          "href": "http://localhost:7990/users/amuniz"
+        }
+      ]
+    },
+    "name": "amuniz",
+    "slug": "amuniz",
+    "type": "NORMAL"
+  },
+  "push": {
+    "changes": []
+  },
+  "date": "2024-11-27T01:34:45+0000",
+  "eventKey": "repo:push",
+  "repository": {
+    "scmId": "git",
+    "project": {
+      "key": "AMUNIZ",
+      "name": "prj"
+    },
+    "slug": "test-repos",
+    "links": {
+      "self": [
+        {
+          "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+        }
+      ]
+    },
+    "public": false,
+    "owner": {
+      "username": "amuniz",
+      "displayName": "Antonio Muniz"
+    },
+    "fullName": "amuniz/test-repos",
+    "ownerName": "amuniz"
+  }
+}
