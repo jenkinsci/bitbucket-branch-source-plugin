@@ -39,7 +39,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * Abstract hook processor.
  *
  * Add new hook processors by extending this class and implement {@link #process(HookEventType, String, BitbucketType, String)},
- * extract details from the hook payload and then fire an {@link jenkins.scm.api.SCMEvent#} to dispatch it to the SCM API.
+ * extract details from the hook payload and then fire an {@link jenkins.scm.api.SCMEvent} to dispatch it to the SCM API.
  */
 public abstract class HookProcessor {
 
