@@ -145,15 +145,9 @@
       <artifactId>plain-credentials</artifactId>
    </dependency>
    <dependency>
-      <groupId>org.scribe</groupId>
-      <artifactId>scribe</artifactId>
-      <version>1.3.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>com.github.scribejava</groupId>
+      <artifactId>scribejava-httpclient-apache</artifactId>
+      <version>8.3.3</version>
     </dependency>
   </dependencies>
 

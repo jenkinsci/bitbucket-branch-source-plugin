@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
+import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 
 
@@ -27,11 +28,12 @@ public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource
      *
      * @param standardUsernamePasswordCredentials the username/password combo
      * @return an authenticator that will use them.
+     * @throws AuthenticationTokenException if the specific credentials could not be converted.
      */
     @NonNull
     @Override
     public BitbucketOAuthAuthenticator convert(
-            @NonNull StandardUsernamePasswordCredentials standardUsernamePasswordCredentials) {
+            @NonNull StandardUsernamePasswordCredentials standardUsernamePasswordCredentials) throws AuthenticationTokenException {
         return new BitbucketOAuthAuthenticator(standardUsernamePasswordCredentials);
     }
 
@@ -43,7 +45,7 @@ public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource
      * @return whether this can authenticate given the context
      */
     @Override
-    public boolean isFit(AuthenticationTokenContext ctx) {
+    protected boolean isFit(AuthenticationTokenContext<? super BitbucketOAuthAuthenticator> ctx) {
         return ctx.mustHave(BitbucketAuthenticator.SCHEME, "https") && ctx.mustHave(
                 BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_CLOUD);
     }
