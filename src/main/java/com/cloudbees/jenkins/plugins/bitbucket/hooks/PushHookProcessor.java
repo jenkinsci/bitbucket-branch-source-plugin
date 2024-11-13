@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import hudson.RestrictedSince;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
@@ -37,6 +38,9 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
 public class PushHookProcessor extends HookProcessor {
+
+    private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = Boolean.getBoolean(
+        PushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges");
 
     private static final Logger LOGGER = Logger.getLogger(PushHookProcessor.class.getName());
 
@@ -51,8 +55,15 @@ public class PushHookProcessor extends HookProcessor {
                 push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
             }
             if (push != null) {
+                if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES && push.getChanges().isEmpty()) {
+                    final String owner = push.getRepository().getOwnerName();
+                    final String repository = push.getRepository().getRepositoryName();
+                    LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
+                        new Object[]{owner, repository});
+                    scmSourceReIndex(owner, repository);
+                } else {
                     SCMHeadEvent.Type type = null;
-                    for (BitbucketPushEvent.Change change: push.getChanges()) {
+                    for (BitbucketPushEvent.Change change : push.getChanges()) {
                         if ((type == null || type == SCMEvent.Type.CREATED) && change.isCreated()) {
                             type = SCMEvent.Type.CREATED;
                         } else if ((type == null || type == SCMEvent.Type.REMOVED) && change.isClosed()) {
