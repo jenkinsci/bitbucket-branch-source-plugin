@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,52 +23,28 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import jenkins.scm.api.SCMHead;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.ObjectStreamException;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 
 /**
- * {@link SCMHead} for a Bitbucket branch.
+ * Retained for data migration.
  *
- * @since 2.0.0
+ * @deprecated use {@link jenkins.plugins.git.MergeWithGitSCMExtension}
  */
-public class BranchSCMHead extends SCMHead {
+@Deprecated
+@Restricted(DoNotUse.class)
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
+public class MergeWithGitSCMExtension extends jenkins.plugins.git.MergeWithGitSCMExtension {
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * Cache of the repository type. Will only be {@code null} for data loaded from pre-2.1.0 releases
-     *
-     * @since 2.1.0
-     */
-    // The repository type should be immutable for any SCMSource.
-    @CheckForNull
-    private final BitbucketRepositoryType repositoryType;
-
-    /**
-     * Constructor.
-     *
-     * @param branchName the branch name
-     */
-    public BranchSCMHead(String branchName) {
-        super(branchName);
-        this.repositoryType = BitbucketRepositoryType.GIT;
+    MergeWithGitSCMExtension(@NonNull String baseName, @CheckForNull String baseHash) {
+        super(baseName, baseHash);
     }
 
-    /**
-     * Gets the repository type.
-     * @return the repository type or {@code null} if this is a legacy branch instance.
-     */
-    @CheckForNull
-    public BitbucketRepositoryType getRepositoryType() {
-        return repositoryType;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPronoun() {
-        return Messages.BranchSCMHead_Pronoun();
+    private Object readResolve() throws ObjectStreamException {
+        return new jenkins.plugins.git.MergeWithGitSCMExtension(getBaseName(), getBaseHash());
     }
 }

@@ -34,6 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirroredRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirroredRepositoryDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
@@ -116,6 +117,7 @@ import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
@@ -229,6 +231,12 @@ public class BitbucketSCMSource extends SCMSource {
     private transient String bitbucketServerUrl;
 
     /**
+     * The cache of the repository type.
+     */
+    @CheckForNull
+    private transient BitbucketRepositoryType repositoryType;
+
+    /**
      * The cache of pull request titles for each open PR.
      */
     @CheckForNull
@@ -288,6 +296,7 @@ public class BitbucketSCMSource extends SCMSource {
      * @return {@code this}
      * @throws ObjectStreamException if things go wrong.
      */
+    @SuppressWarnings({"ConstantConditions", "deprecation"})
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
                         justification = "Only non-null after we set them here!")
     private Object readResolve() throws ObjectStreamException {
@@ -520,6 +529,18 @@ public class BitbucketSCMSource extends SCMSource {
         return true;
     }
 
+    public BitbucketRepositoryType getRepositoryType() throws IOException, InterruptedException {
+        if (repositoryType == null) {
+            BitbucketRepository r = buildBitbucketClient().getRepository();
+            repositoryType = BitbucketRepositoryType.fromString(r.getScm());
+            Map<String, List<BitbucketHref>> links = r.getLinks();
+            if (links != null && links.containsKey("clone")) {
+                setPrimaryCloneLinks(links.get("clone"));
+            }
+        }
+        return repositoryType;
+    }
+
     public BitbucketApi buildBitbucketClient() {
         return buildBitbucketClient(repoOwner, repository);
     }
@@ -530,6 +551,17 @@ public class BitbucketSCMSource extends SCMSource {
 
     public BitbucketApi buildBitbucketClient(String repoOwner, String repository) {
         return BitbucketApiFactory.newInstance(getServerUrl(), authenticator(), repoOwner, null, repository);
+    }
+
+    @Override
+    public void afterSave() {
+        try {
+            getRepositoryType();
+        } catch (InterruptedException | IOException e) {
+            LOGGER.log(Level.FINE,
+                    "Could not determine repository type of " + getRepoOwner() + "/" + getRepository() + " on "
+                            + getServerUrl() + " for " + getOwner(), e);
+        }
     }
 
     @Override
@@ -546,6 +578,9 @@ public class BitbucketSCMSource extends SCMSource {
                 listener.getLogger().format("Connecting to %s using %s%n", getServerUrl(),
                         CredentialsNameProvider.name(scanCredentials));
             }
+            // this has the side effect of ensuring that repository type is always populated.
+            final BitbucketRepositoryType repositoryType = getRepositoryType();
+            listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(repositoryType != null ? repositoryType.name() : "Unknown"));
 
             // populate the request with its data sources
             if (request.isFetchPRs()) {

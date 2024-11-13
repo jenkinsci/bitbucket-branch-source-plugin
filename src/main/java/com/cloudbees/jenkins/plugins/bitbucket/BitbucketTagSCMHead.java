@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.scm.api.SCMHead;
@@ -38,6 +40,15 @@ public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Cache of the repository type.
+     *
+     * @since 2.2.11
+     */
+    // The repository type should be immutable for any SCMSource.
+    @CheckForNull
+    private final BitbucketRepositoryType repositoryType;
+
+    /**
      * Constructor.
      *
      * @param tagName        the tag name
@@ -45,6 +56,16 @@ public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
      */
     public BitbucketTagSCMHead(@NonNull String tagName, long timestamp) {
         super(tagName, timestamp);
+        this.repositoryType = BitbucketRepositoryType.GIT;
+    }
+
+    /**
+     * Gets the repository type.
+     * @return the repository type or {@code null}
+     */
+    @CheckForNull
+    public BitbucketRepositoryType getRepositoryType() {
+        return repositoryType;
     }
 
     /**
