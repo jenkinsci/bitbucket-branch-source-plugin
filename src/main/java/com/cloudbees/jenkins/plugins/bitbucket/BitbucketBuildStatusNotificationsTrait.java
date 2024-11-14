@@ -41,12 +41,17 @@ import org.kohsuke.stapler.DataBoundSetter;
 public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
 
     /**
-     * Should unstable builds be communicated as success to Bitbucket
+     * Should unstable builds be communicated as success to Bitbucket.
      */
     private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
-     * Should not build jobs be communicated to Bitbucket
+     * Aborted jobs must be communicated as stopped to Bitbucket.
+     */
+    private boolean sendStoppedNotificationForAbortBuild;
+
+    /**
+     * Should not build jobs be communicated to Bitbucket.
      */
     private boolean disableNotificationForNotBuildJobs;
 
@@ -73,6 +78,27 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
         return this.sendSuccessNotificationForUnstableBuild;
     }
 
+    /**
+     * Set if aborted builds will be communicated as stopped.
+     *
+     * @param sendStop comunicate Stop/Cancelled build status to Bitbucket for
+     *        aborted build.
+     */
+    @DataBoundSetter
+    public void setSendStoppedNotificationForAbortBuild(boolean sendStop) {
+        sendStoppedNotificationForAbortBuild = sendStop;
+    }
+
+    /**
+     * Return if aborted builds will be communicated as stopped.
+     *
+     * @return true will be comunicate to Bitbucket as Stopped/Cancelled build
+     *         failed otherwise.
+     */
+    public boolean getSendStoppedNotificationForAbortBuild() {
+        return this.sendStoppedNotificationForAbortBuild;
+    }
+
     @DataBoundSetter
     public void setDisableNotificationForNotBuildJobs(boolean isNotificationDisabled) {
         disableNotificationForNotBuildJobs = isNotificationDisabled;
@@ -92,6 +118,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         ((BitbucketSCMSourceContext) context).withDisableNotificationForNotBuildJobs(getDisableNotificationForNotBuildJobs());
         ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
+        ((BitbucketSCMSourceContext) context).withSendStoppedNotificationForAbortBuild(getSendStoppedNotificationForAbortBuild());
     }
 
     /**

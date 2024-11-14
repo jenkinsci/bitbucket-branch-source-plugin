@@ -81,6 +81,7 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     @NonNull
     private WebhookConfiguration webhookConfiguration = new WebhookConfiguration();
+
     /**
      * {@code true} if notifications should be disabled in this context.
      */
@@ -92,7 +93,12 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean sendSuccessNotificationForUnstableBuild;
 
     /**
-     * {@code false} if not build jobs should be send to Bitbucket.
+     * {@code true} if aborted builds will be communicated as stopped/cancelled.
+     */
+    private boolean sendStoppedNotificationForAbortBuild;
+
+    /**
+     * {@code false} if not built jobs should be send to Bitbucket.
      */
     private boolean disableNotificationForNotBuildJobs;
 
@@ -208,7 +214,15 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
+    }
 
+    /**
+     * Returns if aborted builds should be passed as stopped/cancelled to Bitbucket.
+     *
+     * @return {@code true} if aborted builds should be passed as stopped/cancelled to Bitbucket.
+     */
+    public final boolean sendStopNotificationForAbortBuild() {
+        return sendStoppedNotificationForAbortBuild;
     }
 
     /**
@@ -363,6 +377,18 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final BitbucketSCMSourceContext withSendSuccessNotificationForUnstableBuild(boolean isUnstableBuildSuccess) {
         this.sendSuccessNotificationForUnstableBuild = isUnstableBuildSuccess;
+        return this;
+    }
+
+    /**
+     * Defines behaviour of unstable builds in Bitbucket.
+     *
+     * @param sendStopped {@code true} to consider aborted builds as stopped when notifying Bitbucket.
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final BitbucketSCMSourceContext withSendStoppedNotificationForAbortBuild(boolean sendStopped) {
+        this.sendStoppedNotificationForAbortBuild = sendStopped;
         return this;
     }
 
