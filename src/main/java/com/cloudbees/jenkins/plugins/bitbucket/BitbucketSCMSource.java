@@ -533,6 +533,25 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @Override
+    public void afterSave() {
+        try {
+            gatherPrimaryCloneLinks(buildBitbucketClient());
+        } catch (InterruptedException | IOException e) {
+            LOGGER.log(Level.SEVERE,
+                    "Could not determine clone links of " + getRepoOwner() + "/" + getRepository() +
+                    " on " + getServerUrl() + " for " + getOwner() + " falling back to generated links", e);
+        }
+    }
+
+    private void gatherPrimaryCloneLinks(@NonNull BitbucketApi apiClient) throws IOException, InterruptedException {
+        BitbucketRepository r = apiClient.getRepository();
+        Map<String, List<BitbucketHref>> links = r.getLinks();
+        if (links != null && links.containsKey("clone")) {
+            setPrimaryCloneLinks(links.get("clone"));
+        }
+    }
+
+    @Override
     protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer,
                             @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
@@ -546,6 +565,8 @@ public class BitbucketSCMSource extends SCMSource {
                 listener.getLogger().format("Connecting to %s using %s%n", getServerUrl(),
                         CredentialsNameProvider.name(scanCredentials));
             }
+            BitbucketApi apiClient = buildBitbucketClient();
+            gatherPrimaryCloneLinks(apiClient);
 
             // populate the request with its data sources
             if (request.isFetchPRs()) {
@@ -558,7 +579,7 @@ public class BitbucketSCMSource extends SCMSource {
                                 return getBitbucketPullRequestsFromEvent(hasPrEvent, listener);
                             }
 
-                            return (Iterable<BitbucketPullRequest>) buildBitbucketClient().getPullRequests();
+                            return (Iterable<BitbucketPullRequest>) apiClient.getPullRequests();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
                         }
@@ -570,7 +591,7 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
-                            return (Iterable<BitbucketBranch>) buildBitbucketClient().getBranches();
+                            return (Iterable<BitbucketBranch>) apiClient.getBranches();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
                         }
@@ -582,7 +603,7 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketBranch> create() {
                         try {
-                            return (Iterable<BitbucketBranch>) buildBitbucketClient().getTags();
+                            return (Iterable<BitbucketBranch>) apiClient.getTags();
                         } catch (IOException | InterruptedException e) {
                             throw new BitbucketSCMSource.WrappedException(e);
                         }
@@ -1032,11 +1053,8 @@ public class BitbucketSCMSource extends SCMSource {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
         List<Action> result = new ArrayList<>();
         final BitbucketApi bitbucket = buildBitbucketClient();
+        gatherPrimaryCloneLinks(bitbucket);
         BitbucketRepository r = bitbucket.getRepository();
-        Map<String, List<BitbucketHref>> links = r.getLinks();
-        if (links != null && links.containsKey("clone")) {
-            setPrimaryCloneLinks(links.get("clone"));
-        }
         result.add(new BitbucketRepoMetadataAction(r));
         String defaultBranch = bitbucket.getDefaultBranch();
         if (StringUtils.isNotBlank(defaultBranch)) {
