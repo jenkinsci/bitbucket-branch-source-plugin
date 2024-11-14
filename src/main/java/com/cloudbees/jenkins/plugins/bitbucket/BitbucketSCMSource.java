@@ -58,9 +58,12 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
+import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
@@ -87,6 +90,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.MergeWithGitSCMExtension;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
@@ -139,6 +143,14 @@ public class BitbucketSCMSource extends SCMSource {
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
     private static final String SERVER_REPO_TEMPLATE = "/projects{/owner}/repos{/repo}";
+
+    /**
+     * Mapping classes after refactoring for backward compatibility.
+     */
+    @Initializer(before = InitMilestone.PLUGINS_STARTED)
+    public static void aliases() {
+        Items.XSTREAM2.addCompatibilityAlias("com.cloudbees.jenkins.plugins.bitbucket.MergeWithGitSCMExtension", MergeWithGitSCMExtension.class);
+    }
 
     /** How long to delay events received from Bitbucket in order to allow the API caches to sync. */
     private static /*mostly final*/ int eventDelaySeconds =
