@@ -36,7 +36,10 @@ public class BitbucketBuildStatus {
     public enum Status {
         INPROGRESS("INPROGRESS"),
         FAILED("FAILED"),
+        // available only in Cloud
         STOPPED("STOPPED"),
+        // available only in Data Center
+        CANCELLED("CANCELLED"),
         SUCCESSFUL("SUCCESSFUL");
 
         private final String status;
