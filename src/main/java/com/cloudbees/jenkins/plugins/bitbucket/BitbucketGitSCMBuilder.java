@@ -158,7 +158,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     @NonNull
     public BitbucketGitSCMBuilder withCredentials(String credentialsId, BitbucketRepositoryProtocol protocol) {
         if (StringUtils.isNotBlank(credentialsId)) {
-            StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
+            StandardCredentials credentials = BitbucketCredentials.lookupCredentialsAndTrackUsage(
                 scmSource.getServerUrl(),
                 scmSource.getOwner(),
                 DescriptorImpl.SAME.equals(scmSource.getCheckoutCredentialsId()) ? credentialsId : scmSource.getCheckoutCredentialsId(),

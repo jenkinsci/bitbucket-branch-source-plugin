@@ -61,6 +61,7 @@ import hudson.console.HyperlinkNote;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
@@ -1032,7 +1033,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @CheckForNull
     /* package */ StandardCredentials credentials() {
-        return BitbucketCredentials.lookupCredentials(
+        return BitbucketCredentials.lookupCredentialsAndTrackUsage(
                 getServerUrl(),
                 getOwner(),
                 getCredentialsId(),
@@ -1180,6 +1181,11 @@ public class BitbucketSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class) // to allow configuration from system groovy console
     public static void setEventDelaySeconds(int eventDelaySeconds) {
         BitbucketSCMSource.eventDelaySeconds = Math.min(300, Math.max(0, eventDelaySeconds));
+    }
+
+    public static BitbucketSCMSource findForRun(Run<?, ?> run) {
+        SCMSource s = SCMSource.SourceByItem.findSource(run.getParent());
+        return s instanceof BitbucketSCMSource ?  (BitbucketSCMSource) s : null;
     }
 
     private void initCloneLinks() {

@@ -170,11 +170,6 @@ public class BitbucketBuildStatusNotifications {
         }
     }
 
-    private static @CheckForNull BitbucketSCMSource findBitbucketSCMSource(Run<?, ?> build) {
-        SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
-        return s instanceof BitbucketSCMSource ? (BitbucketSCMSource) s : null;
-    }
-
     private static void sendNotifications(BitbucketSCMSource source, Run<?, ?> build, TaskListener listener)
             throws IOException, InterruptedException {
         BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null,
@@ -249,7 +244,7 @@ public class BitbucketBuildStatusNotifications {
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
                                SCMRevisionState pollingBaseline) throws Exception {
-            BitbucketSCMSource source = findBitbucketSCMSource(build);
+            BitbucketSCMSource source = BitbucketSCMSource.findForRun(build);
             if (source == null) {
                 return;
             }
@@ -282,7 +277,7 @@ public class BitbucketBuildStatusNotifications {
 
         @Override
         public void onCompleted(Run<?, ?> build, TaskListener listener) {
-            BitbucketSCMSource source = findBitbucketSCMSource(build);
+            BitbucketSCMSource source = BitbucketSCMSource.findForRun(build);
             if (source == null) {
                 return;
             }
