@@ -149,6 +149,13 @@
       <artifactId>scribejava-httpclient-apache</artifactId>
       <version>8.3.3</version>
     </dependency>
+    <dependency>
+      <!-- https://github.com/jenkinsci/bitbucket-branch-source-plugin/issues/903
+           remove when https://github.com/jenkinsci/plugin-pom/issues/676 will be resoved -->
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <repositories>
@@ -178,6 +185,25 @@
               <version>10.19.0</version>
             </dependency>
           </dependencies>
+        </plugin>
+        <plugin>
+          <!-- https://github.com/jenkinsci/bitbucket-branch-source-plugin/issues/903
+               remove when https://github.com/jenkinsci/plugin-pom/issues/676 will be resoved -->
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>display-info</id>
+              <configuration>
+                <rules>
+                  <bannedDependencies>
+                    <includes>
+                      <include>commons-logging:commons-logging:*:jar:compile</include>
+                    </includes>
+                  </bannedDependencies>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
