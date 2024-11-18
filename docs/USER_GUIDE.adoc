@@ -61,16 +61,16 @@ image::images/screenshot-5.png[scaledwidth=90%]
 [id=bitbucket-scm-navigator]
 == Organization folders
 
-_Bitbucket Team/Project_ repository source can be used in Organization Folder to automatically track branches and pull requests in all Bitbucket Team or Project repositories.
+_Bitbucket Team/Project_ Repository Source can be used in Organization Folder to automatically track branches and pull requests in all Bitbucket Team or Project repositories.
 
 . Create a project of type _Organization Folder_.
 +
-image::images/screenshot-6.png[scaledwidth=90%]
+image::images/screenshot-6.png[scaledwidth=70%]
 
-. Add _Bitbucket Team/Project_ repository source
+. Add _Bitbucket Team/Project_ as Repository Source
 . If you configured more than one _Bitbucket Endpoint_, choose the _Server_ and appropriate _Credential_
 . Configure the repository owner. It could be:
-.. A Bitbucket Cloud Workspace ID (slug): all repositories in the workspace are imported as Multibranch projects.
+.. A Bitbucket Cloud Workspace ID (aka workspace slug): all repositories in the workspace are imported as Multibranch projects.
 .. A Bitbucket Server Project ID: all repositories in the project are imported as Multibranch projects. *Note that the project ID needs to be used instead of the project name*.
 .. A regular username: all repositories which the username is owner of are imported.
 +
