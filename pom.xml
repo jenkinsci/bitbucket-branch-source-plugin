@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.88</version>
+    <version>5.3</version>
     <relativePath />
   </parent>
 
@@ -28,7 +28,8 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
-    <jenkins.version>2.462.3</jenkins.version>
+    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
     <useBeta>true</useBeta> <!-- Jenkins.MANAGE -->
   </properties>
@@ -63,8 +64,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.462.x</artifactId>
-        <version>3654.v237e4a_f2d8da_</version>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
+        <version>3696.vb_b_4e2d1a_0542</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
