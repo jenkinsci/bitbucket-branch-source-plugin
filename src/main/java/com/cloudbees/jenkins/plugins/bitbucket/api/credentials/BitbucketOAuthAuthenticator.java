@@ -6,10 +6,10 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.github.scribejava.core.builder.ServiceBuilder;
+import com.github.scribejava.core.httpclient.jdk.JDKHttpClientConfig;
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.OAuthConstants;
 import com.github.scribejava.core.oauth.OAuth20Service;
-import com.github.scribejava.httpclient.apache.ApacheHttpClientConfig;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -31,11 +31,11 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
     public BitbucketOAuthAuthenticator(StandardUsernamePasswordCredentials credentials) throws AuthenticationTokenException {
         super(credentials);
 
-        try (SetContextClassLoader cl = new SetContextClassLoader(this.getClass())) {
-            OAuth20Service service = new ServiceBuilder(credentials.getUsername())
-                .apiSecret(credentials.getPassword().getPlainText())
-                .httpClientConfig(ApacheHttpClientConfig.defaultConfig())
-                .build(BitbucketOAuth.instance());
+        try (SetContextClassLoader cl = new SetContextClassLoader(this.getClass());
+                OAuth20Service service = new ServiceBuilder(credentials.getUsername())
+                    .apiSecret(credentials.getPassword().getPlainText())
+                    .httpClientConfig(JDKHttpClientConfig.defaultConfig())
+                    .build(BitbucketOAuth.instance())) {
             token = service.getAccessTokenClientCredentialsGrant();
         } catch (IOException | InterruptedException | ExecutionException e) {
             throw new AuthenticationTokenException(e);

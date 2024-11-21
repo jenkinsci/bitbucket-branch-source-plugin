@@ -147,7 +147,7 @@
    </dependency>
    <dependency>
       <groupId>com.github.scribejava</groupId>
-      <artifactId>scribejava-httpclient-apache</artifactId>
+      <artifactId>scribejava-core</artifactId>
       <version>8.3.3</version>
     </dependency>
   </dependencies>
