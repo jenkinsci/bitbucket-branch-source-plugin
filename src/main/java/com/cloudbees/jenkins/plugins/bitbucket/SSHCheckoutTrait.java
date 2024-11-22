@@ -42,7 +42,6 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
@@ -103,9 +102,8 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateBuilder(SCMBuilder<?, ?> builder) {
-        if (builder instanceof GitSCMBuilder) {
-            ((BitbucketGitSCMBuilder) builder)
-                .withCredentials(credentialsId, BitbucketRepositoryProtocol.SSH);
+        if (builder instanceof BitbucketGitSCMBuilder gitBuilder) {
+            gitBuilder.withCredentials(credentialsId, BitbucketRepositoryProtocol.SSH);
         }
     }
 

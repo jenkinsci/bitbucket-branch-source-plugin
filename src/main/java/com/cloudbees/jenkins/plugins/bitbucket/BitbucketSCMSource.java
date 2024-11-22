@@ -66,7 +66,6 @@ import hudson.model.Item;
 import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.SCM;
 import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
@@ -1006,7 +1005,7 @@ public class BitbucketSCMSource extends SCMSource {
 
         BitbucketAuthenticator authenticator = authenticator();
         return new BitbucketGitSCMBuilder(this, head, revision, null)
-                .withExtension(authenticator == null || sshAuth ? null : new GitClientAuthenticatorExtension(authenticator.getCredentialsForSCM()))
+                .withExtension(new GitClientAuthenticatorExtension(authenticator == null || sshAuth ? null : authenticator.getCredentialsForSCM()))
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                 .withTraits(traits)
                 .build();
