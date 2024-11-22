@@ -66,6 +66,7 @@ import hudson.model.Item;
 import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.SCM;
 import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
@@ -73,6 +74,8 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.io.ObjectStreamException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1002,14 +1005,29 @@ public class BitbucketSCMSource extends SCMSource {
                 .anyMatch(SSHCheckoutTrait.class::isInstance);
 
         BitbucketAuthenticator authenticator = authenticator();
-        return new BitbucketGitSCMBuilder(this, head, revision, null)
-                .withExtension(authenticator == null || sshAuth ? null : new GitClientAuthenticatorExtension(authenticator.getCredentialsForSCM()))
+        GitSCMExtension gitExtension = authenticator == null || sshAuth ? null : new GitClientAuthenticatorExtension(authenticator.getCredentialsForSCM());
+        return new BitbucketGitSCMBuilder(this, head, revision, gitExtension == null ? credentialsId : null)
+                .withExtension(gitExtension)
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                 .withTraits(traits)
                 .build();
     }
 
     private void setPrimaryCloneLinks(List<BitbucketHref> links) {
+        links.forEach(link -> {
+            if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
+                try {
+                    URL linkURL = new URL(link.getHref());
+                    // Remove the username from URL because it will be set into the GIT_URL variable
+                    // credentials used to clone or for push/pull could be different than this will cause a failure
+                    // Restore the behaviour before mirror link feature.
+                    URL cleanURL = new URL(linkURL.getProtocol(), linkURL.getHost(), linkURL.getPort(), linkURL.getFile());
+                    link.setHref(cleanURL.toExternalForm());
+                } catch (MalformedURLException e) {
+                    // do nothing, URL can not be parsed, leave as is
+                }
+            }
+        });
         primaryCloneLinks = links;
     }
 

@@ -67,7 +67,7 @@ public class BitbucketGitSCMRevision extends SCMRevisionImpl {
     /**
      * Returns the author of this revision in GIT format.
      *
-     * @return commit author in the following format &gt;name&lt; &gt;email&lt;
+     * @return commit author in the following format &lt;name&gt; &lt;email&gt;
      */
     public String getAuthor() {
         return author;
