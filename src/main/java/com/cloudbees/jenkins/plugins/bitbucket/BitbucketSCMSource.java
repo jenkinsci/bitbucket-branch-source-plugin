@@ -48,6 +48,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIC
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -66,6 +67,7 @@ import hudson.model.Item;
 import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.SCM;
 import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
@@ -377,6 +379,7 @@ public class BitbucketSCMSource extends SCMSource {
         return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
     }
 
+    @Override
     @NonNull
     public List<SCMSourceTrait> getTraits() {
         return Collections.unmodifiableList(traits);
@@ -397,11 +400,11 @@ public class BitbucketSCMSource extends SCMSource {
         if (endpoint != null) {
             // we have a match
             setServerUrl(endpoint.getServerUrl());
-            return;
+        } else {
+            LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
+                    + "from the global configuration.", url);
+            setServerUrl(url);
         }
-        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
-                + "from the global configuration.", url);
-        setServerUrl(url);
     }
 
     @Deprecated
@@ -422,8 +425,8 @@ public class BitbucketSCMSource extends SCMSource {
     @CheckForNull
     public String getCheckoutCredentialsId() {
         for (SCMSourceTrait t : traits) {
-            if (t instanceof SSHCheckoutTrait) {
-                return StringUtils.defaultString(((SSHCheckoutTrait) t).getCredentialsId(), DescriptorImpl.ANONYMOUS);
+            if (t instanceof SSHCheckoutTrait sshTrait) {
+                return StringUtils.defaultString(sshTrait.getCredentialsId(), DescriptorImpl.ANONYMOUS);
             }
         }
         return DescriptorImpl.SAME;
@@ -446,8 +449,8 @@ public class BitbucketSCMSource extends SCMSource {
     @NonNull
     public String getIncludes() {
         for (SCMSourceTrait trait : traits) {
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                return ((WildcardSCMHeadFilterTrait) trait).getIncludes();
+            if (trait instanceof WildcardSCMHeadFilterTrait wildcardTrait) {
+                return wildcardTrait.getIncludes();
             }
         }
         return "*";
@@ -588,8 +591,7 @@ public class BitbucketSCMSource extends SCMSource {
                     @Override
                     protected Iterable<BitbucketPullRequest> create() {
                         try {
-                            if (event instanceof HasPullRequests) {
-                                HasPullRequests hasPrEvent = (HasPullRequests) event;
+                            if (event instanceof HasPullRequests hasPrEvent) {
                                 return getBitbucketPullRequestsFromEvent(hasPrEvent, listener);
                             }
 
@@ -1000,12 +1002,34 @@ public class BitbucketSCMSource extends SCMSource {
     public SCM build(SCMHead head, SCMRevision revision) {
         initCloneLinks();
 
-        boolean sshAuth = traits.stream()
-                .anyMatch(SSHCheckoutTrait.class::isInstance);
+        String scmCredentialsId = credentialsId;
 
         BitbucketAuthenticator authenticator = authenticator();
-        return new BitbucketGitSCMBuilder(this, head, revision, null)
-                .withExtension(new GitClientAuthenticatorExtension(authenticator == null || sshAuth ? null : authenticator.getCredentialsForSCM()))
+        GitSCMExtension scmExtension;
+        if (authenticator != null) {
+            // workaround to force git-plugin to use the configured username/password credentialsId as is
+            // remove this workaround as https://github.com/jenkinsci/bitbucket-branch-source-plugin/pull/867 will be merged
+            boolean sshAuth = traits.stream()
+                    .anyMatch(SSHCheckoutTrait.class::isInstance);
+            if (sshAuth) {
+                // trait will do the magic
+                scmCredentialsId = null;
+                scmExtension = new GitClientAuthenticatorExtension(null);
+            } else {
+                StandardUsernameCredentials scmCredentials = authenticator.getCredentialsForSCM();
+                // extension overrides the configured credentialsId with a custom StandardUsernameCredentials provided by the Authenticator
+                scmExtension = new GitClientAuthenticatorExtension(scmCredentials);
+                if (scmCredentials != null) {
+                    // will be overridden by git extension
+                    scmCredentialsId = null;
+                }
+            }
+        } else {
+            scmExtension = new GitClientAuthenticatorExtension(null);
+        }
+
+        return new BitbucketGitSCMBuilder(this, head, revision, scmCredentialsId)
+                .withExtension(scmExtension)
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                 .withTraits(traits)
                 .build();
@@ -1115,20 +1139,18 @@ public class BitbucketSCMSource extends SCMSource {
             template = UriTemplate.fromTemplate(getServerUrl() + CLOUD_REPO_TEMPLATE + "/{branchOrPR}/{prIdOrHead}")
                     .set("owner", repoOwner)
                     .set("repo", repository);
-            if (head instanceof PullRequestSCMHead) {
-                PullRequestSCMHead pr = (PullRequestSCMHead) head;
-                template.set("branchOrPR", "pull-requests").set("prIdOrHead", pr.getId());
+            if (head instanceof PullRequestSCMHead prHead) {
+                template.set("branchOrPR", "pull-requests").set("prIdOrHead", prHead.getId());
             } else {
                 template.set("branchOrPR", "branch").set("prIdOrHead", head.getName());
             }
         } else {
-            if (head instanceof PullRequestSCMHead) {
-                PullRequestSCMHead pr = (PullRequestSCMHead) head;
+            if (head instanceof PullRequestSCMHead prHead) {
                 template = UriTemplate
                         .fromTemplate(getServerUrl() + SERVER_REPO_TEMPLATE + "/pull-requests/{id}/overview")
                         .set("owner", repoOwner)
                         .set("repo", repository)
-                        .set("id", pr.getId());
+                        .set("id", prHead.getId());
             } else {
                 template = UriTemplate
                         .fromTemplate(getServerUrl() + SERVER_REPO_TEMPLATE + "/compare/commits{?sourceBranch}")
@@ -1137,10 +1159,9 @@ public class BitbucketSCMSource extends SCMSource {
                         .set("sourceBranch", Constants.R_HEADS + head.getName());
             }
         }
-        if (head instanceof PullRequestSCMHead) {
-            PullRequestSCMHead pr = (PullRequestSCMHead) head;
-            title = getPullRequestTitleCache().get(pr.getId());
-            ContributorMetadataAction contributor = getPullRequestContributorCache().get(pr.getId());
+        if (head instanceof PullRequestSCMHead prHead) {
+            title = getPullRequestTitleCache().get(prHead.getId());
+            ContributorMetadataAction contributor = getPullRequestContributorCache().get(prHead.getId());
             if (contributor != null) {
                 result.add(contributor);
             }
@@ -1149,8 +1170,8 @@ public class BitbucketSCMSource extends SCMSource {
         result.add(new BitbucketLink("icon-bitbucket-branch", url));
         result.add(new ObjectMetadataAction(title, null, url));
         SCMSourceOwner owner = getOwner();
-        if (owner instanceof Actionable) {
-            for (BitbucketDefaultBranch p : ((Actionable) owner).getActions(BitbucketDefaultBranch.class)) {
+        if (owner instanceof Actionable actionable) {
+            for (BitbucketDefaultBranch p : actionable.getActions(BitbucketDefaultBranch.class)) {
                 if (StringUtils.equals(getRepoOwner(), p.getRepoOwner())
                         && StringUtils.equals(repository, p.getRepository())
                         && StringUtils.equals(p.getDefaultBranch(), head.getName())) {
@@ -1371,8 +1392,7 @@ public class BitbucketSCMSource extends SCMSource {
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
                                                   @QueryParameter String credentialsId,
-                                                  @QueryParameter String repoOwner)
-                throws IOException, InterruptedException {
+                                                  @QueryParameter String repoOwner) throws IOException {
             BitbucketSupplier<ListBoxModel> listBoxModelSupplier = bitbucket -> {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
@@ -1439,6 +1459,7 @@ public class BitbucketSCMSource extends SCMSource {
             return result;
         }
 
+        @Override
         public List<SCMSourceTrait> getTraitsDefaults() {
             return Arrays.asList(
                     new BranchDiscoveryTrait(true, false),
@@ -1465,7 +1486,6 @@ public class BitbucketSCMSource extends SCMSource {
                     request.listener().getLogger().println("    Met criteria");
                 } else {
                     request.listener().getLogger().println("    Does not meet criteria");
-                    return;
                 }
 
             }
@@ -1484,8 +1504,8 @@ public class BitbucketSCMSource extends SCMSource {
         @NonNull
         @Override
         public Probe create(@NonNull final SCMHead head, @CheckForNull final I revisionInfo) throws IOException, InterruptedException {
-            final String hash = (revisionInfo instanceof BitbucketCommit) //
-                    ? ((BitbucketCommit) revisionInfo).getHash() //
+            final String hash = (revisionInfo instanceof BitbucketCommit bbRevision) //
+                    ? bbRevision.getHash() //
                     : (String) revisionInfo;
 
             return new SCMSourceCriteria.Probe() {
@@ -1501,8 +1521,8 @@ public class BitbucketSCMSource extends SCMSource {
                     try {
                         BitbucketCommit commit = null;
                         if (hash != null) {
-                            commit = (revisionInfo instanceof BitbucketCommit) //
-                                    ? (BitbucketCommit) revisionInfo //
+                            commit = (revisionInfo instanceof BitbucketCommit bbRevision) //
+                                    ? bbRevision //
                                     : bitbucket.resolveCommit(hash);
                         }
 
@@ -1559,8 +1579,7 @@ public class BitbucketSCMSource extends SCMSource {
             BitbucketCommit targetCommit = asCommit(targetInput);
 
             SCMRevision revision;
-            if (head instanceof PullRequestSCMHead) {
-                PullRequestSCMHead prHead = (PullRequestSCMHead) head;
+            if (head instanceof PullRequestSCMHead prHead) {
                 SCMHead targetHead = prHead.getTarget();
 
                 return new PullRequestSCMRevision( //
@@ -1574,10 +1593,10 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         private BitbucketCommit asCommit(I input) throws IOException, InterruptedException {
-            if (input instanceof String) {
-                return client.resolveCommit((String) input);
-            } else if (input instanceof BitbucketCommit) {
-                return (BitbucketCommit) input;
+            if (input instanceof String value) {
+                return client.resolveCommit(value);
+            } else if (input instanceof BitbucketCommit commit) {
+                return commit;
             }
             return null;
         }
@@ -1626,14 +1645,14 @@ public class BitbucketSCMSource extends SCMSource {
 
         public void unwrap() throws IOException, InterruptedException {
             Throwable cause = getCause();
-            if (cause instanceof IOException) {
-                throw (IOException) cause;
+            if (cause instanceof IOException ioEx) {
+                throw ioEx;
             }
-            if (cause instanceof InterruptedException) {
-                throw (InterruptedException) cause;
+            if (cause instanceof InterruptedException interruptedEx) {
+                throw interruptedEx;
             }
-            if (cause instanceof RuntimeException) {
-                throw (RuntimeException) cause;
+            if (cause instanceof RuntimeException rtEx) {
+                throw rtEx;
             }
             throw this;
         }
