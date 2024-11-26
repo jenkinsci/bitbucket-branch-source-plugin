@@ -1,10 +1,15 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import hudson.plugins.git.GitSCM;
+import hudson.scm.SCM;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -25,6 +30,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketSCMSourceTest {
@@ -421,6 +427,21 @@ public class BitbucketSCMSourceTest {
         assertThat(instance.getIncludes(), is("*"));
         assertThat(instance.getExcludes(), is(""));
         assertThat(instance.isAutoRegisterHook(), is(false));
+    }
+
+    @Test
+    public void test_that_clone_url_does_not_contains_username() {
+        BranchSCMHead head = new BranchSCMHead("master");
+        BitbucketPullRequestCommit commit = new BitbucketPullRequestCommit();
+        commit.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d2");
+        commit.setDate(new Date());
+
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repo");
+        BitbucketMockApiFactory.add(instance.getServerUrl(), BitbucketIntegrationClientFactory.getApiMockClient(instance.getServerUrl()));
+        SCM scm = instance.build(head, new BitbucketGitSCMRevision(head, commit));
+        assertInstanceOf(GitSCM.class, scm);
+        GitSCM gitSCM = (GitSCM) scm;
+        assertThat(gitSCM.getUserRemoteConfigs().get(0).getUrl(), is("https://bitbucket.org/amuniz/test-repos.git"));
     }
 
     @Test

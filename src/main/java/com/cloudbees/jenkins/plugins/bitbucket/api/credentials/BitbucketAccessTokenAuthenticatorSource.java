@@ -39,7 +39,7 @@ public class BitbucketAccessTokenAuthenticatorSource extends AuthenticationToken
      * @return whether this can authenticate given the context
      */
     @Override
-    public boolean isFit(AuthenticationTokenContext ctx) {
+    protected boolean isFit(AuthenticationTokenContext<? super BitbucketAccessTokenAuthenticator> ctx) {
         return ctx.mustHave(BitbucketAuthenticator.SCHEME, "https")
             && (ctx.mustHave(BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_SERVER)
             || ctx.mustHave(BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_CLOUD));

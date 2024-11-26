@@ -36,7 +36,6 @@ import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -64,12 +63,14 @@ public class BitbucketCloudApiClientTest {
     public void verifyUpdateWebhookURL() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
         IRequestAudit audit = ((IRequestAudit) client).getAudit();
-        Optional<? extends BitbucketWebHook> webHook = client.getWebHooks().stream().filter(h -> h.getDescription().contains("Jenkins")).findFirst();
+        Optional<? extends BitbucketWebHook> webHook = client.getWebHooks().stream()
+                .filter(h -> h.getDescription().contains("Jenkins"))
+                .findFirst();
         assertTrue(webHook.isPresent());
 
         reset(audit);
         client.updateCommitWebHook(webHook.get());
-        verify(audit).request(Mockito.eq("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
+        verify(audit).request("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D");
     }
 
 }

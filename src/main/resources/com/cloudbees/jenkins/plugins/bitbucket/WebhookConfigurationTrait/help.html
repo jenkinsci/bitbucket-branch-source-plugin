@@ -1,9 +1,12 @@
 <div>
     <p>
-        Sets the value for committersToIgnore in the Bitbucket Webhook. Value should be a comma separated string.
+        Comma separated list of user ids in bitbucket to ignore commits from for triggering the webhook.
     </p>
     <p>
-        committerToIgnore is used to prevent triggering Jenkins builds when commits by certain users
-        are made.
+        committerToIgnore is used exclusively by the "Post Webhooks for Bitbucket" plugin to prevent a server notification
+        from being sent to the Jenkins instance to avoid triggering builds when commits are made by certain users.
+    </p>
+    <p>
+        References could be found <a href="https://help.moveworkforward.com/BPW/how-to-manage-configurations-using-post-webhooks-f#HowtomanageconfigurationsusingPostWebhooksforBitbucketAPIs?-UpdateapostwebhookbyID">here</a>.
     </p>
 </div>

@@ -8,7 +8,6 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Assert;
@@ -36,7 +35,7 @@ public class BitbucketServerAPIClientTest {
     @Rule
     public JenkinsRule r = new JenkinsRule();
     @Rule
-    public LoggerRule logger = new LoggerRule().record(BitbucketServerAPIClient.class, Level.FINE);
+    public LoggerRule logger = new LoggerRule().record(BitbucketServerIntegrationClient.class, Level.FINE);
 
     @Test
     @WithoutJenkins
@@ -74,18 +73,18 @@ public class BitbucketServerAPIClientTest {
 
     @Test
     public void filterArchivedRepositories() throws Exception {
-        BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "foo", "test-repos");;
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "foo", "test-repos");
         List<? extends BitbucketRepository> repos = client.getRepositories();
-        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).collect(Collectors.toList());
+        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).toList();
         assertThat(names, not(hasItem("bar-archived")));
         assertThat(names, is(List.of("bar-active")));
     }
 
     @Test
     public void sortRepositoriesByName() throws Exception {
-        BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "amuniz", "test-repos");;
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "amuniz", "test-repos");
         List<? extends BitbucketRepository> repos = client.getRepositories();
-        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).collect(Collectors.toList());
+        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).toList();
         assertThat(names, is(List.of("another-repo", "dogs-repo", "test-repos")));
     }
 

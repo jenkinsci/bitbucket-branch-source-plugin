@@ -61,7 +61,7 @@ public class BitbucketBuildStatusNotifications {
     private static String getRootURL(@NonNull Run<?, ?> build) {
         JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
 
-        if (cfg == null || cfg.getUrl() == null) {
+        if (cfg.getUrl() == null) {
             throw new IllegalStateException("Could not determine Jenkins URL.");
         }
 
@@ -118,6 +118,8 @@ public class BitbucketBuildStatusNotifications {
             return;
         }
 
+        BitbucketSCMSourceContext context = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits(source.getTraits()); // NOSONAR
         final Result result = build.getResult();
         final String name = build.getFullDisplayName(); // use the build number as the display name of the status
         String buildDescription = build.getDescription();
@@ -127,8 +129,7 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit looks good.");
             state = BitbucketBuildStatus.Status.SUCCESSFUL;
         } else if (Result.UNSTABLE.equals(result)) {
-            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
-            BitbucketSCMSourceContext context = new BitbucketSCMSourceContext(null, SCMHeadObserver.none()).withTraits(source.getTraits());
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit may have some failing tests.");
             if (context.sendSuccessNotificationForUnstableBuild()) {
                 state = BitbucketBuildStatus.Status.SUCCESSFUL;
             } else {
@@ -138,17 +139,21 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "There was a failure building this commit.");
             state = BitbucketBuildStatus.Status.FAILED;
         } else if (Result.NOT_BUILT.equals(result)) {
-            // Bitbucket Cloud and Server support different build states.
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
-            BitbucketSCMSourceContext context = new BitbucketSCMSourceContext(null, SCMHeadObserver.none()).withTraits(source.getTraits());
             if (context.disableNotificationForNotBuildJobs()) {
-                state = (bitbucket instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : null;
+                // Bitbucket Cloud and Server support different build states.
+                state = (bitbucket instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
             } else {
-                state = BitbucketBuildStatus.Status.SUCCESSFUL;
+                state = BitbucketBuildStatus.Status.FAILED;
             }
         } else if (result != null) { // ABORTED etc.
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
-            state = BitbucketBuildStatus.Status.FAILED;
+            if (context.sendStopNotificationForAbortBuild()) {
+                // Bitbucket Cloud and Server support different build states.
+                state = (bitbucket instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
+            } else {
+                state = BitbucketBuildStatus.Status.FAILED;
+            }
         } else {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "The build is in progress...");
             state = BitbucketBuildStatus.Status.INPROGRESS;
@@ -177,28 +182,28 @@ public class BitbucketBuildStatusNotifications {
         if (sourceContext.notificationsDisabled()) {
             return;
         }
-        SCMRevision r = SCMRevisionAction.getRevision(source, build);
-        if (r == null) {
+        SCMRevision rev = SCMRevisionAction.getRevision(source, build);
+        if (rev == null) {
             return;
         }
-        String hash = getHash(r);
+        String hash = getHash(rev);
         if (hash == null) {
             return;
         }
         boolean shareBuildKeyBetweenBranchAndPR = sourceContext
             .filters().stream()
-            .anyMatch(filter -> filter instanceof ExcludeOriginPRBranchesSCMHeadFilter);
+            .anyMatch(ExcludeOriginPRBranchesSCMHeadFilter.class::isInstance);
 
         String key;
         BitbucketApi bitbucket;
-        if (r instanceof PullRequestSCMRevision) {
+        if (rev instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
-            PullRequestSCMHead head = (PullRequestSCMHead) r.getHead();
+            PullRequestSCMHead head = (PullRequestSCMHead) rev.getHead();
             key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
             bitbucket = source.buildBitbucketClient(head);
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
-            key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
+            key = getBuildKey(build, rev.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
             bitbucket = source.buildBitbucketClient();
         }
         createStatus(build, listener, bitbucket, key, hash);
@@ -239,7 +244,7 @@ public class BitbucketBuildStatusNotifications {
      * Sends notifications to Bitbucket on Checkout (for the "In Progress" Status).
      */
     @Extension
-    public static class JobCheckOutListener extends SCMListener {
+    public static class JobCheckoutListener extends SCMListener {
 
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
