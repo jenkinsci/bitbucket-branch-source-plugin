@@ -92,7 +92,7 @@ public class BitbucketSCMSourceBuildTest {
     @Test
     @Issue("JENKINS-73471")
     @WithTimeout(120)
-    public void buildWhenSetSSHCheckoutTraitThenNoAuthenticatorExtension() throws Exception {
+    public void buildWhenSetSSHCheckoutTraitThenEmptyAuthenticatorExtension() throws Exception {
         String jenkinsFile = "Jenkinsfile";
         sampleRepo.init();
         sampleRepo.write(jenkinsFile, "node { checkout scm }");
@@ -136,7 +136,8 @@ public class BitbucketSCMSourceBuildTest {
         assertThat(remoteConfig.getCredentialsId(), is(sshCredentials.getId()));
         assertThat(build.getExtensions(), containsInAnyOrder(
             instanceOf(BuildChooserSetting.class),
-            instanceOf(GitSCMSourceDefaults.class))
+            instanceOf(GitSCMSourceDefaults.class),
+            instanceOf(GitClientAuthenticatorExtension.class))
         );
 
         // Create a Pipeline with CpsScmFlowDefinition based of the GitSCM produced
