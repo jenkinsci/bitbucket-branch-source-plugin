@@ -58,9 +58,12 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
+import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
@@ -70,6 +73,8 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.io.ObjectStreamException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,6 +92,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.MergeWithGitSCMExtension;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
@@ -139,6 +145,14 @@ public class BitbucketSCMSource extends SCMSource {
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
     private static final String SERVER_REPO_TEMPLATE = "/projects{/owner}/repos{/repo}";
+
+    /**
+     * Mapping classes after refactoring for backward compatibility.
+     */
+    @Initializer(before = InitMilestone.PLUGINS_STARTED)
+    public static void aliases() {
+        Items.XSTREAM2.addCompatibilityAlias("com.cloudbees.jenkins.plugins.bitbucket.MergeWithGitSCMExtension", MergeWithGitSCMExtension.class);
+    }
 
     /** How long to delay events received from Bitbucket in order to allow the API caches to sync. */
     private static /*mostly final*/ int eventDelaySeconds =
@@ -991,13 +1005,27 @@ public class BitbucketSCMSource extends SCMSource {
 
         BitbucketAuthenticator authenticator = authenticator();
         return new BitbucketGitSCMBuilder(this, head, revision, null)
-                .withExtension(authenticator == null || sshAuth ? null : new GitClientAuthenticatorExtension(authenticator.getCredentialsForSCM()))
+                .withExtension(new GitClientAuthenticatorExtension(authenticator == null || sshAuth ? null : authenticator.getCredentialsForSCM()))
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                 .withTraits(traits)
                 .build();
     }
 
     private void setPrimaryCloneLinks(List<BitbucketHref> links) {
+        links.forEach(link -> {
+            if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
+                try {
+                    URL linkURL = new URL(link.getHref());
+                    // Remove the username from URL because it will be set into the GIT_URL variable
+                    // credentials used to clone or for push/pull could be different than this will cause a failure
+                    // Restore the behaviour before mirror link feature.
+                    URL cleanURL = new URL(linkURL.getProtocol(), linkURL.getHost(), linkURL.getPort(), linkURL.getFile());
+                    link.setHref(cleanURL.toExternalForm());
+                } catch (MalformedURLException e) {
+                    // do nothing, URL can not be parsed, leave as is
+                }
+            }
+        });
         primaryCloneLinks = links;
     }
 

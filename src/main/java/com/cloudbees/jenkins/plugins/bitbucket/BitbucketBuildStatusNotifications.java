@@ -129,7 +129,7 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit looks good.");
             state = BitbucketBuildStatus.Status.SUCCESSFUL;
         } else if (Result.UNSTABLE.equals(result)) {
-            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit has test failures.");
+            statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit may have some failing tests.");
             if (context.sendSuccessNotificationForUnstableBuild()) {
                 state = BitbucketBuildStatus.Status.SUCCESSFUL;
             } else {
@@ -182,11 +182,11 @@ public class BitbucketBuildStatusNotifications {
         if (sourceContext.notificationsDisabled()) {
             return;
         }
-        SCMRevision r = SCMRevisionAction.getRevision(source, build);
-        if (r == null) {
+        SCMRevision rev = SCMRevisionAction.getRevision(source, build);
+        if (rev == null) {
             return;
         }
-        String hash = getHash(r);
+        String hash = getHash(rev);
         if (hash == null) {
             return;
         }
@@ -196,14 +196,14 @@ public class BitbucketBuildStatusNotifications {
 
         String key;
         BitbucketApi bitbucket;
-        if (r instanceof PullRequestSCMRevision) {
+        if (rev instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
-            PullRequestSCMHead head = (PullRequestSCMHead) r.getHead();
+            PullRequestSCMHead head = (PullRequestSCMHead) rev.getHead();
             key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
             bitbucket = source.buildBitbucketClient(head);
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
-            key = getBuildKey(build, r.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
+            key = getBuildKey(build, rev.getHead().getName(), shareBuildKeyBetweenBranchAndPR);
             bitbucket = source.buildBitbucketClient();
         }
         createStatus(build, listener, bitbucket, key, hash);

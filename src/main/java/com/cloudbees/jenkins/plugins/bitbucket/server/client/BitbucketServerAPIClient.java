@@ -42,6 +42,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.internal.api.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
@@ -65,16 +66,12 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Main;
-import hudson.ProxyConfiguration;
 import hudson.Util;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -87,21 +84,13 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
-import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -113,9 +102,6 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
@@ -130,12 +116,11 @@ import static java.util.Objects.requireNonNull;
  * Bitbucket API client.
  * Developed and test with Bitbucket 4.3.2
  */
-public class BitbucketServerAPIClient implements BitbucketApi {
+public class BitbucketServerAPIClient extends AbstractBitbucketApi implements BitbucketApi {
 
     // Max avatar image length in bytes
     private static final int MAX_AVATAR_SIZE = 16384;
 
-    private static final Logger LOGGER = Logger.getLogger(BitbucketServerAPIClient.class.getName());
     private static final String API_BASE_PATH = "/rest/api/1.0";
     private static final String API_REPOSITORIES_PATH = API_BASE_PATH + "/projects/{owner}/repos{?start,limit}";
     private static final String API_REPOSITORY_PATH = API_BASE_PATH + "/projects/{owner}/repos/{repo}";
@@ -165,7 +150,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_MIRRORS_PATH = "/rest/mirroring/1.0/mirrorServers";
 
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
-    private static final int API_RATE_LIMIT_STATUS_CODE = 429;
     private static final Duration API_RATE_LIMIT_INITIAL_SLEEP = Main.isUnitTest ? Duration.ofMillis(100) : Duration.ofSeconds(5);
     private static final Duration API_RATE_LIMIT_MAX_SLEEP = Duration.ofMinutes(30);
 
@@ -189,8 +173,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
      * Almost @NonNull (but null is accepted for anonymous access).
      */
     private final BitbucketAuthenticator authenticator;
-
-    private HttpClientContext context;
 
     private final String baseURL;
 
@@ -380,7 +362,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
             }
         } catch (NullPointerException e) {
-            LOGGER.log(Level.SEVERE, "setupClosureForPRBranch", e);
+            logger.log(Level.SEVERE, "setupClosureForPRBranch", e);
         }
     }
 
@@ -496,7 +478,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     @NonNull
     public BitbucketMirroredRepository getMirroredRepository(@NonNull String url) throws IOException, InterruptedException {
         HttpGet httpget = new HttpGet(url);
-        var response = getRequest(httpget);
+        String response = getRequest(httpget);
         try {
             return JsonParser.toJava(response, BitbucketMirroredRepository.class);
         } catch (IOException e) {
@@ -572,7 +554,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             String response = getRequest(url);
             return JsonParser.toJava(response, BitbucketServerBranch.class).getName();
         } catch (FileNotFoundException e) {
-            LOGGER.log(Level.FINE, "Could not find default branch for {0}/{1}",
+            logger.log(Level.FINE, "Could not find default branch for {0}/{1}",
                     new Object[]{this.owner, this.repositoryName});
             return null;
         } catch (IOException e) {
@@ -717,7 +699,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 break;
 
             default:
-                LOGGER.log(Level.WARNING, "Cannot register {0} webhook.", webhookImplementation);
+                logger.log(Level.WARNING, "Cannot register {0} webhook.", webhookImplementation);
                 break;
         }
     }
@@ -748,7 +730,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 break;
 
             default:
-                LOGGER.log(Level.WARNING, "Cannot update {0} webhook.", webhookImplementation);
+                logger.log(Level.WARNING, "Cannot update {0} webhook.", webhookImplementation);
                 break;
         }
     }
@@ -779,7 +761,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 break;
 
             default:
-                LOGGER.log(Level.WARNING, "Cannot remove {0} webhook.", webhookImplementation);
+                logger.log(Level.WARNING, "Cannot remove {0} webhook.", webhookImplementation);
                 break;
         }
     }
@@ -961,30 +943,14 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
         try(CloseableHttpClient client = getHttpClient(httpget);
                 CloseableHttpResponse response = executeMethod(client, httpget)) {
-            String content;
-            long len = response.getEntity().getContentLength();
-            if (len == 0) {
-                content = "";
-            } else {
-                ByteArrayOutputStream buf;
-                if (len > 0 && len <= Integer.MAX_VALUE / 2) {
-                    buf = new ByteArrayOutputStream((int) len);
-                } else {
-                    buf = new ByteArrayOutputStream();
-                }
-                try (InputStream is = response.getEntity().getContent()) {
-                    IOUtils.copy(is, buf);
-                }
-                content = new String(buf.toByteArray(), StandardCharsets.UTF_8);
-            }
+            String content = getResponseContent(response);
             EntityUtils.consume(response.getEntity());
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("Request: " + httpget);
             }
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                throw new BitbucketRequestException(response.getStatusLine().getStatusCode(),
-                        "HTTP request error. Status: " + response.getStatusLine().getStatusCode()
-                                + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
+            if (statusCode != HttpStatus.SC_OK) {
+                throw buildResponseException(response, content);
             }
             return content;
         } catch (BitbucketRequestException | FileNotFoundException e) {
@@ -1072,41 +1038,6 @@ public class BitbucketServerAPIClient implements BitbucketApi {
         return httpClientBuilder.build();
     }
 
-    private void setClientProxyParams(String host, HttpClientBuilder builder) {
-        Jenkins jenkins = Jenkins.get();
-        ProxyConfiguration proxyConfig = null;
-        if (jenkins != null) {
-            proxyConfig = jenkins.proxy;
-        }
-
-        final Proxy proxy;
-
-        if (proxyConfig != null) {
-            URI hostURI = URI.create(host);
-            proxy = proxyConfig.createProxy(hostURI.getHost());
-        } else {
-             proxy = Proxy.NO_PROXY;
-        }
-
-        if (proxy.type() != Proxy.Type.DIRECT) {
-            final InetSocketAddress proxyAddress = (InetSocketAddress)proxy.address();
-            LOGGER.log(Level.FINE, "Jenkins proxy: {0}", proxy.address());
-            builder.setProxy(new HttpHost(proxyAddress.getHostName(), proxyAddress.getPort()));
-            String username = proxyConfig.getUserName();
-            String password = proxyConfig.getPassword();
-            if (username != null && !"".equals(username.trim())) {
-                LOGGER.fine("Using proxy authentication (user=" + username + ")");
-                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
-                AuthCache authCache = new BasicAuthCache();
-                authCache.put(HttpHost.create(proxyAddress.getHostName()), new BasicScheme());
-                context = HttpClientContext.create();
-                context.setCredentialsProvider(credentialsProvider);
-                context.setAuthCache(authCache);
-            }
-        }
-    }
-
     private int getRequestStatus(String path) throws IOException, InterruptedException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
         if (authenticator != null) {
@@ -1137,16 +1068,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private String postRequest(String path, String content) throws IOException, InterruptedException {
         HttpPost request = new HttpPost(this.baseURL + path);
         request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
-        LOGGER.log(Level.FINEST, content);
         return postRequest(request);
-    }
-
-    private String nameValueToJson(NameValuePair[] params) {
-        JSONObject o = new JSONObject();
-        for (NameValuePair pair : params) {
-            o.put(pair.getName(), pair.getValue());
-        }
-        return o.toString();
     }
 
     private String postRequest(HttpPost httppost) throws IOException, InterruptedException {
@@ -1158,46 +1080,18 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             authenticator.configureRequest(request);
         }
 
-        try(CloseableHttpClient client = getHttpClient(request);
+        try (CloseableHttpClient client = getHttpClient(request);
                 CloseableHttpResponse response = executeMethod(client, request)) {
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NO_CONTENT) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_NO_CONTENT) {
                 EntityUtils.consume(response.getEntity());
                 // 204, no content
                 return "";
             }
-            String content;
-            long len = -1L;
-            Header[] headers = request.getHeaders("Content-Length");
-            if (headers != null && headers.length > 0) {
-                int i = headers.length - 1;
-                len = -1L;
-                while (i >= 0) {
-                    Header header = headers[i];
-                    try {
-                        len = Long.parseLong(header.getValue());
-                        break;
-                    } catch (NumberFormatException var5) {
-                        --i;
-                    }
-                }
-            }
-            if (len == 0) {
-                content = "";
-            } else {
-                ByteArrayOutputStream buf;
-                if (len > 0 && len <= Integer.MAX_VALUE / 2) {
-                    buf = new ByteArrayOutputStream((int) len);
-                } else {
-                    buf = new ByteArrayOutputStream();
-                }
-                try (InputStream is = response.getEntity().getContent()) {
-                    IOUtils.copy(is, buf);
-                }
-                content = new String(buf.toByteArray(), StandardCharsets.UTF_8);
-            }
+            String content = getResponseContent(response);
             EntityUtils.consume(response.getEntity());
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
-                throw new BitbucketRequestException(response.getStatusLine().getStatusCode(), "HTTP request error. Status: " + response.getStatusLine().getStatusCode() + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
+            if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+                throw new BitbucketRequestException(statusCode, "HTTP request error. Status: " + statusCode + ": " + response.getStatusLine().getReasonPhrase() + ".\n" + response);
             }
             return content;
         } finally {
@@ -1252,12 +1146,12 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             String type = (String) file.get("type");
             List<String> components = (List<String>) ((Map)file.get("path")).get("components");
             SCMFile.Type fileType = null;
-            if(type.equals("FILE")){
+            if (type.equals("FILE")) {
                 fileType = SCMFile.Type.REGULAR_FILE;
             } else if(type.equals("DIRECTORY")){
                 fileType = SCMFile.Type.DIRECTORY;
             }
-            if(components.size() > 0 && fileType != null){
+            if (!components.isEmpty() && fileType != null) {
                 // revision is set to null as fetched values from server API do not give us revision hash
                 // Later on hash is not needed anyways when file content is fetched from server API
                 files.add(new BitbucketSCMFile(parent, components.get(0), fileType, null));
@@ -1290,7 +1184,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
             response = getRequest(url);
             content = collectLines(response, lines);
         }
-        return IOUtils.toInputStream(StringUtils.join(lines,'\n'), "UTF-8");
+        return IOUtils.toInputStream(StringUtils.join(lines,'\n'), StandardCharsets.UTF_8);
     }
 
     private Map<String,Object> collectLines(String response, final List<String> lines) throws IOException {
@@ -1319,7 +1213,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
              * change this to a more precise sleep.
              * TODO: It would be better to log this to a context-appropriate TaskListener, e.g. an org/repo scan log.
              */
-            LOGGER.log(Level.FINE, "Bitbucket server API rate limit reached, sleeping for {0} before retrying",
+            logger.log(Level.FINE, "Bitbucket server API rate limit reached, sleeping for {0} before retrying",
                     sleepDuration);
             Thread.sleep(sleepDuration.toMillis());
             // Duration increases exponentially: 5s, 7s, 10s, 15s, 22s, ... 6m6s, 9m9s.

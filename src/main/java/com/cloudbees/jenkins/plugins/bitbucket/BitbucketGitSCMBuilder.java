@@ -192,8 +192,8 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     public BitbucketGitSCMBuilder withBitbucketRemote() {
         SCMHead head = head();
         String headName = head.getName();
-        if (head instanceof PullRequestSCMHead) {
-            withPullRequestRemote((PullRequestSCMHead) head, headName);
+        if (head instanceof PullRequestSCMHead prHead) {
+            withPullRequestRemote(prHead, headName);
         } else if (head instanceof TagSCMHead) {
             withTagRemote(headName);
         } else {
@@ -322,19 +322,19 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     @Override
     public GitSCM build() {
         withBitbucketRemote();
-        SCMHead h = head();
-        SCMRevision r = revision();
+        SCMHead head = head();
+        SCMRevision rev = revision();
         try {
-            if (h instanceof PullRequestSCMHead) {
-                withHead(new SCMHead(((PullRequestSCMHead) h).getBranchName()));
-                if (r instanceof PullRequestSCMRevision) {
-                    withRevision(((PullRequestSCMRevision) r).getPull());
+            if (head instanceof PullRequestSCMHead prHead) {
+                withHead(new SCMHead(prHead.getBranchName()));
+                if (rev instanceof PullRequestSCMRevision prRev) {
+                    withRevision(prRev.getPull());
                 }
             }
             return super.build();
         } finally {
-            withHead(h);
-            withRevision(r);
+            withHead(head);
+            withRevision(rev);
         }
     }
 }

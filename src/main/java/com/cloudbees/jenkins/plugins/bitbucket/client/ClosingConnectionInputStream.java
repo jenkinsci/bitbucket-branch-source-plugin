@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 
 public class ClosingConnectionInputStream extends InputStream {
@@ -13,16 +13,16 @@ public class ClosingConnectionInputStream extends InputStream {
 
     private final HttpRequestBase method;
 
-    private final PoolingHttpClientConnectionManager connectionManager;
+    private final HttpClientConnectionManager connectionManager;
 
     private final InputStream delegate;
 
     public ClosingConnectionInputStream(final CloseableHttpResponse response, final HttpRequestBase method,
-            final PoolingHttpClientConnectionManager connectionManager)
+            final HttpClientConnectionManager connectionmanager)
             throws UnsupportedOperationException, IOException {
         this.response = response;
         this.method = method;
-        this.connectionManager = connectionManager;
+        this.connectionManager = connectionmanager;
         this.delegate = response.getEntity().getContent();
     }
 

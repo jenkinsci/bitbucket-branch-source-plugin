@@ -48,7 +48,7 @@ public class BitbucketIntegrationClientFactory {
     public interface IRequestAudit {
         default void request(String url) {
             // mockito audit
-        };
+        }
 
         IRequestAudit getAudit();
 
@@ -58,7 +58,7 @@ public class BitbucketIntegrationClientFactory {
                     throw new IllegalStateException("Payload for the REST path " + path + " could not be found: " + payloadPath);
                 }
                 HttpEntity entity = mock(HttpEntity.class);
-                String jsonString = IOUtils.toString(json);
+                String jsonString = IOUtils.toString(json, StandardCharsets.UTF_8);
                 when(entity.getContentLength()).thenReturn((long)jsonString.getBytes(StandardCharsets.UTF_8).length);
                 when(entity.getContent()).thenReturn(new StringInputStream(jsonString));
 
