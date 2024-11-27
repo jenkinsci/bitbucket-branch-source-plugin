@@ -31,6 +31,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.model.ItemGroup;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -48,6 +49,8 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.impl.NullSCMSource;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
@@ -100,8 +103,8 @@ public class BitbucketBuildStatusNotifications {
         @NonNull BitbucketApi bitbucket, @NonNull String key, @NonNull String hash)
             throws IOException, InterruptedException {
 
-        final SCMSource source = SCMSource.SourceByItem.findSource(build.getParent());
-        if (!(source instanceof BitbucketSCMSource)) {
+        final BitbucketSCMSource source = findBitbucketSCMSource(build);
+        if (source == null) {
             return;
         }
 
@@ -172,6 +175,13 @@ public class BitbucketBuildStatusNotifications {
 
     private static @CheckForNull BitbucketSCMSource findBitbucketSCMSource(Run<?, ?> build) {
         SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
+        if (s instanceof NullSCMSource) {
+            // for instance PR merged on Bitbucket since the build has been started
+            ItemGroup<?> grandFather = build.getParent().getParent();
+            if (grandFather instanceof SCMSourceOwner) {
+                s = ((SCMSourceOwner) grandFather).getSCMSources().get(0);
+            }
+        }
         return s instanceof BitbucketSCMSource ? (BitbucketSCMSource) s : null;
     }
 
