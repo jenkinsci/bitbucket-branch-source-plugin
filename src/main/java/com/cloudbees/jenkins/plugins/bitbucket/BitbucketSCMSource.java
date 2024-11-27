@@ -36,6 +36,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
@@ -48,7 +49,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIC
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -1015,14 +1015,13 @@ public class BitbucketSCMSource extends SCMSource {
                 // trait will do the magic
                 scmCredentialsId = null;
                 scmExtension = new GitClientAuthenticatorExtension(null);
+            } else if (authenticator instanceof BitbucketUsernamePasswordAuthenticator) {
+                scmExtension = new GitClientAuthenticatorExtension(null);
             } else {
-                StandardUsernameCredentials scmCredentials = authenticator.getCredentialsForSCM();
                 // extension overrides the configured credentialsId with a custom StandardUsernameCredentials provided by the Authenticator
-                scmExtension = new GitClientAuthenticatorExtension(scmCredentials);
-                if (scmCredentials != null) {
-                    // will be overridden by git extension
-                    scmCredentialsId = null;
-                }
+                scmExtension = new GitClientAuthenticatorExtension(authenticator.getCredentialsForSCM());
+                // will be overridden by git extension
+                scmCredentialsId = null;
             }
         } else {
             scmExtension = new GitClientAuthenticatorExtension(null);
