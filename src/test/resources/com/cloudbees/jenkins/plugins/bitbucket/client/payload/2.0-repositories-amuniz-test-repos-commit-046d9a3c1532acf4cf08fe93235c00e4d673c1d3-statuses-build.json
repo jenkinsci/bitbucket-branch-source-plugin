@@ -1,0 +1,48 @@
+{
+    "key": "fe7e71305b004dd8dd5a124e1dae4c33",
+    "type": "build",
+    "state": "FAILED",
+    "name": "test » feature/test #36",
+    "refname": null,
+    "commit": {
+        "hash": "046d9a3c1532acf4cf08fe93235c00e4d673c1d2",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos/commits/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+            }
+        },
+        "type": "commit"
+    },
+    "url": "https://jenkins.dev.opensoftware.it/job/test/job/feature%252Ftest/36/display/redirect",
+    "repository": {
+        "type": "repository",
+        "full_name": "amuniz/test-repos",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos"
+            },
+            "avatar": {
+                "href": "https://bytebucket.org/ravatar/%7Bf991126e-6825-40ea-a1c2-e72c336ae41e%7D?ts=java"
+            }
+        },
+        "name": "test-repos",
+        "uuid": "{f991126e-6825-40ea-a1c2-e72c336ae41e}"
+    },
+    "description": "There was a failure building this commit.",
+    "created_on": "2024-11-22T10:23:20.512180+00:00",
+    "updated_on": "2024-11-27T16:21:27.750703+00:00",
+    "links": {
+        "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2/statuses/build/fe7e71305b004dd8dd5a124e1dae4c33"
+        },
+        "commit": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/046d9a3c1532acf4cf08fe93235c00e4d673c1d2"
+        }
+    }
+}

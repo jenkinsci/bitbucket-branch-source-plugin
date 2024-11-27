@@ -25,52 +25,87 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
-public class BitbucketCloudApiClientTest {
+class BitbucketCloudApiClientTest {
 
-    public String loadPayload(String api) throws IOException {
+    private String loadPayload(String api) throws IOException {
         try (InputStream is = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + api + "Payload.json")) {
             return IOUtils.toString(is, "UTF-8");
         }
     }
 
     @Test
-    public void get_repository_parse_correctly_date_from_cloud() throws Exception {
-        BitbucketCloudRepository repository = JsonParser.toJava(loadPayload("getRepository"), BitbucketCloudRepository.class);
-        assertNotNull("update on date is null", repository.getUpdatedOn());
-        Date date = DateUtils.getDate(2018, 4, 27, 15, 32, 8, 356);
-        assertThat(repository.getUpdatedOn().getTime(), CoreMatchers.is(date.getTime()));
+    void verify_status_notitication_name_max_length() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketBuildStatus status = new BitbucketBuildStatus();
+        status.setName(RandomStringUtils.randomAlphanumeric(300));
+        status.setState(Status.INPROGRESS);
+        status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d3");
+
+        client.postBuildStatus(status);
+
+        IRequestAudit clientAudit = ((IRequestAudit) client).getAudit();
+        HttpRequestBase request = extractRequest(clientAudit);
+        assertThat(request).isNotNull()
+            .isInstanceOf(HttpPost.class);
+        try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
+            String json = IOUtils.toString(content, StandardCharsets.UTF_8);
+            assertThatJson(json).node("name").isString().hasSize(255);
+        }
+    }
+
+    private HttpRequestBase extractRequest(IRequestAudit clientAudit) {
+        ArgumentCaptor<HttpRequestBase> captor = ArgumentCaptor.forClass(HttpRequestBase.class);
+        verify(clientAudit).request(captor.capture());
+        return captor.getValue();
     }
 
     @Test
-    public void verifyUpdateWebhookURL() throws Exception {
+    void get_repository_parse_correctly_date_from_cloud() throws Exception {
+        BitbucketCloudRepository repository = JsonParser.toJava(loadPayload("getRepository"), BitbucketCloudRepository.class);
+        assertThat(repository.getUpdatedOn()).describedAs("update on date is null").isNotNull();
+        Date expectedDate = DateUtils.getDate(2018, 4, 27, 15, 32, 8, 356);
+        assertThat(repository.getUpdatedOn()).isEqualTo(expectedDate);
+    }
+
+    @Test
+    void verifyUpdateWebhookURL() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
         IRequestAudit audit = ((IRequestAudit) client).getAudit();
         Optional<? extends BitbucketWebHook> webHook = client.getWebHooks().stream()
                 .filter(h -> h.getDescription().contains("Jenkins"))
                 .findFirst();
-        assertTrue(webHook.isPresent());
+        assertThat(webHook).isPresent();
 
         reset(audit);
         client.updateCommitWebHook(webHook.get());
-        verify(audit).request("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D");
+        HttpRequestBase request = extractRequest(audit);
+        assertThat(request).isNotNull()
+            .isInstanceOfSatisfying(HttpPut.class, put ->
+                assertThat(put.getURI()).hasToString("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
     }
 
 }

@@ -509,13 +509,13 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @Override
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
-        postRequest(
-            UriTemplate
-                .fromTemplate(API_COMMIT_STATUS_PATH)
-                .set("hash", status.getHash())
-                .expand(),
-            JsonParser.toJson(status)
-        );
+        BitbucketBuildStatus newStatus = new BitbucketBuildStatus(status);
+        newStatus.setName(truncateMiddle(newStatus.getName(), 255));
+
+        String url = UriTemplate.fromTemplate(API_COMMIT_STATUS_PATH)
+                .set("hash", newStatus.getHash())
+                .expand();
+        postRequest(url, JsonParser.toJson(newStatus));
     }
 
     /**
