@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.internal.api;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.ProxyConfiguration;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,12 +51,21 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
 @Restricted(ProtectedExternally.class)
-public class AbstractBitbucketApi {
+public abstract class AbstractBitbucketApi {
     protected static final int API_RATE_LIMIT_STATUS_CODE = 429;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getName());
     protected HttpClientContext context;
 
+    protected String truncateMiddle(@CheckForNull String value, int maxLength) {
+        int length = StringUtils.length(value);
+        if (length > maxLength) {
+            int halfLength = (maxLength - 3) / 2;
+            return StringUtils.left(value, halfLength) + "..." + StringUtils.substring(value, -halfLength);
+        } else {
+            return value;
+        }
+    }
 
     protected BitbucketRequestException buildResponseException(CloseableHttpResponse response, String errorMessage) {
         String headers = StringUtils.join(response.getAllHeaders(), "\n");

@@ -1,24 +1,37 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
+import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient.API_BROWSE_PATH;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -32,10 +45,37 @@ import static org.mockito.Mockito.when;
 
 public class BitbucketServerAPIClientTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule r = new JenkinsRule();
     @Rule
     public LoggerRule logger = new LoggerRule().record(BitbucketServerIntegrationClient.class, Level.FINE);
+
+    @Test
+    @WithoutJenkins
+    public void verify_status_notitication_name_max_length() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
+        BitbucketBuildStatus status = new BitbucketBuildStatus();
+        status.setName(RandomStringUtils.randomAlphanumeric(300));
+        status.setState(Status.INPROGRESS);
+        status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d3");
+
+        client.postBuildStatus(status);
+
+        IRequestAudit clientAudit = ((IRequestAudit) client).getAudit();
+        HttpRequestBase request = extractRequest(clientAudit);
+        assertThat(request).isNotNull()
+            .isInstanceOf(HttpPost.class);
+        try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
+            String json = IOUtils.toString(content, StandardCharsets.UTF_8);
+            assertThatJson(json).node("name").isString().hasSize(255);
+        }
+    }
+
+    private HttpRequestBase extractRequest(IRequestAudit clientAudit) {
+        ArgumentCaptor<HttpRequestBase> captor = ArgumentCaptor.forClass(HttpRequestBase.class);
+        verify(clientAudit).request(captor.capture());
+        return captor.getValue();
+    }
 
     @Test
     @WithoutJenkins

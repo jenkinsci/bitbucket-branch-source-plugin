@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.util.SetContextClassLoader;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpRequest;
 
 public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
@@ -54,7 +53,7 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
     public StandardUsernameCredentials getCredentialsForSCM() {
         try {
             return new UsernamePasswordCredentialsImpl(
-                    CredentialsScope.GLOBAL, getId(), null, StringUtils.EMPTY, token.getAccessToken());
+                    CredentialsScope.GLOBAL, getId(), null, "x-token-auth", token.getAccessToken());
         } catch (FormException e) {
             throw new RuntimeException(e);
         }
