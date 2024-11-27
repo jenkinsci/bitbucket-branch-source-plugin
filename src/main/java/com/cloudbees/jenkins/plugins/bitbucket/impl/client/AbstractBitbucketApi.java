@@ -23,40 +23,69 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.ServiceUnavailableRetryStrategy;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.util.EntityUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
 @Restricted(ProtectedExternally.class)
-public abstract class AbstractBitbucketApi {
-    protected static final int API_RATE_LIMIT_STATUS_CODE = 429;
-
+public abstract class AbstractBitbucketApi implements AutoCloseable {
     protected final Logger logger = Logger.getLogger(this.getClass().getName());
-    protected HttpClientContext context;
+    private final BitbucketAuthenticator authenticator;
+    private HttpClientContext context;
+
+    protected AbstractBitbucketApi(BitbucketAuthenticator authenticator) {
+        this.authenticator = authenticator;
+    }
 
     protected String truncateMiddle(@CheckForNull String value, int maxLength) {
         int length = StringUtils.length(value);
@@ -109,7 +138,39 @@ public abstract class AbstractBitbucketApi {
         return len;
     }
 
-    protected void setClientProxyParams(String host, HttpClientBuilder builder) {
+    protected HttpClientBuilder setupClientBuilder(@Nullable String host) {
+        int connectTimeout = Integer.getInteger("http.connect.timeout", 10);
+        int connectionRequestTimeout = Integer.getInteger("http.connect.request.timeout", 60);
+        int socketTimeout = Integer.getInteger("http.socket.timeout", 60);
+
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(connectTimeout * 1000)
+                .setConnectionRequestTimeout(connectionRequestTimeout * 1000)
+                .setSocketTimeout(socketTimeout * 1000)
+                .build();
+
+        HttpClientConnectionManager connectionManager = getConnectionManager();
+        ServiceUnavailableRetryStrategy serviceUnavailableStrategy = new ExponentialBackOffServiceUnavailableRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1));
+        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
+                .useSystemProperties()
+                .setConnectionManager(connectionManager)
+                .setConnectionManagerShared(connectionManager != null)
+                .setServiceUnavailableRetryStrategy(serviceUnavailableStrategy)
+                .setRetryHandler(new StandardHttpRequestRetryHandler())
+                .setDefaultRequestConfig(config)
+                .disableCookieManagement();
+
+        if (authenticator != null) {
+            authenticator.configureBuilder(httpClientBuilder);
+
+            context = HttpClientContext.create();
+            authenticator.configureContext(context, getHost());
+        }
+        setClientProxyParams(host, httpClientBuilder);
+        return httpClientBuilder;
+    }
+
+    private void setClientProxyParams(String host, HttpClientBuilder builder) {
         Jenkins jenkins = Jenkins.getInstanceOrNull(); // because unit test
         ProxyConfiguration proxyConfig = jenkins != null ? jenkins.proxy : null;
 
@@ -150,4 +211,142 @@ public abstract class AbstractBitbucketApi {
         }
     }
 
+    @CheckForNull
+    protected abstract HttpClientConnectionManager getConnectionManager();
+
+    @NonNull
+    protected abstract HttpHost getHost();
+
+    @NonNull
+    protected abstract CloseableHttpClient getClient();
+
+    /* for test purpose */
+    protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws IOException {
+        if (authenticator != null) {
+            authenticator.configureRequest(httpMethod);
+        }
+        return getClient().execute(host, httpMethod, context);
+    }
+
+    protected String doRequest(HttpRequestBase request) throws IOException {
+        try (CloseableHttpResponse response =  executeMethod(getHost(), request)) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_NOT_FOUND) {
+                throw new FileNotFoundException("URL: " + request.getURI());
+            }
+            if (statusCode == HttpStatus.SC_NO_CONTENT) {
+                EntityUtils.consume(response.getEntity());
+                // 204, no content
+                return "";
+            }
+            String content = getResponseContent(response);
+            EntityUtils.consume(response.getEntity());
+            if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+                throw buildResponseException(response, content);
+            }
+            return content;
+        } catch (BitbucketRequestException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new IOException("Communication error for url: " + request, e);
+        } finally {
+            release(request);
+        }
+    }
+
+    private void release(HttpRequestBase method) {
+        method.releaseConnection();
+        HttpClientConnectionManager connectionManager = getConnectionManager();
+        if (connectionManager != null) {
+            connectionManager.closeExpiredConnections();
+        }
+    }
+
+    /*
+     * Caller's responsible to close the InputStream.
+     */
+    protected InputStream getRequestAsInputStream(String path) throws IOException {
+        HttpGet httpget = new HttpGet(path);
+        HttpHost host = getHost();
+
+        // Extract host from URL, if present
+        try {
+            URI uri = new URI(host.toURI());
+            if (uri.isAbsolute() && ! uri.isOpaque()) {
+                host = HttpHost.create(uri.getScheme() + "://" + uri.getAuthority());
+            }
+        } catch (URISyntaxException ex) {
+            // use default
+        }
+
+        try (CloseableHttpResponse response =  executeMethod(host, httpget)) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_NOT_FOUND) {
+                EntityUtils.consume(response.getEntity());
+                throw new FileNotFoundException("URL: " + path);
+            }
+            if (statusCode != HttpStatus.SC_OK) {
+                String content = getResponseContent(response);
+                throw buildResponseException(response, content);
+            }
+            return new ClosingConnectionInputStream(response, httpget, getConnectionManager());
+        } catch (BitbucketRequestException | FileNotFoundException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new IOException("Communication error for url: " + path, e);
+        } finally {
+            release(httpget);
+        }
+    }
+
+    protected int headRequestStatus(String path) throws IOException {
+        HttpHead httpHead = new HttpHead(path);
+        try (CloseableHttpResponse response = executeMethod(getHost(), httpHead)) {
+            EntityUtils.consume(response.getEntity());
+            return response.getStatusLine().getStatusCode();
+        } catch (IOException e) {
+            throw new IOException("Communication error for url: " + path, e);
+        } finally {
+            release(httpHead);
+        }
+    }
+
+    protected String getRequest(String path) throws IOException {
+        HttpGet httpget = new HttpGet(path);
+        return doRequest(httpget);
+    }
+
+    protected String postRequest(String path, List<? extends NameValuePair> params) throws IOException {
+        HttpPost request = new HttpPost(path);
+        request.setEntity(new UrlEncodedFormEntity(params));
+        return doRequest(request);
+    }
+
+    protected String postRequest(String path, String content) throws IOException {
+        HttpPost request = new HttpPost(path);
+        request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
+        return doRequest(request);
+    }
+
+    protected String putRequest(String path, String content) throws IOException {
+        HttpPut request = new HttpPut(path);
+        request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
+        return doRequest(request);
+    }
+
+    protected String deleteRequest(String path) throws IOException {
+        HttpDelete request = new HttpDelete(path);
+        return doRequest(request);
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (getClient() != null) {
+            getClient().close();
+        }
+    }
+
+    protected BitbucketAuthenticator getAuthenticator() {
+        return authenticator;
+    }
 }

@@ -32,7 +32,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
@@ -64,9 +63,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -76,33 +72,14 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -116,13 +93,13 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     // Limit images to 16k
     private static final int MAX_AVATAR_LENGTH = 16384;
     private static final int MAX_PAGE_LENGTH = 100;
-    private static final HttpClientConnectionManager connectionManager = getConnectionManager();
-    private CloseableHttpClient client;
+    protected static final HttpClientConnectionManager connectionManager = connectionManager();
+
+    private final CloseableHttpClient client;
     private final String owner;
     private final String projectKey;
     private final String repositoryName;
     private final boolean enableCache;
-    private final BitbucketAuthenticator authenticator;
     private static final Cache<String, BitbucketTeam> cachedTeam = new Cache<>(6, HOURS);
     private static final Cache<String, AvatarImage> cachedAvatar = new Cache<>(6, HOURS);
     private static final Cache<String, List<BitbucketCloudRepository>> cachedRepositories = new Cache<>(3, HOURS);
@@ -130,7 +107,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     private transient BitbucketRepository cachedRepository;
     private transient String cachedDefaultBranch;
 
-    private static HttpClientConnectionManager getConnectionManager() {
+    private static HttpClientConnectionManager connectionManager() {
         try {
             PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(); // NOSONAR
             connManager.setDefaultMaxPerRoute(20);
@@ -166,7 +143,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
 
     public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
             String owner, String projectKey, String repositoryName, BitbucketAuthenticator authenticator) {
-        this.authenticator = authenticator;
+        super(authenticator);
         this.owner = owner;
         this.projectKey = projectKey;
         this.repositoryName = repositoryName;
@@ -175,32 +152,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             cachedTeam.setExpireDuration(teamCacheDuration, MINUTES);
             cachedRepositories.setExpireDuration(repositoriesCacheDuration, MINUTES);
         }
-
-        // Create Http client
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
-            .setConnectionManager(connectionManager)
-            .setConnectionManagerShared(connectionManager != null)
-            .setRetryHandler(new StandardHttpRequestRetryHandler());
-
-        if (authenticator != null) {
-            authenticator.configureBuilder(httpClientBuilder);
-
-            context = HttpClientContext.create();
-            authenticator.configureContext(context, API_HOST);
-        }
-
-        setClientProxyParams("bitbucket.org", httpClientBuilder);
-
-        this.client = httpClientBuilder.build();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        if (client != null) {
-            client.close();
-        }
-
-        super.finalize();
+        this.client = super.setupClientBuilder("bitbucket.org").build();
     }
 
     /**
@@ -311,8 +263,8 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @Deprecated
     @CheckForNull
     public String getLogin() {
-        if (authenticator != null) {
-            return authenticator.getId();
+        if (getAuthenticator() != null) {
+            return getAuthenticator().getId();
         }
         return null;
     }
@@ -757,7 +709,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
 
     /**
      * The role parameter only makes sense when the request is authenticated, so
-     * if there is no auth information ({@link #authenticator}) the role will be omitted.
+     * if there is no auth information ({@link #getAuthenticator()}) the role will be omitted.
      */
     @NonNull
     @Override
@@ -766,8 +718,8 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         StringBuilder cacheKey = new StringBuilder();
         cacheKey.append(owner);
 
-        if (authenticator != null) {
-            cacheKey.append("::").append(authenticator.getId());
+        if (getAuthenticator() != null) {
+            cacheKey.append("::").append(getAuthenticator().getId());
         } else {
             cacheKey.append("::<anonymous>");
         }
@@ -781,7 +733,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         } else {
             cacheKey.append("::<undefined>");
         }
-        if (role != null &&  authenticator != null) {
+        if (role != null &&  getAuthenticator() != null) {
             template.set("role", role.getId());
             cacheKey.append("::").append(role.getId());
         } else {
@@ -824,94 +776,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         return getRepositories(null);
     }
 
-    @Restricted(ProtectedExternally.class)
-    protected CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws InterruptedException, IOException {
-        return executeMethod(API_HOST, httpMethod);
-    }
-
-    @Restricted(ProtectedExternally.class)
-    protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws InterruptedException, IOException {
-        HttpClientContext requestContext = null;
-        if (API_HOST.equals(host)) {
-            requestContext = context;
-            if (authenticator != null) {
-                authenticator.configureRequest(httpMethod);
-            }
-        }
-
-        RequestConfig.Builder requestConfig = RequestConfig.custom();
-        String connectTimeout = System.getProperty("http.connect.timeout", "10");
-        requestConfig.setConnectTimeout(Integer.parseInt(connectTimeout) * 1000);
-        String connectionRequestTimeout = System.getProperty("http.connect.request.timeout", "60");
-        requestConfig.setConnectionRequestTimeout(Integer.parseInt(connectionRequestTimeout) * 1000);
-        String socketTimeout = System.getProperty("http.socket.timeout", "60");
-        requestConfig.setSocketTimeout(Integer.parseInt(socketTimeout) * 1000);
-        httpMethod.setConfig(requestConfig.build());
-
-        CloseableHttpResponse response = client.execute(host, httpMethod, requestContext);
-        while (response.getStatusLine().getStatusCode() == API_RATE_LIMIT_STATUS_CODE) {
-            release(httpMethod);
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-            /*
-                TODO: When bitbucket starts supporting rate limit expiration time, remove 5 sec wait and put code
-                      to wait till expiration time is over. It should also fix the wait for ever loop.
-             */
-            logger.fine("Bitbucket Cloud API rate limit reached, sleeping for 5 sec then retry...");
-            Thread.sleep(5000);
-            response = client.execute(host, httpMethod, requestContext);
-        }
-        return response;
-    }
-
-    /**
-     * Caller's responsible to close the InputStream.
-     */
-    private InputStream getRequestAsInputStream(String path) throws IOException, InterruptedException {
-        HttpGet httpget = new HttpGet(path);
-        HttpHost host = null;
-
-        // Extract host from URL, if present
-        try {
-            URI uri = new URI(path);
-            if (uri.isAbsolute() && ! uri.isOpaque()) {
-                host = HttpHost.create(""+uri.getScheme()+"://"+uri.getAuthority());
-            }
-        } catch (URISyntaxException ex) {
-        }
-        // Use default API Host otherwise
-        if (host == null) {
-            host = API_HOST;
-        }
-
-        try {
-            CloseableHttpResponse response =  executeMethod(host, httpget);
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode == HttpStatus.SC_NOT_FOUND) {
-                EntityUtils.consume(response.getEntity());
-                response.close();
-                throw new FileNotFoundException("URL: " + path);
-            }
-            if (statusCode != HttpStatus.SC_OK) {
-                String content = getResponseContent(response);
-                throw buildResponseException(response, content);
-            }
-            return new ClosingConnectionInputStream(response, httpget, connectionManager);
-        } catch (BitbucketRequestException | FileNotFoundException e) {
-            throw e;
-        } catch (IOException e) {
-            throw new IOException("Communication error for url: " + path, e);
-        }
-    }
-
-    private String getRequest(String path) throws IOException, InterruptedException {
-        try (InputStream inputStream = getRequestAsInputStream(path)){
-            return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-        }
-    }
-
-    private BufferedImage getImageRequest(String path) throws IOException, InterruptedException {
+    private BufferedImage getImageRequest(String path) throws IOException {
         try (InputStream inputStream = getRequestAsInputStream(path)) {
             int length = MAX_AVATAR_LENGTH;
             BufferedInputStream bis = new BufferedInputStream(inputStream, length);
@@ -919,85 +784,24 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         }
     }
 
-    private int headRequestStatus(String path) throws IOException, InterruptedException {
-        HttpHead httpHead = new HttpHead(path);
-        try(CloseableHttpResponse response = executeMethod(httpHead)) {
-            EntityUtils.consume(response.getEntity());
-            return response.getStatusLine().getStatusCode();
-        } catch (IOException e) {
-            throw new IOException("Communication error for url: " + path, e);
-        } finally {
-            release(httpHead);
-        }
+    @Override
+    protected HttpClientConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
-    private void deleteRequest(String path) throws IOException, InterruptedException {
-        HttpDelete httppost = new HttpDelete(path);
-        try(CloseableHttpResponse response =  executeMethod(httppost)) {
-            EntityUtils.consume(response.getEntity());
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode == HttpStatus.SC_NOT_FOUND) {
-                throw new FileNotFoundException("URL: " + path);
-            }
-            if (statusCode != HttpStatus.SC_NO_CONTENT) {
-                throw buildResponseException(response, getResponseContent(response));
-            }
-        } catch (BitbucketRequestException e) {
-            throw e;
-        } catch (IOException e) {
-            throw new IOException("Communication error for url: " + path, e);
-        } finally {
-            release(httppost);
-        }
+    @NonNull
+    @Override
+    protected HttpHost getHost() {
+        return API_HOST;
     }
 
-    private String doRequest(HttpRequestBase request) throws IOException, InterruptedException {
-        try(CloseableHttpResponse response =  executeMethod(request)) {
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode == HttpStatus.SC_NO_CONTENT) {
-                EntityUtils.consume(response.getEntity());
-                // 204, no content
-                return "";
-            }
-            String content = getResponseContent(response);
-            EntityUtils.consume(response.getEntity());
-            if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
-                throw buildResponseException(response, content);
-            }
-            return content;
-        } catch (BitbucketRequestException e) {
-            throw e;
-        } catch (IOException e) {
-            throw new IOException("Communication error for url: " + request, e);
-        } finally {
-            release(request);
-        }
+    @NonNull
+    @Override
+    protected CloseableHttpClient getClient() {
+        return client;
     }
 
-    private void release(HttpRequestBase method) {
-        method.releaseConnection();
-        connectionManager.closeExpiredConnections();
-    }
-
-    private String putRequest(String path, String content) throws IOException, InterruptedException  {
-        HttpPut request = new HttpPut(path);
-        request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
-        return doRequest(request);
-    }
-
-    private String postRequest(String path, String content) throws IOException, InterruptedException {
-        HttpPost httppost = new HttpPost(path);
-        httppost.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
-        return doRequest(httppost);
-    }
-
-    private String postRequest(String path, List<? extends NameValuePair> params) throws IOException, InterruptedException {
-        HttpPost httppost = new HttpPost(path);
-        httppost.setEntity(new UrlEncodedFormEntity(params));
-        return doRequest(httppost);
-    }
-
-    private List<BitbucketCloudBranch> getAllBranches(String response) throws IOException, InterruptedException {
+    private List<BitbucketCloudBranch> getAllBranches(String response) throws IOException {
         List<BitbucketCloudBranch> branches = new ArrayList<>();
         BitbucketCloudPage<BitbucketCloudBranch> page = JsonParser.mapper.readValue(response,
                 new TypeReference<BitbucketCloudPage<BitbucketCloudBranch>>(){});
