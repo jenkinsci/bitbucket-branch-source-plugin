@@ -55,9 +55,11 @@ public class BitbucketGitSCMRevision extends SCMRevisionImpl {
         super(head, commit.getHash());
         this.message = commit.getMessage();
         this.author = commit.getAuthor();
-        Date commitDate;
+        Date commitDate = null;
         try {
-            commitDate = new StdDateFormat().parse(commit.getDate());
+            if (commit.getDate() != null) {
+                commitDate = new StdDateFormat().parse(commit.getDate());
+            }
         } catch (ParseException e) {
             commitDate = null;
         }
