@@ -657,12 +657,15 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @Override
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
+        BitbucketBuildStatus newStatus = new BitbucketBuildStatus(status);
+        newStatus.setName(truncateMiddle(newStatus.getName(), 255));
+
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commit/{hash}/statuses/build")
                 .set("owner", owner)
                 .set("repo", repositoryName)
-                .set("hash", status.getHash())
+                .set("hash", newStatus.getHash())
                 .expand();
-        postRequest(url, JsonParser.toJson(status));
+        postRequest(url, JsonParser.toJson(newStatus));
     }
 
     /**

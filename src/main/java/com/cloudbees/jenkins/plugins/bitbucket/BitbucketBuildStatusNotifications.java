@@ -172,7 +172,7 @@ public class BitbucketBuildStatusNotifications {
 
     private static @CheckForNull BitbucketSCMSource findBitbucketSCMSource(Run<?, ?> build) {
         SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
-        return s instanceof BitbucketSCMSource ? (BitbucketSCMSource) s : null;
+        return s instanceof BitbucketSCMSource scm ? scm : null;
     }
 
     private static void sendNotifications(BitbucketSCMSource source, Run<?, ?> build, TaskListener listener)
@@ -211,12 +211,11 @@ public class BitbucketBuildStatusNotifications {
 
     @CheckForNull
     private static String getHash(@CheckForNull SCMRevision revision) {
-        if (revision instanceof PullRequestSCMRevision) {
-            // unwrap
-            revision = ((PullRequestSCMRevision) revision).getPull();
+        if (revision instanceof PullRequestSCMRevision prRevision) {
+            revision = prRevision.getPull();
         }
-        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
-            return ((AbstractGitSCMSource.SCMRevisionImpl) revision).getHash();
+        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl scmRevision) {
+            return scmRevision.getHash();
         }
         return null;
     }

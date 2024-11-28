@@ -36,6 +36,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
@@ -48,7 +49,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIC
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -1000,8 +1000,10 @@ public class BitbucketSCMSource extends SCMSource {
 
     @Override
     public SCM build(SCMHead head, SCMRevision revision) {
+        initCloneLinks();
+
         boolean sshAuth = traits.stream()
-                .anyMatch(SSHCheckoutTrait.class::isInstance);
+            .anyMatch(SSHCheckoutTrait.class::isInstance);
 
         BitbucketAuthenticator authenticator = authenticator();
         return new BitbucketGitSCMBuilder(this, head, revision, credentialsId)

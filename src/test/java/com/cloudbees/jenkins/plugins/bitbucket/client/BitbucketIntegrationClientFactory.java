@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
 public class BitbucketIntegrationClientFactory {
 
     public interface IRequestAudit {
-        default void request(String url) {
+        default void request(HttpRequestBase request) {
             // mockito audit
         }
 
@@ -118,10 +118,12 @@ public class BitbucketIntegrationClientFactory {
                 return createRateLimitResponse();
             }
             String path = httpMethod.getURI().toString();
-            path = path.substring(path.indexOf("/rest/api/"));
-            audit.request(path);
+            audit.request(httpMethod);
 
-            String payloadPath = path.replace("/rest/api/", "").replace('/', '-').replaceAll("[=%&?]", "_");
+            String payloadPath = path.substring(path.indexOf("/rest/"))
+                    .replace("/rest/api/", "")
+                    .replace("/rest/", "")
+                    .replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";
 
             return loadResponseFromResources(getClass(), path, payloadPath);
@@ -160,7 +162,7 @@ public class BitbucketIntegrationClientFactory {
         @Override
         protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws InterruptedException, IOException {
             String path = httpMethod.getURI().toString();
-            audit.request(path);
+            audit.request(httpMethod);
 
             String payloadPath = path.replace(API_ENDPOINT, "").replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";

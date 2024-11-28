@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -97,6 +98,20 @@ public class BitbucketBuildStatus {
         this.url = url;
         this.key = DigestUtils.md5Hex(key);
         this.name = name;
+    }
+
+    /**
+     * Copy constructor.
+     *
+     * @param other from copy to.
+     */
+    public BitbucketBuildStatus(@NonNull BitbucketBuildStatus other) {
+        this.hash = other.hash;
+        this.description = other.description;
+        this.state = other.state;
+        this.url = other.url;
+        this.key = other.key;
+        this.name = other.name;
     }
 
     public String getHash() {
