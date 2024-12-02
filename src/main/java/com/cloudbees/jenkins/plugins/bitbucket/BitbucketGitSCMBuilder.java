@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
@@ -38,6 +39,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.browser.BitbucketServer;
 import hudson.plugins.git.browser.BitbucketWeb;
 import java.util.List;
 import jenkins.plugins.git.GitSCMBuilder;
@@ -98,15 +100,19 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         // the clone links
         super(head, revision, /*dummy value*/scmSource.getServerUrl(), credentialsId);
         this.scmSource = scmSource;
-        AbstractBitbucketEndpoint endpoint =
-                BitbucketEndpointConfiguration.get().findEndpoint(scmSource.getServerUrl());
+
+        String serverURL = scmSource.getServerUrl();
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverURL);
         if (endpoint == null) {
-            endpoint = new BitbucketServerEndpoint(null, scmSource.getServerUrl(), false, null);
+            endpoint = new BitbucketServerEndpoint(null, serverURL, false, null);
         }
-        withBrowser(new BitbucketWeb(endpoint.getRepositoryUrl(
-                scmSource.getRepoOwner(),
-                scmSource.getRepository()
-        )));
+
+        String repositoryUrl = endpoint.getRepositoryUrl(scmSource.getRepoOwner(), scmSource.getRepository());
+        if (endpoint instanceof BitbucketCloudEndpoint) {
+            withBrowser(new BitbucketWeb(repositoryUrl));
+        } else {
+            withBrowser(new BitbucketServer(repositoryUrl));
+        }
 
         // Test for protocol
         withCredentials(credentialsId, null);
