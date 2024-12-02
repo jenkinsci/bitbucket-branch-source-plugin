@@ -1,6 +1,8 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -10,11 +12,13 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.browser.BitbucketServer;
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.util.LogTaskListener;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,6 +34,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
@@ -40,6 +45,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -47,7 +53,6 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BitbucketGitSCMBuilderTest {
     @ClassRule
@@ -63,7 +68,7 @@ public class BitbucketGitSCMBuilderTest {
         source.setOwner(owner);
         Credentials userPasswordCredential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "user-pass", null, "git-user", "git-secret");
         Credentials sshPrivateKeyCredential = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "user-key", "git",
-                new BasicSSHUserPrivateKey.UsersPrivateKeySource(), null, null);
+                new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource("privateKey"), null, null);
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
                 Arrays.<Credentials>asList(userPasswordCredential, sshPrivateKeyCredential)));
     }
@@ -74,6 +79,43 @@ public class BitbucketGitSCMBuilderTest {
                 .setDomainCredentialsMap(Collections.<Domain, List<Credentials>>emptyMap());
         owner.delete();
         BitbucketMockApiFactory.clear();
+    }
+
+    @Test
+    public void given_server_endpoint_than_use_BitbucketServer_browser() throws Exception {
+        source.setServerUrl("https://www.bitbucket.test/web");
+        BranchSCMHead head = new BranchSCMHead("test-branch");
+        BitbucketGitSCMRevision revision = new BitbucketGitSCMRevision(head, new BitbucketServerCommit("046d9a3c1532acf4cf08fe93235c00e4d673c1d2"));
+
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, null);
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
+
+        Assertions.assertThat(instance.browser())
+            .isInstanceOf(BitbucketServer.class)
+            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+
+        GitSCM actual = instance.build();
+        Assertions.assertThat(actual.getBrowser())
+            .isInstanceOf(BitbucketServer.class)
+            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+    }
+
+    @Test
+    public void given_cloud_endpoint_than_use_BitbucketWeb_browser() throws Exception {
+        BranchSCMHead head = new BranchSCMHead("test-branch");
+        BitbucketGitSCMRevision revision = new BitbucketGitSCMRevision(head, new BitbucketCloudCommit(null, null, "046d9a3c1532acf4cf08fe93235c00e4d673c1d2", null));
+
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, null);
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
+
+        Assertions.assertThat(instance.browser())
+            .isInstanceOf(BitbucketWeb.class)
+            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://bitbucket.org/tester/test-repo"));
+
+        GitSCM actual = instance.build();
+        Assertions.assertThat(actual.getBrowser())
+            .isInstanceOf(BitbucketWeb.class)
+            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://bitbucket.org/tester/test-repo"));
     }
 
     @Test
@@ -89,22 +131,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/tester/test-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -149,22 +181,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/tester/test-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -209,22 +231,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/tester/test-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -267,22 +279,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/tester/test-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -313,22 +315,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/tester/test-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -359,22 +351,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/tester/test-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -408,8 +390,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -422,8 +402,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -470,8 +448,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -488,8 +464,6 @@ public class BitbucketGitSCMBuilderTest {
         ));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -539,8 +513,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -556,8 +528,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -603,8 +573,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -617,8 +585,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -664,8 +630,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -678,8 +642,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -725,9 +687,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -740,9 +699,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -786,8 +742,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -800,8 +754,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -833,8 +785,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -847,8 +797,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -880,8 +828,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -894,8 +840,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -927,9 +871,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -942,9 +883,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -981,22 +919,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1045,22 +973,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1109,21 +1027,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1172,16 +1081,8 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
@@ -1192,8 +1093,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.credentialsId(), is(nullValue()));
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
 
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1242,16 +1141,8 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
@@ -1262,8 +1153,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.credentialsId(), is(nullValue()));
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
 
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1312,16 +1201,8 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
@@ -1332,8 +1213,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.credentialsId(), is(nullValue()));
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
 
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1382,16 +1261,8 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
@@ -1402,8 +1273,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.credentialsId(), is("user-key"));
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
 
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1452,16 +1321,8 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
@@ -1472,8 +1333,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.credentialsId(), is("user-key"));
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
 
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1522,16 +1381,8 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
@@ -1542,8 +1393,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.credentialsId(), is("user-key"));
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
 
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1588,22 +1437,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1636,22 +1475,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1684,22 +1513,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1737,8 +1556,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -1751,8 +1568,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1802,8 +1617,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -1819,8 +1632,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1870,8 +1681,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -1884,8 +1693,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/pr-branch:refs/remotes/@{remote}/pr-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -1935,8 +1742,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -1952,8 +1757,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/heads/pr-branch:refs/remotes/@{remote}/pr-branch"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2004,8 +1807,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
             instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2024,8 +1825,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2080,8 +1879,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
             instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2103,8 +1900,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2160,8 +1955,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2174,8 +1967,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2225,8 +2016,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2239,8 +2028,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2290,9 +2077,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2305,9 +2089,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2352,8 +2133,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2366,8 +2145,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2401,8 +2178,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2415,8 +2190,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2450,8 +2223,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2464,8 +2235,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.refSpecs(), contains("+refs/pull-requests/1/from:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2499,9 +2268,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -2550,22 +2316,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(2));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2634,22 +2390,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(2));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2718,22 +2464,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(2));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2798,22 +2534,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(2));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2866,22 +2592,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("https", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(2));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -2934,22 +2650,12 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
 
-        instance.withCloneLinks(
-            List.of(
-                new BitbucketHref("http", "https://bitbucket.org/tester/test-repo.git"),
-                new BitbucketHref("ssh", "ssh://git@bitbucket.org/tester/test-repo.git")
-            ),
-            List.of()
-        );
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.org/tester/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(2));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3007,8 +2713,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3027,8 +2731,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3089,8 +2791,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3109,8 +2809,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3170,8 +2868,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3190,8 +2886,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3251,9 +2945,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3272,9 +2963,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3330,8 +3018,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3350,8 +3036,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3396,8 +3080,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3416,8 +3098,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3462,8 +3142,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3482,8 +3160,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(), is("https://bitbucket.test/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3528,9 +3204,6 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
-        assertThat(instance.browser(), instanceOf(BitbucketWeb.class));
-        assertThat(instance.browser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
 
         instance.withCloneLinks(
             List.of(
@@ -3549,9 +3222,6 @@ public class BitbucketGitSCMBuilderTest {
         );
 
         GitSCM actual = instance.build();
-        assertThat(actual.getBrowser(), instanceOf(BitbucketWeb.class));
-        assertThat(actual.getBrowser().getRepoUrl(),
-                is("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
         assertThat(actual.getGitTool(), nullValue());
         assertThat(actual.getUserRemoteConfigs(), hasSize(1));
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
@@ -3591,4 +3261,11 @@ public class BitbucketGitSCMBuilderTest {
         return null;
     }
 
+    private List<BitbucketHref> buildCloneLinks() throws Exception {
+        URL serverURL = new URL(source.getServerUrl());
+        return List.of(
+            new BitbucketHref(serverURL.getProtocol(), String.format("%s/%s/%s.git", source.getServerUrl(), source.getRepoOwner(), source.getRepository())),
+            new BitbucketHref("ssh", String.format("ssh://git@%s/%s/%s.git", serverURL.getHost(), source.getRepoOwner(), source.getRepository()))
+        );
+    }
 }
