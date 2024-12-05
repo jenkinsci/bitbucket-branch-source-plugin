@@ -123,7 +123,27 @@ image::images/screenshot-7.png[scaledwidth=90%]
 
 === Access Token
 
-The plugin can make use of a personal access token (Bitbucket Server only) instead of the standard username/password.
+The plugin can make use of a repository, project or workspace access token (Bitbucket Cloud only).
+
+First, create a new _access token_ in Bitbucket as instructed in one of the following links:
+.Bulleted
+. https://support.atlassian.com/bitbucket-cloud/docs/create-a-repository-access-token/[Repository Access Token | Atlassian Documentation];
+. https://support.atlassian.com/bitbucket-cloud/docs/create-a-project-access-token/[Project Access Token | Atlassian Documentation];
+. https://support.atlassian.com/bitbucket-cloud/docs/create-a-workspace-access-token/[Workspace Access Token | Atlassian Documentation];
+
+At least allow _read_ access for repositories. If you want the plugin to install the webhooks, allow _Read and write_ access for Webhooks.
+
+image::images/screenshot-16.png[scaledwidth=90%]
+
+Then create a new _Secret text_ credential in Jenkins, enter the Bitbucket token generated in the previous steps in the _Secret_ field.
+
+If you want be able to perform git push operation from CLI than you have to setup _write_ access for repositories. Than configure the _Custom user name/e-mail address_ trait with the Repository Access Token email generated when you created the Repository Access Token (for example, 52c16467c5f19101ff2061cc@bots.bitbucket.org).
+
+image::images/screenshot-17.png[scaledwidth=90%]
+
+=== Personal Access Token
+
+The plugin can make use of a personal access token (Bitbucket Datacenter only) instead of the standard username/password.
 
 First, create a new _personal access token_ in Bitbucket as instructed in the link:https://confluence.atlassian.com/bitbucketserver080/http-access-tokens-1115142284.html[HTTP access tokens | Bitbucket Data Center and Server 8.0 | Atlassian Documentation].
 At least allow _read_ access for repositories. If you want the plugin to install the webhooks, allow _admin_ access for repositories.

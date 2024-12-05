@@ -37,11 +37,7 @@ import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
  * @since 2.2.0
  */
 public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequestSCMHead> {
-
-    /**
-     * Standardize serialization.
-     */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 6656650901355298126L;
 
     /**
      * The pull head revision.
@@ -100,8 +96,8 @@ public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequest
      */
     @Override
     public String toString() {
-        return getHead() instanceof PullRequestSCMHead
-                && ((PullRequestSCMHead) getHead()).getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE
+        return getHead() instanceof PullRequestSCMHead prHead
+                && prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE
                 ? getPull().toString() + "+" + getTarget().toString()
                 : getPull().toString();
     }

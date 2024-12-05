@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018, CloudBees, Inc.
+ * Copyright (c) 2024, Falco Nikolas
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,45 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.cloudbees.jenkins.plugins.bitbucket.credentials;
 
+import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Extension;
-import jenkins.authentication.tokens.api.AuthenticationTokenSource;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
+import hudson.util.Secret;
+import org.apache.commons.lang.StringUtils;
 
-/**
- * Source for username/password authenticators.
- */
-@Extension
-public class BitbucketUsernamePasswordAuthenticatorSource extends AuthenticationTokenSource<BitbucketUsernamePasswordAuthenticator, StandardUsernamePasswordCredentials> {
-
-    /**
-     * Constructor.
-     */
-    public BitbucketUsernamePasswordAuthenticatorSource() {
-        super(BitbucketUsernamePasswordAuthenticator.class, StandardUsernamePasswordCredentials.class);
-    }
-
-    /**
-     * Converts username/password credentials to an authenticator.
-     * @param standardUsernamePasswordCredentials the username/password combo
-     * @return an authenticator that will use them.
-     */
-    @NonNull
-    @Override
-    public BitbucketUsernamePasswordAuthenticator convert(@NonNull StandardUsernamePasswordCredentials standardUsernamePasswordCredentials) {
-        return new BitbucketUsernamePasswordAuthenticator(standardUsernamePasswordCredentials);
-    }
-
+public class BitbucketUsernamePasswordCredentialMatcher implements CredentialsMatcher, CredentialsMatcher.CQL {
+    private static final long serialVersionUID = -9196480589659636909L;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CredentialsMatcher matcher() {
-        return new BitbucketUsernamePasswordCredentialMatcher();
+    public boolean matches(Credentials item) {
+        if (!(item instanceof UsernamePasswordCredentials)) {
+            return false;
+        }
+
+        UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
+        String username = usernamePasswordCredential.getUsername();
+        String password = Secret.toString(usernamePasswordCredential.getPassword());
+        return StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String describe() {
+        return "username and password are not empty";
+    }
+
 }

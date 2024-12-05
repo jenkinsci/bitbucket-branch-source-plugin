@@ -50,9 +50,6 @@ public class BitbucketClientCertificateAuthenticator implements BitbucketAuthent
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketClientCertificateAuthenticator.class.getName());
 
-    /**
-     * {@inheritDoc}
-     */
     public BitbucketClientCertificateAuthenticator(StandardCertificateCredentials credentials) {
         this.credentialsId = credentials.getId();
         keyStore = credentials.getKeyStore();
