@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
@@ -42,8 +42,9 @@ import org.apache.http.ssl.SSLContexts;
 /**
  * Authenticates against Bitbucket using a TLS client certificate
  */
-public class BitbucketClientCertificateAuthenticator extends BitbucketAuthenticator {
+public class BitbucketClientCertificateAuthenticator implements BitbucketAuthenticator {
 
+    private final String credentialsId;
     private final KeyStore keyStore;
     private final Secret password;
 
@@ -53,7 +54,7 @@ public class BitbucketClientCertificateAuthenticator extends BitbucketAuthentica
      * {@inheritDoc}
      */
     public BitbucketClientCertificateAuthenticator(StandardCertificateCredentials credentials) {
-        super(credentials);
+        this.credentialsId = credentials.getId();
         keyStore = credentials.getKeyStore();
         password = credentials.getPassword();
     }
@@ -76,5 +77,10 @@ public class BitbucketClientCertificateAuthenticator extends BitbucketAuthentica
         SSLContextBuilder contextBuilder = SSLContexts.custom();
         contextBuilder.loadKeyMaterial(keyStore, password.getPlainText().toCharArray());
         return contextBuilder.build();
+    }
+
+    @Override
+    public String getId() {
+        return credentialsId;
     }
 }

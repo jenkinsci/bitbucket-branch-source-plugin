@@ -25,8 +25,8 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import hudson.plugins.git.GitSCM;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -36,57 +36,43 @@ import org.apache.http.impl.client.HttpClientBuilder;
 /**
  * Support for various different methods of authenticating with Bitbucket
  */
-public abstract class BitbucketAuthenticator {
-
-    private final String id;
+public interface BitbucketAuthenticator {
 
     /**
      * The key for bitbucket URL as reported in an {@link AuthenticationTokenContext}
      */
-    public static final String SERVER_URL = "bitbucket.server.uri";
+    static final String SERVER_URL = "bitbucket.server.uri";
 
     /**
      * The key for URL scheme as reported in an {@link AuthenticationTokenContext}
      */
-    public static final String SCHEME = "bitbucket.server.uri.scheme";
+    static final String SCHEME = "bitbucket.server.uri.scheme";
 
     /**
      * The key for Bitbucket instance type as reported in an {@link AuthenticationTokenContext}
      */
-    public static final String BITBUCKET_INSTANCE_TYPE = "bitbucket.server.type";
+    static final String BITBUCKET_INSTANCE_TYPE = "bitbucket.server.type";
 
     /**
      * Purpose value for bitbucket cloud (i.e. bitbucket.org)
      */
-    public static final String BITBUCKET_INSTANCE_TYPE_CLOUD = "BITBUCKET_CLOUD";
+    static final String BITBUCKET_INSTANCE_TYPE_CLOUD = "BITBUCKET_CLOUD";
 
     /**
      * Purpose value for bitbucket server
      */
-    public static final String BITBUCKET_INSTANCE_TYPE_SERVER = "BITBUCKET_SERVER";
-
-    /**
-     * Constructor
-     *
-     * @param credentials credentials instance this authenticator will use
-     */
-    protected BitbucketAuthenticator(StandardCredentials credentials) {
-        id = credentials.getId();
-    }
+    static final String BITBUCKET_INSTANCE_TYPE_SERVER = "BITBUCKET_SERVER";
 
     /**
      * @return id of the credentials used.
      */
-    public String getId() {
-        return id;
-    }
+    String getId();
 
     /**
      * Configures an {@link HttpClientBuilder}. Override if you need to adjust connection setup.
      * @param builder The client builder.
      */
-    public void configureBuilder(HttpClientBuilder builder) {
-        // override to configure HttpClientBuilder
+    default void configureBuilder(HttpClientBuilder builder) {
     }
 
     /**
@@ -94,8 +80,7 @@ public abstract class BitbucketAuthenticator {
      * @param context The connection context
      * @param host host being connected to
      */
-    public void configureContext(HttpClientContext context, HttpHost host) {
-        // override to configure HttpClientContext
+    default void configureContext(HttpClientContext context, HttpHost host) {
     }
 
     /**
@@ -104,17 +89,20 @@ public abstract class BitbucketAuthenticator {
      *
      * @param request the request.
      */
-    public void configureRequest(HttpRequest request) {
-        // override to configure HttpRequest
+    default void configureRequest(HttpRequest request) {
     }
 
-
     /**
-     * Provides credentials that can be used for authenticated interactions with SCM.
+     * Provides credentials that can be used for authenticated interactions with
+     * SCM.
      *
-     * @return credentials to be passed to {@link org.jenkinsci.plugins.gitclient.GitClient#setCredentials(StandardUsernameCredentials)}
+     * @return credentials to be passed to
+     *         {@link org.jenkinsci.plugins.gitclient.GitClient#setCredentials(StandardUsernameCredentials)}.
+     *         If {@code null} force {@link GitSCM} to obtain credentials in the
+     *         standard way, from the credential provider, using the credential
+     *         identifier provided by {@link #getId()}.
      */
-    public StandardUsernameCredentials getCredentialsForSCM() {
+    default StandardUsernameCredentials getCredentialsForSCM() {
         return null;
     }
 

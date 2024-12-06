@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import edu.umd.cs.findbugs.annotations.NonNull;

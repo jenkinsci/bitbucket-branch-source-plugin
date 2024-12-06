@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -14,8 +14,9 @@ import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 /**
  * Authenticator that uses an access token.
  */
-public class BitbucketAccessTokenAuthenticator extends BitbucketAuthenticator {
+public class BitbucketAccessTokenAuthenticator implements BitbucketAuthenticator {
 
+    private final String credentialsId;
     private final Secret token;
 
     /**
@@ -24,7 +25,7 @@ public class BitbucketAccessTokenAuthenticator extends BitbucketAuthenticator {
      * @param credentials the access token that will be used
      */
     public BitbucketAccessTokenAuthenticator(StringCredentials credentials) {
-        super(credentials);
+        this.credentialsId = credentials.getId();
         token = credentials.getSecret();
     }
 
@@ -45,5 +46,10 @@ public class BitbucketAccessTokenAuthenticator extends BitbucketAuthenticator {
         } catch (FormException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String getId() {
+        return credentialsId;
     }
 }

@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -17,8 +17,9 @@ import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.util.SetContextClassLoader;
 import org.apache.http.HttpRequest;
 
-public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
+public class BitbucketOAuthAuthenticator implements BitbucketAuthenticator {
 
+    private final String credentialsId;
     private OAuth2AccessToken token;
 
     /**
@@ -28,7 +29,7 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
      * @throws AuthenticationTokenException
      */
     public BitbucketOAuthAuthenticator(StandardUsernamePasswordCredentials credentials) throws AuthenticationTokenException {
-        super(credentials);
+        this.credentialsId = credentials.getId();
 
         try (SetContextClassLoader cl = new SetContextClassLoader(this.getClass());
                 OAuth20Service service = new ServiceBuilder(credentials.getUsername())
@@ -57,5 +58,10 @@ public class BitbucketOAuthAuthenticator extends BitbucketAuthenticator {
         } catch (FormException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String getId() {
+        return credentialsId;
     }
 }
