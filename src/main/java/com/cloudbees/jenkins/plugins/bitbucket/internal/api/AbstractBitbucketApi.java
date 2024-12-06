@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.internal.api;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.ProxyConfiguration;
+import hudson.util.Secret;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -125,7 +126,7 @@ public abstract class AbstractBitbucketApi {
             HttpHost proxyHttpHost = new HttpHost(proxyAddress.getHostName(), proxyAddress.getPort());
             builder.setProxy(proxyHttpHost);
             String username = proxyConfig.getUserName();
-            String password = proxyConfig.getSecretPassword().getPlainText();
+            String password = Secret.toString(proxyConfig.getSecretPassword());
             if (StringUtils.isNotBlank(username)) {
                 logger.fine("Using proxy authentication (user=" + username + ")");
                 if (context == null) {

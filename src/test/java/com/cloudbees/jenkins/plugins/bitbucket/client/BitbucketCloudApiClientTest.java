@@ -31,9 +31,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import hudson.ProxyConfiguration;
 import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
@@ -42,12 +45,19 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.ArgumentCaptor;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class BitbucketCloudApiClientTest {
 
@@ -55,6 +65,23 @@ class BitbucketCloudApiClientTest {
         try (InputStream is = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + api + "Payload.json")) {
             return IOUtils.toString(is, "UTF-8");
         }
+    }
+
+    @Test
+    @WithJenkins
+    public void test_proxy_configurad_without_password(JenkinsRule r) throws Exception {
+        Proxy proxy = mock(Proxy.class);
+        when(proxy.address()).thenReturn(new InetSocketAddress("proxy.lan", 8080));
+        ProxyConfiguration proxyConfiguration = mock(ProxyConfiguration.class);
+        doReturn(proxy).when(proxyConfiguration).createProxy(anyString());
+        doReturn("username").when(proxyConfiguration).getUserName();
+
+        r.jenkins.setProxy(proxyConfiguration);
+        BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+
+        verify(proxyConfiguration).createProxy(eq("bitbucket.org"));
+        verify(proxyConfiguration).getUserName();
+        verify(proxyConfiguration).getSecretPassword();
     }
 
     @Test
