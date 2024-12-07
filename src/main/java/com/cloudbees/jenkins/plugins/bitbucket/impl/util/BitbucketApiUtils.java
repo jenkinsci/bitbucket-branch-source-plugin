@@ -1,5 +1,6 @@
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
+import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
@@ -19,7 +20,10 @@ import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Restricted(NoExternalUse.class)
 public class BitbucketApiUtils {
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketApiUtils.class.getName());
@@ -45,7 +49,7 @@ public class BitbucketApiUtils {
 
         String serverUrlFallback = BitbucketCloudEndpoint.SERVER_URL;
         // if at least one bitbucket server is configured use it instead of bitbucket cloud
-        if(BitbucketEndpointConfiguration.get().getEndpointItems().size() > 0){
+        if (!BitbucketEndpointConfiguration.get().getEndpointItems().isEmpty()) {
             serverUrlFallback =  BitbucketEndpointConfiguration.get().getEndpointItems().get(0).value;
         }
 

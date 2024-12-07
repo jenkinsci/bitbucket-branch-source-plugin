@@ -1,5 +1,6 @@
-package com.cloudbees.jenkins.plugins.bitbucket.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthCredentialMatcher;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;

@@ -21,9 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.notifier;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter;
+import com.cloudbees.jenkins.plugins.bitbucket.FirstCheckoutCompletedInvisibleAction;
+import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
@@ -58,7 +65,7 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
  * {@link JobCompletedListener} sends a notification to Bitbucket after a build finishes.
  * Only builds derived from a job that was created as part of a multi-branch project will be processed by this listener.
  */
-public class BitbucketBuildStatusNotifications {
+public final class BitbucketBuildStatusNotifications {
 
     private static String getRootURL(@NonNull Run<?, ?> build) {
         JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
@@ -100,7 +107,7 @@ public class BitbucketBuildStatusNotifications {
 
     private static void createStatus(@NonNull Run<?, ?> build,
                                      @NonNull TaskListener listener,
-                                     @NonNull BitbucketApi bitbucket,
+                                     @NonNull BitbucketApi client,
                                      @NonNull String key,
                                      @NonNull String hash,
                                      @Nullable String refName) throws IOException, InterruptedException {
@@ -113,7 +120,7 @@ public class BitbucketBuildStatusNotifications {
         String url;
         try {
             url = getRootURL(build);
-            checkURL(url, bitbucket);
+            checkURL(url, client);
         } catch (IllegalStateException e) {
             listener.getLogger().println("Can not determine Jenkins root URL " +
                     "or Jenkins URL is not a valid URL regarding Bitbucket API. " +
@@ -147,7 +154,7 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
             if (context.sendStopNotificationForNotBuildJobs()) {
                 // Bitbucket Cloud and Server support different build states.
-                state = (bitbucket instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
+                state = (client instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
             } else {
                 state = BitbucketBuildStatus.Status.FAILED;
             }
@@ -155,7 +162,7 @@ public class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
             if (context.sendStopNotificationForAbortBuild()) {
                 // Bitbucket Cloud and Server support different build states.
-                state = (bitbucket instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
+                state = (client instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
             } else {
                 state = BitbucketBuildStatus.Status.FAILED;
             }
@@ -165,12 +172,12 @@ public class BitbucketBuildStatusNotifications {
         }
 
         if (state != null) {
-            BitbucketChangesetCommentNotifier notifier = new BitbucketChangesetCommentNotifier(bitbucket);
+            BitbucketDefaulNotifier notifier = new BitbucketDefaulNotifier(client);
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name, refName);
             buildStatus.setBuildDuration(build.getDuration());
             buildStatus.setBuildNumber(build.getNumber());
             // TODO testResults should be provided by an extension point that integrates JUnit or anything else plugin
-            notifier.buildStatus(buildStatus);
+            notifier.notifyBuildStatus(buildStatus);
             if (result != null) {
                 listener.getLogger().println("[Bitbucket] Build result notified");
             }

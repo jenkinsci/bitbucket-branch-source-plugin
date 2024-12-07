@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.plugins.bitbucket.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;

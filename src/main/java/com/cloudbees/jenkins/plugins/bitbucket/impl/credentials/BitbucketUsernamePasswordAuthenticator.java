@@ -23,7 +23,7 @@
  */
 
 
-package com.cloudbees.jenkins.plugins.bitbucket.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.internal.api;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import edu.umd.cs.findbugs.annotations.CheckForNull;

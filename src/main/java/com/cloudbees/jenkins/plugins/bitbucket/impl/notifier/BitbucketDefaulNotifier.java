@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018, CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,33 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package com.cloudbees.jenkins.plugins.bitbucket.impl.notifier;
 
-package com.cloudbees.jenkins.plugins.bitbucket.credentials;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketNotifier;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.io.IOException;
 
-import com.github.scribejava.core.builder.api.DefaultApi20;
+/**
+ * The default Bitbucket notifier implementation that sends notifications.
+ */
+public class BitbucketDefaulNotifier implements BitbucketNotifier {
 
-public class BitbucketOAuth extends DefaultApi20 {
-    private static final String OAUTH_ENDPOINT = "https://bitbucket.org/site/oauth2/";
+    private final BitbucketApi bitbucket;
 
-    protected BitbucketOAuth() {
-    }
-
-    private static class InstanceHolder {
-        private static final BitbucketOAuth INSTANCE = new BitbucketOAuth();
-    }
-
-    public static BitbucketOAuth instance() {
-        return InstanceHolder.INSTANCE;
-    }
-
-    @Override
-    public String getAccessTokenEndpoint() {
-        return OAUTH_ENDPOINT + "access_token";
+    public BitbucketDefaulNotifier(@NonNull BitbucketApi bitbucket) {
+        this.bitbucket = bitbucket;
     }
 
     @Override
-    protected String getAuthorizationBaseUrl() {
-        return OAUTH_ENDPOINT + "authorize";
+    public void notifyComment(String repoOwner, String repoName, String hash, String content)
+            throws IOException, InterruptedException {
+        bitbucket.postCommitComment(hash, content);
+    }
+
+    @Override
+    public void notifyBuildStatus(BitbucketBuildStatus status) throws IOException, InterruptedException {
+        bitbucket.postBuildStatus(status);
     }
 
 }

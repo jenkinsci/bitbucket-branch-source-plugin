@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018, CloudBees, Inc.
+ * Copyright (c) 2024, Falco Nikolas
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,21 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
-package com.cloudbees.jenkins.plugins.bitbucket.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import hudson.util.Secret;
+import org.apache.commons.lang.StringUtils;
 
-public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, CredentialsMatcher.CQL {
-    private static int keyLength = 18;
-    private static int secretLength = 32;
-
-    private static final long serialVersionUID = 6458784517693211197L;
-    private static final Logger LOGGER = Logger.getLogger(BitbucketOAuthCredentialMatcher.class.getName());
+public class BitbucketUsernamePasswordCredentialMatcher implements CredentialsMatcher, CredentialsMatcher.CQL {
+    private static final long serialVersionUID = -9196480589659636909L;
 
     /**
      * {@inheritDoc}
@@ -46,22 +41,10 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
             return false;
         }
 
-        if(item.getClass().getName().equals("com.cloudbees.jenkins.plugins.amazonecr.AmazonECSRegistryCredential")) {
-            return false;
-        }
-
-        try {
-            UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
-            String username = usernamePasswordCredential.getUsername();
-            boolean isEMail = username.contains(".") && username.contains("@");
-            boolean validSecretLength = usernamePasswordCredential.getPassword().getPlainText().length() == secretLength;
-            boolean validKeyLength = username.length() == keyLength;
-
-            return !isEMail && validKeyLength && validSecretLength;
-        } catch (RuntimeException e) {
-            LOGGER.log(Level.FINE, "Caught exception validating credential", e);
-            return false;
-        }
+        UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
+        String username = usernamePasswordCredential.getUsername();
+        String password = Secret.toString(usernamePasswordCredential.getPassword());
+        return StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
     }
 
     /**
@@ -69,10 +52,7 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
      */
     @Override
     public String describe() {
-        return String.format(
-                "(username.lenght == %d && password.lenght == %d && !(username CONTAINS \".\" && username CONTAINS \"@\")",
-                keyLength, secretLength);
+        return "username and password are not empty";
     }
-
 
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,33 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
-/**
- * Bitbucket notifier implementation that sends notifications as commit comments.
- */
-public class BitbucketChangesetCommentNotifier extends BitbucketNotifier {
+import com.github.scribejava.core.builder.api.DefaultApi20;
 
-    private final BitbucketApi bitbucket;
+public class BitbucketOAuth extends DefaultApi20 {
+    private static final String OAUTH_ENDPOINT = "https://bitbucket.org/site/oauth2/";
 
-    public BitbucketChangesetCommentNotifier(@NonNull BitbucketApi bitbucket) {
-        this.bitbucket = bitbucket;
+    protected BitbucketOAuth() {
+    }
+
+    private static class InstanceHolder {
+        private static final BitbucketOAuth INSTANCE = new BitbucketOAuth();
+    }
+
+    public static BitbucketOAuth instance() {
+        return InstanceHolder.INSTANCE;
     }
 
     @Override
-    public void notify(String repoOwner, String repoName, String hash, String content)
-            throws IOException, InterruptedException {
-        bitbucket.postCommitComment(hash, content);
+    public String getAccessTokenEndpoint() {
+        return OAUTH_ENDPOINT + "access_token";
     }
 
     @Override
-    public void buildStatus(BitbucketBuildStatus status) throws IOException, InterruptedException {
-        bitbucket.postBuildStatus(status);
+    protected String getAuthorizationBaseUrl() {
+        return OAUTH_ENDPOINT + "authorize";
     }
 
 }
