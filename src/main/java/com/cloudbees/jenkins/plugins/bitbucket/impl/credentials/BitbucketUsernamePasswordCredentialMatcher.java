@@ -29,7 +29,15 @@ import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 
-public class BitbucketUsernamePasswordCredentialMatcher implements CredentialsMatcher, CredentialsMatcher.CQL {
+// Although the CredentialsMatcher documentation says that the best practice
+// is to implement CredentialsMatcher.CQL too, this class does not implement
+// CredentialsMatcher.CQL, for the following reasons:
+//
+// * CQL supports neither method calls like StringUtils.isNotBlank(username)
+//   nor any regular-expression matching that could be used instead.
+// * There don't seem to be any public credential-provider plugins that
+//   would benefit from CQL.
+public class BitbucketUsernamePasswordCredentialMatcher implements CredentialsMatcher {
     private static final long serialVersionUID = -9196480589659636909L;
 
     /**
@@ -46,13 +54,4 @@ public class BitbucketUsernamePasswordCredentialMatcher implements CredentialsMa
         String password = Secret.toString(usernamePasswordCredential.getPassword());
         return StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String describe() {
-        return "username and password are not empty";
-    }
-
 }

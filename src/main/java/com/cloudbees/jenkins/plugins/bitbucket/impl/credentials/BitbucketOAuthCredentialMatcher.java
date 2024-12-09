@@ -30,7 +30,15 @@ import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, CredentialsMatcher.CQL {
+// Although the CredentialsMatcher documentation says that the best practice
+// is to implement CredentialsMatcher.CQL too, this class does not implement
+// CredentialsMatcher.CQL, for the following reasons:
+//
+// * CQL supports neither method calls like username.contains(".")
+//   nor any regular-expression matching that could be used instead.
+// * There don't seem to be any public credential-provider plugins that
+//   would benefit from CQL.
+public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
     private static int keyLength = 18;
     private static int secretLength = 32;
 
@@ -63,16 +71,4 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher, Cred
             return false;
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String describe() {
-        return String.format(
-                "(username.lenght == %d && password.lenght == %d && !(username CONTAINS \".\" && username CONTAINS \"@\")",
-                keyLength, secretLength);
-    }
-
-
 }
