@@ -33,7 +33,8 @@ import java.util.Objects;
  * Represents the default branch of a specific repository
  */
 public class BitbucketDefaultBranch extends InvisibleAction implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1826270778226063782L;
+
     @NonNull
     private final String repoOwner;
     @NonNull

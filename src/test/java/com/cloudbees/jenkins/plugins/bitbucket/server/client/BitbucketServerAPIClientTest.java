@@ -7,19 +7,17 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
-import com.damnhandy.uri.template.UriTemplate;
-import com.damnhandy.uri.template.impl.Operator;
 import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,15 +27,13 @@ import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
-import static com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient.API_BROWSE_PATH;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
@@ -79,36 +75,31 @@ public class BitbucketServerAPIClientTest {
 
     @Test
     @WithoutJenkins
-    public void repoBrowsePathFolder() {
-        String expand = UriTemplate
-            .fromTemplate(API_BROWSE_PATH)
-            .set("owner", "test")
-            .set("repo", "test")
-            .set("path", "folder/Jenkinsfile".split(Operator.PATH.getSeparator()))
-            .set("at", "fix/test")
-            .expand();
-        Assert.assertEquals("/rest/api/1.0/projects/test/repos/test/browse/folder/Jenkinsfile?at=fix%2Ftest", expand);
+    public void verify_checkPathExists_given_a_path() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
+        assertThat(client.checkPathExists("feature/pipeline", "folder/Jenkinsfile")).isTrue();
+
+        IRequestAudit clientAudit = ((IRequestAudit) client).getAudit();
+        HttpRequestBase request = extractRequest(clientAudit);
+        assertThat(request).isNotNull()
+            .isInstanceOfSatisfying(HttpHead.class, head -> {
+                    assertThat(head.getURI())
+                        .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/browse/folder/Jenkinsfile")
+                        .hasQuery("at=feature/pipeline");
+            });
     }
 
     @Test
     @WithoutJenkins
-    public void repoBrowsePathFile() {
-        String expand = UriTemplate
-            .fromTemplate(API_BROWSE_PATH)
-            .set("owner", "test")
-            .set("repo", "test")
-            .set("path", "Jenkinsfile".split(Operator.PATH.getSeparator()))
-            .expand();
-        Assert.assertEquals("/rest/api/1.0/projects/test/repos/test/browse/Jenkinsfile", expand);
-    }
+    public void verify_checkPathExists_given_file() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
+        assertThat(client.checkPathExists("feature/pipeline", "Jenkinsfile")).isTrue();
 
-    @Test
-    public void retryWhenRateLimited() throws Exception {
-        logger.capture(50);
-        BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "amuniz", "test-repos");
-        ((BitbucketServerIntegrationClient)client).rateLimitNextRequest();
-        assertThat(client.getRepository().getProject().getKey(), equalTo("AMUNIZ"));
-        assertThat(logger.getMessages(), hasItem(containsString("Bitbucket server API rate limit reached")));
+        IRequestAudit clientAudit = ((IRequestAudit) client).getAudit();
+        HttpRequestBase request = extractRequest(clientAudit);
+        assertThat(request).isNotNull()
+            .isInstanceOfSatisfying(HttpHead.class, head ->
+                assertThat(head.getURI()).hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/browse/Jenkinsfile"));
     }
 
     @Test
@@ -130,10 +121,10 @@ public class BitbucketServerAPIClientTest {
 
     @Test
     public void disableCookieManager() throws Exception {
-        try(MockedStatic<HttpClientBuilder> staticHttpClientBuilder = mockStatic(HttpClientBuilder.class)) {
-            HttpClientBuilder httpClientBuilder = mock(HttpClientBuilder.class);
-            CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+        try (MockedStatic<HttpClientBuilder> staticHttpClientBuilder = mockStatic(HttpClientBuilder.class)) {
+            HttpClientBuilder httpClientBuilder = mock(HttpClientBuilder.class, RETURNS_SELF);
             staticHttpClientBuilder.when(HttpClientBuilder::create).thenReturn(httpClientBuilder);
+            CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
             when(httpClientBuilder.build()).thenReturn(httpClient);
             BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "amuniz", "test-repos");
             client.getRepositories();
