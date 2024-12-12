@@ -66,6 +66,9 @@ import static java.util.Objects.requireNonNull;
 
 public class NativeServerPushHookProcessor extends HookProcessor {
 
+    private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = Boolean.getBoolean(
+        NativeServerPushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges");
+
     private static final Logger LOGGER = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
 
     @Override
@@ -102,10 +105,10 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             return;
         }
 
-        if (changes.isEmpty()) {
+        if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES && changes.isEmpty()) {
             final String owner = repository.getOwnerName();
             final String repositoryName = repository.getRepositoryName();
-            LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
+            LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
                 new Object[] { owner, repositoryName });
             scmSourceReIndex(owner, repositoryName);
             return;
