@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>cloudbees-bitbucket-branch-source</artifactId>
-  <version>${changelist}</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
 
   <name>Bitbucket Branch Source Plugin</name>
@@ -26,12 +26,14 @@
   </licenses>
 
   <properties>
-    <changelist>999999-SNAPSHOT</changelist>
+    <revision>1000.0.0</revision>
+    <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.1</jenkins.version>
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
-    <useBeta>true</useBeta> <!-- Jenkins.MANAGE -->
+    <!-- Jenkins.MANAGE is still in Beta -->
+    <useBeta>true</useBeta>
   </properties>
 
   <developers>
