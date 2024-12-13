@@ -34,6 +34,7 @@
     <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
+    <tagNameFormat>@{project.version}</tagNameFormat>
   </properties>
 
   <developers>
