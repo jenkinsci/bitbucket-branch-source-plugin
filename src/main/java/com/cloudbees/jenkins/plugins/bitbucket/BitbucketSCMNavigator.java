@@ -33,6 +33,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
@@ -101,7 +103,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import static com.cloudbees.jenkins.plugins.bitbucket.BitbucketApiUtils.getFromBitbucket;
+import static com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.getFromBitbucket;
 
 public class BitbucketSCMNavigator extends SCMNavigator {
 

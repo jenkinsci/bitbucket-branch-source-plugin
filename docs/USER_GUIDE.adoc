@@ -123,7 +123,27 @@ image::images/screenshot-7.png[scaledwidth=90%]
 
 === Access Token
 
-The plugin can make use of a personal access token (Bitbucket Server only) instead of the standard username/password.
+The plugin can make use of a repository, project or workspace access token (Bitbucket Cloud only).
+
+First, create a new _access token_ in Bitbucket as instructed in one of the following links:
+
+* https://support.atlassian.com/bitbucket-cloud/docs/create-a-repository-access-token/[Repository Access Token | Atlassian Documentation];
+* https://support.atlassian.com/bitbucket-cloud/docs/create-a-project-access-token/[Project Access Token | Atlassian Documentation];
+* https://support.atlassian.com/bitbucket-cloud/docs/create-a-workspace-access-token/[Workspace Access Token | Atlassian Documentation];
+
+At least allow _read_ access for repositories. If you want the plugin to install the webhooks, allow _Read and write_ access for Webhooks.
+
+image::images/screenshot-16.png[scaledwidth=90%]
+
+Then create a new _Secret text_ credential in Jenkins, enter the Bitbucket token generated in the previous steps in the _Secret_ field.
+
+If you want be able to perform git push operation from CLI than you have to setup _write_ access for repositories. Than configure the _Custom user name/e-mail address_ trait with the Repository Access Token email generated when you created the Repository Access Token (for example, 52c16467c5f19101ff2061cc@bots.bitbucket.org).
+
+image::images/screenshot-17.png[scaledwidth=90%]
+
+=== Personal Access Token
+
+The plugin can make use of a personal access token (Bitbucket Datacenter only) instead of the standard username/password.
 
 First, create a new _personal access token_ in Bitbucket as instructed in the link:https://confluence.atlassian.com/bitbucketserver080/http-access-tokens-1115142284.html[HTTP access tokens | Bitbucket Data Center and Server 8.0 | Atlassian Documentation].
 At least allow _read_ access for repositories. If you want the plugin to install the webhooks, allow _admin_ access for repositories.
@@ -173,6 +193,51 @@ Cloning from the mirror can only be used with native web-hooks since plugin web-
 For branches and tags, the mirror sync event is used. Thus, at cloning time, the mirror is already synchronized. However, in the case of a pull request event, there is no such guarantee. The plugin optimistically assumes that the mirror is synced and the required commit hashes exist in the mirrored repository at cloning time. If the plugin can't find the required hashes, it falls back to the primary repository.
 
 image::images/screenshot-13.png[scaledwidth=90%]
+
+[id=bitbucket-build-status]
+== Bitbucket build status
+
+When a new job build starts, the plugin send notifications to Bitbucket about the build status. An "In progress" notification is sent after complete the git checkout, another notification is sent at the end of the build, the sent value depends by the build result and the configuration given by the trait.
+
+image::images/screenshot-15.png[scaledwidth=90%]
+
+Follow a summary of all possible values:
+
+[cols=3*,options=header]
+|===
+| Jenkins
+| Bitbucket Cloud
+| Bitbucket Data Center and Server
+
+| https://javadoc.jenkins.io/hudson/model/Result.html#SUCCESS[SUCCESS]
+| SUCCESSFUL
+| SUCCESSFUL
+
+| https://javadoc.jenkins.io/hudson/model/Result.html#UNSTABLE[UNSTABLE]
+| configurable SUCCESSFUL or FAILED
+| configurable SUCCESSFUL or FAILED
+
+| https://javadoc.jenkins.io/hudson/model/Result.html#FAILURE[FAILURE]
+| FAILED
+| FAILED
+
+| https://javadoc.jenkins.io/hudson/model/Result.html#NOT_BUILT[NOT_BUILT]
+| configurable FAILED or STOPPED
+| configurable FAILED or CANCELLED
+
+| https://javadoc.jenkins.io/hudson/model/Result.html#ABORTED[ABORTED]
+| configurable FAILED or STOPPED
+| configurable FAILED or CANCELLED
+
+| null
+| INPROGRESS
+| INPROGRESS
+|===
+
+The STOPPED status prevents merge checks on Cloud, CANCELLED status should prevents merge checks on Data Center
+
+If this does not meet you need you can disable any notification to Bitbucket using the https://github.com/jenkinsci/skip-notifications-trait-plugin/[skip-notifications-trait-plugin] and provide notification about the build status yourself. This can be achieved via a curl shell command or by using build steps provided by the https://github.com/jenkinsci/bitbucket-build-status-notifier-plugin[bitbucket-build-status-notifier-plugin].
+
 
 [id=bitbucket-misc-config]
 == Miscellaneous configuration

@@ -82,15 +82,9 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
                               BitbucketPullRequest pr, SCMHeadOrigin origin, ChangeRequestCheckoutStrategy strategy) {
-        super(name);
-        this.repoOwner = repoOwner;
-        this.repository = repository;
-        this.branchName = branchName;
-        this.number = pr.getId();
-        this.title = pr.getTitle();
-        this.target = new BranchSCMHead(pr.getDestination().getBranch().getName());
-        this.origin = origin;
-        this.strategy = strategy;
+        this(name, repoOwner, repository, branchName,
+             pr.getId(), pr.getTitle(), new BranchSCMHead(pr.getDestination().getBranch().getName()),
+             origin, strategy);
     }
 
     @Deprecated

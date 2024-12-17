@@ -51,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
-import jenkins.scm.api.SCMEvent.Type;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;

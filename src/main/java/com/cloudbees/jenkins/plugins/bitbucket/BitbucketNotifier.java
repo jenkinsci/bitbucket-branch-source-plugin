@@ -28,9 +28,9 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
 
 /**
- * Abstract Bitbucket commit notifier implementation.
+ * Implementations must provides a concrete way to notify to Bitbucket commit.
  */
-public abstract class BitbucketNotifier {
+public interface BitbucketNotifier {
 
     /**
      * Notify bitbucket about a new build status on a concrete commit.
@@ -42,8 +42,7 @@ public abstract class BitbucketNotifier {
      * @throws IOException if there was a communication error during notification.
      * @throws InterruptedException if interrupted during notification.
      */
-    public abstract void notify(@CheckForNull String repoOwner, @CheckForNull String repoName, String hash, String content)
-            throws IOException, InterruptedException;
+    void notifyComment(@CheckForNull String repoOwner, @CheckForNull String repoName, String hash, String content) throws IOException, InterruptedException;
 
     /**
      * Notify bitbucket through the build status API.
@@ -52,10 +51,10 @@ public abstract class BitbucketNotifier {
      * @throws IOException if there was a communication error during notification.
      * @throws InterruptedException if interrupted during notification.
      */
-    public abstract void buildStatus(BitbucketBuildStatus status) throws IOException, InterruptedException;
+    void notifyBuildStatus(BitbucketBuildStatus status) throws IOException, InterruptedException;
 
     /**
-     * Convenience method that calls {@link #notify(String, String, String, String)} without owner
+     * Convenience method that calls {@link #notifyComment(String, String, String, String)} without owner
      * and repository name.
      *
      * @param hash commit hash
@@ -63,8 +62,8 @@ public abstract class BitbucketNotifier {
      * @throws IOException if there was a communication error during notification.
      * @throws InterruptedException if interrupted during notification.
      */
-    public void notify(String hash, String content) throws IOException, InterruptedException {
-        notify(null, null, hash, content);
+    default void notifyComment(String hash, String content) throws IOException, InterruptedException {
+        notifyComment(null, null, hash, content);
     }
 
 }

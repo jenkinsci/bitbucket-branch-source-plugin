@@ -23,10 +23,11 @@
  */
 
 
-package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import hudson.util.Secret;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpHost;
@@ -42,20 +43,21 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 /**
  * Authenticator that uses a username and password (probably the default)
  */
-public class BitbucketUsernamePasswordAuthenticator extends BitbucketAuthenticator {
+public class BitbucketUsernamePasswordAuthenticator implements BitbucketAuthenticator {
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketUsernamePasswordAuthenticator.class.getName());
 
     private final UsernamePasswordCredentials httpCredentials;
+    private final String credentialsId;
 
     /**
      * Constructor.
      * @param credentials the username/password that will be used
      */
     public BitbucketUsernamePasswordAuthenticator(StandardUsernamePasswordCredentials credentials) {
-        super(credentials);
-        httpCredentials = new UsernamePasswordCredentials(credentials.getUsername(),
-                credentials.getPassword().getPlainText());
+        credentialsId = credentials.getId();
+        String password = Secret.toString(credentials.getPassword());
+        httpCredentials = new UsernamePasswordCredentials(credentials.getUsername(), password);
     }
 
     /**
@@ -73,6 +75,11 @@ public class BitbucketUsernamePasswordAuthenticator extends BitbucketAuthenticat
         authCache.put(host, new BasicScheme());
         context.setCredentialsProvider(credentialsProvider);
         context.setAuthCache(authCache);
+    }
+
+    @Override
+    public String getId() {
+        return credentialsId;
     }
 
 }

@@ -48,7 +48,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Represents the global configuration of Bitbucket Cloud and Bitbucket Server endpoints.
@@ -138,7 +138,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * {@inheritDoc}
      */
     @Override
-    public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+    public boolean configure(StaplerRequest2 req, JSONObject json) throws FormException {
         req.bindJSON(this, json);
         return true;
     }

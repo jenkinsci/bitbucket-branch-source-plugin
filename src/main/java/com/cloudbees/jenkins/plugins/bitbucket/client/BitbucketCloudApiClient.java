@@ -36,7 +36,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
@@ -50,7 +49,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketReposi
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.PaginatedBitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
-import com.cloudbees.jenkins.plugins.bitbucket.internal.api.AbstractBitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;

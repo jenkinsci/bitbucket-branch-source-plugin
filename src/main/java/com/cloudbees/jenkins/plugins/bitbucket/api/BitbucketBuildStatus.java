@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -87,17 +88,39 @@ public class BitbucketBuildStatus {
      */
     private String name;
 
+    /**
+     * The fully qualified git reference e.g. refs/heads/master.
+     */
+    private String refname;
+
+    /**
+     * Duration of a completed build in milliseconds.
+     */
+    private long buildDuration;
+
+    /**
+     * A unique identifier of this particular run.
+     */
+    private int buildNumber;
+
     // Used for marshalling/unmarshalling
     @Restricted(DoNotUse.class)
     public BitbucketBuildStatus() {}
 
-    public BitbucketBuildStatus(String hash, String description, Status state, String url, String key, String name) {
+    public BitbucketBuildStatus(String hash,
+                                String description,
+                                @NonNull Status state,
+                                String url,
+                                @NonNull String key,
+                                String name,
+                                @Nullable String refname) {
         this.hash = hash;
         this.description = description;
         this.state = state;
         this.url = url;
         this.key = DigestUtils.md5Hex(key);
         this.name = name;
+        this.refname = refname;
     }
 
     /**
@@ -112,6 +135,8 @@ public class BitbucketBuildStatus {
         this.url = other.url;
         this.key = other.key;
         this.name = other.name;
+        this.refname = other.refname;
+        this.buildDuration = other.buildDuration;
     }
 
     public String getHash() {
@@ -160,6 +185,30 @@ public class BitbucketBuildStatus {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRefname() {
+        return refname;
+    }
+
+    public void setRefname(String refname) {
+        this.refname = refname;
+    }
+
+    public long getBuildDuration() {
+        return buildDuration;
+    }
+
+    public void setBuildDuration(long buildDuration) {
+        this.buildDuration = buildDuration;
+    }
+
+    public int getBuildNumber() {
+        return buildNumber;
+    }
+
+    public void setBuildNumber(int buildNumber) {
+        this.buildNumber = buildNumber;
     }
 
 }

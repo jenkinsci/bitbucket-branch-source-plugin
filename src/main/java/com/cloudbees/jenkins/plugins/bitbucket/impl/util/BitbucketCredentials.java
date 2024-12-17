@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -33,7 +33,6 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Queue;
-import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
@@ -44,28 +43,31 @@ import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
+import org.springframework.security.core.Authentication;
 
 /**
  * Utility class for common code accessing credentials
  */
-class BitbucketCredentials {
+public class BitbucketCredentials {
     private BitbucketCredentials() {
         throw new IllegalAccessError("Utility class");
     }
 
     @CheckForNull
-    static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverUrl,
-                                                               @CheckForNull SCMSourceOwner context,
-                                                               @CheckForNull String id,
-                                                               @NonNull Class<T> type) {
+    public static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverUrl,
+                                                                      @CheckForNull SCMSourceOwner context,
+                                                                      @CheckForNull String id,
+                                                                      @NonNull Class<T> type) {
         if (StringUtils.isNotBlank(id) && context != null) {
+            Authentication authentication = context instanceof Queue.Task task
+                    ? task.getDefaultAuthentication2()
+                    : ACL.SYSTEM2;
+
             return CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
+                    CredentialsProvider.lookupCredentialsInItem(
                             type,
                             context,
-                            context instanceof Queue.Task
-                                    ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                                    : ACL.SYSTEM,
+                            authentication,
                             URIRequirementBuilder.fromUri(serverUrl).build()
                     ),
                     CredentialsMatchers.allOf(
@@ -77,7 +79,7 @@ class BitbucketCredentials {
         return null;
     }
 
-    static ListBoxModel fillCredentialsIdItems(
+    public static ListBoxModel fillCredentialsIdItems(
         @AncestorInPath SCMSourceOwner context,
         @QueryParameter String serverUrl) {
         StandardListBoxModel result = new StandardListBoxModel();
@@ -86,10 +88,12 @@ class BitbucketCredentials {
         if (!contextToCheck.hasPermission(CredentialsProvider.VIEW)) {
             return result;
         }
+        Authentication authentication = context instanceof Queue.Task task
+                ? task.getDefaultAuthentication2()
+                : ACL.SYSTEM2;
+
         result.includeMatchingAs(
-                context instanceof Queue.Task
-                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                        : ACL.SYSTEM,
+                authentication,
                 context,
                 StandardCredentials.class,
                 URIRequirementBuilder.fromUri(serverUrl).build(),
@@ -98,18 +102,23 @@ class BitbucketCredentials {
         return result;
     }
 
-    static FormValidation checkCredentialsId(
+    public static FormValidation checkCredentialsId(
         @AncestorInPath @CheckForNull SCMSourceOwner context,
         @QueryParameter String value,
         @QueryParameter String serverUrl) {
         if (!value.isEmpty()) {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             contextToCheck.checkPermission(CredentialsProvider.VIEW);
+
+            Authentication authentication = context instanceof Queue.Task task
+                    ? task.getDefaultAuthentication2()
+                    : ACL.SYSTEM2;
+
             if (CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
+                    CredentialsProvider.lookupCredentialsInItem(
                             StandardCertificateCredentials.class,
                             context,
-                            context instanceof Queue.Task ? Tasks.getDefaultAuthenticationOf((Queue.Task) context) : ACL.SYSTEM,
+                            authentication,
                             URIRequirementBuilder.fromUri(serverUrl).build()),
                     CredentialsMatchers.allOf(
                             CredentialsMatchers.withId(value),

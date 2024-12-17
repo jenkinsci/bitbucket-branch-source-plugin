@@ -36,17 +36,18 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
-import com.cloudbees.jenkins.plugins.bitbucket.internal.api.AbstractBitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.mirror.BitbucketMirrorServerDescriptors;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.mirror.BitbucketMirroredRepositoryDescriptors;
@@ -144,7 +145,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private static final String WEBHOOK_REPOSITORY_PATH = WEBHOOK_BASE_PATH + "/projects/{owner}/repos/{repo}/configurations";
     private static final String WEBHOOK_REPOSITORY_CONFIG_PATH = WEBHOOK_REPOSITORY_PATH + "/{id}";
 
-    private static final String API_COMMIT_STATUS_PATH = "/rest/build-status/1.0/commits{/hash}";
+    private static final String API_COMMIT_STATUS_PATH = API_BASE_PATH + "/projects/{owner}/repos/{repo}/commits/{hash}/builds";
 
     private static final String API_MIRRORS_FOR_REPO_PATH = "/rest/mirroring/1.0/repos/{id}/mirrors";
     private static final String API_MIRRORS_PATH = "/rest/mirroring/1.0/mirrorServers";
@@ -509,10 +510,12 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @Override
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
-        BitbucketBuildStatus newStatus = new BitbucketBuildStatus(status);
+        BitbucketServerBuildStatus newStatus = new BitbucketServerBuildStatus(status);
         newStatus.setName(truncateMiddle(newStatus.getName(), 255));
 
         String url = UriTemplate.fromTemplate(API_COMMIT_STATUS_PATH)
+                .set("owner", getUserCentricOwner())
+                .set("repo", repositoryName)
                 .set("hash", newStatus.getHash())
                 .expand();
         postRequest(url, JsonParser.toJson(newStatus));

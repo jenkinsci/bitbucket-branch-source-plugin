@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.common.IdCredentials;

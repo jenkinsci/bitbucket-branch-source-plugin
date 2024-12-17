@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
-package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
-
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -52,5 +52,14 @@ public class BitbucketUsernamePasswordAuthenticatorSource extends Authentication
     @Override
     public BitbucketUsernamePasswordAuthenticator convert(@NonNull StandardUsernamePasswordCredentials standardUsernamePasswordCredentials) {
         return new BitbucketUsernamePasswordAuthenticator(standardUsernamePasswordCredentials);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CredentialsMatcher matcher() {
+        return new BitbucketUsernamePasswordCredentialMatcher();
     }
 }

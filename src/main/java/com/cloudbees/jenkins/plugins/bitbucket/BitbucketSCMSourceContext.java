@@ -98,9 +98,9 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean sendStoppedNotificationForAbortBuild;
 
     /**
-     * {@code false} if not built jobs should be send to Bitbucket.
+     * {@code false} if not built jobs will be communicated as stopped/cancelled.
      */
-    private boolean disableNotificationForNotBuildJobs;
+    private boolean sendStopNotificationForNotBuildJobs;
 
     /**
      * Constructor.
@@ -235,12 +235,12 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     }
 
     /**
-     * Returns {@code false} if not build jobs should be passed to Bitbucket.
+     * Returns if not build jobs should be passed as stopped/cancelled to Bitbucket.
      *
-     * @return {@code false} if not build jobs should be passed to Bitbucket.
+     * @return if not build jobs should be passed as stopped to Bitbucket.
      */
-    public boolean disableNotificationForNotBuildJobs() {
-        return disableNotificationForNotBuildJobs;
+    public boolean sendStopNotificationForNotBuildJobs() {
+        return sendStopNotificationForNotBuildJobs;
     }
 
     /**
@@ -395,12 +395,12 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     /**
      * Defines behaviour of not-built jobs in Bitbucket.
      *
-     * @param disabled {@code false} to report not-built jobs to Bitbucket.
+     * @param sendStopped {@code false} to consider aborted builds as stopped when notifying Bitbucket.
      * @return {@code this} for method chaining.
      */
     @NonNull
-    public final BitbucketSCMSourceContext withDisableNotificationForNotBuildJobs(boolean disabled) {
-        this.disableNotificationForNotBuildJobs = disabled;
+    public final BitbucketSCMSourceContext withSendStopNotificationForNotBuildJobs(boolean sendStopped) {
+        this.sendStopNotificationForNotBuildJobs = sendStopped;
         return this;
     }
 

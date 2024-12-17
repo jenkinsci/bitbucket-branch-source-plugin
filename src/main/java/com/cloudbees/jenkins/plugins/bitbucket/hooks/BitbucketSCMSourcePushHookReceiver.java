@@ -27,18 +27,18 @@ import hudson.Extension;
 import hudson.model.UnprotectedRootAction;
 import hudson.security.csrf.CrumbExclusion;
 import hudson.util.HttpResponses;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.scm.api.SCMEvent;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Process Bitbucket push and pull requests creations/updates hooks.
@@ -76,7 +76,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
      * @return the HTTP response object
      * @throws IOException if there is any issue reading the HTTP content payload.
      */
-    public HttpResponse doNotify(StaplerRequest req) throws IOException {
+    public HttpResponse doNotify(StaplerRequest2 req) throws IOException {
         String origin = SCMEvent.originOf(req);
         String body = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
         String eventKey = req.getHeader("X-Event-Key");

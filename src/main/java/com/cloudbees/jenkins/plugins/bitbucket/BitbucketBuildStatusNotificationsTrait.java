@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
@@ -40,20 +41,12 @@ import org.kohsuke.stapler.DataBoundSetter;
  */
 public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
 
-    /**
-     * Should unstable builds be communicated as success to Bitbucket.
-     */
     private boolean sendSuccessNotificationForUnstableBuild;
-
-    /**
-     * Aborted jobs must be communicated as stopped to Bitbucket.
-     */
     private boolean sendStoppedNotificationForAbortBuild;
-
-    /**
-     * Should not build jobs be communicated to Bitbucket.
-     */
     private boolean disableNotificationForNotBuildJobs;
+    // seems that this attribute as been moved out to plugin skip-notifications-trait-plugin
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient boolean disableNotifications;
 
     /**
      * Constructor.
@@ -72,6 +65,8 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     }
 
     /**
+     * Should unstable builds be communicated as success to Bitbucket.
+     *
      * @return if unstable builds will be communicated as successful
      */
     public boolean getSendSuccessNotificationForUnstableBuild() {
@@ -92,7 +87,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     /**
      * Return if aborted builds will be communicated as stopped.
      *
-     * @return true will be comunicate to Bitbucket as Stopped/Cancelled build
+     * @return if will be communicated to Bitbucket as Stopped/Cancelled build
      *         failed otherwise.
      */
     public boolean getSendStoppedNotificationForAbortBuild() {
@@ -105,7 +100,10 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     }
 
     /**
-     * @return if unstable builds will be communicated
+     * Should not build jobs be communicated as stopped.
+     *
+     * @return if will be communicated to Bitbucket as Stopped/Cancelled build
+     *         failed otherwise.
      */
     public boolean getDisableNotificationForNotBuildJobs() {
         return this.disableNotificationForNotBuildJobs;
@@ -116,9 +114,11 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((BitbucketSCMSourceContext) context).withDisableNotificationForNotBuildJobs(getDisableNotificationForNotBuildJobs());
-        ((BitbucketSCMSourceContext) context).withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
-        ((BitbucketSCMSourceContext) context).withSendStoppedNotificationForAbortBuild(getSendStoppedNotificationForAbortBuild());
+        if (context instanceof BitbucketSCMSourceContext scmContext) {
+            scmContext.withSendStopNotificationForNotBuildJobs(getDisableNotificationForNotBuildJobs());
+            scmContext.withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
+            scmContext.withSendStoppedNotificationForAbortBuild(getSendStoppedNotificationForAbortBuild());
+        }
     }
 
     /**

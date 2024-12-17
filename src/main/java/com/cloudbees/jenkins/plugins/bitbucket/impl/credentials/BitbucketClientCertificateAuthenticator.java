@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.plugins.bitbucket.api.credentials;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
@@ -42,18 +42,16 @@ import org.apache.http.ssl.SSLContexts;
 /**
  * Authenticates against Bitbucket using a TLS client certificate
  */
-public class BitbucketClientCertificateAuthenticator extends BitbucketAuthenticator {
+public class BitbucketClientCertificateAuthenticator implements BitbucketAuthenticator {
 
+    private final String credentialsId;
     private final KeyStore keyStore;
     private final Secret password;
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketClientCertificateAuthenticator.class.getName());
 
-    /**
-     * {@inheritDoc}
-     */
     public BitbucketClientCertificateAuthenticator(StandardCertificateCredentials credentials) {
-        super(credentials);
+        this.credentialsId = credentials.getId();
         keyStore = credentials.getKeyStore();
         password = credentials.getPassword();
     }
@@ -74,7 +72,12 @@ public class BitbucketClientCertificateAuthenticator extends BitbucketAuthentica
 
     private SSLContext buildSSLContext() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException, KeyManagementException {
         SSLContextBuilder contextBuilder = SSLContexts.custom();
-        contextBuilder.loadKeyMaterial(keyStore, password.getPlainText().toCharArray());
+        contextBuilder.loadKeyMaterial(keyStore, Secret.toString(password).toCharArray());
         return contextBuilder.build();
+    }
+
+    @Override
+    public String getId() {
+        return credentialsId;
     }
 }

@@ -160,36 +160,34 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
 
             if (head instanceof BranchSCMHead) {
                 ref = head.getName();
-            } else if (head instanceof PullRequestSCMHead) {
+            } else if (head instanceof PullRequestSCMHead prHead) {
                 // working on a pull request - can be either "HEAD" or "MERGE"
-                PullRequestSCMHead pr = (PullRequestSCMHead) head;
-                if (pr.getRepository() == null) { // check access to repository (might be forked)
+                if (prHead.getRepository() == null) { // check access to repository (might be forked)
                     return null;
                 }
 
                 if (apiClient instanceof BitbucketCloudApiClient) {
                     // support lightweight checkout for branches with same owner and repository
-                    if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
-                        pr.getRepoOwner().equals(src.getRepoOwner()) &&
-                        pr.getRepository().equals(src.getRepository())) {
-                        ref = pr.getOriginName();
+                    if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
+                        prHead.getRepoOwner().equals(src.getRepoOwner()) &&
+                        prHead.getRepository().equals(src.getRepository())) {
+                        ref = prHead.getOriginName();
                     } else {
                         // Bitbucket cloud does not support refs for pull requests
                         // Makes lightweight checkout for forks and merge strategy improbable
                         // TODO waiting for cloud support: https://bitbucket.org/site/master/issues/5814/refify-pull-requests-by-making-them-a-ref
                         return null;
                     }
-                } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
-                    ref = "pull-requests/" + pr.getId() + "/from";
-                } else if (pr.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
+                } else if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
+                    ref = "pull-requests/" + prHead.getId() + "/from";
+                } else if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
                     // Bitbucket server v7 doesn't have the `merge` ref for PRs
                     // We don't return `ref` when working with v7
                     // so that pipeline falls back to heavyweight checkout properly
                     AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(src.getServerUrl());
-                    final BitbucketServerEndpoint endpoint = endpointConfig instanceof BitbucketServerEndpoint ?
-                            (BitbucketServerEndpoint) endpointConfig : null;
-                    if (endpoint != null && endpoint.getServerVersion() != BitbucketServerVersion.VERSION_7) {
-                        ref = "pull-requests/" + pr.getId() + "/merge";
+                    if (endpointConfig instanceof BitbucketServerEndpoint endpoint &&
+                        endpoint.getServerVersion() != BitbucketServerVersion.VERSION_7) {
+                        ref = "pull-requests/" + prHead.getId() + "/merge";
                     } else {
                         // returning null to fall back to heavyweight checkout
                         return null;

@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirrorServer;

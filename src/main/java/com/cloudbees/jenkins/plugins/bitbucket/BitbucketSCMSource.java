@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketApiUtils.BitbucketSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
@@ -36,7 +35,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
-import com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
@@ -44,6 +42,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.BitbucketSupplier;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -67,7 +68,6 @@ import hudson.model.Item;
 import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.SCM;
 import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
@@ -134,7 +134,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import static com.cloudbees.jenkins.plugins.bitbucket.BitbucketApiUtils.getFromBitbucket;
+import static com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.getFromBitbucket;
 
 /**
  * SCM source implementation for Bitbucket.
@@ -1002,33 +1002,12 @@ public class BitbucketSCMSource extends SCMSource {
     public SCM build(SCMHead head, SCMRevision revision) {
         initCloneLinks();
 
-        String scmCredentialsId = credentialsId;
+        boolean sshAuth = traits.stream()
+            .anyMatch(SSHCheckoutTrait.class::isInstance);
 
         BitbucketAuthenticator authenticator = authenticator();
-        GitSCMExtension scmExtension;
-        if (authenticator != null) {
-            // workaround to force git-plugin to use the configured username/password credentialsId as is
-            // remove this workaround as https://github.com/jenkinsci/bitbucket-branch-source-plugin/pull/867 will be merged
-            boolean sshAuth = traits.stream()
-                    .anyMatch(SSHCheckoutTrait.class::isInstance);
-            if (sshAuth) {
-                // trait will do the magic
-                scmCredentialsId = null;
-                scmExtension = new GitClientAuthenticatorExtension(null);
-            } else if (authenticator instanceof BitbucketUsernamePasswordAuthenticator) {
-                scmExtension = new GitClientAuthenticatorExtension(null);
-            } else {
-                // extension overrides the configured credentialsId with a custom StandardUsernameCredentials provided by the Authenticator
-                scmExtension = new GitClientAuthenticatorExtension(authenticator.getCredentialsForSCM());
-                // will be overridden by git extension
-                scmCredentialsId = null;
-            }
-        } else {
-            scmExtension = new GitClientAuthenticatorExtension(null);
-        }
-
-        return new BitbucketGitSCMBuilder(this, head, revision, scmCredentialsId)
-                .withExtension(scmExtension)
+        return new BitbucketGitSCMBuilder(this, head, revision, credentialsId)
+                .withExtension(new GitClientAuthenticatorExtension(authenticator == null || sshAuth ? null : authenticator.getCredentialsForSCM()))
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                 .withTraits(traits)
                 .build();
