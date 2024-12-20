@@ -227,12 +227,16 @@ public class BitbucketBuildStatusNotifications {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
             SCMHead head = rev.getHead();
             key = getBuildKey(build, head.getName(), shareBuildKeyBetweenBranchAndPR);
-            if (rev instanceof BitbucketTagSCMRevision || head instanceof BitbucketTagSCMHead) {
-                refName = "refs/tags/" + head.getName();
-            } else {
-                refName = "refs/heads/" + head.getName();
-            }
             bitbucket = source.buildBitbucketClient();
+            if (BitbucketApiUtils.isCloud(bitbucket)) {
+                refName = head.getName();
+            } else {
+                if (rev instanceof BitbucketTagSCMRevision || head instanceof BitbucketTagSCMHead) {
+                    refName = "refs/tags/" + head.getName();
+                } else {
+                    refName = "refs/heads/" + head.getName();
+                }
+            }
         }
         createStatus(build, listener, bitbucket, key, hash, refName);
     }

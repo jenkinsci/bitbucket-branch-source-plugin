@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -22,7 +23,11 @@ import org.apache.commons.lang.StringUtils;
 
 public class BitbucketApiUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(BitbucketApiUtils.class.getName());
+    private static final Logger logger = Logger.getLogger(BitbucketApiUtils.class.getName());
+
+    public static boolean isCloud(BitbucketApi client) {
+        return client instanceof BitbucketCloudApiClient;
+    }
 
     public static ListBoxModel getFromBitbucket(SCMSourceOwner context,
                                                 String serverUrl,
@@ -78,10 +83,10 @@ public class BitbucketApiUtils {
                         : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
                 }
             }
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw FormFillFailure.error(e.getMessage());
         } catch (Throwable e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             throw FormFillFailure.error(e.getMessage());
         }
     }
