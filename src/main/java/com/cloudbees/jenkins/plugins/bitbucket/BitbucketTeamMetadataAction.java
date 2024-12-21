@@ -47,7 +47,9 @@ import jenkins.scm.api.metadata.AvatarMetadataAction;
 
 /**
  * Invisible property that retains information about Bitbucket team.
+ * @deprecated Replaced with {@link BitbucketServerProjectAvatarAction} and {@link BitbucketCloudWorkspaceAvatarAction}
  */
+@Deprecated
 public class BitbucketTeamMetadataAction extends AvatarMetadataAction {
     /**
      *
