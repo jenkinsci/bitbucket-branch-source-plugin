@@ -59,6 +59,9 @@ import org.apache.commons.lang.StringUtils;
 
 public class PushHookProcessor extends HookProcessor {
 
+    private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = Boolean.getBoolean(
+        PushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges");
+
     private static final Logger LOGGER = Logger.getLogger(PushHookProcessor.class.getName());
 
     @Override
@@ -71,15 +74,15 @@ public class PushHookProcessor extends HookProcessor {
                 push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
             }
             if (push != null) {
-                String owner = push.getRepository().getOwnerName();
-                final String repository = push.getRepository().getRepositoryName();
-                if (push.getChanges().isEmpty()) {
-                    LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
-                            new Object[]{owner, repository});
+                if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES && push.getChanges().isEmpty()) {
+                    final String owner = push.getRepository().getOwnerName();
+                    final String repository = push.getRepository().getRepositoryName();
+                    LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
+                        new Object[]{owner, repository});
                     scmSourceReIndex(owner, repository);
                 } else {
                     SCMHeadEvent.Type type = null;
-                    for (BitbucketPushEvent.Change change: push.getChanges()) {
+                    for (BitbucketPushEvent.Change change : push.getChanges()) {
                         if ((type == null || type == SCMEvent.Type.CREATED) && change.isCreated()) {
                             type = SCMEvent.Type.CREATED;
                         } else if ((type == null || type == SCMEvent.Type.REMOVED) && change.isClosed()) {
@@ -170,7 +173,7 @@ public class PushHookProcessor extends HookProcessor {
                             }
 
                             Map<SCMHead, SCMRevision> result = new HashMap<>();
-                            for (BitbucketPushEvent.Change change: getPayload().getChanges()) {
+                            for (BitbucketPushEvent.Change change : getPayload().getChanges()) {
                                 if (change.isClosed()) {
                                     result.put(new BranchSCMHead(change.getOld().getName()), null);
                                 } else {
