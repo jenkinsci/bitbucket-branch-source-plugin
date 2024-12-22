@@ -8,7 +8,6 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
@@ -18,6 +17,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  * If specified commit hashes are not found in repository then fetch
  * specified branches from remote.
  */
+//TODO be attention serialized in config.xml of the job as extension child of hudson.plugins.git.GitSCM. Provide a xml alias when move to package com.cloudbees.jenkins.plugins.bitbucket.impl.extension
 public class FallbackToOtherRepositoryGitSCMExtension extends GitSCMExtension {
 
     private final String cloneLink;
@@ -49,7 +49,7 @@ public class FallbackToOtherRepositoryGitSCMExtension extends GitSCMExtension {
                 String branch = branchWithHash.getBranch();
                 return new RefSpec("+refs/heads/" + branch + ":refs/remotes/" + remoteName + "/" + branch);
             })
-            .collect(Collectors.toList());
+            .toList();
 
         if (!refSpecs.isEmpty()) {
             FetchCommand fetchCommand = git.fetch_();

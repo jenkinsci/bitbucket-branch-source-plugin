@@ -239,6 +239,18 @@ The STOPPED status prevents merge checks on Cloud, CANCELLED status should preve
 If this does not meet you need you can disable any notification to Bitbucket using the https://github.com/jenkinsci/skip-notifications-trait-plugin/[skip-notifications-trait-plugin] and provide notification about the build status yourself. This can be achieved via a curl shell command or by using build steps provided by the https://github.com/jenkinsci/bitbucket-build-status-notifier-plugin[bitbucket-build-status-notifier-plugin].
 
 
+[id=bitbucket-env-var]
+== Environment Variables
+
+This plugin contribute to the enviroment with the following variables:
+
+- BITBUCKET_REPOSITORY: the repository name/slug
+- BITBUCKET_OWNER: the repository owner name/slug, in Bitbucket Cloud is the equivalent of workspace name
+- BITBUCKET_PROJECT_KEY: the project key in which the repository is contained
+- BITBUCKET_SERVER_URL: the Bitbucket server URL
+
+These variables were added to allow users to easily integrate calls to Bitbucket's REST APIs into their own pipelines to implement own business logics.
+
 [id=bitbucket-misc-config]
 == Miscellaneous configuration
 
