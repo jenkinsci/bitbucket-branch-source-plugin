@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
@@ -41,8 +42,6 @@ import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.QueryParameter;
 import org.springframework.security.core.Authentication;
 
 /**
@@ -79,9 +78,7 @@ public class BitbucketCredentials {
         return null;
     }
 
-    public static ListBoxModel fillCredentialsIdItems(
-        @AncestorInPath SCMSourceOwner context,
-        @QueryParameter String serverUrl) {
+    public static ListBoxModel fillCredentialsIdItems(SCMSourceOwner context, String serverURL) {
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeEmptyValue();
         AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
@@ -92,21 +89,28 @@ public class BitbucketCredentials {
                 ? task.getDefaultAuthentication2()
                 : ACL.SYSTEM2;
 
+        serverURL = BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverURL)
+                .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
+                .getServerUrl();
+
         result.includeMatchingAs(
                 authentication,
                 context,
                 StandardCredentials.class,
-                URIRequirementBuilder.fromUri(serverUrl).build(),
-                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+                URIRequirementBuilder.fromUri(serverURL).build(),
+                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL))
         );
         return result;
     }
 
-    public static FormValidation checkCredentialsId(
-        @AncestorInPath @CheckForNull SCMSourceOwner context,
-        @QueryParameter String value,
-        @QueryParameter String serverUrl) {
-        if (!value.isEmpty()) {
+    public static FormValidation checkCredentialsId(@CheckForNull SCMSourceOwner context, String value, String serverURL) {
+        if (StringUtils.isNotBlank(value)) {
+            serverURL = BitbucketEndpointConfiguration.get()
+                    .findEndpoint(serverURL)
+                    .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
+                    .getServerUrl();
+
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             contextToCheck.checkPermission(CredentialsProvider.VIEW);
 
@@ -119,10 +123,10 @@ public class BitbucketCredentials {
                             StandardCertificateCredentials.class,
                             context,
                             authentication,
-                            URIRequirementBuilder.fromUri(serverUrl).build()),
+                            URIRequirementBuilder.fromUri(serverURL).build()),
                     CredentialsMatchers.allOf(
                             CredentialsMatchers.withId(value),
-                            AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+                            AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL))
                     )
             ) != null) {
                 return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
@@ -132,4 +136,5 @@ public class BitbucketCredentials {
             return FormValidation.warning("Credentials are required for build notifications");
         }
     }
+
 }

@@ -22,14 +22,16 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
     @Override
     protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
                                   @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(BitbucketCloudEndpoint.SERVER_URL);
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(BitbucketCloudEndpoint.SERVER_URL)
+                .orElse(null);
         boolean enableCache = false;
         int teamCacheDuration = 0;
         int repositoriesCacheDuration = 0;
-        if (endpoint != null && endpoint instanceof BitbucketCloudEndpoint) {
-            enableCache = ((BitbucketCloudEndpoint) endpoint).isEnableCache();
-            teamCacheDuration = ((BitbucketCloudEndpoint) endpoint).getTeamCacheDuration();
-            repositoriesCacheDuration = ((BitbucketCloudEndpoint) endpoint).getRepositoriesCacheDuration();
+        if (endpoint instanceof BitbucketCloudEndpoint cloudEndpoint) {
+            enableCache = cloudEndpoint.isEnableCache();
+            teamCacheDuration = cloudEndpoint.getTeamCacheDuration();
+            repositoriesCacheDuration = cloudEndpoint.getRepositoriesCacheDuration();
         }
         return new BitbucketCloudApiClient(
                 enableCache, teamCacheDuration, repositoriesCacheDuration,
