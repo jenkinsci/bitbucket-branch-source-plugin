@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.trait.SCMSourceBuilder;
@@ -74,7 +73,7 @@ public class BitbucketSCMSourceBuilder extends SCMSourceBuilder<BitbucketSCMSour
                                      @NonNull String repoName, @CheckForNull String mirrorId) {
         super(BitbucketSCMSource.class, repoName);
         this.id = id;
-        this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+        this.serverUrl = serverUrl;
         this.credentialsId = credentialsId;
         this.mirrorId = mirrorId;
         this.repoOwner = repoOwner;

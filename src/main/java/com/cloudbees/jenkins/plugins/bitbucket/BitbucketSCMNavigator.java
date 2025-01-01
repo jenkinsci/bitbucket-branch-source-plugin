@@ -102,6 +102,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.getFromBitbucket;
 
@@ -288,9 +289,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     }
 
     @DataBoundSetter
-    public void setServerUrl(String serverUrl) {
+    public void setServerUrl(@CheckForNull String serverUrl) {
         serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
-        if (!StringUtils.equals(this.serverUrl, serverUrl)) {
+        if (serverUrl != null && !StringUtils.equals(this.serverUrl, serverUrl)) {
             this.serverUrl = serverUrl;
             resetId();
         }
@@ -384,14 +385,14 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @DataBoundSetter
     public void setBitbucketServerUrl(String url) {
         url = BitbucketEndpointConfiguration.normalizeServerUrl(url);
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(url);
-        if (endpoint != null) {
-            // we have a match
-            setServerUrl(url);
-            return;
+        url = StringUtils.defaultIfBlank(url, BitbucketCloudEndpoint.SERVER_URL); // when BitbucketServerUrl was null means cloud was configured
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(url)
+                .orElse(null);
+        if (endpoint == null) {
+            LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
+                    + "from the global configuration.", url);
         }
-        LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
-                + "from the global configuration.", url);
         setServerUrl(url);
     }
 
@@ -400,7 +401,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     @CheckForNull
     public String getBitbucketServerUrl() {
-        if (BitbucketEndpointConfiguration.get().findEndpoint(serverUrl) instanceof BitbucketCloudEndpoint) {
+        if (BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl)
+                .filter(BitbucketCloudEndpoint.class::isInstance)
+                .isPresent()) {
             return null;
         }
         return serverUrl;
@@ -629,7 +633,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         @Override
         public SCMNavigator newInstance(String name) {
             BitbucketSCMNavigator instance = new BitbucketSCMNavigator(StringUtils.defaultString(name));
-            instance.setTraits((List) getTraitsDefaults());
+            instance.setTraits(getTraitsDefaults());
             return instance;
         }
 
@@ -647,16 +651,21 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return BitbucketEndpointConfiguration.get().getEndpointItems();
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // used By stapler
-        public FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl, @QueryParameter String value) {
-            return BitbucketCredentials.checkCredentialsId(context, value, serverUrl);
+        public static FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
+                                                          @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
+                                                          @QueryParameter String value) {
+            return BitbucketCredentials.checkCredentialsId(context, value, serverURL);
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // used By stapler
-        public static FormValidation doCheckMirrorId(@QueryParameter String value, @QueryParameter String serverUrl) {
+        public static FormValidation doCheckMirrorId(@QueryParameter String value,
+                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             if (!value.isEmpty()) {
                 BitbucketServerWebhookImplementation webhookImplementation =
-                    BitbucketServerEndpoint.findWebhookImplementation(serverUrl);
+                    BitbucketServerEndpoint.findWebhookImplementation(serverURL);
                 if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
                     return FormValidation.error("Mirror can only be used with native webhooks");
                 }
@@ -666,13 +675,13 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
-                                                     @QueryParameter String serverUrl) {
-            return BitbucketCredentials.fillCredentialsIdItems(context, serverUrl);
+                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
+            return BitbucketCredentials.fillCredentialsIdItems(context, serverURL);
         }
 
         @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
-                                                @QueryParameter String serverUrl,
+                                                @QueryParameter(fixEmpty = true, value = "serverUrl") String serverUrl,
                                                 @QueryParameter String credentialsId,
                                                 @QueryParameter String repoOwner)
             throws FormFillFailure {

@@ -264,8 +264,9 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
         pullRequests.removeIf(this::shouldIgnore);
 
-        BitbucketServerEndpoint endpoint = (BitbucketServerEndpoint) BitbucketEndpointConfiguration.get().
-            findEndpoint(this.baseURL, BitbucketServerEndpoint.class).orElse(null);
+        BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(this.baseURL, BitbucketServerEndpoint.class)
+                .orElse(null);
 
         for (BitbucketServerPullRequest pullRequest : pullRequests) {
             setupPullRequest(pullRequest, endpoint);
@@ -395,8 +396,11 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         try {
             BitbucketServerPullRequest pr = JsonParser.toJava(response, BitbucketServerPullRequest.class);
             setupClosureForPRBranch(pr);
-            setupPullRequest(pr, (BitbucketServerEndpoint) BitbucketEndpointConfiguration.get().
-                findEndpoint(this.baseURL, BitbucketServerEndpoint.class).orElse(null));
+
+            BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                    .findEndpoint(this.baseURL, BitbucketServerEndpoint.class)
+                    .orElse(null);
+            setupPullRequest(pr, endpoint);
             return pr;
         } catch (IOException e) {
             throw new IOException("I/O error when accessing URL: " + url, e);

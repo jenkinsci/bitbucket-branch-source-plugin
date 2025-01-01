@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
@@ -213,9 +212,11 @@ public class WebhookConfiguration {
     }
 
     private static List<String> getNativeServerEvents(String serverUrl) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        if (endpoint instanceof BitbucketServerEndpoint) {
-            switch (((BitbucketServerEndpoint) endpoint).getServerVersion()) {
+        BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl, BitbucketServerEndpoint.class)
+                .orElse(null);
+        if (endpoint != null) {
+            switch (endpoint.getServerVersion()) {
             case VERSION_5:
                 return NATIVE_SERVER_EVENTS_v5;
             case VERSION_5_10:

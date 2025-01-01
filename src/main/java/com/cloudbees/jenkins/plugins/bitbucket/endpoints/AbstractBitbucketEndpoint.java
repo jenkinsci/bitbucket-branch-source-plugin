@@ -144,10 +144,11 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        if (StringUtils.isBlank(bitbucketJenkinsRootUrl))
+        if (StringUtils.isBlank(bitbucketJenkinsRootUrl)) {
             return ClassicDisplayURLProvider.get().getRoot();
-        else
+        } else {
             return bitbucketJenkinsRootUrl;
+        }
     }
 
     /**
@@ -172,7 +173,9 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         // Note: do not pre-initialize to the global value, so it can be
         // reconfigured on the fly.
 
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl)
+                .orElse(null);
         if (endpoint != null) {
             return endpoint.getEndpointJenkinsRootUrl();
         }

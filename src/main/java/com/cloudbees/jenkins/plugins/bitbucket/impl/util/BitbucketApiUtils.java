@@ -28,6 +28,10 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Restricted(NoExternalUse.class)
 public class BitbucketApiUtils {
 
+    public interface BitbucketSupplier<T> {
+        T get(BitbucketApi bitbucketApi) throws IOException, InterruptedException;
+    }
+
     private static final Logger logger = Logger.getLogger(BitbucketApiUtils.class.getName());
 
     public static boolean isCloud(BitbucketApi client) {
@@ -39,7 +43,7 @@ public class BitbucketApiUtils {
     }
 
     public static ListBoxModel getFromBitbucket(SCMSourceOwner context,
-                                                String serverUrl,
+                                                String serverURL,
                                                 String credentialsId,
                                                 String repoOwner,
                                                 String repository,
@@ -57,40 +61,35 @@ public class BitbucketApiUtils {
             return new ListBoxModel(); // not permitted to try connecting with these credentials
         }
 
-        String serverUrlFallback = BitbucketCloudEndpoint.SERVER_URL;
-        // if at least one bitbucket server is configured use it instead of bitbucket cloud
-        if (!BitbucketEndpointConfiguration.get().getEndpointItems().isEmpty()) {
-            serverUrlFallback =  BitbucketEndpointConfiguration.get().getEndpointItems().get(0).value;
-        }
-
-        serverUrl = StringUtils.defaultIfBlank(serverUrl, serverUrlFallback);
+        serverURL = BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverURL)
+                .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
+                .getServerUrl();
         StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
-            serverUrl,
+            serverURL,
             context,
             credentialsId,
             StandardCredentials.class
         );
 
-        BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
+        BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
 
         try {
-            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null, repository);
+            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverURL, authenticator, repoOwner, null, repository);
             return listBoxModelSupplier.get(bitbucket);
         } catch (FormFillFailure | OutOfMemoryError e) {
             throw e;
         } catch (IOException e) {
-            if (e instanceof BitbucketRequestException) {
-                if (((BitbucketRequestException) e).getHttpCode() == 401) {
+            if (e instanceof BitbucketRequestException bbe) {
+                if (bbe.getHttpCode() == 401) {
                     throw FormFillFailure.error(credentials == null
                         ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
                         : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
                 }
-            } else if (e.getCause() instanceof BitbucketRequestException) {
-                if (((BitbucketRequestException) e.getCause()).getHttpCode() == 401) {
-                    throw FormFillFailure.error(credentials == null
-                        ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
-                        : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
-                }
+            } else if (e.getCause() instanceof BitbucketRequestException cause && cause.getHttpCode() == 401) {
+                throw FormFillFailure.error(credentials == null
+                    ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
+                    : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
             }
             logger.log(Level.SEVERE, e.getMessage(), e);
             throw FormFillFailure.error(e.getMessage());
@@ -98,10 +97,6 @@ public class BitbucketApiUtils {
             logger.log(Level.SEVERE, e.getMessage(), e);
             throw FormFillFailure.error(e.getMessage());
         }
-    }
-
-    public interface BitbucketSupplier<T> {
-        T get(BitbucketApi bitbucketApi) throws IOException, InterruptedException;
     }
 
 }
