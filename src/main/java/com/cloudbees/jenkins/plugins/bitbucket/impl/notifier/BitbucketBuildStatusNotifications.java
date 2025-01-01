@@ -223,10 +223,20 @@ public final class BitbucketBuildStatusNotifications {
              * Poor documentation for bitbucket cloud at:
              * https://community.atlassian.com/t5/Bitbucket-questions/Re-Builds-not-appearing-in-pull-requests/qaq-p/1805991/comment-id/65864#M65864
              * that means refName null or valued with only head.getBranchName()
-             * For bitbucket server refName set to null or ... (refs/heads/ + head.getBranchName()) ??
+             *
+             * For Bitbucket Server, refName should be "refs/heads/" + the name
+             * of the source branch of the pull request, and the build status
+             * should be posted to the repository that contains that branch.
+             * If refName is null, then Bitbucket Server does not show the
+             * build status in the list of pull requests, but still shows it
+             * on the web page of the individual pull request.
              */
-            refName = null;
             bitbucket = source.buildBitbucketClient(head);
+            if (BitbucketApiUtils.isCloud(bitbucket)) {
+                refName = null;
+            } else {
+                refName = "refs/heads/" + head.getBranchName();
+            }
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
             SCMHead head = rev.getHead();
