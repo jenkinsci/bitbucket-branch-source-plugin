@@ -76,10 +76,50 @@
     "type": "user",
     "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}"
   },
+  "workspace": {
+    "type": "workspace",
+    "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+    "name": "Albert Muniz",
+    "slug": "amunuz",
+    "links": {
+      "avatar": {
+        "href": "https://bitbucket.org/workspaces/amuniz/avatar/?ts=1644525365"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/"
+      },
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/workspaces/nfalco79"
+      }
+    }
+  },
+  "project": {
+    "type": "project",
+    "key": "PUB",
+    "uuid": "{ef731d07-06e0-46d2-9b56-2674649b0655}",
+    "name": "public",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/workspaces/amuniz/projects/PUB"
+      },
+      "html": {
+        "href": "https://bitbucket.org/amuniz/workspace/projects/PUB"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/amuniz/workspace/projects/PUB/avatar/32?ts=1644525770"
+      }
+    }
+  },
   "updated_on": "2018-09-21T15:53:38.794718+00:00",
   "size": 84351,
   "type": "repository",
   "slug": "test-repos",
   "is_private": false,
-  "description": ""
+  "description": "",
+  "override_settings": {
+    "default_merge_strategy": false,
+    "branching_model": false
+  },
+  "parent": null,
+  "enforced_signed_commits": null
 }

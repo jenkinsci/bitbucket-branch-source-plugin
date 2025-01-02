@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClient
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -321,6 +322,34 @@ public class BitbucketSCMSourceTest {
             .satisfies(urc -> {
                 assertThat(urc.getUrl()).isEqualTo("https://bitbucket.org/amuniz/test-repos.git");
             });
+    }
+
+    @Test
+    public void verify_envvar() {
+        BranchSCMHead head = new BranchSCMHead("master");
+        BitbucketPullRequestCommit commit = new BitbucketPullRequestCommit();
+        commit.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d2");
+        commit.setDate(new Date());
+
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repo");
+        BitbucketMockApiFactory.add(instance.getServerUrl(), BitbucketIntegrationClientFactory.getApiMockClient(instance.getServerUrl()));
+        SCM scm = instance.build(head, new BitbucketGitSCMRevision(head, commit));
+        assertThat(scm).isInstanceOf(GitSCM.class);
+        GitSCM gitSCM = (GitSCM) scm;
+
+        assertThat(gitSCM.getExtensions())
+            .isNotEmpty()
+            .hasAtLeastOneElementOfType(BitbucketEnvVarExtension.class);
+
+        BitbucketEnvVarExtension gitExtension = gitSCM.getExtensions().stream()
+            .filter(BitbucketEnvVarExtension.class::isInstance)
+            .map(BitbucketEnvVarExtension.class::cast)
+            .findFirst()
+            .orElseThrow();
+        assertThat(gitExtension.getOwner()).isEqualTo("amuniz");
+        assertThat(gitExtension.getProjectKey()).isEqualTo("PUB");
+        assertThat(gitExtension.getServerURL()).isEqualTo(instance.getServerUrl());
+        assertThat(gitExtension.getRepository()).isEqualTo("test-repo");
     }
 
     @Test
