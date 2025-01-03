@@ -373,8 +373,8 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @DataBoundSetter
-    public void setServerUrl(@CheckForNull String serverUrl) {
-        this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+    public void setServerUrl(String serverUrl) {
+        this.serverUrl = serverUrl;
     }
 
     @NonNull
@@ -399,8 +399,9 @@ public class BitbucketSCMSource extends SCMSource {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setBitbucketServerUrl(String url) {
-        url = BitbucketEndpointConfiguration.normalizeServerUrl(url);
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(url);
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(url)
+                .orElse(null);
         if (endpoint != null) {
             // we have a match
             setServerUrl(endpoint.getServerUrl());
@@ -417,7 +418,10 @@ public class BitbucketSCMSource extends SCMSource {
     @CheckForNull
     public String getBitbucketServerUrl() {
         String serverUrl = getServerUrl();
-        if (BitbucketEndpointConfiguration.get().findEndpoint(serverUrl) instanceof BitbucketCloudEndpoint) {
+        if (BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl)
+                .filter(BitbucketCloudEndpoint.class::isInstance)
+                .isPresent()) {
             return null;
         }
         return serverUrl;
@@ -1333,8 +1337,8 @@ public class BitbucketSCMSource extends SCMSource {
         @SuppressWarnings("unused") // used By stapler
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
-                                                   @QueryParameter String serverUrl) {
-            return BitbucketCredentials.checkCredentialsId(context, value, serverUrl);
+                                                   @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
+            return BitbucketCredentials.checkCredentialsId(context, value, serverURL);
         }
 
         @SuppressWarnings("unused") // used By stapler
@@ -1350,11 +1354,13 @@ public class BitbucketSCMSource extends SCMSource {
             return FormValidation.ok();
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // used By stapler
-        public static FormValidation doCheckMirrorId(@QueryParameter String value, @QueryParameter String serverUrl) {
+        public static FormValidation doCheckMirrorId(@QueryParameter String value,
+                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             if (!value.isEmpty()) {
                 BitbucketServerWebhookImplementation webhookImplementation =
-                    BitbucketServerEndpoint.findWebhookImplementation(serverUrl);
+                    BitbucketServerEndpoint.findWebhookImplementation(serverURL);
                 if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
                     return FormValidation.error("Mirror can only be used with native webhooks");
                 }

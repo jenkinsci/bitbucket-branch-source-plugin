@@ -32,10 +32,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -166,7 +164,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     return null;
                 }
 
-                if (apiClient instanceof BitbucketCloudApiClient) {
+                if (BitbucketApiUtils.isCloud(apiClient)) {
                     // support lightweight checkout for branches with same owner and repository
                     if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
                         prHead.getRepoOwner().equals(src.getRepoOwner()) &&
@@ -184,9 +182,8 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     // Bitbucket server v7 doesn't have the `merge` ref for PRs
                     // We don't return `ref` when working with v7
                     // so that pipeline falls back to heavyweight checkout properly
-                    AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(src.getServerUrl());
-                    if (endpointConfig instanceof BitbucketServerEndpoint endpoint &&
-                        endpoint.getServerVersion() != BitbucketServerVersion.VERSION_7) {
+                    boolean ligthCheckout = BitbucketServerEndpoint.findServerVersion(serverUrl) != BitbucketServerVersion.VERSION_7;
+                    if (ligthCheckout) {
                         ref = "pull-requests/" + prHead.getId() + "/merge";
                     } else {
                         // returning null to fall back to heavyweight checkout

@@ -139,8 +139,9 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     case DISABLE:
                         continue;
                     case SYSTEM:
-                        AbstractBitbucketEndpoint endpoint =
-                                BitbucketEndpointConfiguration.get().findEndpoint(source.getServerUrl());
+                        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                            .findEndpoint(source.getServerUrl())
+                            .orElse(null);
                         if (endpoint == null || !endpoint.isManageHooks()) {
                             continue;
                         }
@@ -215,8 +216,9 @@ public class WebhookAutoRegisterListener extends ItemListener {
             case DISABLE:
                 return null;
             case SYSTEM:
-                AbstractBitbucketEndpoint endpoint =
-                        BitbucketEndpointConfiguration.get().findEndpoint(source.getServerUrl());
+                AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                    .findEndpoint(source.getServerUrl())
+                    .orElse(null);
                 return endpoint == null || !endpoint.isManageHooks()
                         ? null
                         : BitbucketApiFactory.newInstance(
