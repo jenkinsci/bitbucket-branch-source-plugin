@@ -220,16 +220,21 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     @NonNull
     protected abstract CloseableHttpClient getClient();
 
-    /* for test purpose */
-    protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws IOException {
-        if (authenticator != null) {
+    protected CloseableHttpResponse executeMethod(HttpHost host,
+                                                  HttpRequestBase httpMethod,
+                                                  boolean requireAuthentication) throws IOException {
+        if (requireAuthentication && authenticator != null) {
             authenticator.configureRequest(httpMethod);
         }
         return getClient().execute(host, httpMethod, context);
     }
 
-    protected String doRequest(HttpRequestBase request) throws IOException {
-        try (CloseableHttpResponse response =  executeMethod(getHost(), request)) {
+    protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws IOException {
+        return executeMethod(host, httpMethod, true);
+    }
+
+    protected String doRequest(HttpRequestBase request, boolean requireAuthentication) throws IOException {
+        try (CloseableHttpResponse response =  executeMethod(getHost(), request, requireAuthentication)) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("URL: " + request.getURI());
@@ -252,6 +257,10 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         } finally {
             release(request);
         }
+    }
+
+    protected String doRequest(HttpRequestBase request) throws IOException {
+        return doRequest(request, true);
     }
 
     private void release(HttpRequestBase method) {

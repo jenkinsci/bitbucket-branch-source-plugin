@@ -104,7 +104,9 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws IOException {
+        protected CloseableHttpResponse executeMethod(HttpHost host,
+                                                      HttpRequestBase httpMethod,
+                                                      boolean requireAuthentication) throws IOException {
             String path = httpMethod.getURI().toString();
             audit.request(httpMethod);
 
@@ -115,6 +117,11 @@ public class BitbucketIntegrationClientFactory {
             payloadPath = payloadRootPath + payloadPath + ".json";
 
             return loadResponseFromResources(getClass(), path, payloadPath);
+        }
+
+        @Override
+        public BitbucketAuthenticator getAuthenticator() {
+            return super.getAuthenticator();
         }
 
         @Override
@@ -131,7 +138,7 @@ public class BitbucketIntegrationClientFactory {
         private final IRequestAudit audit;
 
         private BitbucketClouldIntegrationClient(String payloadRootPath, String owner, String repositoryName) {
-            super(false, 0, 0, owner, null, repositoryName, (BitbucketAuthenticator) null);
+            super(false, 0, 0, owner, null, repositoryName, mock(BitbucketAuthenticator.class));
 
             if (payloadRootPath == null) {
                 this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;
@@ -148,7 +155,9 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws IOException {
+        protected CloseableHttpResponse executeMethod(HttpHost host,
+                                                      HttpRequestBase httpMethod,
+                                                      boolean requireAuthentication) throws IOException {
             String path = httpMethod.getURI().toString();
             audit.request(httpMethod);
 
@@ -156,6 +165,11 @@ public class BitbucketIntegrationClientFactory {
             payloadPath = payloadRootPath + payloadPath + ".json";
 
             return loadResponseFromResources(getClass(), path, payloadPath);
+        }
+
+        @Override
+        public BitbucketAuthenticator getAuthenticator() {
+            return super.getAuthenticator();
         }
 
         @Override
