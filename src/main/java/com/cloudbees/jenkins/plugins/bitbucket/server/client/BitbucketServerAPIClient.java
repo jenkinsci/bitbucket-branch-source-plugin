@@ -903,7 +903,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("start", pageNumber) //
                 .set("limit", limit) //
                 .expand();
-            String response = getRequest(this.baseURL + url);
+            String response = getRequest(url);
             try {
                 page = JsonParser.toJava(response, clazz);
             } catch (IOException e) {
