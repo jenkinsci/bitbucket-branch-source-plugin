@@ -28,9 +28,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.FallbackToOtherRepositoryGitSCMExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
@@ -108,11 +109,11 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             endpoint = new BitbucketServerEndpoint(null, serverURL, false, null);
         }
 
-        String repositoryUrl = endpoint.getRepositoryUrl(scmSource.getRepoOwner(), scmSource.getRepository());
-        if (endpoint instanceof BitbucketCloudEndpoint) {
-            withBrowser(new BitbucketWeb(repositoryUrl));
+        String repositoryURL = endpoint.getRepositoryUrl(scmSource.getRepoOwner(), scmSource.getRepository());
+        if (BitbucketApiUtils.isCloud(endpoint.getServerUrl())) {
+            withBrowser(new BitbucketWeb(repositoryURL));
         } else {
-            withBrowser(new BitbucketServer(repositoryUrl));
+            withBrowser(new BitbucketServer(repositoryURL));
         }
 
         // Test for protocol
@@ -214,8 +215,8 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         String scmSourceRepository = scmSource.getRepository();
         String pullRequestRepoOwner = head.getRepoOwner();
         String pullRequestRepository = head.getRepository();
-        boolean prFromTargetRepository = pullRequestRepoOwner.equals(scmSourceRepoOwner)
-            && pullRequestRepository.equals(scmSourceRepository);
+        boolean prFromTargetRepository = pullRequestRepoOwner.equalsIgnoreCase(scmSourceRepoOwner)
+            && pullRequestRepository.equalsIgnoreCase(scmSourceRepository);
         SCMRevision revision = revision();
         ChangeRequestCheckoutStrategy checkoutStrategy = head.getCheckoutStrategy();
         // PullRequestSCMHead should be refactored to add references to target and source commit hashes.

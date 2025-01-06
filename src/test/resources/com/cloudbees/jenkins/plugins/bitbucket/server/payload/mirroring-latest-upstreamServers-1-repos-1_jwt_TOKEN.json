@@ -1,0 +1,19 @@
+{
+  "pushUrls": [
+    {
+      "name": "http",
+      "href": "https://bitbucket.example.com/scm/awesomeproject/awesomerepo.git"
+    }
+  ],
+  "cloneUrls": [
+    {
+      "name": "http",
+      "href": "https://bitbucket.example.com/scm/awesomeproject/awesomerepo.git"
+    }
+  ],
+  "mirrorName": "Saigon Mirror",
+  "lastUpdated": "<string>",
+  "available": true,
+  "status": "NOT_MIRRORED",
+  "repositoryId": "1"
+}

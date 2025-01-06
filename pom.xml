@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.3</version>
+    <version>5.4</version>
     <relativePath />
   </parent>
 
@@ -26,7 +26,7 @@
   </licenses>
 
   <properties>
-    <revision>1000.0.0</revision>
+    <revision>933.2.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
@@ -68,7 +68,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3761.vd922730f0fd2</version>
+        <version>3850.vb_c5319efa_e29</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -91,7 +91,7 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
       <!-- TODO: remove when in bom -->
-      <version>5.6.1-rc5349.5d1753d390a_7</version>
+      <version>5.7.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -129,7 +129,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.26.3</version>
+      <version>3.27.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -167,6 +167,18 @@
       <artifactId>scribejava-core</artifactId>
       <version>8.3.3</version>
     </dependency>
+    <dependency>
+      <groupId>org.mock-server</groupId>
+      <artifactId>mockserver-junit-jupiter</artifactId>
+      <version>5.15.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <repositories>
@@ -193,7 +205,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.20.2</version>
+              <version>10.21.0</version>
             </dependency>
           </dependencies>
         </plugin>

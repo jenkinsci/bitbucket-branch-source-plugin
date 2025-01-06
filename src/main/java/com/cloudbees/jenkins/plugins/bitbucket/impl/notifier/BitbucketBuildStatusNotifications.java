@@ -34,6 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -219,27 +220,37 @@ public final class BitbucketBuildStatusNotifications {
             PullRequestSCMHead head = (PullRequestSCMHead) rev.getHead();
             key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
             /*
-             * in case of pull request it's not clear at all how to value refname. The
-             * bitbucket documentation does not help. Using values like
-             * - refs/heads/PR-748;
-             * - refs/pull-requests/748,
-             * - refs/pull-requests/feature/test;
-             * causes the build status disappear from the web page.
-             * The only working value is null. If commit is used for two different
-             * pull requests than you will get status doubled in both PRs
+             * Poor documentation for bitbucket cloud at:
+             * https://community.atlassian.com/t5/Bitbucket-questions/Re-Builds-not-appearing-in-pull-requests/qaq-p/1805991/comment-id/65864#M65864
+             * that means refName null or valued with only head.getBranchName()
+             *
+             * For Bitbucket Server, refName should be "refs/heads/" + the name
+             * of the source branch of the pull request, and the build status
+             * should be posted to the repository that contains that branch.
+             * If refName is null, then Bitbucket Server does not show the
+             * build status in the list of pull requests, but still shows it
+             * on the web page of the individual pull request.
              */
-            refName = null; // "refs/pull-requests/" + head.getBranchName();
             bitbucket = source.buildBitbucketClient(head);
+            if (BitbucketApiUtils.isCloud(bitbucket)) {
+                refName = null;
+            } else {
+                refName = "refs/heads/" + head.getBranchName();
+            }
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
             SCMHead head = rev.getHead();
             key = getBuildKey(build, head.getName(), shareBuildKeyBetweenBranchAndPR);
-            if (rev instanceof BitbucketTagSCMRevision || head instanceof BitbucketTagSCMHead) {
-                refName = "refs/tags/" + head.getName();
-            } else {
-                refName = "refs/heads/" + head.getName();
-            }
             bitbucket = source.buildBitbucketClient();
+            if (BitbucketApiUtils.isCloud(bitbucket)) {
+                refName = head.getName();
+            } else {
+                if (rev instanceof BitbucketTagSCMRevision || head instanceof BitbucketTagSCMHead) {
+                    refName = "refs/tags/" + head.getName();
+                } else {
+                    refName = "refs/heads/" + head.getName();
+                }
+            }
         }
         createStatus(build, listener, bitbucket, key, hash, refName);
     }

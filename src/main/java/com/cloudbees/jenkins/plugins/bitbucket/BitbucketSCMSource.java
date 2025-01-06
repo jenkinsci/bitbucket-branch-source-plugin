@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirroredRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirroredRepositoryDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketProject;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
@@ -42,9 +43,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.BitbucketSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -75,8 +80,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -128,6 +131,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.accmod.restrictions.ProtectedExternally;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -385,6 +389,7 @@ public class BitbucketSCMSource extends SCMSource {
         return Collections.unmodifiableList(traits);
     }
 
+    @Override
     @DataBoundSetter
     public void setTraits(@CheckForNull List<SCMSourceTrait> traits) {
         this.traits = new ArrayList<>(Util.fixNull(traits));
@@ -690,7 +695,7 @@ public class BitbucketSCMSource extends SCMSource {
             boolean fork = !fullName.equalsIgnoreCase(pull.getSource().getRepository().getFullName());
             String pullRepoOwner = pull.getSource().getRepository().getOwnerName();
             String pullRepository = pull.getSource().getRepository().getRepositoryName();
-            final BitbucketApi pullBitbucket = fork && originBitbucket instanceof BitbucketCloudApiClient
+            final BitbucketApi pullBitbucket = fork && BitbucketApiUtils.isCloud(originBitbucket)
                     ? BitbucketApiFactory.newInstance(
                     getServerUrl(),
                     authenticator(),
@@ -999,33 +1004,45 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @Override
-    public SCM build(SCMHead head, SCMRevision revision) {
+    public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
         initCloneLinks();
 
-        boolean sshAuth = traits.stream()
-            .anyMatch(SSHCheckoutTrait.class::isInstance);
-
-        BitbucketAuthenticator authenticator = authenticator();
-        return new BitbucketGitSCMBuilder(this, head, revision, credentialsId)
-                .withExtension(new GitClientAuthenticatorExtension(authenticator == null || sshAuth ? null : authenticator.getCredentialsForSCM()))
+        BitbucketGitSCMBuilder scmBuilder = new BitbucketGitSCMBuilder(this, head, revision, credentialsId)
+                .withExtension(new BitbucketEnvVarExtension(getRepoOwner(), getRepository(), getProjectKey(), getServerUrl()))
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
-                .withTraits(traits)
+                .withTraits(traits);
+
+        boolean sshAuth = traits.stream()
+                .anyMatch(SSHCheckoutTrait.class::isInstance);
+        BitbucketAuthenticator authenticator = authenticator();
+
+        return scmBuilder
+                .withExtension(new GitClientAuthenticatorExtension(scmBuilder.remote(), authenticator == null || sshAuth ? null : authenticator.getCredentialsForSCM()))
                 .build();
+    }
+
+    @CheckForNull
+    @Restricted(ProtectedExternally.class)
+    protected String getProjectKey() {
+        String projectKey = null;
+        try {
+            BitbucketProject project = buildBitbucketClient().getRepository().getProject();
+            if (project != null) {
+                projectKey = project.getKey();
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.severe("Failure getting the project key of repository " + getRepository() + " : " + e.getMessage());
+        }
+        return projectKey;
     }
 
     private void setPrimaryCloneLinks(List<BitbucketHref> links) {
         links.forEach(link -> {
             if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
-                try {
-                    URL linkURL = new URL(link.getHref());
-                    // Remove the username from URL because it will be set into the GIT_URL variable
-                    // credentials used to clone or for push/pull could be different than this will cause a failure
-                    // Restore the behaviour before mirror link feature.
-                    URL cleanURL = new URL(linkURL.getProtocol(), linkURL.getHost(), linkURL.getPort(), linkURL.getFile());
-                    link.setHref(cleanURL.toExternalForm());
-                } catch (MalformedURLException e) {
-                    // do nothing, URL can not be parsed, leave as is
-                }
+                // Remove the username from URL because it will be set into the GIT_URL variable
+                // credentials used to clone or for push/pull could be different than this will cause a failure
+                // Restore the behaviour before mirror link feature.
+                link.setHref(URLUtils.removeAuthority(link.getHref()));
             }
         });
         primaryCloneLinks = links;
@@ -1091,13 +1108,15 @@ public class BitbucketSCMSource extends SCMSource {
             result.add(new BitbucketDefaultBranch(repoOwner, repository, defaultBranch));
         }
         UriTemplate template;
-        if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
+        if (BitbucketApiUtils.isCloud(getServerUrl())) {
             template = UriTemplate.fromTemplate(getServerUrl() + CLOUD_REPO_TEMPLATE);
         } else {
             template = UriTemplate.fromTemplate(getServerUrl() + SERVER_REPO_TEMPLATE);
         }
-        template.set("owner", repoOwner).set("repo", repository);
-        String url = template.expand();
+        String url = template
+            .set("owner", repoOwner)
+            .set("repo", repository)
+            .expand();
         result.add(new BitbucketLink("icon-bitbucket-repo", url));
         result.add(new ObjectMetadataAction(r.getRepositoryName(), null, url));
         return result;

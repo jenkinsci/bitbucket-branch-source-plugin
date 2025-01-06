@@ -25,7 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,8 +36,6 @@ import org.apache.http.HttpHost;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.tools.ant.filters.StringInputStream;
 
 import static org.mockito.Mockito.mock;
@@ -75,8 +73,7 @@ public class BitbucketIntegrationClientFactory {
     }
 
     public static BitbucketApi getClient(String payloadRootPath, String serverURL, String owner, String repositoryName) {
-        if (BitbucketCloudEndpoint.SERVER_URL.equals(serverURL) ||
-                BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverURL)) {
+        if (BitbucketApiUtils.isCloud(serverURL)) {
             return new BitbucketClouldIntegrationClient(payloadRootPath, owner, repositoryName);
         } else {
             return new BitbucketServerIntegrationClient(payloadRootPath, serverURL, owner, repositoryName);
@@ -92,10 +89,9 @@ public class BitbucketIntegrationClientFactory {
 
         private final String payloadRootPath;
         private final IRequestAudit audit;
-        private boolean rateLimitNextRequest; // TODO: Would be nice to have a better way to mock non-200 responses.
 
         private BitbucketServerIntegrationClient(String payloadRootPath, String baseURL, String owner, String repositoryName) {
-            super(baseURL, owner, repositoryName, (BitbucketAuthenticator) null, false);
+            super(baseURL, owner, repositoryName, mock(BitbucketAuthenticator.class), false);
 
             if (payloadRootPath == null) {
                 this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;
@@ -107,16 +103,10 @@ public class BitbucketIntegrationClientFactory {
             this.audit = mock(IRequestAudit.class);
         }
 
-        public void rateLimitNextRequest() {
-            rateLimitNextRequest = true;
-        }
-
         @Override
-        protected CloseableHttpResponse executeMethodNoRetry(CloseableHttpClient client, HttpRequestBase httpMethod, HttpClientContext context) throws IOException {
-            if (rateLimitNextRequest) {
-                rateLimitNextRequest = false;
-                return createRateLimitResponse();
-            }
+        protected CloseableHttpResponse executeMethod(HttpHost host,
+                                                      HttpRequestBase httpMethod,
+                                                      boolean requireAuthentication) throws IOException {
             String path = httpMethod.getURI().toString();
             audit.request(httpMethod);
 
@@ -127,6 +117,11 @@ public class BitbucketIntegrationClientFactory {
             payloadPath = payloadRootPath + payloadPath + ".json";
 
             return loadResponseFromResources(getClass(), path, payloadPath);
+        }
+
+        @Override
+        public BitbucketAuthenticator getAuthenticator() {
+            return super.getAuthenticator();
         }
 
         @Override
@@ -143,7 +138,7 @@ public class BitbucketIntegrationClientFactory {
         private final IRequestAudit audit;
 
         private BitbucketClouldIntegrationClient(String payloadRootPath, String owner, String repositoryName) {
-            super(false, 0, 0, owner, null, repositoryName, (BitbucketAuthenticator) null);
+            super(false, 0, 0, owner, null, repositoryName, mock(BitbucketAuthenticator.class));
 
             if (payloadRootPath == null) {
                 this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;
@@ -160,7 +155,9 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws InterruptedException, IOException {
+        protected CloseableHttpResponse executeMethod(HttpHost host,
+                                                      HttpRequestBase httpMethod,
+                                                      boolean requireAuthentication) throws IOException {
             String path = httpMethod.getURI().toString();
             audit.request(httpMethod);
 
@@ -168,6 +165,11 @@ public class BitbucketIntegrationClientFactory {
             payloadPath = payloadRootPath + payloadPath + ".json";
 
             return loadResponseFromResources(getClass(), path, payloadPath);
+        }
+
+        @Override
+        public BitbucketAuthenticator getAuthenticator() {
+            return super.getAuthenticator();
         }
 
         @Override
@@ -180,13 +182,4 @@ public class BitbucketIntegrationClientFactory {
         return BitbucketIntegrationClientFactory.getClient(null, serverURL, "amuniz", "test-repos");
     }
 
-    private static CloseableHttpResponse createRateLimitResponse() {
-        StatusLine statusLine = mock(StatusLine.class);
-        when(statusLine.getStatusCode()).thenReturn(429);
-
-        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-        when(response.getStatusLine()).thenReturn(statusLine);
-
-        return response;
-    }
 }

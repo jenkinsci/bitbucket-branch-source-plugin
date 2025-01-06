@@ -85,8 +85,7 @@ public class BitbucketOAuthAuthenticator implements BitbucketAuthenticator {
     @Override
     public StandardUsernameCredentials getCredentialsForSCM() {
         try {
-            return new UsernamePasswordCredentialsImpl(
-                    CredentialsScope.GLOBAL, getId(), null, "x-token-auth", getToken().getAccessToken());
+            return new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, getId(), null, "x-token-auth", getToken().getAccessToken());
         } catch (FormException e) {
             throw new RuntimeException(e);
         }
