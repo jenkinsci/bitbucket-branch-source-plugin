@@ -35,20 +35,28 @@ import java.security.UnrecoverableKeyException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.HttpsSupport;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.URIScheme;
+import org.apache.hc.core5.http.config.Registry;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.SSLContexts;
 
 /**
  * Authenticates against Bitbucket using a TLS client certificate
  */
 public class BitbucketClientCertificateAuthenticator implements BitbucketAuthenticator {
+    private static final Logger logger = Logger.getLogger(BitbucketClientCertificateAuthenticator.class.getName());
+    private static final String SOCKET_FACTORY_REGISTRY = "http.socket-factory-registry";
 
     private final String credentialsId;
     private final KeyStore keyStore;
     private final Secret password;
-
-    private static final Logger LOGGER = Logger.getLogger(BitbucketClientCertificateAuthenticator.class.getName());
 
     public BitbucketClientCertificateAuthenticator(StandardCertificateCredentials credentials) {
         this.credentialsId = credentials.getId();
@@ -58,14 +66,19 @@ public class BitbucketClientCertificateAuthenticator implements BitbucketAuthent
 
     /**
      * Sets the SSLContext for the builder to one that will connect with the selected certificate.
-     * @param builder The client builder.
+     * @param context The client builder context
+     * @param host the target host name
      */
     @Override
-    public void configureBuilder(HttpClientBuilder builder) {
+    public void configureContext(HttpClientContext context, HttpHost host) {
         try {
-            builder.setSSLContext(buildSSLContext());
+            Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register(URIScheme.HTTP.id, PlainConnectionSocketFactory.getSocketFactory())
+                .register(URIScheme.HTTPS.id, new SSLConnectionSocketFactory(buildSSLContext(), HttpsSupport.getDefaultHostnameVerifier()))
+                .build();
+            context.setAttribute(SOCKET_FACTORY_REGISTRY, registry); // override SSL registry for this context
         } catch (NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException | KeyManagementException e) {
-            LOGGER.log(Level.WARNING, "Failed to set up SSL context from provided client certificate: " + e.getMessage());
+            logger.log(Level.WARNING, "Failed to set up SSL context from provided client certificate: " + e.getMessage());
             // TODO: handle this error in a way that provides feedback to the user
         }
     }
