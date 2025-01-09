@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 import jenkins.util.SetContextClassLoader;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 
 public class BitbucketOAuthAuthenticator implements BitbucketAuthenticator {
     private static final Cache<String, OAuth2AccessToken> cacheToken = new Cache<>(5, TimeUnit.MINUTES);

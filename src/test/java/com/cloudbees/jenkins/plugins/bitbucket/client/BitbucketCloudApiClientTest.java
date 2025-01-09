@@ -27,7 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IAuditable;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
@@ -40,9 +40,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
@@ -86,7 +86,7 @@ class BitbucketCloudApiClientTest {
 
         client.postBuildStatus(status);
 
-        HttpRequestBase request = extractRequest(client);
+        HttpRequest request = extractRequest(client);
         assertThat(request).isNotNull()
             .isInstanceOf(HttpPost.class);
         try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
@@ -95,15 +95,16 @@ class BitbucketCloudApiClientTest {
         }
     }
 
-    private HttpRequestBase extractRequest(@NonNull BitbucketApi client) {
-        IRequestAudit audit = ((IRequestAudit) client).getAudit();
-        ArgumentCaptor<HttpRequestBase> captor = ArgumentCaptor.forClass(HttpRequestBase.class);
-        verify(audit).request(captor.capture());
+    private HttpRequest extractRequest(BitbucketApi client) {
+        assertThat(client).isInstanceOf(IAuditable.class);
+
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(((IAuditable) client).getAudit()).request(captor.capture());
         return captor.getValue();
     }
 
     private void resetAudit(@NonNull BitbucketApi client) {
-        reset(((IRequestAudit) client).getAudit());
+        reset(((IAuditable) client).getAudit());
     }
 
     @Test
@@ -124,10 +125,10 @@ class BitbucketCloudApiClientTest {
 
         resetAudit(client);
         client.updateCommitWebHook(webHook.get());
-        HttpRequestBase request = extractRequest(client);
+        HttpRequest request = extractRequest(client);
         assertThat(request).isNotNull()
             .isInstanceOfSatisfying(HttpPut.class, put ->
-                assertThat(put.getURI()).hasToString("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
+                assertThat(put.getRequestUri()).isEqualTo("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
     }
 
 }

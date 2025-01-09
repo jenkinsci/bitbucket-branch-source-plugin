@@ -27,10 +27,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import hudson.plugins.git.GitSCM;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
 
 /**
  * Support for various different methods of authenticating with Bitbucket

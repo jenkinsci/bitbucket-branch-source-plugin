@@ -39,12 +39,16 @@ import hudson.model.Item;
 import hudson.util.FormFillFailure;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hc.core5.http.HttpHost;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -120,6 +124,35 @@ public class BitbucketApiUtils {
             logger.log(Level.SEVERE, e.getMessage(), e);
             throw FormFillFailure.error(e.getMessage());
         }
+    }
+
+    public static HttpHost toHttpHost(String url) {
+        try {
+            // it's needed because the serverURL can contains a context root different than '/' and the HttpHost must contains only schema, host and port
+            URL tmp = new URL(url);
+            String schema = tmp.getProtocol() == null ? "http" : tmp.getProtocol();
+            return new HttpHost(schema, tmp.getHost(), tmp.getPort());
+        } catch (MalformedURLException e) {
+        }
+        try {
+            return HttpHost.create(url);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid URL " + url, e);
+        }
+//
+//        String checkedURL = url;
+//        try {
+//            URL tmp = new URL(url);
+//            if (tmp.getProtocol() == null) {
+//                checkedURL = new URL("http", tmp.getHost(), tmp.getPort(), tmp.getFile()).toString();
+//            }
+//        } catch (MalformedURLException e) {
+//        }
+//        try {
+//            return HttpHost.create(checkedURL);
+//        } catch (URISyntaxException e) {
+//            throw new RuntimeException("Invalid URL " + checkedURL, e);
+//        }
     }
 
 }

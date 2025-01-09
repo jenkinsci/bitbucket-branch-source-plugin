@@ -41,6 +41,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
@@ -72,8 +73,6 @@ import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,14 +89,13 @@ import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicNameValuePair;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang.StringUtils.abbreviate;
@@ -523,7 +521,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("path", path.split(Operator.PATH.getSeparator()))
                 .set("at", branchOrHash)
                 .expand();
-        int status = headRequestStatus(new HttpHead(url));
+        int status = headRequestStatus(url);
         if (HttpStatus.SC_OK == status) {
             return true;
             // Bitbucket returns UNAUTHORIZED when no credentials are provided
@@ -944,15 +942,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     @NonNull
     @Override
     protected HttpHost getHost() {
-        String url = baseURL;
-        try {
-            // it's needed because the serverURL can contains a context root different than '/' and the HttpHost must contains only schema, host and port
-            URL tmp = new URL(baseURL);
-            String schema = tmp.getProtocol() == null ? "http" : tmp.getProtocol();
-            return new HttpHost(tmp.getHost(), tmp.getPort(), schema);
-        } catch (MalformedURLException e) {
-            return HttpHost.create(url);
-        }
+        return BitbucketApiUtils.toHttpHost(this.baseURL);
     }
 
     @Override

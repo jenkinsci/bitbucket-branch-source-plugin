@@ -47,6 +47,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.damnhandy.uri.template.UriTemplate;
@@ -68,19 +69,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicNameValuePair;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -88,7 +90,7 @@ import static org.apache.commons.lang.StringUtils.abbreviate;
 
 public class BitbucketCloudApiClient extends AbstractBitbucketApi implements BitbucketApi {
 
-    private static final HttpHost API_HOST = HttpHost.create("https://api.bitbucket.org");
+    private static final HttpHost API_HOST = BitbucketApiUtils.toHttpHost("https://api.bitbucket.org");
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
     private static final String V2_WORKSPACES_API_BASE_URL = "https://api.bitbucket.org/2.0/workspaces";
     private static final String REPO_URL_TEMPLATE = V2_API_BASE_URL + "{/owner,repo}";
@@ -110,11 +112,24 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
 
     private static HttpClientConnectionManager connectionManager() {
         try {
-            PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(); // NOSONAR
-            connManager.setDefaultMaxPerRoute(20);
-            connManager.setMaxTotal(22);
-            connManager.setSocketConfig(API_HOST, SocketConfig.custom().setSoTimeout(60 * 1000).build());
-            return connManager;
+            int connectTimeout = Integer.getInteger("http.connect.timeout", 10);
+            int socketTimeout = Integer.getInteger("http.socket.timeout", 60);
+
+            ConnectionConfig connCfg = ConnectionConfig.custom()
+                    .setConnectTimeout(connectTimeout, TimeUnit.SECONDS)
+                    .setSocketTimeout(socketTimeout, TimeUnit.SECONDS)
+                    .build();
+
+            SocketConfig socketConfig = SocketConfig.custom()
+                    .setSoTimeout(60, TimeUnit.SECONDS)
+                    .build();
+
+            return PoolingHttpClientConnectionManagerBuilder.create()
+                    .setMaxConnPerRoute(20)
+                    .setMaxConnTotal(22)
+                    .setDefaultConnectionConfig(connCfg)
+                    .setSocketConfigResolver(host -> host.getTargetHost().equals(API_HOST) ? socketConfig : SocketConfig.DEFAULT)
+                    .build();
         } catch (Exception e) {
             // in case of exception this avoids ClassNotFoundError which prevents the classloader from loading this class again
             return null;
@@ -346,7 +361,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("branchOrHash", branchOrHash)
                 .set("path", path.split(Operator.PATH.getSeparator()))
                 .expand();
-        int status = headRequestStatus(new HttpHead(url));
+        int status = headRequestStatus(url);
         if (HttpStatus.SC_OK == status) {
             return true;
         } else if (HttpStatus.SC_NOT_FOUND == status) {
