@@ -30,15 +30,15 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import hudson.util.Secret;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.CredentialsStore;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.HttpHost;
 
 /**
  * Authenticator that uses a username and password (probably the default)
@@ -57,7 +57,7 @@ public class BitbucketUsernamePasswordAuthenticator implements BitbucketAuthenti
     public BitbucketUsernamePasswordAuthenticator(StandardUsernamePasswordCredentials credentials) {
         credentialsId = credentials.getId();
         String password = Secret.toString(credentials.getPassword());
-        httpCredentials = new UsernamePasswordCredentials(credentials.getUsername(), password);
+        httpCredentials = new UsernamePasswordCredentials(credentials.getUsername(), password.toCharArray());
     }
 
     /**
@@ -68,12 +68,12 @@ public class BitbucketUsernamePasswordAuthenticator implements BitbucketAuthenti
      */
     @Override
     public void configureContext(HttpClientContext context, HttpHost host) {
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(new AuthScope(host), httpCredentials);
+        CredentialsStore credentialsStore = new BasicCredentialsProvider();
+        credentialsStore.setCredentials(new AuthScope(host), httpCredentials);
         AuthCache authCache = new BasicAuthCache();
         LOGGER.log(Level.FINE,"Add host={0} to authCache.", host);
         authCache.put(host, new BasicScheme());
-        context.setCredentialsProvider(credentialsProvider);
+        context.setCredentialsProvider(credentialsStore);
         context.setAuthCache(authCache);
     }
 
