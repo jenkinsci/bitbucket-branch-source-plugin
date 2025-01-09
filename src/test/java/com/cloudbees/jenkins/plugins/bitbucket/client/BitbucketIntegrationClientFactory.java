@@ -31,11 +31,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
 import org.apache.tools.ant.filters.StringInputStream;
 
 import static org.mockito.Mockito.mock;
@@ -44,13 +44,13 @@ import static org.mockito.Mockito.when;
 public class BitbucketIntegrationClientFactory {
 
     public interface IRequestAudit {
-        default void request(HttpRequestBase request) {
+        default void request(HttpRequest request) {
             // mockito audit
         }
 
         IRequestAudit getAudit();
 
-        default CloseableHttpResponse loadResponseFromResources(Class<?> resourceBase, String path, String payloadPath) throws IOException {
+        default ClassicHttpResponse loadResponseFromResources(Class<?> resourceBase, String path, String payloadPath) throws IOException {
             try (InputStream json = resourceBase.getResourceAsStream(payloadPath)) {
                 if (json == null) {
                     throw new IllegalStateException("Payload for the REST path " + path + " could not be found: " + payloadPath);
@@ -60,12 +60,9 @@ public class BitbucketIntegrationClientFactory {
                 when(entity.getContentLength()).thenReturn((long)jsonString.getBytes(StandardCharsets.UTF_8).length);
                 when(entity.getContent()).thenReturn(new StringInputStream(jsonString));
 
-                StatusLine statusLine = mock(StatusLine.class);
-                when(statusLine.getStatusCode()).thenReturn(200);
-
-                CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+                ClassicHttpResponse response = mock(ClassicHttpResponse.class);
                 when(response.getEntity()).thenReturn(entity);
-                when(response.getStatusLine()).thenReturn(statusLine);
+                when(response.getCode()).thenReturn(200);
 
                 return response;
             }
@@ -104,10 +101,10 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected CloseableHttpResponse executeMethod(HttpHost host,
-                                                      HttpRequestBase httpMethod,
-                                                      boolean requireAuthentication) throws IOException {
-            String path = httpMethod.getURI().toString();
+        protected ClassicHttpResponse executeMethod(org.apache.hc.core5.http.HttpHost host,
+                                                    HttpUriRequest httpMethod,
+                                                    boolean requireAuthentication) throws IOException {
+            String path = httpMethod.getRequestUri();
             audit.request(httpMethod);
 
             String payloadPath = path.substring(path.indexOf("/rest/"))
@@ -155,10 +152,10 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected CloseableHttpResponse executeMethod(HttpHost host,
-                                                      HttpRequestBase httpMethod,
-                                                      boolean requireAuthentication) throws IOException {
-            String path = httpMethod.getURI().toString();
+        protected ClassicHttpResponse executeMethod(HttpHost host,
+                                                    HttpUriRequest httpMethod,
+                                                    boolean requireAuthentication) throws IOException {
+            String path = httpMethod.getRequestUri();
             audit.request(httpMethod);
 
             String payloadPath = path.replace(API_ENDPOINT, "").replace('/', '-').replaceAll("[=%&?]", "_");

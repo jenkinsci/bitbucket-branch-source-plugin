@@ -28,11 +28,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import java.io.IOException;
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.integration.ClientAndServer;
@@ -56,7 +57,7 @@ class ExponentialBackOffServiceUnavailableRetryStrategyTest {
         mockServer.when(request)
             .respond( //
                 response() //
-                        .withStatusCode(429) //
+                    .withStatusCode(429) //
         );
 
         final RetryInterceptor counterInterceptor = new RetryInterceptor();
@@ -70,8 +71,8 @@ class ExponentialBackOffServiceUnavailableRetryStrategyTest {
             protected HttpClientBuilder setupClientBuilder(String host) {
                 return super.setupClientBuilder(host)
                         .disableAutomaticRetries()
-                        .setServiceUnavailableRetryStrategy(new ExponentialBackOffServiceUnavailableRetryStrategy(2, 5, 100))
-                        .addInterceptorFirst(counterInterceptor);
+                        .setRetryStrategy(new ExponentialBackOffRetryStrategy(2, 5, 100))
+                        .addResponseInterceptorFirst(counterInterceptor);
             }
         }) {
 
@@ -84,8 +85,8 @@ class ExponentialBackOffServiceUnavailableRetryStrategyTest {
         private int retry = 0;
 
         @Override
-        public void process(HttpResponse response, HttpContext context) throws HttpException, IOException {
-            if (response.getStatusLine().getStatusCode() == 429) {
+        public void process(HttpResponse response, EntityDetails entity, HttpContext context) throws HttpException, IOException {
+            if (response.getCode() == 429) {
                 retry += 1;
             }
         }
@@ -93,5 +94,6 @@ class ExponentialBackOffServiceUnavailableRetryStrategyTest {
         public int getRetry() {
             return retry;
         }
+
     }
 }
