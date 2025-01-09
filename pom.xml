@@ -76,8 +76,8 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>apache-httpcomponents-client-4-api</artifactId>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>apache-httpcomponents-client-5-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -92,6 +92,12 @@
       <artifactId>git</artifactId>
       <!-- TODO: remove when in bom -->
       <version>5.7.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>apache-httpcomponents-client-4-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -116,6 +122,12 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-basic-steps</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>apache-httpcomponents-client-4-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -177,6 +189,10 @@
           <groupId>javax.servlet</groupId>
           <artifactId>javax.servlet-api</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>io.swagger.parser.v3</groupId>
+          <artifactId>swagger-parser</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>
@@ -230,16 +246,6 @@
             <goals>
               <goal>check</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin> <!-- TODO scm-api gratuitously restricts deprecated APIs, preventing us from compiling even deprecated classes in *this* plugin -->
-        <groupId>org.kohsuke</groupId>
-        <artifactId>access-modifier-checker</artifactId>
-        <executions>
-          <execution>
-            <id>default-enforce</id>
-            <phase /> <!-- https://stackoverflow.com/a/19540026/12916 -->
           </execution>
         </executions>
       </plugin>

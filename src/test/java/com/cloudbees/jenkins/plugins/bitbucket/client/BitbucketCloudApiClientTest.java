@@ -41,9 +41,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
@@ -95,7 +95,7 @@ class BitbucketCloudApiClientTest {
         client.postBuildStatus(status);
 
         IRequestAudit clientAudit = ((IRequestAudit) client).getAudit();
-        HttpRequestBase request = extractRequest(clientAudit);
+        HttpRequest request = extractRequest(clientAudit);
         assertThat(request).isNotNull()
             .isInstanceOf(HttpPost.class);
         try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
@@ -104,8 +104,8 @@ class BitbucketCloudApiClientTest {
         }
     }
 
-    private HttpRequestBase extractRequest(IRequestAudit clientAudit) {
-        ArgumentCaptor<HttpRequestBase> captor = ArgumentCaptor.forClass(HttpRequestBase.class);
+    private HttpRequest extractRequest(IRequestAudit clientAudit) {
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(clientAudit).request(captor.capture());
         return captor.getValue();
     }
@@ -129,10 +129,10 @@ class BitbucketCloudApiClientTest {
 
         reset(audit);
         client.updateCommitWebHook(webHook.get());
-        HttpRequestBase request = extractRequest(audit);
+        HttpRequest request = extractRequest(audit);
         assertThat(request).isNotNull()
             .isInstanceOfSatisfying(HttpPut.class, put ->
-                assertThat(put.getURI()).hasToString("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
+                assertThat(put.getRequestUri()).isEqualTo("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
     }
 
 }

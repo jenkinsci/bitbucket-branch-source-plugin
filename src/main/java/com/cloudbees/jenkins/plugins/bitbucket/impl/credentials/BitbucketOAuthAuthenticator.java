@@ -39,7 +39,7 @@ import hudson.util.Secret;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import jenkins.util.SetContextClassLoader;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 
 public class BitbucketOAuthAuthenticator implements BitbucketAuthenticator {
 
