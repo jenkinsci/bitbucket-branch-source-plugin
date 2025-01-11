@@ -102,12 +102,18 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             LOGGER.log(Level.FINE, "X-Bitbucket-Type header / server_url request parameter not found. Bitbucket Cloud webhook incoming.");
         }
 
+        HookProcessor hookProcessor = getHookProcessor(type);
         try {
-            type.getProcessor().process(type, body, instanceType, origin, serverUrl);
+            hookProcessor.process(type, body, instanceType, origin, serverUrl);
         } catch (AbstractMethodError e) {
-            type.getProcessor().process(body, instanceType);
+            hookProcessor.process(body, instanceType);
         }
         return HttpResponses.ok();
+    }
+
+    /* For test purpose */
+    HookProcessor getHookProcessor(HookEventType type) {
+        return type.getProcessor();
     }
 
     @Override

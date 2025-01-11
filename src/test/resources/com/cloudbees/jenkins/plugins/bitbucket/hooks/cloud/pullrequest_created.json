@@ -1,0 +1,258 @@
+{
+    "actor": {
+        "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
+        "display_name": "Nikolas Falco",
+        "links": {
+            "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/NF-4.png"
+            },
+            "html": {
+                "href": "https://bitbucket.org/%7B6b47f1dc-23a0-4b99-9964-d13e665f5d8e%7D/"
+            },
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7B6b47f1dc-23a0-4b99-9964-d13e665f5d8e%7D"
+            }
+        },
+        "nickname": "Nikolas Falco",
+        "type": "user",
+        "uuid": "{6b47f1dc-23a0-4b99-9964-d13e665f5d8e}"
+    },
+    "pullrequest": {
+        "author": {
+            "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
+            "display_name": "Nikolas Falco",
+            "links": {
+                "avatar": {
+                    "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/NF-4.png"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7B6b47f1dc-23a0-4b99-9964-d13e665f5d8e%7D/"
+                },
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/%7B6b47f1dc-23a0-4b99-9964-d13e665f5d8e%7D"
+                }
+            },
+            "nickname": "Nikolas Falco",
+            "type": "user",
+            "uuid": "{6b47f1dc-23a0-4b99-9964-d13e665f5d8e}"
+        },
+        "close_source_branch": false,
+        "closed_by": null,
+        "comment_count": 0,
+        "created_on": "2024-11-09T13:02:56.285477+00:00",
+        "description": "",
+        "destination": {
+            "branch": {
+                "name": "master"
+            },
+            "commit": {
+                "hash": "320cc39764dc",
+                "links": {
+                    "html": {
+                        "href": "https://bitbucket.org/amuniz/test-repos/commits/320cc39764dc"
+                    },
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/320cc39764dc"
+                    }
+                },
+                "type": "commit"
+            },
+            "repository": {
+                "full_name": "amuniz/test-repos",
+                "links": {
+                    "avatar": {
+                        "href": "https://bytebucket.org/ravatar/%7Bf991126e-6825-40ea-a1c2-e72c336ae41e%7D?ts=java"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/amuniz/test-repos"
+                    },
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+                    }
+                },
+                "name": "test-repos",
+                "type": "repository",
+                "uuid": "{f991126e-6825-40ea-a1c2-e72c336ae41e}"
+            }
+        },
+        "id": 735,
+        "links": {
+            "activity": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/activity"
+            },
+            "approve": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/approve"
+            },
+            "comments": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/comments"
+            },
+            "commits": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/commits"
+            },
+            "decline": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/decline"
+            },
+            "diff": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/amuniz/test-repos:d31df3425c5b%0D320cc39764dc?from_pullrequest_id=735&topic=true"
+            },
+            "diffstat": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diffstat/amuniz/test-repos:d31df3425c5b%0D320cc39764dc?from_pullrequest_id=735&topic=true"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos/pull-requests/735"
+            },
+            "merge": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/merge"
+            },
+            "request-changes": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/request-changes"
+            },
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735"
+            },
+            "statuses": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/pullrequests/735/statuses"
+            }
+        },
+        "merge_commit": null,
+        "participants": [],
+        "reason": "",
+        "rendered": {
+            "description": {
+                "html": "",
+                "markup": "markdown",
+                "raw": "",
+                "type": "rendered"
+            },
+            "title": {
+                "html": "<p>BUILD test</p>",
+                "markup": "markdown",
+                "raw": "BUILD test",
+                "type": "rendered"
+            }
+        },
+        "reviewers": [],
+        "source": {
+            "branch": {
+                "links": {},
+                "name": "feature/test",
+                "sync_strategies": [
+                    "merge_commit",
+                    "rebase"
+                ]
+            },
+            "commit": {
+                "hash": "d31df3425c5b",
+                "links": {
+                    "html": {
+                        "href": "https://bitbucket.org/amuniz/test-repos/commits/d31df3425c5b"
+                    },
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/d31df3425c5b"
+                    }
+                },
+                "type": "commit"
+            },
+            "repository": {
+                "full_name": "amuniz/test-repos",
+                "links": {
+                    "avatar": {
+                        "href": "https://bytebucket.org/ravatar/%7Bf991126e-6825-40ea-a1c2-e72c336ae41e%7D?ts=java"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/amuniz/test-repos"
+                    },
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+                    }
+                },
+                "name": "test-repos",
+                "type": "repository",
+                "uuid": "{f991126e-6825-40ea-a1c2-e72c336ae41e}"
+            }
+        },
+        "state": "OPEN",
+        "summary": {
+            "html": "",
+            "markup": "markdown",
+            "raw": "",
+            "type": "rendered"
+        },
+        "task_count": 0,
+        "title": "BUILD test",
+        "type": "pullrequest",
+        "updated_on": "2024-11-09T13:02:57.098060+00:00"
+    },
+    "repository": {
+        "full_name": "amuniz/test-repos",
+        "is_private": true,
+        "links": {
+            "avatar": {
+                "href": "https://bytebucket.org/ravatar/%7Bf991126e-6825-40ea-a1c2-e72c336ae41e%7D?ts=java"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos"
+            },
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            }
+        },
+        "name": "test-repos",
+        "owner": {
+            "display_name": "amuniz",
+            "links": {
+                "avatar": {
+                    "href": "https://bitbucket.org/account/amuniz/avatar/"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7B2f053ac1-4c69-4188-8014-43c976bf1c7c%7D/"
+                },
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/%7B2f053ac1-4c69-4188-8014-43c976bf1c7c%7D"
+                }
+            },
+            "type": "team",
+            "username": "amuniz",
+            "uuid": "{2f053ac1-4c69-4188-8014-43c976bf1c7c}"
+        },
+        "parent": null,
+        "project": {
+            "key": "PRJKEY",
+            "links": {
+                "avatar": {
+                    "href": "https://bitbucket.org/account/user/amuniz/projects/PRJKEY/avatar/32?ts=1674583920"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/workspace/projects/PRJKEY"
+                },
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/amuniz/projects/PRJKEY"
+                }
+            },
+            "name": "My Project",
+            "type": "project",
+            "uuid": "{0a517fd3-65f0-473b-9bc1-bc1e8125519a}"
+        },
+        "scm": "git",
+        "type": "repository",
+        "uuid": "{f991126e-6825-40ea-a1c2-e72c336ae41e}",
+        "website": null,
+        "workspace": {
+            "links": {
+                "avatar": {
+                    "href": "https://bitbucket.org/workspaces/amuniz/avatar/?ts=1677575993"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/"
+                },
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/amuniz"
+                }
+            },
+            "name": "amuniz",
+            "slug": "amuniz",
+            "type": "workspace",
+            "uuid": "{2f053ac1-4c69-4188-8014-43c976bf1c7c}"
+        }
+    }
+}

@@ -15,7 +15,7 @@ public final class URLUtils {
         if (url != null) {
             try {
                 URL linkURL = new URL(url);
-                URL cleanURL = new URL(linkURL.getProtocol(), linkURL.getHost(), linkURL.getPort(), linkURL.getFile());
+                URL cleanURL = new URL(linkURL.getProtocol(), linkURL.getHost(), linkURL.getPort(), /*linkURL.getPath()*/ linkURL.getFile());
                 return cleanURL.toExternalForm();
             } catch (MalformedURLException e) {
                 // do nothing, URL can not be parsed, leave as is

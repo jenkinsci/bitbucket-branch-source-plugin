@@ -90,14 +90,15 @@ public abstract class HookProcessor {
      * @param repository the repository name as configured in the SCMSource
      */
     protected void scmSourceReIndex(final String owner, final String repository) {
-        try (ACLContext context = ACL.as(ACL.SYSTEM)) {
+        try (ACLContext context = ACL.as2(ACL.SYSTEM2)) {
             boolean reindexed = false;
             for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
                 List<SCMSource> sources = scmOwner.getSCMSources();
                 for (SCMSource source : sources) {
                     // Search for the correct SCM source
-                    if (source instanceof BitbucketSCMSource && ((BitbucketSCMSource) source).getRepoOwner().equalsIgnoreCase(owner)
-                            && ((BitbucketSCMSource) source).getRepository().equals(repository)) {
+                    if (source instanceof BitbucketSCMSource scmSource
+                            && scmSource.getRepoOwner().equalsIgnoreCase(owner)
+                            && scmSource.getRepository().equals(repository)) {
                         LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
                         scmOwner.onSCMSourceUpdated(source);
                         reindexed = true;

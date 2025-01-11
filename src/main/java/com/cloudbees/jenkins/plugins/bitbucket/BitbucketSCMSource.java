@@ -1047,7 +1047,8 @@ public class BitbucketSCMSource extends SCMSource {
         links.forEach(link -> {
             if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
                 // Remove the username from URL because it will be set into the GIT_URL variable
-                // credentials used to clone or for push/pull could be different than this will cause a failure
+                // credentials used to git clone or push/pull operation could be different than this (for example SSH)
+                // and will run into a failure
                 // Restore the behaviour before mirror link feature.
                 link.setHref(URLUtils.removeAuthority(link.getHref()));
             }
