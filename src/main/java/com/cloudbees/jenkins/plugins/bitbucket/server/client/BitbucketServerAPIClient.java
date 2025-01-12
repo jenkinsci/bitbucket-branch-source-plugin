@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
+import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
@@ -87,10 +88,15 @@ import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
@@ -509,7 +515,11 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("repo", repositoryName)
                 .set("hash", newStatus.getHash())
                 .expand();
-        postRequest(url, JsonParser.toJson(newStatus));
+
+        HttpPost request = new HttpPost(url);
+        request.setEntity(new StringEntity(JsonParser.toJson(newStatus),
+                                           ContentType.create("application/json", "UTF-8")));
+        doRequest(request, true, this::adviceForBuildStatusError);
     }
 
     /**
@@ -1051,4 +1061,45 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return content;
     }
 
+    // Gets user-visible advice for an HTTP error response when
+    // Bitbucket Server rejects a build status.
+    // Implements AbstractBitbucketApi.HttpErrorAdvisor#getAdvice.
+    @CheckForNull
+    private String adviceForBuildStatusError(HttpResponse response) {
+        // If the HTTP request failed because of an authorization
+        // problem, then make the exception message also show the
+        // Bitbucket user name with which Jenkins authenticated,
+        // the project name, and the repository name.
+        //
+        // Such an authorization problem can occur especially in a
+        // pull request from a personal fork: if Jenkins has been
+        // granted REPO_READ access on the target repository of the PR
+        // but no access on the fork, then it can read the PR
+        // information from the target repository and check out the
+        // files, but cannot post a build status to the fork.
+        // Showing the name of the fork will help the user or
+        // administrator grant the required access.
+        //
+        // If the HTTP request already includes valid credentials,
+        // but the Bitbucket user has not been granted access on the
+        // repository, then Bitbucket Server responds with HTTP status
+        // 401 (Unauthorized) and a WWW-Authenticate header field that
+        // requests OAuth, even though RFC 7235 section 2.1 recommends
+        // 403 (Forbidden).  Let's recognize both 401 and 403.
+        int httpStatus = response.getStatusLine().getStatusCode();
+        if (httpStatus == HttpStatus.SC_UNAUTHORIZED || httpStatus == HttpStatus.SC_FORBIDDEN) {
+            Header userNameHeader = response.getFirstHeader("X-AUSERNAME");
+            if (userNameHeader != null
+                && !userNameHeader.getValue().equals("anonymous")) {
+                // Posting a build status requires REPO_READ access.
+                // https://docs.atlassian.com/bitbucket-server/rest/7.4.0/bitbucket-rest.html#idp219
+                return Messages.BitbucketServerAPIClient_adviceForBuildStatusError(
+                    userNameHeader.getValue(),
+                    getUserCentricOwner(),
+                    getRepositoryName());
+            }
+        }
+
+        return null;
+    }
 }
