@@ -13,11 +13,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -182,6 +185,19 @@ class BitbucketServerAPIClientTest {
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
                     .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/tags"));
+    }
+
+    @Issue("JENKINS-75119")
+    @Test
+    void verify_HttpHost_built_when_server_has_context_root() throws Exception {
+        String serverURL = "https://acme.bitbucket.org/bitbucket";
+        BitbucketServerAPIClient client = (BitbucketServerAPIClient) BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+
+        BitbucketAuthenticator authenticator = extractAuthenticator(client);
+        client.getRepository();
+
+        HttpHost expectedHost = HttpHost.create("https://acme.bitbucket.org");
+        verify(authenticator).configureContext(any(HttpClientContext.class), eq(expectedHost));
     }
 
 }

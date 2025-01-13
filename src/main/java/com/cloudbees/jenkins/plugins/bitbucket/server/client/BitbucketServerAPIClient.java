@@ -954,12 +954,11 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         try {
             // it's really needed?
             URL tmp = new URL(baseURL);
-            if (tmp.getProtocol() == null) {
-                url = new URL("http", tmp.getHost(), tmp.getPort(), tmp.getFile()).toString();
-            }
+            String schema = tmp.getProtocol() == null ? "http" : tmp.getProtocol();
+            return new HttpHost(tmp.getHost(), tmp.getPort(), schema);
         } catch (MalformedURLException e) {
+            return HttpHost.create(url);
         }
-        return HttpHost.create(url);
     }
 
     @Override
