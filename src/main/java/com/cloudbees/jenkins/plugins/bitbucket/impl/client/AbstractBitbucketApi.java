@@ -164,17 +164,17 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
             context = HttpClientContext.create();
             authenticator.configureContext(context, getHost());
         }
-        setClientProxyParams(host, httpClientBuilder);
+        setClientProxyParams(httpClientBuilder);
         return httpClientBuilder;
     }
 
-    private void setClientProxyParams(String host, HttpClientBuilder builder) {
+    protected void setClientProxyParams(HttpClientBuilder builder) {
         Jenkins jenkins = Jenkins.getInstanceOrNull(); // because unit test
         ProxyConfiguration proxyConfig = jenkins != null ? jenkins.proxy : null;
 
         final Proxy proxy;
         if (proxyConfig != null) {
-            proxy = proxyConfig.createProxy(host);
+            proxy = proxyConfig.createProxy(getHost().getHostName());
         } else {
             proxy = Proxy.NO_PROXY;
         }

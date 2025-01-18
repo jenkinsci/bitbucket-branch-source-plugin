@@ -31,10 +31,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
+import hudson.ProxyConfiguration;
 import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -64,6 +66,7 @@ import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @WithJenkins
@@ -221,6 +224,26 @@ class BitbucketServerAPIClientTest {
 
         HttpHost expectedHost = HttpHost.create("https://acme.bitbucket.org");
         verify(authenticator).configureContext(any(HttpClientContext.class), eq(expectedHost));
+    }
+
+    @Issue("JENKINS-75160")
+    @Test
+    void test_no_proxy_configurations() throws Exception {
+        ProxyConfiguration proxyConfiguration = spy(new ProxyConfiguration("proxy.lan", 8080, null, null, "*.internaldomain.com"));
+
+        j.jenkins.setProxy(proxyConfiguration);
+
+        AtomicReference<HttpClientBuilder> builderReference = new AtomicReference<>();
+        try(BitbucketApi client = new BitbucketServerAPIClient("https://git.internaldomain.com:7990/bitbucket", "amuniz", "test-repos", mock(BitbucketAuthenticator.class), false) {
+            @Override
+            protected void setClientProxyParams(HttpClientBuilder builder) {
+                builderReference.set(spy(builder));
+                super.setClientProxyParams(builderReference.get());
+            }
+        }) {}
+
+        verify(proxyConfiguration).createProxy("git.internaldomain.com");
+        verify(builderReference.get(), never()).setProxy(any(HttpHost.class));
     }
 
 }

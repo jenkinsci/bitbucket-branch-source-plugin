@@ -31,12 +31,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClient
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
 import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
@@ -51,13 +50,9 @@ import org.mockito.ArgumentCaptor;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class BitbucketCloudApiClientTest {
 
@@ -69,17 +64,13 @@ class BitbucketCloudApiClientTest {
 
     @Test
     @WithJenkins
-    void test_proxy_configurad_without_password(JenkinsRule r) throws Exception {
-        Proxy proxy = mock(Proxy.class);
-        when(proxy.address()).thenReturn(new InetSocketAddress("proxy.lan", 8080));
-        ProxyConfiguration proxyConfiguration = mock(ProxyConfiguration.class);
-        doReturn(proxy).when(proxyConfiguration).createProxy(anyString());
-        doReturn("username").when(proxyConfiguration).getUserName();
+    void test_proxy_configurated_without_password(JenkinsRule r) throws Exception {
+        ProxyConfiguration proxyConfiguration = spy(new ProxyConfiguration("proxy.lan", 8080, "username", null));
 
         r.jenkins.setProxy(proxyConfiguration);
         BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
 
-        verify(proxyConfiguration).createProxy(eq("bitbucket.org"));
+        verify(proxyConfiguration).createProxy("api.bitbucket.org");
         verify(proxyConfiguration).getUserName();
         verify(proxyConfiguration).getSecretPassword();
     }
@@ -94,8 +85,7 @@ class BitbucketCloudApiClientTest {
 
         client.postBuildStatus(status);
 
-        IRequestAudit clientAudit = ((IRequestAudit) client).getAudit();
-        HttpRequestBase request = extractRequest(clientAudit);
+        HttpRequestBase request = extractRequest(client);
         assertThat(request).isNotNull()
             .isInstanceOf(HttpPost.class);
         try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
@@ -104,10 +94,15 @@ class BitbucketCloudApiClientTest {
         }
     }
 
-    private HttpRequestBase extractRequest(IRequestAudit clientAudit) {
+    private HttpRequestBase extractRequest(@NonNull BitbucketApi client) {
+        IRequestAudit audit = ((IRequestAudit) client).getAudit();
         ArgumentCaptor<HttpRequestBase> captor = ArgumentCaptor.forClass(HttpRequestBase.class);
-        verify(clientAudit).request(captor.capture());
+        verify(audit).request(captor.capture());
         return captor.getValue();
+    }
+
+    private void resetAudit(@NonNull BitbucketApi client) {
+        reset(((IRequestAudit) client).getAudit());
     }
 
     @Test
@@ -121,15 +116,14 @@ class BitbucketCloudApiClientTest {
     @Test
     void verifyUpdateWebhookURL() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
-        IRequestAudit audit = ((IRequestAudit) client).getAudit();
         Optional<? extends BitbucketWebHook> webHook = client.getWebHooks().stream()
                 .filter(h -> h.getDescription().contains("Jenkins"))
                 .findFirst();
         assertThat(webHook).isPresent();
 
-        reset(audit);
+        resetAudit(client);
         client.updateCommitWebHook(webHook.get());
-        HttpRequestBase request = extractRequest(audit);
+        HttpRequestBase request = extractRequest(client);
         assertThat(request).isNotNull()
             .isInstanceOfSatisfying(HttpPut.class, put ->
                 assertThat(put.getURI()).hasToString("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
