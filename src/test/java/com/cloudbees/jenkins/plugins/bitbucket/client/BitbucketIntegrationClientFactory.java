@@ -27,12 +27,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -53,7 +53,7 @@ public class BitbucketIntegrationClientFactory {
         default CloseableHttpResponse loadResponseFromResources(Class<?> resourceBase, String path, String payloadPath) throws IOException {
             try (InputStream json = resourceBase.getResourceAsStream(payloadPath)) {
                 if (json == null) {
-                    throw new IllegalStateException("Payload for the REST path " + path + " could not be found: " + payloadPath);
+                    throw new FileNotFoundException("Payload for the REST path " + path + " could not be found: " + payloadPath);
                 }
                 HttpEntity entity = mock(HttpEntity.class);
                 String jsonString = IOUtils.toString(json, StandardCharsets.UTF_8);
@@ -104,19 +104,17 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected CloseableHttpResponse executeMethod(HttpHost host,
-                                                      HttpRequestBase httpMethod,
-                                                      boolean requireAuthentication) throws IOException {
-            String path = httpMethod.getURI().toString();
-            audit.request(httpMethod);
+        protected CloseableHttpResponse executeMethod(HttpRequestBase request, boolean requireAuthentication) throws IOException {
+            String requestURI = request.getURI().toString();
+            audit.request(request);
 
-            String payloadPath = path.substring(path.indexOf("/rest/"))
+            String payloadPath = requestURI.substring(requestURI.indexOf("/rest/"))
                     .replace("/rest/api/", "")
                     .replace("/rest/", "")
                     .replace('/', '-').replaceAll("[=%&?]", "_");
             payloadPath = payloadRootPath + payloadPath + ".json";
 
-            return loadResponseFromResources(getClass(), path, payloadPath);
+            return loadResponseFromResources(getClass(), requestURI, payloadPath);
         }
 
         @Override
@@ -155,9 +153,7 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected CloseableHttpResponse executeMethod(HttpHost host,
-                                                      HttpRequestBase httpMethod,
-                                                      boolean requireAuthentication) throws IOException {
+        protected CloseableHttpResponse executeMethod(HttpRequestBase httpMethod, boolean requireAuthentication) throws IOException {
             String path = httpMethod.getURI().toString();
             audit.request(httpMethod);
 

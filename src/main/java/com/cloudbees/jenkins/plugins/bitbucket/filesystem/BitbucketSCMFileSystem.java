@@ -45,7 +45,6 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
-import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
@@ -118,22 +117,24 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
         }
 
         private static StandardCredentials lookupScanCredentials(@CheckForNull Item context,
-                @CheckForNull String scanCredentialsId, String serverUrl) {
-            if (Util.fixEmpty(scanCredentialsId) == null) {
+                                                                 @CheckForNull String scanCredentialsId,
+                                                                 String serverURL) {
+            scanCredentialsId = Util.fixEmpty(scanCredentialsId);
+            if (scanCredentialsId == null) {
                 return null;
             } else {
                 return CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
+                        CredentialsProvider.lookupCredentialsInItem(
                                 StandardCredentials.class,
                                 context,
-                                context instanceof Queue.Task
-                                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                                        : ACL.SYSTEM,
-                                URIRequirementBuilder.fromUri(serverUrl).build()
+                                context instanceof Queue.Task task
+                                        ? task.getDefaultAuthentication2()
+                                        : ACL.SYSTEM2,
+                                URIRequirementBuilder.fromUri(serverURL).build()
                         ),
                         CredentialsMatchers.allOf(
                                 CredentialsMatchers.withId(scanCredentialsId),
-                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL))
                         )
                 );
             }

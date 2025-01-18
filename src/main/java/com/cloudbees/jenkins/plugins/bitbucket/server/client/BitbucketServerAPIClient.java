@@ -952,7 +952,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     protected HttpHost getHost() {
         String url = baseURL;
         try {
-            // it's really needed?
+            // it's needed because the serverURL can contains a context root different than '/' and the HttpHost must contains only schema, host and port
             URL tmp = new URL(baseURL);
             String schema = tmp.getProtocol() == null ? "http" : tmp.getProtocol();
             return new HttpHost(tmp.getHost(), tmp.getPort(), schema);

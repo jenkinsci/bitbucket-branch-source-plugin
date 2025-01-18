@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import jenkins.scm.api.SCMFile;
 
 public class BitbucketSCMFile  extends SCMFile {
@@ -45,13 +46,13 @@ public class BitbucketSCMFile  extends SCMFile {
     }
 
     @Deprecated
-    public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
+    public BitbucketSCMFile(BitbucketSCMFileSystem bitbucketSCMFileSystem,
                             BitbucketApi api,
                             String ref) {
-        this(bitBucketSCMFileSystem, api, ref, null);
+        this(bitbucketSCMFileSystem, api, ref, null);
     }
 
-    public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
+    public BitbucketSCMFile(BitbucketSCMFileSystem bitbucketSCMFileSystem,
                             BitbucketApi api,
                             String ref, String hash) {
         super();
@@ -85,7 +86,8 @@ public class BitbucketSCMFile  extends SCMFile {
         if (this.isDirectory()) {
             return api.getDirectoryContent(this);
         } else {
-            throw new IOException("Cannot get children from a regular file");
+            // respect the interface javadoc
+            return Collections.emptyList();
         }
     }
 
@@ -108,7 +110,7 @@ public class BitbucketSCMFile  extends SCMFile {
     @Override
     @NonNull
     protected SCMFile newChild(String name, boolean assumeIsDirectory) {
-        return new BitbucketSCMFile(this, name, assumeIsDirectory?Type.DIRECTORY:Type.REGULAR_FILE, hash);
+        return new BitbucketSCMFile(this, name, assumeIsDirectory ? Type.DIRECTORY : Type.REGULAR_FILE, hash);
     }
 
     @Override
