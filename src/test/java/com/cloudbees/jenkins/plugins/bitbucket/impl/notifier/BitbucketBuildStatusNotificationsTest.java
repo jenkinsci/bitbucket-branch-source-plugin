@@ -34,7 +34,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
-import hudson.model.Action;
 import hudson.model.Descriptor.FormException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -42,11 +41,14 @@ import hudson.model.Result;
 import hudson.model.TaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import jenkins.branch.BranchSource;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
+import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -55,47 +57,51 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.AbstractWorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
+import org.springframework.util.ReflectionUtils;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-public class BitbucketBuildStatusNotificationsTest {
+@WithGitSampleRepo
+@WithJenkins
+class BitbucketBuildStatusNotificationsTest {
 
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule
-    public JenkinsRule r = new JenkinsRule() {
-        @Override
-        public URL getURL() throws IOException {
-            return new URL("http://example.com:" + localPort + contextPath + "/");
-        }
-    };
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    private GitSampleRepoRule sampleRepo;
+    private JenkinsRule r;
 
-    // TODO test of effectiveness of FirstCheckoutCompletedInvisibleAction (#130)
+    @BeforeEach
+    void setup(GitSampleRepoRule sampleRepo, JenkinsRule rule) throws Exception {
+        this.sampleRepo = sampleRepo;
+        this.r = spy(rule);
+        doReturn(new URL("http://example.com:" + extractJenkinsHttpPort(rule) + rule.contextPath + "/")).when(r).getURL();
+    }
+
+    private Integer extractJenkinsHttpPort(JenkinsRule rule) {
+        Field field = ReflectionUtils.findField(JenkinsRule.class, "localPort");
+        field.setAccessible(true);
+        Integer localPort = (Integer) ReflectionUtils.getField(field, rule);
+        return localPort;
+    }
 
     @Test
-    public void noInappropriateFirstCheckoutCompletedInvisibleAction() throws Exception {
+    void noInappropriateFirstCheckoutCompletedInvisibleAction() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
         p.setScm(new SingleFileSCM("file", "contents"));
         FreeStyleBuild b = r.buildAndAssertSuccess(p);
-        assertThat((List<Action>) b.getAllActions(), not(hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class))));
+        assertThat(b.getAllActions()).doesNotHaveAnyElementsOfTypes(FirstCheckoutCompletedInvisibleAction.class);
     }
 
     private WorkflowMultiBranchProject prepareFirstCheckoutCompletedInvisibleActionTest(String dsl) throws Exception {
@@ -108,18 +114,18 @@ public class BitbucketBuildStatusNotificationsTest {
         sampleRepo.git("add", jenkinsfile);
         sampleRepo.git("commit", "--all", "--message=defined");
 
-        BitbucketApi api = Mockito.mock(BitbucketApi.class);
-        BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
+        BitbucketApi api = mock(BitbucketApi.class);
+        BitbucketBranch branch = mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
         when(api.getBranches()).thenAnswer(new Returns(branchList));
         when(api.getBranch("master")).thenAnswer(new Returns(branch));
         when(branch.getName()).thenReturn(branchName);
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
-        BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
+        BitbucketCommit commit = mock(BitbucketCommit.class);
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
         when(api.checkPathExists(Mockito.anyString(), eq(jenkinsfile))).thenReturn(true);
-        BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
+        BitbucketRepository repository = mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
         when(repository.getOwnerName()).thenReturn(repoOwner);
         when(repository.getRepositoryName()).thenReturn(repositoryName);
@@ -132,6 +138,7 @@ public class BitbucketBuildStatusNotificationsTest {
         when(api.getRepository()).thenReturn(repository);
         when(api.getFileContent(any(BitbucketSCMFile.class))).thenReturn(
                 new ByteArrayInputStream(dsl.getBytes()));
+        when(api.getFile(any(BitbucketSCMFile.class))).thenReturn(new BitbucketSCMFile(mock(BitbucketSCMFile.class), "master", Type.REGULAR_FILE, "hash"));
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, api);
 
         BitbucketSCMSource source = new BitbucketSCMSource(repoOwner, repositoryName);
@@ -145,37 +152,37 @@ public class BitbucketBuildStatusNotificationsTest {
     }
 
     @Test
-    public void firstCheckoutCompletedInvisibleAction() throws Exception {
+    void firstCheckoutCompletedInvisibleAction() throws Exception {
         String dsl = "node { checkout scm }";
         WorkflowMultiBranchProject owner = prepareFirstCheckoutCompletedInvisibleActionTest(dsl);
 
         owner.scheduleBuild2(0).getFuture().get();
         owner.getComputation().writeWholeLogTo(System.out);
-        assertThat(owner.getIndexing().getResult(), is(Result.SUCCESS));
+        assertThat(owner.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
         r.waitUntilNoActivity();
         WorkflowJob master = owner.getItem("master");
         WorkflowRun run = master.getLastBuild();
         run.writeWholeLogTo(System.out);
-        assertThat(run.getResult(), is(Result.SUCCESS));
-        assertThat((List<Action>) run.getAllActions(), hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class)));
+        assertThat(run.getResult()).isEqualTo(Result.SUCCESS);
+        assertThat(run.getAllActions()).hasAtLeastOneElementOfType(FirstCheckoutCompletedInvisibleAction.class);
     }
 
     @Issue("JENKINS-66040")
     @Test
-    public void shouldNotSetFirstCheckoutCompletedInvisibleActionOnOtherCheckoutWithNonDefaultFactory() throws Exception {
+    void shouldNotSetFirstCheckoutCompletedInvisibleActionOnOtherCheckoutWithNonDefaultFactory() throws Exception {
         String dsl = "node { checkout(scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/jenkinsci/bitbucket-branch-source-plugin.git']], branches: [[name: 'master']]]) }";
         WorkflowMultiBranchProject owner = prepareFirstCheckoutCompletedInvisibleActionTest(dsl);
         owner.setProjectFactory(new DummyWorkflowBranchProjectFactory(dsl));
 
         owner.scheduleBuild2(0).getFuture().get();
         owner.getComputation().writeWholeLogTo(System.out);
-        assertThat(owner.getIndexing().getResult(), is(Result.SUCCESS));
+        assertThat(owner.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
         r.waitUntilNoActivity();
         WorkflowJob master = owner.getItem("master");
         WorkflowRun run = master.getLastBuild();
         run.writeWholeLogTo(System.out);
-        assertThat(run.getResult(), is(Result.SUCCESS));
-        assertThat((List<Action>) run.getAllActions(), not(hasItem(instanceOf(FirstCheckoutCompletedInvisibleAction.class))));
+        assertThat(run.getResult()).isEqualTo(Result.SUCCESS);
+        assertThat(run.getAllActions()).doesNotHaveAnyElementsOfTypes(FirstCheckoutCompletedInvisibleAction.class);
     }
 
     private static class DummyWorkflowBranchProjectFactory extends AbstractWorkflowBranchProjectFactory {
@@ -194,6 +201,7 @@ public class BitbucketBuildStatusNotificationsTest {
             }
         }
 
+        @SuppressWarnings("serial")
         @Override
         protected SCMSourceCriteria getSCMSourceCriteria(SCMSource source) {
             return new SCMSourceCriteria() {

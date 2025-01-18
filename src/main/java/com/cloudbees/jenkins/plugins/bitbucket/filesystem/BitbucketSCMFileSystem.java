@@ -43,11 +43,11 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
-import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import java.io.IOException;
+import java.lang.annotation.Inherited;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
@@ -69,13 +69,10 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
     }
 
     /**
-     * Return timestamp of last commit or of tag if its annotated tag.
-     *
-     * @return timestamp of last commit or of tag if its annotated tag
+     * {@link Inherited}
      */
     @Override
     public long lastModified() throws IOException {
-        // TODO figure out how to implement this
         return 0L;
     }
 
@@ -83,7 +80,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
     @Override
     public SCMFile getRoot() {
         SCMRevision revision = getRevision();
-        return new BitbucketSCMFile(this, api, ref, revision == null ? null : revision.toString());
+        return new BitbucketSCMFile(api, ref, revision == null ? null : revision.toString());
     }
 
     @Extension
@@ -116,22 +113,24 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
         }
 
         private static StandardCredentials lookupScanCredentials(@CheckForNull Item context,
-                @CheckForNull String scanCredentialsId, String serverUrl) {
-            if (Util.fixEmpty(scanCredentialsId) == null) {
+                                                                 @CheckForNull String scanCredentialsId,
+                                                                 String serverURL) {
+            scanCredentialsId = Util.fixEmpty(scanCredentialsId);
+            if (scanCredentialsId == null) {
                 return null;
             } else {
                 return CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
+                        CredentialsProvider.lookupCredentialsInItem(
                                 StandardCredentials.class,
                                 context,
-                                context instanceof Queue.Task
-                                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                                        : ACL.SYSTEM,
-                                URIRequirementBuilder.fromUri(serverUrl).build()
+                                context instanceof Queue.Task task
+                                        ? task.getDefaultAuthentication2()
+                                        : ACL.SYSTEM2,
+                                URIRequirementBuilder.fromUri(serverURL).build()
                         ),
                         CredentialsMatchers.allOf(
                                 CredentialsMatchers.withId(scanCredentialsId),
-                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL))
                         )
                 );
             }

@@ -302,17 +302,30 @@ public interface BitbucketApi extends AutoCloseable {
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
+    @NonNull
     @Restricted(NoExternalUse.class)
     Iterable<SCMFile> getDirectoryContent(BitbucketSCMFile parent) throws IOException, InterruptedException;
 
     /**
      * Return an input stream for the given file.
      *
-     * @param file and instance of SCM file
+     * @param file an instance of SCM file
      * @return the stream of the given {@link SCMFile}
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @Restricted(NoExternalUse.class)
     InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException;
+
+    /**
+     * Return the metadata for the given file.
+     *
+     * @param file an instance of SCM file
+     * @return a {@link SCMFile} file with updated the metadata
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    @NonNull
+    @Restricted(NoExternalUse.class)
+    SCMFile getFile(@NonNull BitbucketSCMFile file) throws IOException, InterruptedException;
 }

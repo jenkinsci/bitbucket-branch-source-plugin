@@ -63,6 +63,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -85,6 +86,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
+import jenkins.scm.api.SCMFile.Type;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
@@ -952,7 +954,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     protected HttpHost getHost() {
         String url = baseURL;
         try {
-            // it's really needed?
+            // it's needed because the serverURL can contains a context root different than '/' and the HttpHost must contains only schema, host and port
             URL tmp = new URL(baseURL);
             String schema = tmp.getProtocol() == null ? "http" : tmp.getProtocol();
             return new HttpHost(tmp.getHost(), tmp.getPort(), schema);
@@ -1048,6 +1050,40 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             }
         }
         return content;
+    }
+
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
+    @NonNull
+    @Override
+    public SCMFile getFile(@NonNull BitbucketSCMFile file) throws IOException, InterruptedException {
+        String branchOrHash = file.getHash().contains("+") ? file.getRef() : file.getHash();
+        String url = UriTemplate.fromTemplate(this.baseURL + API_BROWSE_PATH + "{&type,blame}")
+                .set("owner", getUserCentricOwner())
+                .set("repo", repositoryName)
+                .set("path", file.getPath().split(Operator.PATH.getSeparator()))
+                .set("at", branchOrHash)
+                .set("type", true)
+                .set("blame", false)
+                .expand();
+        Type type = Type.OTHER;
+        try {
+            String response = getRequest(url);
+            JsonNode typeNode = JsonParser.mapper.readTree(response).path("type");
+            if (!typeNode.isMissingNode() && !typeNode.isNull()) {
+                String responseType = typeNode.asText();
+                if ("FILE".equals(responseType)) {
+                    type = Type.REGULAR_FILE;
+                    // type = Type.LINK; does not matter if getFileContent on the linked file/directory returns the content
+                } else if ("DIRECTORY".equals(responseType)) {
+                    type = Type.DIRECTORY;
+                } else if ("SUBMODULE".equals(responseType)) {
+                    type = Type.OTHER; // NOSONAR
+                }
+            }
+        } catch (FileNotFoundException e) {
+            type = Type.NONEXISTENT;
+        }
+        return new BitbucketSCMFile((BitbucketSCMFile) file.parent(), file.getRef(), type, file.getHash());
     }
 
 }

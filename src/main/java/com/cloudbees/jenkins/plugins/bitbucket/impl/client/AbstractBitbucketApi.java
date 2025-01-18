@@ -36,8 +36,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -220,21 +218,21 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     @NonNull
     protected abstract CloseableHttpClient getClient();
 
-    protected CloseableHttpResponse executeMethod(HttpHost host,
-                                                  HttpRequestBase httpMethod,
-                                                  boolean requireAuthentication) throws IOException {
+    protected CloseableHttpResponse executeMethod(HttpRequestBase request, boolean requireAuthentication) throws IOException {
         if (requireAuthentication && authenticator != null) {
-            authenticator.configureRequest(httpMethod);
+            authenticator.configureRequest(request);
         }
-        return getClient().execute(host, httpMethod, context);
+        // the Apache client determinate the host from request.getURI()
+        // in some cases like requests to mirror or avatar, the host could not be the same of configured in Jenkins
+        return getClient().execute(request, context);
     }
 
-    protected CloseableHttpResponse executeMethod(HttpHost host, HttpRequestBase httpMethod) throws IOException {
-        return executeMethod(host, httpMethod, true);
+    protected CloseableHttpResponse executeMethod(HttpRequestBase httpMethod) throws IOException {
+        return executeMethod(httpMethod, true);
     }
 
     protected String doRequest(HttpRequestBase request, boolean requireAuthentication) throws IOException {
-        try (CloseableHttpResponse response =  executeMethod(getHost(), request, requireAuthentication)) {
+        try (CloseableHttpResponse response =  executeMethod(request, requireAuthentication)) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("URL: " + request.getURI());
@@ -250,7 +248,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
                 throw buildResponseException(response, content);
             }
             return content;
-        } catch (BitbucketRequestException e) {
+        } catch (FileNotFoundException | BitbucketRequestException e) {
             throw e;
         } catch (IOException e) {
             throw new IOException("Communication error for url: " + request, e);
@@ -276,19 +274,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
      */
     protected InputStream getRequestAsInputStream(String path) throws IOException {
         HttpGet httpget = new HttpGet(path);
-        HttpHost host = getHost();
-
-        // Extract host from URL, if present
-        try {
-            URI uri = new URI(host.toURI());
-            if (uri.isAbsolute() && ! uri.isOpaque()) {
-                host = HttpHost.create(uri.getScheme() + "://" + uri.getAuthority());
-            }
-        } catch (URISyntaxException ex) {
-            // use default
-        }
-
-        CloseableHttpResponse response =  executeMethod(host, httpget);
+        CloseableHttpResponse response =  executeMethod(httpget);
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == HttpStatus.SC_NOT_FOUND) {
             EntityUtils.consume(response.getEntity());
@@ -303,7 +289,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
 
     protected int headRequestStatus(String path) throws IOException {
         HttpHead httpHead = new HttpHead(path);
-        try (CloseableHttpResponse response = executeMethod(getHost(), httpHead)) {
+        try (CloseableHttpResponse response = executeMethod(httpHead)) {
             EntityUtils.consume(response.getEntity());
             return response.getStatusLine().getStatusCode();
         } catch (IOException e) {

@@ -55,6 +55,7 @@ import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -836,33 +837,45 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("path", parent.getPath())
                 .expand();
         List<SCMFile> result = new ArrayList<>();
-        String response = getRequest(url);
-        BitbucketCloudPage<BitbucketRepositorySource> page = JsonParser.mapper.readValue(response,
-                new TypeReference<BitbucketCloudPage<BitbucketRepositorySource>>(){});
 
-        for(BitbucketRepositorySource source:page.getValues()){
-            result.add(source.toBitbucketScmFile(parent));
-        }
+        String pageURL = url;
+        BitbucketCloudPage<BitbucketRepositorySource> page;
+        do {
+            String response = getRequest(pageURL);
+            page = JsonParser.mapper.readValue(response, new TypeReference<BitbucketCloudPage<BitbucketRepositorySource>>(){});
 
-        while (!page.isLastPage()){
-            response = getRequest(page.getNext());
-            page = JsonParser.mapper.readValue(response,
-                    new TypeReference<BitbucketCloudPage<BitbucketRepositorySource>>(){});
-            for(BitbucketRepositorySource source:page.getValues()){
-                result.add(source.toBitbucketScmFile(parent));
+            for(BitbucketRepositorySource source : page.getValues()){
+                result.add(source.toBitbucketSCMFile(parent));
             }
-        }
+            pageURL = page.getNext();
+        } while (!page.isLastPage());
         return result;
     }
 
     @Override
-    public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}")
+    public InputStream getFileContent(@NonNull BitbucketSCMFile file) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}{?at}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
                 .set("branchOrHash", file.getHash())
                 .set("path", file.getPath())
+                .set("at", file.getRef())
                 .expand();
         return getRequestAsInputStream(url);
+    }
+
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
+    @NonNull
+    @Override
+    public SCMFile getFile(@NonNull BitbucketSCMFile file) throws IOException, InterruptedException {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}?format=meta")
+                .set("owner", owner)
+                .set("repo", repositoryName)
+                .set("branchOrHash", file.getHash() != null ? file.getHash() : file.getRef())
+                .set("path", file.getPath())
+                .expand();
+        String response = getRequest(url);
+        BitbucketRepositorySource src = JsonParser.mapper.readValue(response, BitbucketRepositorySource.class);
+        return src.toBitbucketSCMFile((BitbucketSCMFile) file.parent());
     }
 }
