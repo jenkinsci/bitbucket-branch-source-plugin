@@ -47,6 +47,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
@@ -97,9 +98,14 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         }
     }
 
-    protected BitbucketRequestException buildResponseException(CloseableHttpResponse response, String errorMessage) {
+    protected BitbucketRequestException buildResponseException(CloseableHttpResponse response,
+                                                               String errorMessage,
+                                                               @CheckForNull String advice) {
         String headers = StringUtils.join(response.getAllHeaders(), "\n");
         String message = String.format("HTTP request error.%nStatus: %s%nResponse: %s%n%s", response.getStatusLine(), errorMessage, headers);
+        if (advice != null) {
+            message = advice + System.lineSeparator() + message;
+        }
         return new BitbucketRequestException(response.getStatusLine().getStatusCode(), message);
     }
 
@@ -234,6 +240,12 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     }
 
     protected String doRequest(HttpRequestBase request, boolean requireAuthentication) throws IOException {
+        return doRequest(request, requireAuthentication, HttpErrorAdvisor.NULL);
+    }
+
+    protected String doRequest(HttpRequestBase request,
+                               boolean requireAuthentication,
+                               HttpErrorAdvisor advisor) throws IOException {
         try (CloseableHttpResponse response =  executeMethod(getHost(), request, requireAuthentication)) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_NOT_FOUND) {
@@ -247,7 +259,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
             String content = getResponseContent(response);
             EntityUtils.consume(response.getEntity());
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
-                throw buildResponseException(response, content);
+                throw buildResponseException(response, content, advisor.getAdvice(response));
             }
             return content;
         } catch (BitbucketRequestException e) {
@@ -296,7 +308,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         }
         if (statusCode != HttpStatus.SC_OK) {
             String content = getResponseContent(response);
-            throw buildResponseException(response, content);
+            throw buildResponseException(response, content, null);
         }
         return new ClosingConnectionInputStream(response, httpget, getConnectionManager());
     }
@@ -350,5 +362,26 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
 
     protected BitbucketAuthenticator getAuthenticator() {
         return authenticator;
+    }
+
+    /**
+     * REST API operation methods in classes derived from {@link AbstractBitbucketApi}
+     * can implement this interface to explain to users why
+     * {@link #doRequest(HttpRequestBase, boolean, HttpErrorAdvisor)} failed.
+     */
+    @FunctionalInterface
+    protected interface HttpErrorAdvisor {
+        /**
+         * Gets user-readable advice on why Bitbucket returned an error HTTP status.
+         *
+         * @param response The HTTP response from Bitbucket.
+         * @return Advice to the user on why the request failed, or {@code null}.
+         */
+        @CheckForNull String getAdvice(HttpResponse response);
+
+        /**
+         * A trivial {@link HttpErrorAdvisor} implementation that never has advice.
+         */
+        public static final HttpErrorAdvisor NULL = response -> null;
     }
 }
