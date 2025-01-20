@@ -85,7 +85,7 @@ public abstract class HookProcessor {
     /**
      * To be called by implementations once the owner and the repository have been extracted from the payload.
      *
-     * @deprecated SCM Event should not trigger Branch Indexing
+     * @deprecated Branch Indexing should not be triggered directly. But through {@link jenkins.scm.api.SCMSourceEvent}.
      * @param owner the repository owner as configured in the SCMSource
      * @param repository the repository name as configured in the SCMSource
      */
