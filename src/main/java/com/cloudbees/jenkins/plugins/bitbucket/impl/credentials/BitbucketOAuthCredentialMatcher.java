@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
+import hudson.util.Secret;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,15 +57,19 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
             return false;
         }
 
-        if (item.getClass().getName().equals("com.cloudbees.jenkins.plugins.amazonecr.AmazonECSRegistryCredential")) {
-            return false;
-        }
-
         try {
             UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
             String username = usernamePasswordCredential.getUsername();
+            String password;
+            try {
+                password = Secret.toString(usernamePasswordCredential.getPassword());
+            } catch (Exception e) {
+                // JENKINS-75184
+                return false;
+            }
+
             boolean isEMail = username.contains(".") && username.contains("@");
-            boolean validSecretLength = usernamePasswordCredential.getPassword().getPlainText().length() == CLIENT_SECRET_LENGTH;
+            boolean validSecretLength = password.length() == CLIENT_SECRET_LENGTH;
             boolean validKeyLength = username.length() == CLIENT_KEY_LENGTH;
 
             return !isEMail && validKeyLength && validSecretLength;
