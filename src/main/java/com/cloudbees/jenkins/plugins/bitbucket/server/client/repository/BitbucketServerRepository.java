@@ -118,6 +118,7 @@ public class BitbucketServerRepository implements BitbucketRepository {
         this.public_ = public_;
     }
 
+    @Override
     @JsonIgnore
     public Map<String, List<BitbucketHref>> getLinks() {
         if (links == null) {
@@ -144,4 +145,9 @@ public class BitbucketServerRepository implements BitbucketRepository {
         }
     }
 
+    @Override
+    public String getAvatar() {
+        // repository does not supports avatar
+        return null;
+    }
 }
