@@ -234,7 +234,6 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
      * <p>
      * This reduces generics in the databound constructor method signature as a workaround for JENKINS-26535
      */
-    @SuppressWarnings("rawtypes")
     public static abstract class BitbucketForkTrustPolicy extends SCMHeadAuthority<BitbucketSCMSourceRequest, PullRequestSCMHead, PullRequestSCMRevision> {
     }
 

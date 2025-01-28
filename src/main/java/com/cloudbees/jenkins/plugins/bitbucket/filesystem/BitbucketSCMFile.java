@@ -25,16 +25,19 @@
 package com.cloudbees.jenkins.plugins.bitbucket.filesystem;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import jenkins.scm.api.SCMFile;
 
-public class BitbucketSCMFile  extends SCMFile {
+public class BitbucketSCMFile extends SCMFile {
 
     private final BitbucketApi api;
     private  String ref;
     private final String hash;
+    private boolean resolved;
 
     public String getRef() {
         return ref;
@@ -44,34 +47,22 @@ public class BitbucketSCMFile  extends SCMFile {
         this.ref = ref;
     }
 
-    @Deprecated
-    public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
-                            BitbucketApi api,
-                            String ref) {
-        this(bitBucketSCMFileSystem, api, ref, null);
-    }
-
-    public BitbucketSCMFile(BitbucketSCMFileSystem bitBucketSCMFileSystem,
-                            BitbucketApi api,
-                            String ref, String hash) {
-        super();
-        type(Type.DIRECTORY);
+    public BitbucketSCMFile(BitbucketApi api, String ref, String hash) {
         this.api = api;
         this.ref = ref;
         this.hash = hash;
+        this.resolved = false;
     }
 
-    @Deprecated
-    public BitbucketSCMFile(@NonNull BitbucketSCMFile parent, String name, Type type) {
-        this(parent, name, type, null);
-    }
-
-    public BitbucketSCMFile(@NonNull BitbucketSCMFile parent, String name, Type type, String hash) {
+    public BitbucketSCMFile(BitbucketSCMFile parent, String name, @CheckForNull Type type, String hash) {
         super(parent, name);
         this.api = parent.api;
         this.ref = parent.ref;
         this.hash = hash;
-        type(type);
+        if (type != null) {
+            type(type);
+        }
+        this.resolved = type != null;
     }
 
     public String getHash() {
@@ -80,40 +71,48 @@ public class BitbucketSCMFile  extends SCMFile {
 
     @Override
     @NonNull
-    public Iterable<SCMFile> children() throws IOException,
-            InterruptedException {
+    public Iterable<SCMFile> children() throws IOException, InterruptedException {
         if (this.isDirectory()) {
             return api.getDirectoryContent(this);
         } else {
-            throw new IOException("Cannot get children from a regular file");
+            // respect the interface javadoc
+            return Collections.emptyList();
         }
     }
 
     @Override
     @NonNull
     public InputStream content() throws IOException, InterruptedException {
-        if (this.isDirectory()) {
-            throw new IOException("Cannot get raw content from a directory");
-        } else {
+        if (this.isFile()) {
             return api.getFileContent(this);
+        } else {
+            throw new IOException("Cannot get raw content from a directory");
         }
     }
 
     @Override
     public long lastModified() throws IOException, InterruptedException {
-        // TODO: Return valid value when Tag support is implemented
-        return 0;
+        return 0L;
     }
 
     @Override
     @NonNull
     protected SCMFile newChild(String name, boolean assumeIsDirectory) {
-        return new BitbucketSCMFile(this, name, assumeIsDirectory?Type.DIRECTORY:Type.REGULAR_FILE, hash);
+        return new BitbucketSCMFile(this, name, null, hash);
     }
 
     @Override
     @NonNull
     protected Type type() throws IOException, InterruptedException {
+        if (!resolved) {
+            try {
+                SCMFile metadata = api.getFile(this);
+                type(metadata.getType());
+            } catch(IOException e) {
+                type(Type.NONEXISTENT);
+            }
+            resolved = true;
+        }
         return this.getType();
     }
 

@@ -1,3 +1,26 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2016, CloudBees, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
@@ -8,16 +31,20 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
+import hudson.ProxyConfiguration;
 import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,10 +61,12 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @WithJenkins
@@ -182,6 +211,39 @@ class BitbucketServerAPIClientTest {
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
                     .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/tags"));
+    }
+
+    @Issue("JENKINS-75119")
+    @Test
+    void verify_HttpHost_built_when_server_has_context_root() throws Exception {
+        String serverURL = "https://acme.bitbucket.org/bitbucket";
+        BitbucketServerAPIClient client = (BitbucketServerAPIClient) BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+
+        BitbucketAuthenticator authenticator = extractAuthenticator(client);
+        client.getRepository();
+
+        HttpHost expectedHost = HttpHost.create("https://acme.bitbucket.org");
+        verify(authenticator).configureContext(any(HttpClientContext.class), eq(expectedHost));
+    }
+
+    @Issue("JENKINS-75160")
+    @Test
+    void test_no_proxy_configurations() throws Exception {
+        ProxyConfiguration proxyConfiguration = spy(new ProxyConfiguration("proxy.lan", 8080, null, null, "*.internaldomain.com"));
+
+        j.jenkins.setProxy(proxyConfiguration);
+
+        AtomicReference<HttpClientBuilder> builderReference = new AtomicReference<>();
+        try(BitbucketApi client = new BitbucketServerAPIClient("https://git.internaldomain.com:7990/bitbucket", "amuniz", "test-repos", mock(BitbucketAuthenticator.class), false) {
+            @Override
+            protected void setClientProxyParams(HttpClientBuilder builder) {
+                builderReference.set(spy(builder));
+                super.setClientProxyParams(builderReference.get());
+            }
+        }) {}
+
+        verify(proxyConfiguration).createProxy("git.internaldomain.com");
+        verify(builderReference.get(), never()).setProxy(any(HttpHost.class));
     }
 
 }

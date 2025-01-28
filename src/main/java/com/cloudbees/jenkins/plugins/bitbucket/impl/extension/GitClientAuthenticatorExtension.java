@@ -66,7 +66,7 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
 
     @Override
     public int hashCode() {
-        return Objects.hash(credentials.getId(), url);
+        return Objects.hash(credentials != null ? credentials.getId() : null, credentials);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
             return false;
         }
         GitClientAuthenticatorExtension other = (GitClientAuthenticatorExtension) obj;
-        return Objects.equals(credentials.getId(), other.credentials.getId())
+        return Objects.equals(credentials != null ? credentials.getId() : credentials, other.credentials != null ? other.credentials.getId() : other.credentials)
                 && Objects.equals(url, other.url);
     }
 

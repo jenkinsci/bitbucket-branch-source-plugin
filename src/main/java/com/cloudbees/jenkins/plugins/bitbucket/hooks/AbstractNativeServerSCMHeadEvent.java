@@ -27,13 +27,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.scm.SCM;
 import java.util.Collections;
 import java.util.Map;
-import java.util.logging.Logger;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
@@ -41,15 +40,13 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 
-abstract class NativeServerHeadEvent<P> extends SCMHeadEvent<P> {
-    private static final Logger LOGGER = Logger.getLogger(NativeServerHeadEvent.class.getName());
-
+abstract class AbstractNativeServerSCMHeadEvent<P> extends SCMHeadEvent<P> {
     @NonNull
-    private final String serverUrl;
+    private final String serverURL;
 
-    NativeServerHeadEvent(String serverUrl, Type type, P payload, String origin) {
+    AbstractNativeServerSCMHeadEvent(String serverURL, Type type, P payload, String origin) {
         super(type, payload, origin);
-        this.serverUrl = serverUrl;
+        this.serverURL = serverURL;
     }
 
     @NonNull
@@ -66,7 +63,7 @@ abstract class NativeServerHeadEvent<P> extends SCMHeadEvent<P> {
 
         final BitbucketSCMNavigator bbNav = (BitbucketSCMNavigator) navigator;
 
-        return isServerUrlMatch(bbNav.getServerUrl()) && bbNav.getRepoOwner().equalsIgnoreCase(getRepository().getOwnerName());
+        return isServerURLMatch(bbNav.getServerUrl()) && bbNav.getRepoOwner().equalsIgnoreCase(getRepository().getOwnerName());
     }
 
     @Override
@@ -87,12 +84,12 @@ abstract class NativeServerHeadEvent<P> extends SCMHeadEvent<P> {
     @NonNull
     protected abstract Map<SCMHead, SCMRevision> heads(@NonNull BitbucketSCMSource source);
 
-    protected boolean isServerUrlMatch(String serverUrl) {
-        if (serverUrl == null || BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
+    protected boolean isServerURLMatch(String serverURL) {
+        if (serverURL == null || BitbucketApiUtils.isCloud(serverURL)) {
             return false; // this is Bitbucket Cloud, which is not handled by this processor
         }
 
-        return serverUrl.equals(this.serverUrl);
+        return serverURL.equals(this.serverURL);
     }
 
     protected boolean eventMatchesRepo(BitbucketSCMSource source) {
@@ -111,7 +108,7 @@ abstract class NativeServerHeadEvent<P> extends SCMHeadEvent<P> {
         }
 
         final BitbucketSCMSource src = (BitbucketSCMSource) source;
-        if (!isServerUrlMatch(src.getServerUrl())) {
+        if (!isServerURLMatch(src.getServerUrl())) {
             return null;
         }
 

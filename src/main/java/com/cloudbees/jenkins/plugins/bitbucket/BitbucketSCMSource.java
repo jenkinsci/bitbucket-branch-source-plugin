@@ -375,7 +375,11 @@ public class BitbucketSCMSource extends SCMSource {
 
     @DataBoundSetter
     public void setServerUrl(@CheckForNull String serverUrl) {
-        this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+        String url = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+        if (url == null) {
+            url = BitbucketEndpointConfiguration.get().getDefaultEndpoint().getServerUrl();
+        }
+        this.serverUrl = url;
     }
 
     @NonNull
@@ -401,7 +405,10 @@ public class BitbucketSCMSource extends SCMSource {
     @DataBoundSetter
     public void setBitbucketServerUrl(String url) {
         url = BitbucketEndpointConfiguration.normalizeServerUrl(url);
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(url);
+        url = StringUtils.defaultIfBlank(url, BitbucketCloudEndpoint.SERVER_URL);
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(url)
+                .orElse(null);
         if (endpoint != null) {
             // we have a match
             setServerUrl(endpoint.getServerUrl());
@@ -418,7 +425,10 @@ public class BitbucketSCMSource extends SCMSource {
     @CheckForNull
     public String getBitbucketServerUrl() {
         String serverUrl = getServerUrl();
-        if (BitbucketEndpointConfiguration.get().findEndpoint(serverUrl) instanceof BitbucketCloudEndpoint) {
+        if (BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl)
+                .filter(BitbucketCloudEndpoint.class::isInstance)
+                .isPresent()) {
             return null;
         }
         return serverUrl;
@@ -833,36 +843,35 @@ public class BitbucketSCMSource extends SCMSource {
     protected SCMRevision retrieve(SCMHead head, TaskListener listener) throws IOException, InterruptedException {
         final BitbucketApi bitbucket = buildBitbucketClient();
         try {
-            if (head instanceof PullRequestSCMHead) {
-                PullRequestSCMHead h = (PullRequestSCMHead) head;
+            if (head instanceof PullRequestSCMHead prHead) {
                 BitbucketCommit sourceRevision;
                 BitbucketCommit targetRevision;
 
                 if (bitbucket instanceof BitbucketCloudApiClient) {
                     // Bitbucket Cloud /pullrequests/{id} API endpoint only returns short commit IDs of the source
                     // and target branch. We therefore retrieve the branches directly
-                    BitbucketBranch targetBranch = bitbucket.getBranch(h.getTarget().getName());
+                    BitbucketBranch targetBranch = bitbucket.getBranch(prHead.getTarget().getName());
 
                     if(targetBranch == null) {
                         listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
-                            repoOwner, repository, h.getTarget().getName());
+                            repoOwner, repository, prHead.getTarget().getName());
                         return null;
                     }
                     targetRevision = findCommit(targetBranch, listener);
 
                     if (targetRevision == null) {
                         listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
-                            repoOwner, repository, h.getTarget().getName());
+                            repoOwner, repository, prHead.getTarget().getName());
                         return null;
                     }
 
                     // Retrieve the source branch commit
                     BitbucketBranch branch;
                     if (head.getOrigin() == SCMHeadOrigin.DEFAULT) {
-                        branch = bitbucket.getBranch(h.getBranchName());
+                        branch = bitbucket.getBranch(prHead.getBranchName());
                     } else {
                         // In case of a forked branch, retrieve the branch as that owner
-                        branch = buildBitbucketClient(h).getBranch(h.getBranchName());
+                        branch = buildBitbucketClient(prHead).getBranch(prHead.getBranchName());
                     }
 
                     if(branch == null) {
@@ -876,9 +885,9 @@ public class BitbucketSCMSource extends SCMSource {
                 } else {
                     BitbucketPullRequest pr;
                     try {
-                        pr = bitbucket.getPullRequestById(Integer.parseInt(h.getId()));
+                        pr = bitbucket.getPullRequestById(Integer.parseInt(prHead.getId()));
                     } catch (NumberFormatException nfe) {
-                        LOGGER.log(Level.WARNING, "Cannot parse the PR id {0}", h.getId());
+                        LOGGER.log(Level.WARNING, "Cannot parse the PR id {0}", prHead.getId());
                         return null;
                     }
 
@@ -886,7 +895,7 @@ public class BitbucketSCMSource extends SCMSource {
 
                     if (targetRevision == null) {
                         listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
-                            repoOwner, repository, h.getTarget().getName());
+                            repoOwner, repository, prHead.getTarget().getName());
                         return null;
                     }
 
@@ -895,20 +904,19 @@ public class BitbucketSCMSource extends SCMSource {
 
                 if (sourceRevision == null) {
                     listener.getLogger().format("No revision found in {0}/{1} for PR-{2} [{3}]",
-                        h.getRepoOwner(),
-                        h.getRepository(),
-                        h.getId(),
-                        h.getBranchName());
+                        prHead.getRepoOwner(),
+                        prHead.getRepository(),
+                        prHead.getId(),
+                        prHead.getBranchName());
                     return null;
                 }
 
                 return new PullRequestSCMRevision(
-                    h,
-                    new BitbucketGitSCMRevision(h.getTarget(), targetRevision),
-                    new BitbucketGitSCMRevision(h, sourceRevision)
+                    prHead,
+                    new BitbucketGitSCMRevision(prHead.getTarget(), targetRevision),
+                    new BitbucketGitSCMRevision(prHead, sourceRevision)
                 );
-            } else if (head instanceof BitbucketTagSCMHead) {
-                BitbucketTagSCMHead tagHead = (BitbucketTagSCMHead) head;
+            } else if (head instanceof BitbucketTagSCMHead tagHead) {
                 BitbucketBranch tag = bitbucket.getTag(tagHead.getName());
                 if(tag == null) {
                     listener.getLogger().format( "No tag found in {0}/{1} with name [{2}]",
@@ -939,8 +947,7 @@ public class BitbucketSCMSource extends SCMSource {
             }
         } catch (IOException e) {
             // here we only want to display the job name to have it in the log
-            if (e instanceof BitbucketRequestException) {
-                BitbucketRequestException bre = (BitbucketRequestException) e;
+            if (e instanceof BitbucketRequestException bre) {
                 SCMSourceOwner scmSourceOwner = getOwner();
                 if (bre.getHttpCode() == 401 && scmSourceOwner != null) {
                     LOGGER.log(Level.WARNING, "BitbucketRequestException: Authz error. Status: 401 for Item '{0}' using credentialId '{1}'",
@@ -1040,7 +1047,8 @@ public class BitbucketSCMSource extends SCMSource {
         links.forEach(link -> {
             if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
                 // Remove the username from URL because it will be set into the GIT_URL variable
-                // credentials used to clone or for push/pull could be different than this will cause a failure
+                // credentials used to git clone or push/pull operation could be different than this (for example SSH)
+                // and will run into a failure
                 // Restore the behaviour before mirror link feature.
                 link.setHref(URLUtils.removeAuthority(link.getHref()));
             }
@@ -1336,8 +1344,8 @@ public class BitbucketSCMSource extends SCMSource {
         @SuppressWarnings("unused") // used By stapler
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
-                                                   @QueryParameter String serverUrl) {
-            return BitbucketCredentials.checkCredentialsId(context, value, serverUrl);
+                                                   @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
+            return BitbucketCredentials.checkCredentialsId(context, value, serverURL);
         }
 
         @SuppressWarnings("unused") // used By stapler
@@ -1353,11 +1361,13 @@ public class BitbucketSCMSource extends SCMSource {
             return FormValidation.ok();
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // used By stapler
-        public static FormValidation doCheckMirrorId(@QueryParameter String value, @QueryParameter String serverUrl) {
+        public static FormValidation doCheckMirrorId(@QueryParameter String value,
+                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             if (!value.isEmpty()) {
                 BitbucketServerWebhookImplementation webhookImplementation =
-                    BitbucketServerEndpoint.findWebhookImplementation(serverUrl);
+                    BitbucketServerEndpoint.findWebhookImplementation(serverURL);
                 if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
                     return FormValidation.error("Mirror can only be used with native webhooks");
                 }

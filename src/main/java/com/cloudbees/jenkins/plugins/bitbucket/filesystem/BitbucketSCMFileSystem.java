@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
-
 package com.cloudbees.jenkins.plugins.bitbucket.filesystem;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
@@ -32,10 +30,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -47,11 +43,11 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
-import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import java.io.IOException;
+import java.lang.annotation.Inherited;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
@@ -73,13 +69,10 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
     }
 
     /**
-     * Return timestamp of last commit or of tag if its annotated tag.
-     *
-     * @return timestamp of last commit or of tag if its annotated tag
+     * {@link Inherited}
      */
     @Override
     public long lastModified() throws IOException {
-        // TODO figure out how to implement this
         return 0L;
     }
 
@@ -87,7 +80,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
     @Override
     public SCMFile getRoot() {
         SCMRevision revision = getRevision();
-        return new BitbucketSCMFile(this, api, ref, revision == null ? null : revision.toString());
+        return new BitbucketSCMFile(api, ref, revision == null ? null : revision.toString());
     }
 
     @Extension
@@ -120,22 +113,24 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
         }
 
         private static StandardCredentials lookupScanCredentials(@CheckForNull Item context,
-                @CheckForNull String scanCredentialsId, String serverUrl) {
-            if (Util.fixEmpty(scanCredentialsId) == null) {
+                                                                 @CheckForNull String scanCredentialsId,
+                                                                 String serverURL) {
+            scanCredentialsId = Util.fixEmpty(scanCredentialsId);
+            if (scanCredentialsId == null) {
                 return null;
             } else {
                 return CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
+                        CredentialsProvider.lookupCredentialsInItem(
                                 StandardCredentials.class,
                                 context,
-                                context instanceof Queue.Task
-                                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                                        : ACL.SYSTEM,
-                                URIRequirementBuilder.fromUri(serverUrl).build()
+                                context instanceof Queue.Task task
+                                        ? task.getDefaultAuthentication2()
+                                        : ACL.SYSTEM2,
+                                URIRequirementBuilder.fromUri(serverURL).build()
                         ),
                         CredentialsMatchers.allOf(
                                 CredentialsMatchers.withId(scanCredentialsId),
-                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
+                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL))
                         )
                 );
             }
@@ -166,7 +161,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     return null;
                 }
 
-                if (apiClient instanceof BitbucketCloudApiClient) {
+                if (BitbucketApiUtils.isCloud(apiClient)) {
                     // support lightweight checkout for branches with same owner and repository
                     if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
                         prHead.getRepoOwner().equals(src.getRepoOwner()) &&
@@ -184,9 +179,8 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     // Bitbucket server v7 doesn't have the `merge` ref for PRs
                     // We don't return `ref` when working with v7
                     // so that pipeline falls back to heavyweight checkout properly
-                    AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(src.getServerUrl());
-                    if (endpointConfig instanceof BitbucketServerEndpoint endpoint &&
-                        endpoint.getServerVersion() != BitbucketServerVersion.VERSION_7) {
+                    boolean ligthCheckout = BitbucketServerEndpoint.findServerVersion(serverUrl) != BitbucketServerVersion.VERSION_7;
+                    if (ligthCheckout) {
                         ref = "pull-requests/" + prHead.getId() + "/merge";
                     } else {
                         // returning null to fall back to heavyweight checkout

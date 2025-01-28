@@ -31,6 +31,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
@@ -104,10 +105,13 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      *                      auto-management of hooks.
      */
     @DataBoundConstructor
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
-        boolean manageHooks, @CheckForNull String credentialsId) {
+    public BitbucketServerEndpoint(@CheckForNull String displayName,
+                                   @NonNull String serverUrl,
+                                   boolean manageHooks,
+                                   @CheckForNull String credentialsId) {
         super(manageHooks, credentialsId);
-        this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+        // use fixNull to silent nullability check
+        this.serverUrl = Util.fixNull(BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl));
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName.trim();
@@ -122,9 +126,11 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
     @NonNull
     public static BitbucketServerWebhookImplementation findWebhookImplementation(String serverUrl) {
-        final AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        if (endpoint instanceof BitbucketServerEndpoint) {
-            return ((BitbucketServerEndpoint) endpoint).getWebhookImplementation();
+        final BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl, BitbucketServerEndpoint.class)
+                .orElse(null);
+        if (endpoint != null) {
+            return endpoint.getWebhookImplementation();
         }
 
         return BitbucketServerWebhookImplementation.PLUGIN;
@@ -150,12 +156,10 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
     @NonNull
     public static BitbucketServerVersion findServerVersion(String serverUrl) {
-        final AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        if (endpoint instanceof BitbucketServerEndpoint) {
-            return ((BitbucketServerEndpoint) endpoint).getServerVersion();
-        }
-
-        return BitbucketServerVersion.VERSION_7;
+        return BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl, BitbucketServerEndpoint.class)
+                .map(endpoint -> endpoint.getServerVersion())
+                .orElse(BitbucketServerVersion.VERSION_7);
     }
 
     @NonNull

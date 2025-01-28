@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
@@ -108,12 +107,12 @@ public class BitbucketTeamMetadataAction extends AvatarMetadataAction {
         }
 
         private StandardCredentials findCredentials() {
-            try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
+            try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
                 return CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
+                        CredentialsProvider.lookupCredentialsInItem(
                                 credentials.getClass(),
                                 (Item) null, // context
-                                ACL.SYSTEM,
+                                ACL.SYSTEM2,
                                 URIRequirementBuilder.fromUri(serverUrl).build()
                         ),
                         CredentialsMatchers.allOf(

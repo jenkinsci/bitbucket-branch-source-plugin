@@ -23,12 +23,17 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import hudson.RestrictedSince;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-public class PingHookProcessor extends HookProcessor {
+@Restricted(NoExternalUse.class)
+@RestrictedSince("933.3.0")
+public class NativeServerPingHookProcessor extends HookProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(PingHookProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(NativeServerPingHookProcessor.class.getName());
 
     @Override
     public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {

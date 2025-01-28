@@ -1,0 +1,31 @@
+{
+    "path": "script.bat",
+    "commit": {
+        "hash": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/fb522a6f08c7c7df337312e4e65ec1b57710672e"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos/commits/fb522a6f08c7c7df337312e4e65ec1b57710672e"
+            }
+        },
+        "type": "commit"
+    },
+    "type": "commit_file",
+    "attributes": [],
+    "escaped_path": "script.bat",
+    "size": 28,
+    "mimetype": "application/x-msdos-program",
+    "links": {
+        "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/fb522a6f08c7c7df337312e4e65ec1b57710672e/script.bat"
+        },
+        "meta": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/fb522a6f08c7c7df337312e4e65ec1b57710672e/script.bat?format=meta"
+        },
+        "history": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/filehistory/fb522a6f08c7c7df337312e4e65ec1b57710672e/script.bat"
+        }
+    }
+}

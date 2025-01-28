@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Map;
 import jenkins.scm.api.SCMFile;
@@ -68,23 +69,25 @@ public class BitbucketRepositorySource {
 
     @JsonIgnore
     public boolean isDirectory() {
-        return type.equals("commit_directory");
+        return "commit_directory".equals(type);
     }
 
-    public BitbucketSCMFile toBitbucketScmFile(BitbucketSCMFile parent){
+    @NonNull
+    public BitbucketSCMFile toBitbucketSCMFile(BitbucketSCMFile parent) {
         SCMFile.Type fileType;
-        if(isDirectory()){
+        if (isDirectory()) {
             fileType = SCMFile.Type.DIRECTORY;
         } else {
             fileType = SCMFile.Type.REGULAR_FILE;
-            for(String attribute: getAttributes()){
-                if(attribute.equals("link")){
+            for (String attribute : getAttributes()) {
+                if ("link".equals(attribute)) {
                     fileType = SCMFile.Type.LINK;
-                } else if(attribute.equals("subrepository")){
+                } else if ("subrepository".equals(attribute)) {
                     fileType = SCMFile.Type.OTHER; // sub-module or sub-repo
                 }
             }
         }
         return new BitbucketSCMFile(parent, path, fileType, hash);
     }
+
 }

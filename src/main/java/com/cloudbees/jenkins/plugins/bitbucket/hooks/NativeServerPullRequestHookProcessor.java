@@ -24,32 +24,20 @@
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
-import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerPullRequestEvent;
-import com.google.common.base.Ascii;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.RestrictedSince;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
-import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
-import jenkins.scm.api.SCMHeadOrigin;
-import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Restricted(NoExternalUse.class)
+@RestrictedSince("933.3.0")
 public class NativeServerPullRequestHookProcessor extends HookProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(NativeServerPullRequestHookProcessor.class.getName());
@@ -75,14 +63,14 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
             case SERVER_PULL_REQUEST_OPENED:
                 eventType = SCMEvent.Type.CREATED;
                 break;
-            case SERVER_PULL_REQUEST_MERGED:
-            case SERVER_PULL_REQUEST_DECLINED:
-            case SERVER_PULL_REQUEST_DELETED:
+            case SERVER_PULL_REQUEST_MERGED,
+                 SERVER_PULL_REQUEST_DECLINED,
+                 SERVER_PULL_REQUEST_DELETED:
                 eventType = SCMEvent.Type.REMOVED;
                 break;
-            case SERVER_PULL_REQUEST_MODIFIED:
-            case SERVER_PULL_REQUEST_REVIEWER_UPDATED:
-            case SERVER_PULL_REQUEST_FROM_REF_UPDATED:
+            case SERVER_PULL_REQUEST_MODIFIED,
+                 SERVER_PULL_REQUEST_REVIEWER_UPDATED,
+                 SERVER_PULL_REQUEST_FROM_REF_UPDATED:
                 eventType = SCMEvent.Type.UPDATED;
                 break;
             default:
@@ -90,82 +78,6 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 return;
         }
 
-        SCMHeadEvent.fireLater(new HeadEvent(serverUrl, eventType, pullRequestEvent, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
-    }
-
-    private static final class HeadEvent extends NativeServerHeadEvent<NativeServerPullRequestEvent> implements HasPullRequests {
-        private HeadEvent(String serverUrl, Type type, NativeServerPullRequestEvent payload, String origin) {
-            super(serverUrl, type, payload, origin);
-        }
-
-        @Override
-        protected BitbucketServerRepository getRepository() {
-            return getPayload().getPullRequest().getDestination().getRepository();
-        }
-
-        @NonNull
-        @Override
-        protected Map<SCMHead, SCMRevision> heads(@NonNull BitbucketSCMSource source) {
-            if (!eventMatchesRepo(source)) {
-                return Collections.emptyMap();
-            }
-
-            final BitbucketSCMSourceContext ctx = contextOf(source);
-            if (!ctx.wantPRs()) {
-                return Collections.emptyMap(); // doesn't want PRs, nothing to do here
-            }
-
-            final BitbucketPullRequest pullRequest = getPayload().getPullRequest();
-            final BitbucketRepository sourceRepo = pullRequest.getSource().getRepository();
-            final SCMHeadOrigin headOrigin = source.originOf(sourceRepo.getOwnerName(), sourceRepo.getRepositoryName());
-            final Set<ChangeRequestCheckoutStrategy> strategies = headOrigin == SCMHeadOrigin.DEFAULT
-                ? ctx.originPRStrategies()
-                : ctx.forkPRStrategies();
-            final Map<SCMHead, SCMRevision> result = new HashMap<>(strategies.size());
-            for (final ChangeRequestCheckoutStrategy strategy : strategies) {
-                final String originalBranchName = pullRequest.getSource().getBranch().getName();
-                final String branchName = String.format("PR-%s%s", pullRequest.getId(),
-                    strategies.size() > 1 ? "-" + Ascii.toLowerCase(strategy.name()) : "");
-                final PullRequestSCMHead head = new PullRequestSCMHead(
-                    branchName,
-                    sourceRepo.getOwnerName(),
-                    sourceRepo.getRepositoryName(),
-                    originalBranchName,
-                    pullRequest,
-                    headOrigin,
-                    strategy
-                );
-
-                switch (getType()) {
-                    case CREATED:
-                    case UPDATED:
-                        final String targetHash = pullRequest.getDestination().getCommit().getHash();
-                        final String pullHash = pullRequest.getSource().getCommit().getHash();
-                        result.put(head,
-                            new PullRequestSCMRevision(head,
-                                new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(), targetHash),
-                                new AbstractGitSCMSource.SCMRevisionImpl(head, pullHash)));
-                        break;
-
-                    case REMOVED:
-                        // special case for repo being deleted
-                        result.put(head, null);
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-
-            return result;
-        }
-
-        @Override
-        public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
-            if (Type.REMOVED.equals(getType())) {
-                return Collections.emptySet();
-            }
-            return Collections.singleton(getPayload().getPullRequest());
-        }
+        SCMHeadEvent.fireLater(new ServerHeadEvent(serverUrl, eventType, pullRequestEvent, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
     }
 }

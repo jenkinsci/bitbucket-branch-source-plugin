@@ -104,10 +104,9 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         this.scmSource = scmSource;
 
         String serverURL = scmSource.getServerUrl();
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverURL);
-        if (endpoint == null) {
-            endpoint = new BitbucketServerEndpoint(null, serverURL, false, null);
-        }
+        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverURL)
+                .orElse(new BitbucketServerEndpoint(null, serverURL, false, null));
 
         String repositoryURL = endpoint.getRepositoryUrl(scmSource.getRepoOwner(), scmSource.getRepository());
         if (BitbucketApiUtils.isCloud(endpoint.getServerUrl())) {

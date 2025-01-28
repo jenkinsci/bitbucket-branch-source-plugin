@@ -26,10 +26,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.NativeBitbucketServerWebhook;
 import com.damnhandy.uri.template.UriTemplate;
@@ -113,23 +112,20 @@ public class WebhookConfiguration {
     }
 
     boolean updateHook(BitbucketWebHook hook, BitbucketSCMSource owner) {
-        if (hook instanceof BitbucketRepositoryHook) {
+        if (hook instanceof BitbucketRepositoryHook cloudHook) {
             if (!hook.getEvents().containsAll(CLOUD_EVENTS)) {
                 Set<String> events = new TreeSet<>(hook.getEvents());
                 events.addAll(CLOUD_EVENTS);
-                BitbucketRepositoryHook repoHook = (BitbucketRepositoryHook) hook;
-                repoHook.setEvents(new ArrayList<>(events));
+                cloudHook.setEvents(new ArrayList<>(events));
                 return true;
             }
 
             return false;
         }
 
-        if (hook instanceof BitbucketServerWebhook) {
-            BitbucketServerWebhook serverHook = (BitbucketServerWebhook) hook;
-
+        if (hook instanceof BitbucketServerWebhook serverHook) {
             // Handle null case
-            String hookCommittersToIgnore = ((BitbucketServerWebhook) hook).getCommittersToIgnore();
+            String hookCommittersToIgnore = serverHook.getCommittersToIgnore();
             if (hookCommittersToIgnore == null) {
                 hookCommittersToIgnore = "";
             }
@@ -148,10 +144,9 @@ public class WebhookConfiguration {
             return false;
         }
 
-        if (hook instanceof NativeBitbucketServerWebhook) {
+        if (hook instanceof NativeBitbucketServerWebhook serverHook) {
             boolean updated = false;
 
-            NativeBitbucketServerWebhook serverHook = (NativeBitbucketServerWebhook) hook;
             String serverUrl = owner.getServerUrl();
             String url = getNativeServerWebhookUrl(serverUrl, owner.getEndpointJenkinsRootUrl());
 
@@ -181,7 +176,7 @@ public class WebhookConfiguration {
         final String serverUrl = owner.getServerUrl();
         final String rootUrl = owner.getEndpointJenkinsRootUrl();
 
-        if (BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
+        if (BitbucketApiUtils.isCloud(serverUrl)) {
             BitbucketRepositoryHook hook = new BitbucketRepositoryHook();
             hook.setEvents(CLOUD_EVENTS);
             hook.setActive(true);
@@ -213,9 +208,11 @@ public class WebhookConfiguration {
     }
 
     private static List<String> getNativeServerEvents(String serverUrl) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
-        if (endpoint instanceof BitbucketServerEndpoint) {
-            switch (((BitbucketServerEndpoint) endpoint).getServerVersion()) {
+        BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(serverUrl, BitbucketServerEndpoint.class)
+                .orElse(null);
+        if (endpoint != null) {
+            switch (endpoint.getServerVersion()) {
             case VERSION_5:
                 return NATIVE_SERVER_EVENTS_v5;
             case VERSION_5_10:

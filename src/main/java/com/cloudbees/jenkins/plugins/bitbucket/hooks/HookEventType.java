@@ -126,7 +126,7 @@ public enum HookEventType {
     /**
      * Sent when hitting the {@literal "Test connection"} button in Bitbucket Server. Apparently undocumented.
      */
-    SERVER_PING("diagnostics:ping", PingHookProcessor.class);
+    SERVER_PING("diagnostics:ping", NativeServerPingHookProcessor.class);
 
 
     private final String key;
@@ -149,8 +149,8 @@ public enum HookEventType {
 
     public HookProcessor getProcessor() {
         try {
-            return (HookProcessor) clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            return (HookProcessor) clazz.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
             throw new AssertionError("Can not instantiate hook payload processor: " + e.getMessage());
         }
     }

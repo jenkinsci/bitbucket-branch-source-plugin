@@ -51,7 +51,13 @@ public class BitbucketUsernamePasswordCredentialMatcher implements CredentialsMa
 
         UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
         String username = usernamePasswordCredential.getUsername();
-        String password = Secret.toString(usernamePasswordCredential.getPassword());
+        String password;
+        try {
+            password = Secret.toString(usernamePasswordCredential.getPassword());
+        } catch (Exception e) {
+            // JENKINS-75184
+            return false;
+        }
         return StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
     }
 }

@@ -36,10 +36,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import jenkins.model.GlobalConfiguration;
@@ -85,6 +85,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     public Permission getRequiredGlobalConfigPagePermission() {
         return Jenkins.MANAGE;
     }
+
     /**
      * Called from a {@code readResolve()} method only to convert the old {@code bitbucketServerUrl} field into the new
      * {@code serverUrl} field. When called from {@link ACL#SYSTEM} this will update the configuration with the
@@ -97,8 +98,9 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     @NonNull
     public String readResolveServerUrl(@CheckForNull String bitbucketServerUrl) {
         String serverUrl = normalizeServerUrl(bitbucketServerUrl);
-        AbstractBitbucketEndpoint endpoint = findEndpoint(serverUrl);
-        if (endpoint == null && ACL.SYSTEM.equals(Jenkins.getAuthentication())) {
+        serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
+        AbstractBitbucketEndpoint endpoint = findEndpoint(serverUrl).orElse(null);
+        if (endpoint == null && ACL.SYSTEM2.equals(Jenkins.getAuthentication2())) {
             if (BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)
                     || BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverUrl)) {
                 // exception case
@@ -107,7 +109,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
                 addEndpoint(new BitbucketServerEndpoint(null, serverUrl, false, null));
             }
         }
-        return endpoint == null ? serverUrl : endpoint.getServerUrl();
+        return endpoint == null ?  serverUrl : endpoint.getServerUrl();
     }
 
     /**
@@ -238,66 +240,65 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     /**
      * Removes an endpoint.
      *
-     * @param serverUrl the server URL to remove.
+     * @param serverURL the server URL to remove.
      * @return {@code true} if the list of endpoints was modified
      */
-    public synchronized boolean removeEndpoint(@CheckForNull String serverUrl) {
-        serverUrl = normalizeServerUrl(serverUrl);
-        boolean modified = false;
-        List<AbstractBitbucketEndpoint> endpoints = new ArrayList<>(getEndpoints());
-        for (Iterator<AbstractBitbucketEndpoint> iterator = endpoints.iterator(); iterator.hasNext(); ) {
-            if (serverUrl.equals(iterator.next().getServerUrl())) {
-                iterator.remove();
-                modified = true;
-            }
-        }
-        setEndpoints(endpoints);
+    public synchronized boolean removeEndpoint(@CheckForNull String serverURL) {
+        String fixedServerURL = normalizeServerUrl(serverURL);
+        List<AbstractBitbucketEndpoint> newEndpoints = new ArrayList<>(getEndpoints());
+        boolean modified = newEndpoints.removeIf(endpoint -> Objects.equals(fixedServerURL, endpoint.getServerUrl()));
+        setEndpoints(newEndpoints);
         return modified;
     }
 
     /**
      * Checks to see if the supplied server URL is defined in the global configuration.
      *
-     * @param serverUrl the server url to check.
+     * @param serverURL the server url to check.
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
-    @CheckForNull
-    public synchronized AbstractBitbucketEndpoint findEndpoint(@CheckForNull String serverUrl) {
-        serverUrl = normalizeServerUrl(serverUrl);
+    public synchronized Optional<AbstractBitbucketEndpoint> findEndpoint(@CheckForNull String serverURL) {
+        serverURL = normalizeServerUrl(serverURL);
         for (AbstractBitbucketEndpoint endpoint : getEndpoints()) {
-            if (serverUrl.equals(endpoint.getServerUrl())) {
-                return endpoint;
+            if (Objects.equals(serverURL, endpoint.getServerUrl())) {
+                return Optional.of(endpoint);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
      * Checks to see if the supplied server URL is defined in the global configuration.
      *
-     * @param serverUrl the server url to check.
+     * @param serverURL the server url to check.
      * @param clazz the class to check.
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
-    public synchronized Optional<AbstractBitbucketEndpoint> findEndpoint(@CheckForNull String serverUrl,
-                                                                         Class<? extends AbstractBitbucketEndpoint> clazz) {
-        return getEndpoints().stream()
+    public synchronized <T extends AbstractBitbucketEndpoint> Optional<T> findEndpoint(@CheckForNull String serverURL,
+                                                                                       Class<T> clazz) {
+        return findEndpoint(serverURL)
             .filter(clazz::isInstance)
-            .filter(endpoint -> normalizeServerUrl(serverUrl).equals(endpoint.getServerUrl()))
-            .findFirst();
+            .map(clazz::cast);
+    }
+
+    @NonNull
+    public synchronized AbstractBitbucketEndpoint getDefaultEndpoint() {
+        return getEndpoints().get(0);
     }
 
     /**
      * Fix a serverUrl.
      *
-     * @param serverUrl the server URL.
+     * @param serverURL the server URL.
      * @return the normalized server URL.
      */
-    @NonNull
-    public static String normalizeServerUrl(@CheckForNull String serverUrl) {
-        serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
+    @CheckForNull
+    public static String normalizeServerUrl(@CheckForNull String serverURL) {
+        if (StringUtils.isBlank(serverURL)) {
+            return null;
+        }
         try {
-            URI uri = new URI(serverUrl).normalize();
+            URI uri = new URI(serverURL).normalize();
             String scheme = uri.getScheme();
             if ("http".equals(scheme) || "https".equals(scheme)) {
                 // we only expect http / https, but also these are the only ones where we know the authority
@@ -311,7 +312,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
                 } else if ("https".equals(scheme) && port == 443) {
                     port = -1;
                 }
-                serverUrl = new URI(
+                serverURL = new URI(
                         scheme,
                         uri.getUserInfo(),
                         host,
@@ -324,7 +325,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
         } catch (URISyntaxException e) {
             // ignore, this was a best effort tidy-up
         }
-        return serverUrl.replaceAll("/$", "");
+        return serverURL.replaceAll("/$", "");
     }
 
 }

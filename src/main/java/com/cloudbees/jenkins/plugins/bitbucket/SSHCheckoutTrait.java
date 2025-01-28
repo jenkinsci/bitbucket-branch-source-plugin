@@ -54,6 +54,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.springframework.security.core.Authentication;
 
 /**
  * A {@link SCMSourceTrait} for {@link BitbucketSCMSource} that causes the {@link GitSCM}
@@ -176,9 +177,9 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
             StandardListBoxModel result = new StandardListBoxModel();
             result.add(Messages.SSHCheckoutTrait_useAgentKey(), "");
             return result.includeMatchingAs(
-                    context instanceof Queue.Task
-                            ? ((Queue.Task) context).getDefaultAuthentication()
-                            : ACL.SYSTEM,
+                    context instanceof Queue.Task task
+                            ? task.getDefaultAuthentication2()
+                            : ACL.SYSTEM2,
                     context,
                     StandardUsernameCredentials.class,
                     URIRequirementBuilder.fromUri(serverUrl).build(),
@@ -208,18 +209,21 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
                 // use agent key
                 return FormValidation.ok();
             }
-            if (CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
+            Authentication authentication = context instanceof Queue.Task task
+                    ? task.getDefaultAuthentication2()
+                    : ACL.SYSTEM2;
+            if (CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItem(
                     SSHUserPrivateKey.class,
                     context,
-                    context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication() : ACL.SYSTEM,
+                    authentication,
                     URIRequirementBuilder.fromUri(serverUrl).build()),
                     CredentialsMatchers.withId(value)) != null) {
                 return FormValidation.ok();
             }
-            if (CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(
+            if (CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItem(
                     StandardUsernameCredentials.class,
                     context,
-                    context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication() : ACL.SYSTEM,
+                    authentication,
                     URIRequirementBuilder.fromUri(serverUrl).build()),
                     CredentialsMatchers.withId(value)) != null) {
                 return FormValidation.error(Messages.SSHCheckoutTrait_incompatibleCredentials());

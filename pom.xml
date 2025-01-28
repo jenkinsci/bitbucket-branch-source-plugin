@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.4</version>
+    <version>5.5</version>
     <relativePath />
   </parent>
 
@@ -26,7 +26,7 @@
   </licenses>
 
   <properties>
-    <revision>933.2.1</revision>
+    <revision>934.4.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
@@ -68,7 +68,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3850.vb_c5319efa_e29</version>
+        <version>4023.va_eeb_b_4e45f07</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -90,8 +90,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
-      <!-- TODO: remove when in bom -->
-      <version>5.7.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -129,7 +127,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.27.0</version>
+      <version>3.27.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -205,7 +203,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.21.0</version>
+              <version>10.21.1</version>
             </dependency>
           </dependencies>
         </plugin>
