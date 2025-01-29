@@ -36,6 +36,7 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @WithJenkins
 class BitbucketSCMFileTest {
@@ -53,9 +54,27 @@ class BitbucketSCMFileTest {
     void verify_content_throws_FileNotFoundException_when_file_does_not_exists() {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.com");
 
-        BitbucketSCMFile parent = new BitbucketSCMFile(client, "master", "hash");
+        BitbucketSCMFile parent = new BitbucketSCMFile(client, "master", "51af66dad14c38d7c69874c57a65f77f688e3f33");
         BitbucketSCMFile file = new BitbucketSCMFile(parent, "pipeline_config.groovy", Type.REGULAR_FILE, "046d9a3c1532acf4cf08fe93235c00e4d673c1d2");
         assertThatThrownBy(file::content).isInstanceOf(FileNotFoundException.class);
+    }
+
+    @Issue("JENKINS-75208")
+    @Test
+    void test_SCMFile_does_not_contains_illegal_chars_in_the_name() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.com");
+
+        BitbucketSCMFile parent = new BitbucketSCMFile(client, "feature/pipeline", null);
+        BitbucketSCMFile file = new BitbucketSCMFile(parent, "Jenkinsfile", null, "2c130d767a38ac4ef511797f221315f35a2aea55");
+        SCMFile scmFile = assertDoesNotThrow(() -> client.getFile(file));
+
+        assertThat(scmFile.isFile()).isTrue();
+        assertThat(scmFile.getName()).isEqualTo("Jenkinsfile");
+        assertThat(scmFile).isInstanceOfSatisfying(BitbucketSCMFile.class,
+                f -> {
+                    assertThat(f.getRef()).isEqualTo("feature/pipeline");
+                    assertThat(f.getHash()).isEqualTo("2c130d767a38ac4ef511797f221315f35a2aea55");
+                });
     }
 
     @Issue("JENKINS-75157")

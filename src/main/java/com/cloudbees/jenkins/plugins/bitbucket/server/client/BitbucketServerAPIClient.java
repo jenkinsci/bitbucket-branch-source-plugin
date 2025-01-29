@@ -1083,7 +1083,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         } catch (FileNotFoundException e) {
             type = Type.NONEXISTENT;
         }
-        return new BitbucketSCMFile((BitbucketSCMFile) file.parent(), file.getRef(), type, file.getHash());
+        return new BitbucketSCMFile((BitbucketSCMFile) file.parent(), file.getName(), type, file.getHash());
     }
 
 }
