@@ -84,33 +84,41 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             return;
         }
 
-        if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES && changes.isEmpty()) {
+        if (changes.isEmpty()) {
             final String owner = repository.getOwnerName();
             final String repositoryName = repository.getRepositoryName();
-            LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
-                new Object[] { owner, repositoryName });
-            scmSourceReIndex(owner, repositoryName);
-            return;
-        }
-
-        final Multimap<SCMEvent.Type, NativeServerChange> events = HashMultimap.create();
-        for (final NativeServerChange change : changes) {
-            final String type = change.getType();
-            if ("UPDATE".equals(type)) {
-                events.put(SCMEvent.Type.UPDATED, change);
-            } else if ("DELETE".equals(type)) {
-                events.put(SCMEvent.Type.REMOVED, change);
-            } else if ("ADD".equals(type)) {
-                events.put(SCMEvent.Type.CREATED, change);
+            if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
+                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
+                    new Object[]{owner, repositoryName});
+                scmSourceReIndex(owner, repositoryName);
             } else {
-                LOGGER.log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
+                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
+                    new Object[]{owner, repository});
+            }
+        } else {
+            final Multimap<SCMEvent.Type, NativeServerChange> events = HashMultimap.create();
+            for (final NativeServerChange change : changes) {
+                final String type = change.getType();
+                if ("UPDATE".equals(type)) {
+                    events.put(SCMEvent.Type.UPDATED, change);
+                } else if ("DELETE".equals(type)) {
+                    events.put(SCMEvent.Type.REMOVED, change);
+                } else if ("ADD".equals(type)) {
+                    events.put(SCMEvent.Type.CREATED, change);
+                } else {
+                    LOGGER.log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
+                }
+            }
+
+            for (final SCMEvent.Type type : events.keySet()) {
+                notifyEvent(new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId), BitbucketSCMSource.getEventDelaySeconds());
             }
         }
+    }
 
-        for (final SCMEvent.Type type : events.keySet()) {
-            ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
-            SCMHeadEvent.fireLater(headEvent, BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
-        }
+    /* for test purpose */
+    protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+        SCMHeadEvent.fireLater(event, delaySeconds, TimeUnit.SECONDS);
     }
 
 }
