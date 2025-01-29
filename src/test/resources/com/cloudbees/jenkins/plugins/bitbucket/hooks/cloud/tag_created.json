@@ -1,0 +1,186 @@
+{
+    "push": {
+        "changes": [
+            {
+                "old": null,
+                "new": {
+                    "name": "simple-tag",
+                    "type": "tag",
+                    "message": null,
+                    "date": null,
+                    "tagger": null,
+                    "target": {
+                        "type": "commit",
+                        "hash": "7ef5981d59145c3ed300b1ab77b93907d33abe59",
+                        "date": "2025-02-03T18:53:15+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Nikolas Falco <email@domain.com>",
+                            "user": {
+                                "display_name": "Nikolas Falco",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                                    },
+                                    "avatar": {
+                                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                                    }
+                                },
+                                "type": "user",
+                                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                                "nickname": "Nikolas Falco"
+                            }
+                        },
+                        "committer": {},
+                        "message": "Test pipeline for issue JENKINS-75182\n",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Test pipeline for issue JENKINS-75182\n",
+                            "markup": "markdown",
+                            "html": "<p>Test pipeline for issue JENKINS-75182</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/7ef5981d59145c3ed300b1ab77b93907d33abe59"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/7ef5981d59145c3ed300b1ab77b93907d33abe59"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "c1fa9a169b6053b135f400d042a32d3b4952adf9",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    },
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/tags/simple-tag"
+                        },
+                        "commits": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits/simple-tag"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/amuniz/test-repos/commits/tag/simple-tag"
+                        }
+                    }
+                },
+                "truncated": false,
+                "created": true,
+                "forced": false,
+                "closed": false,
+                "links": {
+                    "commits": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits?include=7ef5981d59145c3ed300b1ab77b93907d33abe59"
+                    }
+                }
+            }
+        ]
+    },
+    "repository": {
+        "type": "repository",
+        "full_name": "amuniz/test-repos",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos"
+            },
+            "avatar": {
+                "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+            }
+        },
+        "name": "test-repos",
+        "scm": "git",
+        "website": null,
+        "owner": {
+            "display_name": "Nikolas Falco",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                },
+                "avatar": {
+                    "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                }
+            },
+            "type": "user",
+            "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+            "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+            "nickname": "Nikolas Falco"
+        },
+        "workspace": {
+            "type": "workspace",
+            "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+            "name": "Nikolas Falco",
+            "slug": "amuniz",
+            "links": {
+                "avatar": {
+                    "href": "https://bitbucket.org/workspaces/amuniz/avatar/?ts=1737924067"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/"
+                },
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/amuniz"
+                }
+            }
+        },
+        "is_private": false,
+        "project": {
+            "type": "project",
+            "key": "PUB",
+            "uuid": "{ef731d07-06e0-46d2-9b56-2674649b0655}",
+            "name": "public",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/amuniz/projects/PUB"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/workspace/projects/PUB"
+                },
+                "avatar": {
+                    "href": "https://bitbucket.org/amuniz/workspace/projects/PUB/avatar/32?ts=1644525770"
+                }
+            }
+        },
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}",
+        "parent": null
+    },
+    "actor": {
+        "display_name": "Nikolas Falco",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+            },
+            "avatar": {
+                "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+            },
+            "html": {
+                "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+            }
+        },
+        "type": "user",
+        "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+        "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+        "nickname": "Nikolas Falco"
+    }
+}

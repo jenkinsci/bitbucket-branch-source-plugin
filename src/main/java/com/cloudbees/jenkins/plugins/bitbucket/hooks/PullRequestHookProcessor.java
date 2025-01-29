@@ -28,9 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import hudson.RestrictedSince;
-import java.util.concurrent.TimeUnit;
 import jenkins.scm.api.SCMEvent;
-import jenkins.scm.api.SCMHeadEvent;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -66,10 +64,5 @@ public class PullRequestHookProcessor extends HookProcessor {
                 notifyEvent(new PREvent(eventType, pull, origin, hookEvent), BitbucketSCMSource.getEventDelaySeconds());
             }
         }
-    }
-
-    /* for test purpose */
-    protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-        SCMHeadEvent.fireLater(event, delaySeconds, TimeUnit.SECONDS);
     }
 }

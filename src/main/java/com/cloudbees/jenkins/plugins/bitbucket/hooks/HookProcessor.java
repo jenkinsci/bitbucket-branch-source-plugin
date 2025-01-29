@@ -27,8 +27,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
@@ -108,6 +110,23 @@ public abstract class HookProcessor {
             if (!reindexed) {
                 LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
             }
+        }
+    }
+
+    /**
+     * Implementations have to call this method when want propagate an
+     * {@link SCMHeadEvent} to the scm-api.
+     *
+     * @param event the to fire
+     * @param delaySeconds a delay in seconds to wait before propagate the
+     *        event. If the given value is less than 0 than default will be
+     *        used.
+     */
+    protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+        if (delaySeconds == 0) {
+            SCMHeadEvent.fireNow(event);
+        } else {
+            SCMHeadEvent.fireLater(event, delaySeconds > 0 ? delaySeconds : BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
         }
     }
 }

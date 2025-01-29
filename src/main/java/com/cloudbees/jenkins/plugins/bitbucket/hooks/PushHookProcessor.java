@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import hudson.RestrictedSince;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
@@ -70,14 +69,10 @@ public class PushHookProcessor extends HookProcessor {
                             type = SCMEvent.Type.UPDATED;
                         }
                     }
-                    SCMHeadEvent.fireLater(new PushEvent(type, push, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
+                    notifyEvent(new PushEvent(type, push, origin), BitbucketSCMSource.getEventDelaySeconds());
                 }
             }
         }
     }
 
-    /* for test purpose */
-    protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-        SCMHeadEvent.fireLater(event, delaySeconds, TimeUnit.SECONDS);
-    }
 }

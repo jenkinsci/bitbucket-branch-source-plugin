@@ -34,11 +34,9 @@ import com.google.common.collect.Multimap;
 import hudson.RestrictedSince;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
-import jenkins.scm.api.SCMHeadEvent;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -106,7 +104,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
 
         for (final SCMEvent.Type type : events.keySet()) {
             ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
-            SCMHeadEvent.fireLater(headEvent, BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
+            notifyEvent(headEvent, BitbucketSCMSource.getEventDelaySeconds());
         }
     }
 
