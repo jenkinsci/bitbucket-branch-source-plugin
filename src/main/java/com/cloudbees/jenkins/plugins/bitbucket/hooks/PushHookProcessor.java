@@ -55,12 +55,17 @@ public class PushHookProcessor extends HookProcessor {
                 push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
             }
             if (push != null) {
-                if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES && push.getChanges().isEmpty()) {
+                if (push.getChanges().isEmpty()) {
                     final String owner = push.getRepository().getOwnerName();
                     final String repository = push.getRepository().getRepositoryName();
-                    LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
-                        new Object[]{owner, repository});
-                    scmSourceReIndex(owner, repository);
+                    if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
+                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
+                            new Object[]{owner, repository});
+                        scmSourceReIndex(owner, repository);
+                    } else {
+                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
+                            new Object[]{owner, repository});
+                    }
                 } else {
                     SCMHeadEvent.Type type = null;
                     for (BitbucketPushEvent.Change change : push.getChanges()) {
