@@ -55,6 +55,10 @@ public class BitbucketCloudWorkspace implements BitbucketWorkspace {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
     public String getDisplayName() {
         return name;
@@ -76,15 +80,8 @@ public class BitbucketCloudWorkspace implements BitbucketWorkspace {
     }
 
     @Override
-    public String getLink(String name) {
-        if (links == null) {
-            return null;
-        }
-        List<BitbucketHref> hrefs = links.get(name);
-        if (hrefs == null || hrefs.isEmpty()) {
-            return null;
-        }
-        BitbucketHref href = hrefs.get(0);
-        return href == null ? null : href.getHref();
+    public String getAvatar() {
+        return getLink("avatar");
     }
+
 }

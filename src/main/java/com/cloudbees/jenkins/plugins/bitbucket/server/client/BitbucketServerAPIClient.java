@@ -35,7 +35,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
@@ -87,6 +86,7 @@ import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
+import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
@@ -808,26 +808,33 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     /**
-     * Get Team avatar
+     * {@inheritDoc}
      */
+    @Deprecated
     @Override
     public AvatarImage getTeamAvatar() throws IOException {
         if (userCentric) {
-            return null;
+            return AvatarImage.EMPTY;
         } else {
             String url = UriTemplate.fromTemplate(this.baseURL + AVATAR_PATH)
                     .set("owner", getOwner())
                     .expand();
-            try {
-                BufferedImage response = getImageRequest(url);
-                return new AvatarImage(response, System.currentTimeMillis());
-            } catch (FileNotFoundException e) {
-                return null;
-            } catch (IOException e) {
-                throw new IOException("I/O error when accessing URL: " + url, e);
-            } catch (InterruptedException e) {
-                throw new IOException("InterruptedException when accessing URL: " + url, e);
-            }
+            return getAvatar(url);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AvatarImage getAvatar(@NonNull String url) throws IOException {
+        try {
+            BufferedImage response = getImageRequest(url);
+            return new AvatarImage(response, System.currentTimeMillis());
+        } catch (FileNotFoundException e) {
+            return AvatarImage.EMPTY;
+        } catch (IOException e) {
+            throw new IOException("I/O error when accessing URL: " + url, e);
         }
     }
 
@@ -930,7 +937,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return null;
     }
 
-    private BufferedImage getImageRequest(String path) throws IOException, InterruptedException {
+    private BufferedImage getImageRequest(String path) throws IOException {
         try (InputStream inputStream = getRequestAsInputStream(path)) {
             int length = MAX_AVATAR_LENGTH;
             BufferedInputStream bis = new BufferedInputStream(inputStream, length);

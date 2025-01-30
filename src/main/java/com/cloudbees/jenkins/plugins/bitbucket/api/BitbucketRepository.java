@@ -77,9 +77,34 @@ public interface BitbucketRepository {
     boolean isArchived();
 
     /**
+     * Get Link based on name
+     *
+     * @param name - link type - one of(self, html, avatar)
+     * @return href string if there is one, else null
+     */
+    default String getLink(String name) {
+        Map<String, List<BitbucketHref>> links = getLinks();
+        if (links == null) {
+            return null;
+        }
+        List<BitbucketHref> hrefs = links.get(name);
+        if (hrefs == null || hrefs.isEmpty()) {
+            return null;
+        }
+        BitbucketHref href = hrefs.get(0);
+        return href == null ? null : href.getHref();
+    }
+
+    /**
      * Gets the links for this repository.
      * @return the links for this repository.
      */
     Map<String, List<BitbucketHref>> getLinks();
 
+    /**
+     * Return the avatar associated to the team or project name.
+     *
+     * @return the URL of the avatar
+     */
+    String getAvatar();
 }

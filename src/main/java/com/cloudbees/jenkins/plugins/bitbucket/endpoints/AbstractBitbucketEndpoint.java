@@ -221,10 +221,10 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     @CheckForNull
     public StandardCredentials credentials() {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(
+                CredentialsProvider.lookupCredentialsInItemGroup(
                         StandardCredentials.class,
                         Jenkins.get(),
-                        ACL.SYSTEM,
+                        ACL.SYSTEM2 ,
                         URIRequirementBuilder.fromUri(getServerUrl()).build()
                 ),
                 CredentialsMatchers.allOf(
