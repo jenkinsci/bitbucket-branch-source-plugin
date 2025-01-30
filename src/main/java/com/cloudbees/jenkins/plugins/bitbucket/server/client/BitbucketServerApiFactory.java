@@ -42,11 +42,14 @@ public class BitbucketServerApiFactory extends BitbucketApiFactory {
 
     @NonNull
     @Override
-    protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
-                                  @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
-        if(StringUtils.isBlank(serverUrl)){
+    protected BitbucketApi create(@Nullable String serverURL,
+                                  @Nullable BitbucketAuthenticator authenticator,
+                                  @NonNull String owner,
+                                  @CheckForNull String projectKey,
+                                  @CheckForNull String repository) {
+        if (StringUtils.isBlank(serverURL)) {
             throw new IllegalArgumentException("serverUrl is required");
         }
-        return new BitbucketServerAPIClient(serverUrl, owner, repository, authenticator, false);
+        return new BitbucketServerAPIClient(serverURL, owner, repository, authenticator, false);
     }
 }

@@ -24,7 +24,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
@@ -33,7 +35,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullR
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import hudson.model.TaskListener;
@@ -45,7 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import jenkins.model.Jenkins;
 
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -147,11 +148,9 @@ public class BitbucketClientMockUtils {
         return Arrays.asList(r1, r2, r3);
     }
 
-    private static BitbucketCloudTeam getTeam() {
-        BitbucketCloudTeam t = new BitbucketCloudTeam();
-        t.setName("myteam");
-        t.setDisplayName("This is my team");
-        return t;
+    private static BitbucketTeam getTeam() {
+        BitbucketCloudWorkspace team = new BitbucketCloudWorkspace("myteam");
+        return team;
     }
 
     private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {

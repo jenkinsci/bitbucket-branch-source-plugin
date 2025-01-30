@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -32,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import jenkins.scm.api.SCMFile;
+import jenkins.scm.impl.avatars.AvatarImage;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -247,10 +247,22 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @return the team profile of the current owner, or {@code null} if {@link #getOwner()} is not a team ID.
      * @throws IOException  if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
+     * @deprecated Use {@link #getAvatar(String)} with the avatar url link gather from repository, project, workspace or user.
      */
     @CheckForNull
-    AvatarImage getTeamAvatar() throws IOException, InterruptedException;
+    @Deprecated
+    AvatarImage getTeamAvatar() throws IOException;
+
+    /**
+     * Returns an Avatar image from the given URL.
+     * <p>
+     * The URL link could come from repository, project, workspace or user links.
+     *
+     * @return the resource image.
+     * @throws IOException  if there was a network communications error.
+     */
+    @CheckForNull
+    AvatarImage getAvatar(@NonNull String url) throws IOException;
 
     /**
      * Returns the repositories where the user has the given role.
@@ -328,4 +340,10 @@ public interface BitbucketApi extends AutoCloseable {
     @NonNull
     @Restricted(NoExternalUse.class)
     SCMFile getFile(@NonNull BitbucketSCMFile file) throws IOException, InterruptedException;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void close() throws IOException;
 }

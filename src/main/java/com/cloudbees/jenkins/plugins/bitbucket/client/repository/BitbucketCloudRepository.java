@@ -90,6 +90,7 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         this.project = project;
     }
 
+    @Override
     public BitbucketProject getProject() {
         return this.project;
     }
@@ -133,6 +134,7 @@ public class BitbucketCloudRepository implements BitbucketRepository {
         this.priv = priv;
     }
 
+    @Override
     @JsonIgnore
     public Map<String, List<BitbucketHref>> getLinks() {
         if (links == null) {
@@ -157,5 +159,10 @@ public class BitbucketCloudRepository implements BitbucketRepository {
                 this.links.put(entry.getKey(), new ArrayList<>(entry.getValue()));
             }
         }
+    }
+
+    @Override
+    public String getAvatar() {
+        return getLink("avatar");
     }
 }

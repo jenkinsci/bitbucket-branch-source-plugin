@@ -23,15 +23,44 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.AbstractBitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.List;
+import java.util.Map;
 
-public class BitbucketServerProject extends AbstractBitbucketTeam {
+public class BitbucketServerProject implements BitbucketTeam {
 
     @JsonProperty("key")
-    protected String name;
+    private String name;
 
     @JsonProperty("name")
-    protected String displayName;
+    private String displayName;
 
+    private String avatar;
+
+    @JsonProperty("links")
+    @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
+    private Map<String,List<BitbucketHref>> links;
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @Override
+    public Map<String, List<BitbucketHref>> getLinks() {
+        return links;
+    }
+
+    @Override
+    public String getAvatar() {
+        return avatar == null ? getLink("self") + "/avatar.png" : avatar;
+    }
 }

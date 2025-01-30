@@ -1,0 +1,32 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<jenkins.branch.OrganizationFolder_-State plugin="branch-api@2.1200.v4b_a_3da_2eb_db_4">
+  <actions>
+    <entry>
+      <string>com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator::https://bitbucket.org::amuniz</string>
+      <list>
+        <jenkins.scm.api.metadata.ObjectMetadataAction plugin="scm-api@698.v8e3b_c788f0a_6">
+          <objectDisplayName>amuniz</objectDisplayName>
+          <objectUrl>https://bitbucket.org/amuniz/</objectUrl>
+        </jenkins.scm.api.metadata.ObjectMetadataAction>
+        <com.cloudbees.jenkins.plugins.bitbucket.BitbucketTeamMetadataAction plugin="cloudbees-bitbucket-branch-source@933.0.2">
+          <avatarSource>
+            <serverUrl>https://bitbucket.org</serverUrl>
+            <credentials class="com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl" plugin="credentials@1393.v6017143c1763">
+              <scope>GLOBAL</scope>
+              <id>bitbucket.oauth</id>
+              <description>Bitbucket Cloud OAuth credentials</description>
+              <username>xxxxxxxxxxxxxxxxxx</username>
+              <password>{yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy}</password>
+              <usernameSecret>true</usernameSecret>
+            </credentials>
+            <repoOwner>amuniz</repoOwner>
+          </avatarSource>
+        </com.cloudbees.jenkins.plugins.bitbucket.BitbucketTeamMetadataAction>
+        <com.cloudbees.jenkins.plugins.bitbucket.BitbucketLink plugin="cloudbees-bitbucket-branch-source@933.0.2">
+          <iconClassName>icon-bitbucket-logo</iconClassName>
+          <url>https://bitbucket.org/amuniz/</url>
+        </com.cloudbees.jenkins.plugins.bitbucket.BitbucketLink>
+      </list>
+    </entry>
+  </actions>
+</jenkins.branch.OrganizationFolder_-State>

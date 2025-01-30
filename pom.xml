@@ -31,10 +31,12 @@
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.1</jenkins.version>
-    <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
+    <hpi.compatibleSinceVersion>934.0</hpi.compatibleSinceVersion>
     <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
     <tagNameFormat>@{project.version}</tagNameFormat>
+    <!-- because eclipse generate a JUnit5 run configuration with placeholder not replaced in the jvm argument section! -->
+    <surefire.forkNumber>1</surefire.forkNumber>
   </properties>
 
   <developers>
