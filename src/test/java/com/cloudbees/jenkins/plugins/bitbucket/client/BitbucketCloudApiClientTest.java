@@ -109,7 +109,7 @@ class BitbucketCloudApiClientTest {
     void get_repository_parse_correctly_date_from_cloud() throws Exception {
         BitbucketCloudRepository repository = JsonParser.toJava(loadPayload("getRepository"), BitbucketCloudRepository.class);
         assertThat(repository.getUpdatedOn()).describedAs("update on date is null").isNotNull();
-        Date expectedDate = DateUtils.getDate(2018, 4, 27, 15, 32, 8, 356);
+        Date expectedDate = DateUtils.getDate(2025, 1, 27, 14, 15, 58, 600);
         assertThat(repository.getUpdatedOn()).isEqualTo(expectedDate);
     }
 
