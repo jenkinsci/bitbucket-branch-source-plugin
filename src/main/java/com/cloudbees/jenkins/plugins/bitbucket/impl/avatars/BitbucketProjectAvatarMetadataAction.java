@@ -34,7 +34,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 /**
  * Invisible property that retains information about the Bitbucket team avatar.
  */
-public class BitbucketTeamAvatarMetadataAction extends AvatarMetadataAction {
+public class BitbucketProjectAvatarMetadataAction extends AvatarMetadataAction {
     private static final long serialVersionUID = -7472619697440514373L;
 
     private final String avatarURL;
@@ -43,7 +43,7 @@ public class BitbucketTeamAvatarMetadataAction extends AvatarMetadataAction {
     private final String owner;
 
     @DataBoundConstructor
-    public BitbucketTeamAvatarMetadataAction(String avatarURL, String serverURL, String owner, String credentialsId) {
+    public BitbucketProjectAvatarMetadataAction(String avatarURL, String serverURL, String owner, String credentialsId) {
         this.avatarURL = Util.fixEmptyAndTrim(avatarURL);
         this.serverURL = Util.fixEmptyAndTrim(serverURL);
         this.owner = Util.fixEmptyAndTrim(owner);
@@ -95,7 +95,7 @@ public class BitbucketTeamAvatarMetadataAction extends AvatarMetadataAction {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        BitbucketTeamAvatarMetadataAction other = (BitbucketTeamAvatarMetadataAction) obj;
+        BitbucketProjectAvatarMetadataAction other = (BitbucketProjectAvatarMetadataAction) obj;
         return Objects.equals(avatarURL, other.avatarURL)
                 && Objects.equals(serverURL, other.serverURL)
                 && Objects.equals(owner, other.owner)

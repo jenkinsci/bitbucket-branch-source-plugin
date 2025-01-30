@@ -688,6 +688,23 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         return null;
     }
 
+    @CheckForNull
+    public AvatarImage getProjectAvatar(@CheckForNull String url) throws IOException {
+        if (url == null) {
+            return AvatarImage.EMPTY;
+        }
+
+        try {
+            BufferedImage avatar = getImageRequest(url);
+            return new AvatarImage(avatar, System.currentTimeMillis());
+        } catch (FileNotFoundException e) {
+            logger.log(Level.FINE, "Failed to get avatar from URL {0}", url);
+        } catch (IOException e) {
+            throw new IOException("I/O error when parsing response from URL: " + url, e);
+        }
+        return null;
+    }
+
     /**
      * The role parameter only makes sense when the request is authenticated, so
      * if there is no auth information ({@link #getAuthenticator()}) the role will be omitted.
