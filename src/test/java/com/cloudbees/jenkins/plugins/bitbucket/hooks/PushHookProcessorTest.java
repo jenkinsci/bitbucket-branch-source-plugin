@@ -43,7 +43,6 @@ import static org.mockito.Mockito.verify;
 
 class PushHookProcessorTest {
 
-    private static final String SERVER_URL = "http://localhost:7990/";
     private PushHookProcessor sut;
 
     @BeforeEach
