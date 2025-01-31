@@ -242,7 +242,7 @@ If this does not meet you need you can disable any notification to Bitbucket usi
 [id=bitbucket-env-var]
 == Environment Variables
 
-This plugin contribute to the enviroment with the following variables:
+This plugin contribute to the enviroment the following variables:
 
 - BITBUCKET_REPOSITORY: the repository name/slug
 - BITBUCKET_OWNER: the repository owner name/slug, in Bitbucket Cloud is the equivalent of workspace name
@@ -250,6 +250,9 @@ This plugin contribute to the enviroment with the following variables:
 - BITBUCKET_SERVER_URL: the Bitbucket server URL
 
 These variables were added to allow users to easily integrate calls to Bitbucket's REST APIs into their own pipelines to implement own business logics.
+
+NOTE: Since variables are contributed through a GitSCMExtension they will be avaiable only after performed the checkout scm step.
+For the same reason existing projects must be updated with a "Scan Organization Folder Now" or "Scan Multibranch Project Now" action to persisnt the new git extension in the job configuration.
 
 [id=bitbucket-misc-config]
 == Miscellaneous configuration
