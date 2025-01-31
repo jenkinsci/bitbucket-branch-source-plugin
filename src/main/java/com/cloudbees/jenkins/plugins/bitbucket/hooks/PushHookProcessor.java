@@ -40,6 +40,9 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @RestrictedSince("933.3.0")
 public class PushHookProcessor extends HookProcessor {
 
+    private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = Boolean.getBoolean(
+        PushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges");
+
     private static final Logger LOGGER = Logger.getLogger(PushHookProcessor.class.getName());
 
     @Override
@@ -53,15 +56,20 @@ public class PushHookProcessor extends HookProcessor {
                 push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
             }
             if (push != null) {
-                String owner = push.getRepository().getOwnerName();
-                final String repository = push.getRepository().getRepositoryName();
                 if (push.getChanges().isEmpty()) {
-                    LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
+                    final String owner = push.getRepository().getOwnerName();
+                    final String repository = push.getRepository().getRepositoryName();
+                    if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
+                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
                             new Object[]{owner, repository});
-                    scmSourceReIndex(owner, repository);
+                        scmSourceReIndex(owner, repository);
+                    } else {
+                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
+                            new Object[]{owner, repository});
+                    }
                 } else {
                     SCMHeadEvent.Type type = null;
-                    for (BitbucketPushEvent.Change change: push.getChanges()) {
+                    for (BitbucketPushEvent.Change change : push.getChanges()) {
                         if ((type == null || type == SCMEvent.Type.CREATED) && change.isCreated()) {
                             type = SCMEvent.Type.CREATED;
                         } else if ((type == null || type == SCMEvent.Type.REMOVED) && change.isClosed()) {
@@ -70,7 +78,7 @@ public class PushHookProcessor extends HookProcessor {
                             type = SCMEvent.Type.UPDATED;
                         }
                     }
-                    SCMHeadEvent.fireLater(new PushEvent(type, push, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
+                    notifyEvent(new PushEvent(type, push, origin), BitbucketSCMSource.getEventDelaySeconds());
                 }
             }
         }

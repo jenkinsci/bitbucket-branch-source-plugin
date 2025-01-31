@@ -1,0 +1,64 @@
+{
+  "actor": {
+    "active": true,
+    "displayName": "Antonio Muniz",
+    "emailAddress": "amuniz@acme.com",
+    "id": 2,
+    "links": {
+      "self": [
+        {
+          "href": "http://localhost:7990/users/amuniz"
+        }
+      ]
+    },
+    "name": "amuniz",
+    "slug": "amuniz",
+    "type": "NORMAL"
+  },
+  "changes": [],
+  "date": "2024-11-27T01:34:45+0000",
+  "eventKey": "repo:refs_changed",
+  "repository": {
+    "archived": false,
+    "forkable": true,
+    "hierarchyId": "050ab73089457a2ae375",
+    "id": 1,
+    "links": {
+      "clone": [
+        {
+          "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+          "name": "ssh"
+        },
+        {
+          "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+          "name": "http"
+        }
+      ],
+      "self": [
+        {
+          "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+        }
+      ]
+    },
+    "name": "test-repos",
+    "project": {
+      "id": 1,
+      "key": "AMUNIZ",
+      "links": {
+        "self": [
+          {
+            "href": "http://localhost:7990/projects/AMUNIZ"
+          }
+        ]
+      },
+      "name": "prj",
+      "public": false,
+      "type": "NORMAL"
+    },
+    "public": false,
+    "scmId": "git",
+    "slug": "test-repos",
+    "state": "AVAILABLE",
+    "statusMessage": "Available"
+  }
+}
