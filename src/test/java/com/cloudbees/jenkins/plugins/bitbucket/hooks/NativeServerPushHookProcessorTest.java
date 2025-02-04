@@ -52,6 +52,29 @@ class NativeServerPushHookProcessorTest {
     }
 
     @Test
+    @Issue("JENKINS-55927")
+    void test_mirror_sync_changes() throws Exception {
+        sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED, loadResource("native/mirrorSynchronized.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+
+        ArgumentCaptor<ServerPushEvent> eventCaptor = ArgumentCaptor.forClass(ServerPushEvent.class);
+        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
+        ServerPushEvent event = eventCaptor.getValue();
+        assertThat(event).isNotNull();
+        assertThat(event.getSourceName()).isEqualTo("test-repos");
+        assertThat(event.getType()).isEqualTo(SCMEvent.Type.UPDATED);
+        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+    }
+
+    @Test
+    @Issue("JENKINS-55927")
+    void test_mirror_sync_reflimitexceeed() throws Exception {
+        sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED, loadResource("native/mirrorSynchronized_refLimitExceeded.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+
+        ArgumentCaptor<ServerPushEvent> eventCaptor = ArgumentCaptor.forClass(ServerPushEvent.class);
+        verify(sut, times(0)).notifyEvent(eventCaptor.capture(), anyInt());
+    }
+
+    @Test
     void test_push() throws Exception {
         sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/pushPayload.json"), BitbucketType.SERVER, "origin", SERVER_URL);
 
