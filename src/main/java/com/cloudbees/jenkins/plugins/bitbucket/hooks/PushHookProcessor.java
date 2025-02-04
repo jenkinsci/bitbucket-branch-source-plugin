@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
+import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -39,8 +40,8 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @RestrictedSince("933.3.0")
 public class PushHookProcessor extends HookProcessor {
 
-    private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = Boolean.getBoolean(
-        PushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges");
+    private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = SystemProperties.getBoolean(
+        PushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges", true);
 
     private static final Logger LOGGER = Logger.getLogger(PushHookProcessor.class.getName());
 
