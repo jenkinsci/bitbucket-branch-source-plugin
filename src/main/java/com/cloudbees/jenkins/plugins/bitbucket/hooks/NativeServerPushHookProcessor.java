@@ -45,7 +45,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 public class NativeServerPushHookProcessor extends HookProcessor {
 
     private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = Boolean.getBoolean(
-        NativeServerPushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges");
+        NativeServerPushHookProcessor.class.getName() + ".scanOnPushWithEmptyChanges");
 
     private static final Logger LOGGER = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
 
@@ -74,6 +74,16 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 repository = event.getRepository();
                 changes = event.getChanges();
                 mirrorId = event.getMirrorServer().getId();
+                // If too many changes, this event set refLimitExceeded to true
+                // https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html#Eventpayload-Mirrorsynchronized
+                if (event.getRefLimitExceeded()) {
+                    final String owner = repository.getOwnerName();
+                    final String repositoryName = repository.getRepositoryName();
+                    LOGGER.log(Level.INFO, "Received mirror synchronized event with refLimitExceeded from Bitbucket. Processing with indexing on {0}/{1}",
+                        new Object[]{owner, repositoryName});
+                    scmSourceReIndex(owner, repositoryName);
+                    return;
+                }
             } else {
                 throw new UnsupportedOperationException("Unsupported hook event " + hookEvent);
             }
@@ -86,7 +96,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             final String owner = repository.getOwnerName();
             final String repositoryName = repository.getRepositoryName();
             if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
-                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
+                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}",
                     new Object[]{owner, repositoryName});
                 scmSourceReIndex(owner, repositoryName);
             } else {
@@ -108,10 +118,11 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 }
             }
 
-        for (final SCMEvent.Type type : events.keySet()) {
-            ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
-            notifyEvent(headEvent, BitbucketSCMSource.getEventDelaySeconds());
+            for (final SCMEvent.Type type : events.keySet()) {
+                ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
+                notifyEvent(headEvent, BitbucketSCMSource.getEventDelaySeconds());
+            }
         }
-    }
 
+    }
 }

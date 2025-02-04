@@ -59,7 +59,7 @@ public class PushHookProcessor extends HookProcessor {
                     final String owner = push.getRepository().getOwnerName();
                     final String repository = push.getRepository().getRepositoryName();
                     if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
-                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing push event on {0}/{1}",
+                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}",
                             new Object[]{owner, repository});
                         scmSourceReIndex(owner, repository);
                     } else {
