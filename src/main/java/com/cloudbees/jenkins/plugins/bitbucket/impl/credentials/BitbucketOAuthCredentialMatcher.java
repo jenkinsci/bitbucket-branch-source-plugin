@@ -27,7 +27,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import hudson.util.Secret;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,7 +61,7 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
             String username = usernamePasswordCredential.getUsername();
             String password;
             try {
-                password = Secret.toString(usernamePasswordCredential.getPassword());
+                password = BitbucketAuthenticatorUtils.getPassword(usernamePasswordCredential);
             } catch (Exception e) {
                 // JENKINS-75184
                 return false;
