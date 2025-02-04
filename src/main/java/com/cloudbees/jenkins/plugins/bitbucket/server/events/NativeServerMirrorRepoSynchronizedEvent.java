@@ -34,7 +34,7 @@ public class NativeServerMirrorRepoSynchronizedEvent {
 
     private List<NativeServerChange> changes;
 
-    private Boolean refLimitExceeded;
+    private boolean refLimitExceeded;
 
     public BitbucketServerMirrorServer getMirrorServer() {
         return mirrorServer;
@@ -48,7 +48,7 @@ public class NativeServerMirrorRepoSynchronizedEvent {
         return changes == null ? Collections.emptyList() : Collections.unmodifiableList(changes);
     }
 
-    public Boolean getRefLimitExceeded() {
+    public boolean getRefLimitExceeded() {
         return refLimitExceeded;
     }
 }
