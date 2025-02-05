@@ -35,36 +35,36 @@ import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMEvent.Type;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMRevision;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
-import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 class PushHookProcessorTest {
 
     private PushHookProcessor sut;
+    private SCMHeadEvent<?> scmEvent;
 
     @BeforeEach
     void setup() {
-        sut = spy(new PushHookProcessor());
+        sut = new PushHookProcessor() {
+            @Override
+            protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+                PushHookProcessorTest.this.scmEvent = event;
+            }
+        };
     }
 
     @Test
     void test_tag_created() throws Exception {
         sut.process(HookEventType.PUSH, loadResource("cloud/tag_created.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PushEvent> eventCaptor = ArgumentCaptor.forClass(PushEvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PushEvent event = eventCaptor.getValue();
+        PushEvent event = (PushEvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(Type.CREATED);
@@ -75,16 +75,14 @@ class PushHookProcessorTest {
         assertThat(heads.keySet())
             .first()
             .usingRecursiveComparison()
-            .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1738608795000l)); // verify is using last commit date
+            .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1738608795000L)); // verify is using last commit date
     }
 
     @Test
     void test_annotated_tag_created() throws Exception {
         sut.process(HookEventType.PUSH, loadResource("cloud/annotated_tag_created.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PushEvent> eventCaptor = ArgumentCaptor.forClass(PushEvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PushEvent event = eventCaptor.getValue();
+        PushEvent event = (PushEvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(Type.CREATED);
@@ -95,16 +93,14 @@ class PushHookProcessorTest {
         assertThat(heads.keySet())
             .first()
             .usingRecursiveComparison()
-            .isEqualTo(new BitbucketTagSCMHead("test-tag", 1738608816000l));
+            .isEqualTo(new BitbucketTagSCMHead("test-tag", 1738608816000L));
     }
 
     @Test
     void test_commmit_created() throws Exception {
         sut.process(HookEventType.PUSH, loadResource("cloud/commit_created.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PushEvent> eventCaptor = ArgumentCaptor.forClass(PushEvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PushEvent event = eventCaptor.getValue();
+        PushEvent event = (PushEvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(Type.UPDATED);
@@ -126,22 +122,29 @@ class PushHookProcessorTest {
     void test_push_server() throws Exception {
         sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("server/pushPayload.json"), BitbucketType.SERVER, "origin");
 
-        ArgumentCaptor<PushEvent> eventCaptor = ArgumentCaptor.forClass(PushEvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PushEvent event = eventCaptor.getValue();
+        PushEvent event = (PushEvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(SCMEvent.Type.UPDATED);
         assertThat(event.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
+        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        assertThat(heads.keySet())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BranchSCMHead("main"));
+        assertThat(heads.values())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new SCMRevisionImpl(new BranchSCMHead("main"), "9fdd7b96d3f5c276d0b9e0bf38c879eb112d889a"));
     }
 
     @Test
     @Issue("JENKINS-55927")
     void test_push_server_empty_changes() throws Exception {
         sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("server/emptyPayload.json"), BitbucketType.SERVER, "origin");
-
-        ArgumentCaptor<PushEvent> eventCaptor = ArgumentCaptor.forClass(PushEvent.class);
-        verify(sut, times(0)).notifyEvent(eventCaptor.capture(), anyInt());
+        assertThat(scmEvent).isNull();
     }
 
     private String loadResource(String resource) throws IOException {

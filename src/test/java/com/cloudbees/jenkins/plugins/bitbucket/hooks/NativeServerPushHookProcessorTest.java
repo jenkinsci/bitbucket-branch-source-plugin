@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025, Nikolas Falco
+ * Copyright (c) 2025, Allan Burdajewicz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,32 +23,41 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadEvent;
+import jenkins.scm.api.SCMRevision;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
-import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 class NativeServerPushHookProcessorTest {
 
     private static final String SERVER_URL = "http://localhost:7990/";
+    private static final String MIRROR_ID = "ABCD-1234-EFGH-5678";
     private NativeServerPushHookProcessor sut;
+    private SCMHeadEvent<?> scmEvent;
 
     @BeforeEach
     void setup() {
-        sut = spy(new NativeServerPushHookProcessor());
+        sut = new NativeServerPushHookProcessor() {
+            @Override
+            protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+                NativeServerPushHookProcessorTest.this.scmEvent = event;
+            }
+        };
     }
 
     @Test
@@ -56,44 +65,57 @@ class NativeServerPushHookProcessorTest {
     void test_mirror_sync_changes() throws Exception {
         sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED, loadResource("native/mirrorSynchronized.json"), BitbucketType.SERVER, "origin", SERVER_URL);
 
-        ArgumentCaptor<ServerPushEvent> eventCaptor = ArgumentCaptor.forClass(ServerPushEvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        ServerPushEvent event = eventCaptor.getValue();
+        ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(SCMEvent.Type.UPDATED);
         assertThat(event.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
+        scmSource.setMirrorId(MIRROR_ID);
+        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        assertThat(heads.keySet())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BranchSCMHead("main"));
     }
 
     @Test
     @Issue("JENKINS-55927")
     void test_mirror_sync_reflimitexceeed() throws Exception {
         sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED, loadResource("native/mirrorSynchronized_refLimitExceeded.json"), BitbucketType.SERVER, "origin", SERVER_URL);
-
-        ArgumentCaptor<ServerPushEvent> eventCaptor = ArgumentCaptor.forClass(ServerPushEvent.class);
-        verify(sut, times(0)).notifyEvent(eventCaptor.capture(), anyInt());
+        ServerPushEvent event = (ServerPushEvent) scmEvent;
+        assertThat(event).isNull();
     }
 
     @Test
     void test_push() throws Exception {
         sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/pushPayload.json"), BitbucketType.SERVER, "origin", SERVER_URL);
 
-        ArgumentCaptor<ServerPushEvent> eventCaptor = ArgumentCaptor.forClass(ServerPushEvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        ServerPushEvent event = eventCaptor.getValue();
+        ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(SCMEvent.Type.UPDATED);
         assertThat(event.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
+        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        assertThat(heads.keySet())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BranchSCMHead("main"));
+        assertThat(heads.values())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new AbstractGitSCMSource.SCMRevisionImpl(new BranchSCMHead("main"), "9fdd7b96d3f5c276d0b9e0bf38c879eb112d889a"));
     }
 
     @Test
     @Issue("JENKINS-55927")
     void test_push_empty_changes() throws Exception {
         sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/emptyPayload.json"), BitbucketType.SERVER, "origin", SERVER_URL);
-
-        ArgumentCaptor<ServerPushEvent> eventCaptor = ArgumentCaptor.forClass(ServerPushEvent.class);
-        verify(sut, times(0)).notifyEvent(eventCaptor.capture(), anyInt());
+        ServerPushEvent event = (ServerPushEvent) scmEvent;
+        assertThat(event).isNull();
     }
 
     private String loadResource(String resource) throws IOException {

@@ -1,31 +1,45 @@
 {
   "actor": {
-    "username": "admin",
-    "displayName": "Administrator"
-  },
-  "repository": {
-    "scmId": "git",
-    "project": {
-      "key": "PROJECT_1",
-      "name": "Project 1"
-    },
-    "slug": "rep_1",
+    "active": true,
+    "displayName": "Antonio Muniz",
+    "emailAddress": "amuniz@acme.com",
+    "id": 2,
     "links": {
       "self": [
         {
-          "href": "http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"
+          "href": "http://localhost:7990/users/amuniz"
+        }
+      ]
+    },
+    "name": "amuniz",
+    "slug": "amuniz",
+    "type": "NORMAL"
+  },
+  "push": {
+    "changes": []
+  },
+  "date": "2024-11-27T01:34:45+0000",
+  "eventKey": "repo:push",
+  "repository": {
+    "scmId": "git",
+    "project": {
+      "key": "AMUNIZ",
+      "name": "prj"
+    },
+    "slug": "test-repos",
+    "links": {
+      "self": [
+        {
+          "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
         }
       ]
     },
     "public": false,
     "owner": {
-      "username": "PROJECT_1",
-      "displayName": "PROJECT_1"
+      "username": "amuniz",
+      "displayName": "Antonio Muniz"
     },
-    "fullName": "PROJECT_1/rep_1",
-    "ownerName": "PROJECT_1"
-  },
-  "push": {
-    "changes": []
+    "fullName": "amuniz/test-repos",
+    "ownerName": "amuniz"
   }
 }
