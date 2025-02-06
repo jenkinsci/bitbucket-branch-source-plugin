@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2017, CloudBees, Inc.
+ * Copyright (c) 2025, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,17 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
+package com.cloudbees.jenkins.plugins.bitbucket.impl;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.AbstractBitbucketTeam;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.Items;
+import jenkins.plugins.git.MergeWithGitSCMExtension;
 
-public class BitbucketCloudTeam extends AbstractBitbucketTeam {
+public class BitbucketPlugin {
 
-    @JsonProperty("username")
-    protected String name;
-
-    @JsonProperty("display_name")
-    protected String displayName;
+    /**
+     * Mapping classes after refactoring for backward compatibility.
+     */
+    @Initializer(before = InitMilestone.PLUGINS_STARTED)
+    public static void aliases() {
+        Items.XSTREAM2.addCompatibilityAlias("com.cloudbees.jenkins.plugins.bitbucket.MergeWithGitSCMExtension", MergeWithGitSCMExtension.class);
+        Items.XSTREAM2.addCompatibilityAlias("com.cloudbees.jenkins.plugins.bitbucket.BitbucketTeamMetadataAction", BitbucketTeamAvatarMetadataAction.class);
+        Items.XSTREAM2.addCompatibilityAlias("com.cloudbees.jenkins.plugins.bitbucket.BitbucketRepoMetadataAction", BitbucketRepoAvatarMetadataAction.class);
+    }
 
 }

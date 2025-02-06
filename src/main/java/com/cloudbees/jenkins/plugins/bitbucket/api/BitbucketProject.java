@@ -23,10 +23,16 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.List;
+import java.util.Map;
+
 public class BitbucketProject {
 
     private String key;
     private String name;
+    @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
+    private Map<String, List<BitbucketHref>> links;
 
     public String getKey() {
         return key;
@@ -44,8 +50,29 @@ public class BitbucketProject {
         this.name = name;
     }
 
+    public Map<String, List<BitbucketHref>> getLinks() {
+        return links;
+    }
+
+    public void setLinks(Map<String, List<BitbucketHref>> links) {
+        this.links = links;
+    }
+
+    public String getLink(String name) {
+        if (links == null) {
+            return null;
+        }
+        List<BitbucketHref> hrefs = links.get(name);
+        if (hrefs == null || hrefs.isEmpty()) {
+            return null;
+        }
+        BitbucketHref href = hrefs.get(0);
+        return href == null ? null : href.getHref();
+    }
+
     @Override
     public String toString() {
         return "{ key=" + key + ", name=" + name + "}";
     }
+
 }
