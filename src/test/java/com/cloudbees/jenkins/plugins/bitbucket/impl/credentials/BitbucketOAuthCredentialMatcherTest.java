@@ -53,6 +53,12 @@ class BitbucketOAuthCredentialMatcherTest {
         assertThat(sut.matches(new ExceptionalCredentials())).isFalse();
     }
 
+    @Test
+    @Issue("JENKINS-75225")
+    void matches_returns_false_when_getting_password_takes_longer() {
+        assertThat(sut.matches(new TakeLongCredentials())).isFalse();
+    }
+
     @SuppressWarnings("serial")
     private static class ExceptionalCredentials implements UsernamePasswordCredentials {
 
@@ -60,6 +66,38 @@ class BitbucketOAuthCredentialMatcherTest {
         @Override
         public Secret getPassword() {
             throw new IllegalArgumentException("Failed authentication");
+        }
+
+        @NonNull
+        @Override
+        public String getUsername() {
+            return "dummy-username";
+        }
+
+        @Override
+        public CredentialsScope getScope() {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public CredentialsDescriptor getDescriptor() {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("serial")
+    private static class TakeLongCredentials implements UsernamePasswordCredentials {
+
+        @NonNull
+        @Override
+        public Secret getPassword() {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return Secret.fromString("password");
         }
 
         @NonNull
