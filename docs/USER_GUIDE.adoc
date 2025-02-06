@@ -257,9 +257,21 @@ For the same reason existing projects must be updated with a "Scan Organization 
 [id=bitbucket-misc-config]
 == Miscellaneous configuration
 
+=== Client Timeout
+
 In case of slow network, you can increase socket timeout using the link:https://jenkins.io/doc/book/managing/script-console/[Script Console]:
 
 [source,groovy]
 ----
 System.setProperty("http.socket.timeout", "300") // 5 minutes
 ----
+
+=== Disable Branch Indexing on Empty changes
+
+By default, the plugin triggers *a full branch indexing* when a push event contains *empty* changes. This may happen on various scenario, mainly in Bitbucket Server, such as:
+
+* When manually merging remote **Open** pull requests. This particular scenario produces 2 events and cause duplicated builds.
+* For a fork, when link:https://confluence.atlassian.com/bitbucketserver/keeping-forks-synchronized-776639961.html[Auto-Sync] is on and a branch cannot be synchronized
+* A link:http://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html#Eventpayload-Mirrorsynchronized[mirror:repo_synchronized] event with too many refs
+
+This behavior can be disabled by adding the system property `bitbucket.hooks.processor.scanOnEmptyChanges=false` on Jenkins startup.

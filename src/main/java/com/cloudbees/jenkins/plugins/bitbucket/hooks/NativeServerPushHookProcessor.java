@@ -71,6 +71,17 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 repository = event.getRepository();
                 changes = event.getChanges();
                 mirrorId = event.getMirrorServer().getId();
+                // If too many changes, this event set refLimitExceeded to true
+                // https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html#Eventpayload-Mirrorsynchronized
+                if (event.getRefLimitExceeded()) {
+                    final String owner = repository.getOwnerName();
+                    final String repositoryName = repository.getRepositoryName();
+                    LOGGER.log(Level.INFO, "Received mirror synchronized event with refLimitExceeded from Bitbucket. Processing with indexing on {0}/{1}. " +
+                            "You may skip this scan by adding the system property -D{2}=false on startup.",
+                        new Object[]{owner, repositoryName, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
+                    scmSourceReIndex(owner, repositoryName, mirrorId);
+                    return;
+                }
             } else {
                 throw new UnsupportedOperationException("Unsupported hook event " + hookEvent);
             }
@@ -82,30 +93,35 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         if (changes.isEmpty()) {
             final String owner = repository.getOwnerName();
             final String repositoryName = repository.getRepositoryName();
-            LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
-                new Object[] { owner, repositoryName });
-            scmSourceReIndex(owner, repositoryName);
-            return;
-        }
-
-        final Multimap<SCMEvent.Type, NativeServerChange> events = HashMultimap.create();
-        for (final NativeServerChange change : changes) {
-            final String type = change.getType();
-            if ("UPDATE".equals(type)) {
-                events.put(SCMEvent.Type.UPDATED, change);
-            } else if ("DELETE".equals(type)) {
-                events.put(SCMEvent.Type.REMOVED, change);
-            } else if ("ADD".equals(type)) {
-                events.put(SCMEvent.Type.CREATED, change);
+            if (SCAN_ON_EMPTY_CHANGES) {
+                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}. " +
+                        "You may skip this scan by adding the system property -D{2}=false on startup.",
+                    new Object[]{owner, repositoryName, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
+                scmSourceReIndex(owner, repositoryName, mirrorId);
             } else {
-                LOGGER.log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
+                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
+                    new Object[]{owner, repositoryName});
+            }
+        } else {
+            final Multimap<SCMEvent.Type, NativeServerChange> events = HashMultimap.create();
+            for (final NativeServerChange change : changes) {
+                final String type = change.getType();
+                if ("UPDATE".equals(type)) {
+                    events.put(SCMEvent.Type.UPDATED, change);
+                } else if ("DELETE".equals(type)) {
+                    events.put(SCMEvent.Type.REMOVED, change);
+                } else if ("ADD".equals(type)) {
+                    events.put(SCMEvent.Type.CREATED, change);
+                } else {
+                    LOGGER.log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
+                }
+            }
+
+            for (final SCMEvent.Type type : events.keySet()) {
+                ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
+                notifyEvent(headEvent, BitbucketSCMSource.getEventDelaySeconds());
             }
         }
 
-        for (final SCMEvent.Type type : events.keySet()) {
-            ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
-            notifyEvent(headEvent, BitbucketSCMSource.getEventDelaySeconds());
-        }
     }
-
 }
