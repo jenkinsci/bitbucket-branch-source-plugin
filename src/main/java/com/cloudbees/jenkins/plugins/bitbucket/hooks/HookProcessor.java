@@ -34,6 +34,7 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -44,6 +45,9 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * extract details from the hook payload and then fire an {@link jenkins.scm.api.SCMEvent} to dispatch it to the SCM API.
  */
 public abstract class HookProcessor {
+
+    protected static final String SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME = "bitbucket.hooks.processor.scanOnEmptyChanges";
+    protected static final boolean SCAN_ON_EMPTY_CHANGES = SystemProperties.getBoolean(SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME, true);
 
     private static final Logger LOGGER = Logger.getLogger(HookProcessor.class.getName());
 

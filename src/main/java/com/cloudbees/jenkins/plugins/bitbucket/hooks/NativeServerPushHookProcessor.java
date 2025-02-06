@@ -37,16 +37,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
-import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
 public class NativeServerPushHookProcessor extends HookProcessor {
-
-    private static final String SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME = NativeServerPushHookProcessor.class.getName()+".scanOnEmptyChanges";
-    private static final boolean SCAN_ON_EMPTY_CHANGES = SystemProperties.getBoolean(SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME, true);
 
     private static final Logger LOGGER = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
 
