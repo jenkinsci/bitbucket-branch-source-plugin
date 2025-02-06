@@ -46,7 +46,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 public class NativeServerPushHookProcessor extends HookProcessor {
 
     private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = SystemProperties.getBoolean(
-        NativeServerPushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges", true);
+        NativeServerPushHookProcessor.class.getName()+".scanOnEmptyChanges", true);
 
     private static final Logger LOGGER = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
 
@@ -82,7 +82,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                     final String repositoryName = repository.getRepositoryName();
                     LOGGER.log(Level.INFO, "Received mirror synchronized event with refLimitExceeded from Bitbucket. Processing with indexing on {0}/{1}",
                         new Object[]{owner, repositoryName});
-                    scmSourceReIndex(owner, repositoryName);
+                    scmSourceReIndex(owner, repositoryName, mirrorId);
                     return;
                 }
             } else {
@@ -99,7 +99,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
                 LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}",
                     new Object[]{owner, repositoryName});
-                scmSourceReIndex(owner, repositoryName);
+                scmSourceReIndex(owner, repositoryName, mirrorId);
             } else {
                 LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
                     new Object[]{owner, repository});

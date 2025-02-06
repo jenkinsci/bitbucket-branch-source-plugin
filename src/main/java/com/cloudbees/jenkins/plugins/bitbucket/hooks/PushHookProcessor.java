@@ -41,7 +41,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 public class PushHookProcessor extends HookProcessor {
 
     private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = SystemProperties.getBoolean(
-        PushHookProcessor.class.getName()+".scanOnPushWithEmptyChanges", true);
+        PushHookProcessor.class.getName()+".scanOnEmptyChanges", true);
 
     private static final Logger LOGGER = Logger.getLogger(PushHookProcessor.class.getName());
 
@@ -62,7 +62,7 @@ public class PushHookProcessor extends HookProcessor {
                     if (instanceType == BitbucketType.CLOUD || SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
                         LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}",
                             new Object[]{owner, repository});
-                        scmSourceReIndex(owner, repository);
+                        scmSourceReIndex(owner, repository, null);
                     } else {
                         LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
                             new Object[]{owner, repository});

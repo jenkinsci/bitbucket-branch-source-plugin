@@ -87,11 +87,11 @@ public abstract class HookProcessor {
     /**
      * To be called by implementations once the owner and the repository have been extracted from the payload.
      *
-     * @deprecated Branch Indexing should not be triggered directly. But through {@link jenkins.scm.api.SCMSourceEvent}.
      * @param owner the repository owner as configured in the SCMSource
      * @param repository the repository name as configured in the SCMSource
+     * @param mirrorId the mirror id if applicable, may be null
      */
-    protected void scmSourceReIndex(final String owner, final String repository) {
+    protected void scmSourceReIndex(final String owner, final String repository, final String mirrorId) {
         try (ACLContext context = ACL.as2(ACL.SYSTEM2)) {
             boolean reindexed = false;
             for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
@@ -100,8 +100,11 @@ public abstract class HookProcessor {
                     // Search for the correct SCM source
                     if (source instanceof BitbucketSCMSource scmSource
                             && scmSource.getRepoOwner().equalsIgnoreCase(owner)
-                            && scmSource.getRepository().equals(repository)) {
+                            && scmSource.getRepository().equals(repository)
+                            && (mirrorId == null || mirrorId.equalsIgnoreCase(scmSource.getMirrorId()))) {
                         LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
+                        // TODO: SCMSourceOwner.onSCMSourceUpdated is deprecated. We may explore options with an
+                        //  SCMEventListener extension and firing SCMSourceEvents.
                         scmOwner.onSCMSourceUpdated(source);
                         reindexed = true;
                     }
