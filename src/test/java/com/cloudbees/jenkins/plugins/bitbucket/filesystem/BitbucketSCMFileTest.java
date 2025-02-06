@@ -77,6 +77,17 @@ class BitbucketSCMFileTest {
                 });
     }
 
+    @Issue("JENKINS-75208")
+    @Test
+    void test_SCMFile_when_client_return_path_attribute_with_folder_separator_on_cloud() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://bitbucket.org");
+
+        BitbucketSCMFile root = new BitbucketSCMFile(client, "master", null);
+        SCMFile file = root.child("folder/file.properties");
+        String content = file.contentAsString();
+        assertThat(content).isEqualTo("message=This is a test for metadata");
+    }
+
     @Issue("JENKINS-75157")
     @Test
     void test_SCMBinder_behavior_when_discover_the_Jenkinsfile_for_a_given_branch_on_cloud() throws Exception {

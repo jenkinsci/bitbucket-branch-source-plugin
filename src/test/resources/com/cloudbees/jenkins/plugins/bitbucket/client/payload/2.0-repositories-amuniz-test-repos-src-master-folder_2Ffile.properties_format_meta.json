@@ -1,0 +1,31 @@
+{
+    "path": "folder/file.properties",
+    "commit": {
+        "hash": "e43fdffe2def75053da30efa8204d0317a0b932a",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e43fdffe2def75053da30efa8204d0317a0b932a"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos/commits/e43fdffe2def75053da30efa8204d0317a0b932a"
+            }
+        },
+        "type": "commit"
+    },
+    "type": "commit_file",
+    "attributes": [],
+    "escaped_path": "folder/file.properties",
+    "size": 35,
+    "mimetype": null,
+    "links": {
+        "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/e43fdffe2def75053da30efa8204d0317a0b932a/folder/file.properties"
+        },
+        "meta": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/e43fdffe2def75053da30efa8204d0317a0b932a/folder/file.properties?format=meta"
+        },
+        "history": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/filehistory/e43fdffe2def75053da30efa8204d0317a0b932a/folder/file.properties"
+        }
+    }
+}

@@ -87,7 +87,7 @@ public class BitbucketRepositorySource {
                 }
             }
         }
-        return new BitbucketSCMFile(parent, path, fileType, hash);
+        return parent.child(path, fileType);
     }
 
 }

@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import jenkins.scm.api.SCMFile;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 public class BitbucketSCMFile extends SCMFile {
 
@@ -69,6 +71,11 @@ public class BitbucketSCMFile extends SCMFile {
         return hash;
     }
 
+    @Restricted(NoExternalUse.class)
+    public void setType(Type type) {
+        type(type);
+    }
+
     @Override
     @NonNull
     public Iterable<SCMFile> children() throws IOException, InterruptedException {
@@ -99,6 +106,14 @@ public class BitbucketSCMFile extends SCMFile {
     @NonNull
     protected SCMFile newChild(String name, boolean assumeIsDirectory) {
         return new BitbucketSCMFile(this, name, null, hash);
+    }
+
+    @NonNull
+    public BitbucketSCMFile child(@NonNull String path, @NonNull Type type) {
+        BitbucketSCMFile scmFile = (BitbucketSCMFile) super.child(path);
+        scmFile.type(type);
+        scmFile.resolved = true;
+        return scmFile;
     }
 
     @Override
