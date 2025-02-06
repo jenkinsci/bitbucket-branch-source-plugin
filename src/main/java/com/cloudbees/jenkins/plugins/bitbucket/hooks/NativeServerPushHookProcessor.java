@@ -45,8 +45,8 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @RestrictedSince("933.3.0")
 public class NativeServerPushHookProcessor extends HookProcessor {
 
-    private static final boolean SCAN_ON_PUSH_WITH_EMPTY_CHANGES = SystemProperties.getBoolean(
-        NativeServerPushHookProcessor.class.getName()+".scanOnEmptyChanges", true);
+    private static final String SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME = NativeServerPushHookProcessor.class.getName()+".scanOnEmptyChanges";
+    private static final boolean SCAN_ON_EMPTY_CHANGES = SystemProperties.getBoolean(SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME, true);
 
     private static final Logger LOGGER = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
 
@@ -80,8 +80,9 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 if (event.getRefLimitExceeded()) {
                     final String owner = repository.getOwnerName();
                     final String repositoryName = repository.getRepositoryName();
-                    LOGGER.log(Level.INFO, "Received mirror synchronized event with refLimitExceeded from Bitbucket. Processing with indexing on {0}/{1}",
-                        new Object[]{owner, repositoryName});
+                    LOGGER.log(Level.INFO, "Received mirror synchronized event with refLimitExceeded from Bitbucket. Processing with indexing on {0}/{1}. " +
+                            "You may skip this scan by adding the system property -D{2}=false on startup.",
+                        new Object[]{owner, repositoryName, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
                     scmSourceReIndex(owner, repositoryName, mirrorId);
                     return;
                 }
@@ -96,13 +97,14 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         if (changes.isEmpty()) {
             final String owner = repository.getOwnerName();
             final String repositoryName = repository.getRepositoryName();
-            if (SCAN_ON_PUSH_WITH_EMPTY_CHANGES) {
-                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}",
-                    new Object[]{owner, repositoryName});
+            if (SCAN_ON_EMPTY_CHANGES) {
+                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}. " +
+                        "You may skip this scan by adding the system property -D{2}=false on startup.",
+                    new Object[]{owner, repositoryName, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
                 scmSourceReIndex(owner, repositoryName, mirrorId);
             } else {
                 LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
-                    new Object[]{owner, repository});
+                    new Object[]{owner, repositoryName});
             }
         } else {
             final Multimap<SCMEvent.Type, NativeServerChange> events = HashMultimap.create();

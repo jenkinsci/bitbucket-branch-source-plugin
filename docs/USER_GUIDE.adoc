@@ -276,7 +276,7 @@ By default, the plugin triggers *a full branch indexing* when a push event conta
 
 This behavior can be disabled with the following system properties:
 
-* `com.cloudbees.jenkins.plugins.bitbucket.hooks.PushHookProcessor.scanOnPushWithEmptyChanges=false` for Cloud and Server (non-native)
-* `com.cloudbees.jenkins.plugins.bitbucket.hooks.NativeServerPushHookProcessor.scanOnPushWithEmptyChanges=false` for Server native implementation
+* `com.cloudbees.jenkins.plugins.bitbucket.hooks.PushHookProcessor.scanOnEmptyChanges=false` for Cloud and Server (non-native)
+* `com.cloudbees.jenkins.plugins.bitbucket.hooks.NativeServerPushHookProcessor.scanOnEmptyChanges=false` for Server native implementation
 
 This properties must be set on Jenkins startup.
