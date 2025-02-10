@@ -21,25 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.avatars;
 
+import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import hudson.Util;
 import java.util.Objects;
 import jenkins.scm.api.metadata.AvatarMetadataAction;
+import jenkins.scm.impl.avatars.AvatarCache;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Invisible property that retains information about Bitbucket repository.
  */
-public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
+public class BitbucketRepoAvatarMetadataAction extends AvatarMetadataAction {
+    private static final long serialVersionUID = 6159334180425135341L;
 
     private final String scm;
+    private String avatarURL;
 
-    public BitbucketRepoMetadataAction(@NonNull BitbucketRepository repo) {
-        this(repo.getScm());
+    public BitbucketRepoAvatarMetadataAction(@CheckForNull BitbucketRepository repo) {
+        this("git");
+        if (repo != null) {
+            this.avatarURL = repo.getAvatar();
+        }
     }
 
-    public BitbucketRepoMetadataAction(String scm) {
+    @DataBoundConstructor
+    public BitbucketRepoAvatarMetadataAction(String scm) {
         this.scm = scm;
     }
 
@@ -47,11 +58,35 @@ public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
         return scm;
     }
 
+    public String getAvatarURL() {
+        return avatarURL;
+    }
+
+    @DataBoundSetter
+    public void setAvatarURL(String avatarURL) {
+        this.avatarURL = Util.fixEmptyAndTrim(avatarURL);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getAvatarImageOf(String size) {
+        if (avatarURL == null) {
+            return super.getAvatarImageOf(size);
+        } else {
+            return AvatarCache.buildUrl(avatarURL, size);
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String getAvatarIconClassName() {
+        if (avatarURL != null) {
+            return null; // trigger #getAvatarImageOf(String) if this class override #getAvatarImageOf(String)
+        }
         if ("git".equals(scm)) {
             return "icon-bitbucket-repo-git";
         }
@@ -69,9 +104,6 @@ public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
         return Messages.BitbucketRepoMetadataAction_IconDescription();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -81,26 +113,14 @@ public class BitbucketRepoMetadataAction extends AvatarMetadataAction{
             return false;
         }
 
-        BitbucketRepoMetadataAction that = (BitbucketRepoMetadataAction) o;
-
-        return Objects.equals(scm, that.scm);
+        BitbucketRepoAvatarMetadataAction that = (BitbucketRepoAvatarMetadataAction) o;
+        return Objects.equals(scm, that.scm)
+                && Objects.equals(avatarURL, that.avatarURL);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
-        return Objects.hashCode(scm);
+        return Objects.hash(scm, avatarURL);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return "BitbucketRepoMetadataAction{" +
-                "scm='" + scm + '\'' +
-                '}';
-    }
 }

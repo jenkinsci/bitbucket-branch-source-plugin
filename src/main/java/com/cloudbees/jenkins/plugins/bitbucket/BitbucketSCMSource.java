@@ -43,6 +43,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -53,6 +54,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
@@ -65,12 +67,9 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
-import hudson.init.InitMilestone;
-import hudson.init.Initializer;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
-import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
@@ -97,7 +96,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.MergeWithGitSCMExtension;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
@@ -151,14 +149,6 @@ public class BitbucketSCMSource extends SCMSource {
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
     private static final String SERVER_REPO_TEMPLATE = "/projects{/owner}/repos{/repo}";
-
-    /**
-     * Mapping classes after refactoring for backward compatibility.
-     */
-    @Initializer(before = InitMilestone.PLUGINS_STARTED)
-    public static void aliases() {
-        Items.XSTREAM2.addCompatibilityAlias("com.cloudbees.jenkins.plugins.bitbucket.MergeWithGitSCMExtension", MergeWithGitSCMExtension.class);
-    }
 
     /** How long to delay events received from Bitbucket in order to allow the API caches to sync. */
     private static /*mostly final*/ int eventDelaySeconds =
@@ -1107,27 +1097,32 @@ public class BitbucketSCMSource extends SCMSource {
             throws IOException, InterruptedException {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
         List<Action> result = new ArrayList<>();
-        final BitbucketApi bitbucket = buildBitbucketClient();
-        gatherPrimaryCloneLinks(bitbucket);
-        BitbucketRepository r = bitbucket.getRepository();
-        result.add(new BitbucketRepoMetadataAction(r));
-        String defaultBranch = bitbucket.getDefaultBranch();
-        if (StringUtils.isNotBlank(defaultBranch)) {
-            result.add(new BitbucketDefaultBranch(repoOwner, repository, defaultBranch));
+        try (BitbucketApi bitbucket = buildBitbucketClient()) {
+            gatherPrimaryCloneLinks(bitbucket);
+            BitbucketRepository repo = bitbucket.getRepository();
+            result.add(new BitbucketRepoAvatarMetadataAction(showAvatar() ? repo : null));
+            String defaultBranch = bitbucket.getDefaultBranch();
+            if (StringUtils.isNotBlank(defaultBranch)) {
+                result.add(new BitbucketDefaultBranch(repoOwner, repository, defaultBranch));
+            }
+            UriTemplate template;
+            if (BitbucketApiUtils.isCloud(getServerUrl())) {
+                template = UriTemplate.fromTemplate(getServerUrl() + CLOUD_REPO_TEMPLATE);
+            } else {
+                template = UriTemplate.fromTemplate(getServerUrl() + SERVER_REPO_TEMPLATE);
+            }
+            String url = template
+                .set("owner", repoOwner)
+                .set("repo", repository)
+                .expand();
+            result.add(new BitbucketLink("icon-bitbucket-repo", url));
+            result.add(new ObjectMetadataAction(repo.getRepositoryName(), null, url));
         }
-        UriTemplate template;
-        if (BitbucketApiUtils.isCloud(getServerUrl())) {
-            template = UriTemplate.fromTemplate(getServerUrl() + CLOUD_REPO_TEMPLATE);
-        } else {
-            template = UriTemplate.fromTemplate(getServerUrl() + SERVER_REPO_TEMPLATE);
-        }
-        String url = template
-            .set("owner", repoOwner)
-            .set("repo", repository)
-            .expand();
-        result.add(new BitbucketLink("icon-bitbucket-repo", url));
-        result.add(new ObjectMetadataAction(r.getRepositoryName(), null, url));
         return result;
+    }
+
+    private boolean showAvatar() {
+        return traits.stream().anyMatch(ShowBitbucketAvatarTrait.class::isInstance);
     }
 
     @NonNull

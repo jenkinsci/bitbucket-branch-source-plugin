@@ -1,0 +1,186 @@
+{
+  "actor": {
+    "active": true,
+    "displayName": "Antonio Muniz",
+    "emailAddress": "amuniz@acme.com",
+    "id": 2,
+    "links": {
+      "self": [
+        {
+          "href": "http://localhost:7990/users/amuniz"
+        }
+      ]
+    },
+    "name": "amuniz",
+    "slug": "amuniz",
+    "type": "NORMAL"
+  },
+  "changes": [
+    {
+      "fromHash": "a8c13e8850dc60300be720019d1ffc1aa2fded87",
+      "ref": {
+        "displayId": "main",
+        "id": "refs/heads/main",
+        "type": "BRANCH"
+      },
+      "refId": "refs/heads/main",
+      "toHash": "9fdd7b96d3f5c276d0b9e0bf38c879eb112d889a",
+      "type": "UPDATE"
+    }
+  ],
+  "commits": [
+    {
+      "author": {
+        "active": true,
+        "displayName": "Antonio Muniz",
+        "emailAddress": "amuniz@acme.com",
+        "id": 2,
+        "links": {
+          "self": [
+            {
+              "href": "http://localhost:7990/users/amuniz"
+            }
+          ]
+        },
+        "name": "amuniz",
+        "slug": "amuniz",
+        "type": "NORMAL"
+      },
+      "authorTimestamp": 1731498876000,
+      "committer": {
+        "active": true,
+        "displayName": "Antonio Muniz",
+        "emailAddress": "amuniz@acme.com",
+        "id": 2,
+        "links": {
+          "self": [
+            {
+              "href": "http://localhost:7990/users/amuniz"
+            }
+          ]
+        },
+        "name": "amuniz",
+        "slug": "amuniz",
+        "type": "NORMAL"
+      },
+      "committerTimestamp": 1732671086000,
+      "displayId": "9fdd7b96d3f",
+      "id": "9fdd7b96d3f5c276d0b9e0bf38c879eb112d889a",
+      "message": "source-2: Wed 13 Nov 2024 21:54:36 AEST",
+      "parents": [
+        {
+          "displayId": "dda75d7e955",
+          "id": "dda75d7e95568d3493a9d976a6702506bbf9b495"
+        }
+      ]
+    }
+  ],
+
+  "date": "2024-11-27T01:34:45+0000",
+  "eventKey": "repo:refs_changed",
+  "repository": {
+    "archived": false,
+    "forkable": true,
+    "hierarchyId": "050ab73089457a2ae375",
+    "id": 1,
+    "links": {
+      "clone": [
+        {
+          "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+          "name": "ssh"
+        },
+        {
+          "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+          "name": "http"
+        }
+      ],
+      "self": [
+        {
+          "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+        }
+      ]
+    },
+    "name": "test-repos",
+    "project": {
+      "id": 1,
+      "key": "AMUNIZ",
+      "links": {
+        "self": [
+          {
+            "href": "http://localhost:7990/projects/AMUNIZ"
+          }
+        ]
+      },
+      "name": "prj",
+      "public": false,
+      "type": "NORMAL"
+    },
+    "public": false,
+    "scmId": "git",
+    "slug": "test-repos",
+    "state": "AVAILABLE",
+    "statusMessage": "Available"
+  },
+  "toCommit": {
+    "author": {
+      "active": true,
+      "displayName": "Antonio Muniz",
+      "emailAddress": "amuniz@acme.com",
+      "id": 2,
+      "links": {
+        "self": [
+          {
+            "href": "http://localhost:7990/users/amuniz"
+          }
+        ]
+      },
+      "name": "amuniz",
+      "slug": "amuniz",
+      "type": "NORMAL"
+    },
+    "authorTimestamp": 1731498876000,
+    "committer": {
+      "active": true,
+      "displayName": "Antonio Muniz",
+      "emailAddress": "amuniz@acme.com",
+      "id": 2,
+      "links": {
+        "self": [
+          {
+            "href": "http://localhost:7990/users/amuniz"
+          }
+        ]
+      },
+      "name": "amuniz",
+      "slug": "amuniz",
+      "type": "NORMAL"
+    },
+    "committerTimestamp": 1732671086000,
+    "displayId": "9fdd7b96d3f",
+    "id": "9fdd7b96d3f5c276d0b9e0bf38c879eb112d889a",
+    "message": "source-2: Wed 13 Nov 2024 21:54:36 AEST",
+    "parents": [
+      {
+        "author": {
+          "emailAddress": "amuniz@acme.com",
+          "name": "Antonio Muniz"
+        },
+        "authorTimestamp": 1731497124000,
+        "committer": {
+          "emailAddress": "amuniz@acme.com",
+          "name": "Antonio Muniz"
+        },
+        "committerTimestamp": 1732671086000,
+        "displayId": "bf4f4ce8a3a",
+        "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+        "message": "source-2: Wed 13 Nov 2024 21:25:24 AEST",
+        "parents": [
+          {
+            "displayId": "e716aaed1df",
+            "id": "e716aaed1df39c02ade739c1205d68dc278539b8"
+          }
+        ]
+      }
+    ]
+  }
+}

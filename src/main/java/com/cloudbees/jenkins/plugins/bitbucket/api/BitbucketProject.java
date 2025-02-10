@@ -23,16 +23,28 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-public class BitbucketProject {
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.List;
+import java.util.Map;
+
+public class BitbucketProject implements BitbucketTeam {
 
     private String key;
     private String name;
+    @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
+    private Map<String, List<BitbucketHref>> links;
 
     public String getKey() {
         return key;
     }
 
+    @Override
     public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getDisplayName() {
         return name;
     }
 
@@ -45,7 +57,18 @@ public class BitbucketProject {
     }
 
     @Override
+    public Map<String, List<BitbucketHref>> getLinks() {
+        return links;
+    }
+
+    @Override
+    public String getAvatar() {
+        return getLink("avatar");
+    }
+
+    @Override
     public String toString() {
         return "{ key=" + key + ", name=" + name + "}";
     }
+
 }

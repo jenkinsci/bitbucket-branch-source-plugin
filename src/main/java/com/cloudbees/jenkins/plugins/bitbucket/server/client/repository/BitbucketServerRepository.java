@@ -48,8 +48,8 @@ public class BitbucketServerRepository implements BitbucketRepository {
     @JsonProperty("slug")
     private String repositoryName;
 
-    // JSON mapping added in setter because the field can not be called "public"
-    private Boolean public_;
+    @JsonProperty("public")
+    private boolean isPublic;
 
     private Boolean archived;
 
@@ -100,7 +100,7 @@ public class BitbucketServerRepository implements BitbucketRepository {
 
     @Override
     public boolean isPrivate() {
-        return !public_;
+        return !isPublic;
     }
 
     @Override
@@ -113,11 +113,11 @@ public class BitbucketServerRepository implements BitbucketRepository {
         this.archived = archived;
     }
 
-    @JsonProperty("public")
-    public void setPublic(Boolean public_) {
-        this.public_ = public_;
+    public void setPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
     }
 
+    @Override
     @JsonIgnore
     public Map<String, List<BitbucketHref>> getLinks() {
         if (links == null) {
@@ -144,4 +144,9 @@ public class BitbucketServerRepository implements BitbucketRepository {
         }
     }
 
+    @Override
+    public String getAvatar() {
+        // repository does not supports avatar
+        return null;
+    }
 }

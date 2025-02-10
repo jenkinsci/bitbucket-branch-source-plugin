@@ -328,10 +328,8 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        if (getClient() != null) {
-            getClient().close();
-        }
+    public void close() throws IOException {
+        getClient().close();
     }
 
     protected BitbucketAuthenticator getAuthenticator() {

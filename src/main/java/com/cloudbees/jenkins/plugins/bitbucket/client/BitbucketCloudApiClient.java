@@ -33,7 +33,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.avatars.AvatarCacheSource.AvatarImage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommits;
@@ -72,6 +71,7 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
+import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
@@ -101,7 +101,6 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     private final String repositoryName;
     private final boolean enableCache;
     private static final Cache<String, BitbucketTeam> cachedTeam = new Cache<>(6, HOURS);
-    private static final Cache<String, AvatarImage> cachedAvatar = new Cache<>(6, HOURS);
     private static final Cache<String, List<BitbucketCloudRepository>> cachedRepositories = new Cache<>(3, HOURS);
     private static final Cache<String, BitbucketCloudCommit> cachedCommits = new Cache<>(24, HOURS);
     private transient BitbucketRepository cachedRepository;
@@ -639,7 +638,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @Override
     @CheckForNull
-    public BitbucketTeam getTeam() throws IOException, InterruptedException {
+    public BitbucketTeam getTeam() throws IOException {
         final String url = UriTemplate.fromTemplate(V2_WORKSPACES_API_BASE_URL + "{/owner}")
                 .set("owner", owner)
                 .expand();
@@ -669,42 +668,28 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     /**
      * {@inheritDoc}
      */
+    @Deprecated
     @Override
     @CheckForNull
-    public AvatarImage getTeamAvatar() throws IOException, InterruptedException {
-        try {
-            final BitbucketTeam team = getTeam();
-            final String url = (team!=null) ? team.getLink("avatar") : null;
-            if (url == null) {
-                return AvatarImage.EMPTY;
-            }
+    public AvatarImage getTeamAvatar() throws IOException {
+        final BitbucketTeam team = getTeam();
+        return getAvatar(team == null ? null : team.getAvatar());
+    }
 
-            Callable<AvatarImage> request = () -> {
-                try {
-                    BufferedImage avatar = getImageRequest(url);
-                    return new AvatarImage(avatar, System.currentTimeMillis());
-                } catch (FileNotFoundException e) {
-                    logger.log(Level.FINE, "Failed to get avatar for team {0} from URL: " + url,
-                            team.getName());
-                } catch (IOException e) {
-                    throw new IOException("I/O error when parsing response from URL: " + url, e);
-                }
-                return null;
-            };
-
+    @Override
+    @CheckForNull
+    public AvatarImage getAvatar(@CheckForNull String url) throws IOException {
+        if (url != null) {
             try {
-                if (enableCache) {
-                    return cachedAvatar.get(owner, request);
-                } else {
-                    return request.call();
-                }
-            } catch (Exception ex) {
-                return null;
+                BufferedImage avatar = getImageRequest(url);
+                return new AvatarImage(avatar, System.currentTimeMillis());
+            } catch (FileNotFoundException e) {
+                logger.log(Level.FINE, "Failed to get avatar from URL {0}", url);
+            } catch (IOException e) {
+                throw new IOException("I/O error when parsing response from URL: " + url, e);
             }
-        } catch (Exception ex) {
-            logger.log(Level.FINE, "Unexpected exception while loading team avatar: "+ex.getMessage(), ex);
-            throw ex;
         }
+        return AvatarImage.EMPTY;
     }
 
     /**

@@ -28,11 +28,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerPullRequestEvent;
 import hudson.RestrictedSince;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
-import jenkins.scm.api.SCMHeadEvent;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -78,6 +76,6 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 return;
         }
 
-        SCMHeadEvent.fireLater(new ServerHeadEvent(serverUrl, eventType, pullRequestEvent, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
+        notifyEvent(new ServerHeadEvent(serverUrl, eventType, pullRequestEvent, origin), BitbucketSCMSource.getEventDelaySeconds());
     }
 }

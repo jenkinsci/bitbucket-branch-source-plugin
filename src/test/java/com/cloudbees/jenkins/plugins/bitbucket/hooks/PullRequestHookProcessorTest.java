@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import jenkins.scm.api.SCMEvent.Type;
+import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMSource;
 import org.apache.commons.io.IOUtils;
@@ -39,30 +40,30 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
-import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 
 class PullRequestHookProcessorTest {
 
     private PullRequestHookProcessor sut;
+    protected SCMHeadEvent<?> scmEvent;
 
     @BeforeEach
     void setup() {
-        sut = spy(new PullRequestHookProcessor());
+        sut = new PullRequestHookProcessor() {
+            @Override
+            protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+                PullRequestHookProcessorTest.this.scmEvent = event;
+            }
+        };
     }
 
     @Test
     void test_pullrequest_created() throws Exception {
         sut.process(HookEventType.PULL_REQUEST_CREATED, loadResource("pullrequest_created.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PREvent> eventCaptor = ArgumentCaptor.forClass(PREvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PREvent event = eventCaptor.getValue();
+        PREvent event = (PREvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(Type.CREATED);
@@ -73,9 +74,7 @@ class PullRequestHookProcessorTest {
     void test_pullrequest_rejected() throws Exception {
         sut.process(HookEventType.PULL_REQUEST_DECLINED, loadResource("pullrequest_rejected.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PREvent> eventCaptor = ArgumentCaptor.forClass(PREvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PREvent event = eventCaptor.getValue();
+        PREvent event = (PREvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
         assertThat(event.getType()).isEqualTo(Type.REMOVED);
@@ -86,9 +85,7 @@ class PullRequestHookProcessorTest {
     void test_pullrequest_created_when_event_match_SCMNavigator() throws Exception {
         sut.process(HookEventType.PULL_REQUEST_CREATED, loadResource("pullrequest_created.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PREvent> eventCaptor = ArgumentCaptor.forClass(PREvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PREvent event = eventCaptor.getValue();
+        PREvent event = (PREvent) scmEvent;
         // discard any scm navigator than bitbucket
         assertThat(event.isMatch(mock(SCMNavigator.class))).isFalse();
 
@@ -112,9 +109,7 @@ class PullRequestHookProcessorTest {
     void test_pullrequest_created_when_event_match_SCMSource(JenkinsRule r) throws Exception {
         sut.process(HookEventType.PULL_REQUEST_CREATED, loadResource("pullrequest_created.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PREvent> eventCaptor = ArgumentCaptor.forClass(PREvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PREvent event = eventCaptor.getValue();
+        PREvent event = (PREvent) scmEvent;
         // discard any scm navigator than bitbucket
         assertThat(event.isMatch(mock(SCMSource.class))).isFalse();
 
@@ -140,11 +135,9 @@ class PullRequestHookProcessorTest {
     void test_pullrequest_rejected_returns_empty_pullrequests_when_event_match_SCMSource(JenkinsRule r) throws Exception {
         sut.process(HookEventType.PULL_REQUEST_DECLINED, loadResource("pullrequest_rejected.json"), BitbucketType.CLOUD, "origin");
 
-        ArgumentCaptor<PREvent> eventCaptor = ArgumentCaptor.forClass(PREvent.class);
-        verify(sut).notifyEvent(eventCaptor.capture(), anyInt());
-        PREvent event = eventCaptor.getValue();
+        PREvent event = (PREvent) scmEvent;
 
-        BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
         scmSource.setTraits(List.of(new OriginPullRequestDiscoveryTrait(2)));
         assertThat(event.isMatch(scmSource)).isTrue();
         assertThat(event.getPullRequests(scmSource)).isEmpty();

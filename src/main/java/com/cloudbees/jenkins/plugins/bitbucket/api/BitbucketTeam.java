@@ -46,7 +46,7 @@ public interface BitbucketTeam {
      *
      * @return the links of the project.
      */
-    Map<String,List<BitbucketHref>> getLinks();
+    Map<String, List<BitbucketHref>> getLinks();
 
     /**
      * Get Link based on name
@@ -54,5 +54,23 @@ public interface BitbucketTeam {
      * @param name - link type - one of(self, html, avatar)
      * @return href string if there is one, else null
      */
-    String getLink(String name);
+    default String getLink(String name) {
+        Map<String, List<BitbucketHref>> links = getLinks();
+        if (links == null) {
+            return null;
+        }
+        List<BitbucketHref> hrefs = links.get(name);
+        if (hrefs == null || hrefs.isEmpty()) {
+            return null;
+        }
+        BitbucketHref href = hrefs.get(0);
+        return href == null ? null : href.getHref();
+    }
+
+    /**
+     * Return the avatar associated to the team or project name.
+     *
+     * @return the URL of the avatar
+     */
+    String getAvatar();
 }

@@ -26,14 +26,17 @@
   </licenses>
 
   <properties>
-    <revision>934.4.0</revision>
+    <revision>934.4.3</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
+    <!--jenkins.version>${jenkins.baseline}.1</jenkins.version-->
     <!-- REMOVE -->
     <jenkins.version>2.495</jenkins.version>
-    <hpi.compatibleSinceVersion>2.0</hpi.compatibleSinceVersion>
+    <hpi.compatibleSinceVersion>934.0</hpi.compatibleSinceVersion>
     <tagNameFormat>@{project.version}</tagNameFormat>
+    <!-- because eclipse generate a JUnit5 run configuration with placeholder not replaced in the jvm argument section! -->
+    <surefire.forkNumber>1</surefire.forkNumber>
   </properties>
 
   <developers>

@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPayload;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import hudson.RestrictedSince;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
@@ -53,15 +52,21 @@ public class PushHookProcessor extends HookProcessor {
                 push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
             }
             if (push != null) {
-                String owner = push.getRepository().getOwnerName();
-                final String repository = push.getRepository().getRepositoryName();
                 if (push.getChanges().isEmpty()) {
-                    LOGGER.log(Level.INFO, "Received hook from Bitbucket. Processing push event on {0}/{1}",
+                    final String owner = push.getRepository().getOwnerName();
+                    final String repository = push.getRepository().getRepositoryName();
+                    if (instanceType == BitbucketType.CLOUD || SCAN_ON_EMPTY_CHANGES) {
+                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}. " +
+                                "You may skip this scan by adding the system property -D{2}=false on startup.",
+                            new Object[]{owner, repository, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
+                        scmSourceReIndex(owner, repository, null);
+                    } else {
+                        LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
                             new Object[]{owner, repository});
-                    scmSourceReIndex(owner, repository);
+                    }
                 } else {
                     SCMHeadEvent.Type type = null;
-                    for (BitbucketPushEvent.Change change: push.getChanges()) {
+                    for (BitbucketPushEvent.Change change : push.getChanges()) {
                         if ((type == null || type == SCMEvent.Type.CREATED) && change.isCreated()) {
                             type = SCMEvent.Type.CREATED;
                         } else if ((type == null || type == SCMEvent.Type.REMOVED) && change.isClosed()) {
@@ -70,14 +75,10 @@ public class PushHookProcessor extends HookProcessor {
                             type = SCMEvent.Type.UPDATED;
                         }
                     }
-                    SCMHeadEvent.fireLater(new PushEvent(type, push, origin), BitbucketSCMSource.getEventDelaySeconds(), TimeUnit.SECONDS);
+                    notifyEvent(new PushEvent(type, push, origin), BitbucketSCMSource.getEventDelaySeconds());
                 }
             }
         }
     }
 
-    /* for test purpose */
-    protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-        SCMHeadEvent.fireLater(event, delaySeconds, TimeUnit.SECONDS);
-    }
 }

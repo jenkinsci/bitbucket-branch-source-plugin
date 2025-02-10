@@ -1,0 +1,645 @@
+{
+    "push": {
+        "changes": [
+            {
+                "old": {
+                    "name": "feature/issue-819",
+                    "target": {
+                        "type": "commit",
+                        "hash": "a10199272451f4c7c5edced2d40b5d6f2f6f5fa3",
+                        "date": "2025-01-27T14:15:50+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Nikolas Falco <email@domain.com>",
+                            "user": {
+                                "display_name": "Nikolas Falco",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                                    },
+                                    "avatar": {
+                                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                                    }
+                                },
+                                "type": "user",
+                                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                                "nickname": "Nikolas Falco"
+                            }
+                        },
+                        "committer": {},
+                        "message": "Test pipeline for issue JENKINS-75182\n",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Test pipeline for issue JENKINS-75182\n",
+                            "markup": "markdown",
+                            "html": "<p>Test pipeline for issue JENKINS-75182</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/a10199272451f4c7c5edced2d40b5d6f2f6f5fa3"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/a10199272451f4c7c5edced2d40b5d6f2f6f5fa3"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "e87089f8227afa350808f3fe9a1e3db39be294eb",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e87089f8227afa350808f3fe9a1e3db39be294eb"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/e87089f8227afa350808f3fe9a1e3db39be294eb"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    },
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches/feature/issue-819"
+                        },
+                        "commits": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits/feature/issue-819"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/amuniz/test-repos/branch/feature/issue-819"
+                        },
+                        "pullrequest_create": {
+                            "href": "https://bitbucket.org/amuniz/test-repos/pull-requests/new?source=feature/issue-819&t=1"
+                        }
+                    },
+                    "type": "branch",
+                    "merge_strategies": [
+                        "merge_commit",
+                        "squash",
+                        "fast_forward",
+                        "squash_fast_forward",
+                        "rebase_fast_forward",
+                        "rebase_merge"
+                    ],
+                    "sync_strategies": [
+                        "merge_commit",
+                        "rebase"
+                    ],
+                    "default_merge_strategy": "merge_commit"
+                },
+                "new": {
+                    "name": "feature/issue-819",
+                    "target": {
+                        "type": "commit",
+                        "hash": "5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4",
+                        "date": "2025-02-03T18:26:00+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Nikolas Falco <email@domain.com>",
+                            "user": {
+                                "display_name": "Nikolas Falco",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                                    },
+                                    "avatar": {
+                                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                                    }
+                                },
+                                "type": "user",
+                                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                                "nickname": "Nikolas Falco"
+                            }
+                        },
+                        "committer": {},
+                        "message": "Test pipeline for issue JENKINS-75182\n",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Test pipeline for issue JENKINS-75182\n",
+                            "markup": "markdown",
+                            "html": "<p>Test pipeline for issue JENKINS-75182</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "c1fa9a169b6053b135f400d042a32d3b4952adf9",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    },
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches/feature/issue-819"
+                        },
+                        "commits": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits/feature/issue-819"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/amuniz/test-repos/branch/feature/issue-819"
+                        },
+                        "pullrequest_create": {
+                            "href": "https://bitbucket.org/amuniz/test-repos/pull-requests/new?source=feature/issue-819&t=1"
+                        }
+                    },
+                    "type": "branch",
+                    "merge_strategies": [
+                        "merge_commit",
+                        "squash",
+                        "fast_forward",
+                        "squash_fast_forward",
+                        "rebase_fast_forward",
+                        "rebase_merge"
+                    ],
+                    "sync_strategies": [
+                        "merge_commit",
+                        "rebase"
+                    ],
+                    "default_merge_strategy": "merge_commit"
+                },
+                "truncated": true,
+                "created": false,
+                "forced": true,
+                "closed": false,
+                "links": {
+                    "commits": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits?include=5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4&exclude=a10199272451f4c7c5edced2d40b5d6f2f6f5fa3"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/amuniz/test-repos/branch/feature/issue-819"
+                    }
+                },
+                "commits": [
+                    {
+                        "type": "commit",
+                        "hash": "5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4",
+                        "date": "2025-02-03T18:26:00+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Nikolas Falco <email@domain.com>",
+                            "user": {
+                                "display_name": "Nikolas Falco",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                                    },
+                                    "avatar": {
+                                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                                    }
+                                },
+                                "type": "user",
+                                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                                "nickname": "Nikolas Falco"
+                            }
+                        },
+                        "committer": {},
+                        "message": "Test pipeline for issue JENKINS-75182\n",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Test pipeline for issue JENKINS-75182\n",
+                            "markup": "markdown",
+                            "html": "<p>Test pipeline for issue JENKINS-75182</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"
+                            },
+                            "diff": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"
+                            },
+                            "approve": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4/approve"
+                            },
+                            "comments": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4/comments"
+                            },
+                            "statuses": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4/statuses"
+                            },
+                            "patch": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "c1fa9a169b6053b135f400d042a32d3b4952adf9",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    },
+                    {
+                        "type": "commit",
+                        "hash": "c1fa9a169b6053b135f400d042a32d3b4952adf9",
+                        "date": "2025-02-03T18:26:00+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Nikolas Falco <email@domain.com>",
+                            "user": {
+                                "display_name": "Nikolas Falco",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                                    },
+                                    "avatar": {
+                                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                                    }
+                                },
+                                "type": "user",
+                                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                                "nickname": "Nikolas Falco"
+                            }
+                        },
+                        "committer": {},
+                        "message": "Try using pipeline from JENKINS-74980\n",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Try using pipeline from JENKINS-74980\n",
+                            "markup": "markdown",
+                            "html": "<p>Try using pipeline from JENKINS-74980</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                            },
+                            "diff": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                            },
+                            "approve": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/c1fa9a169b6053b135f400d042a32d3b4952adf9/approve"
+                            },
+                            "comments": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/c1fa9a169b6053b135f400d042a32d3b4952adf9/comments"
+                            },
+                            "statuses": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/c1fa9a169b6053b135f400d042a32d3b4952adf9/statuses"
+                            },
+                            "patch": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/c1fa9a169b6053b135f400d042a32d3b4952adf9"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "5e13458e76a69ac3ed03925dc58d519f3bdc275f",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5e13458e76a69ac3ed03925dc58d519f3bdc275f"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/5e13458e76a69ac3ed03925dc58d519f3bdc275f"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    },
+                    {
+                        "type": "commit",
+                        "hash": "5e13458e76a69ac3ed03925dc58d519f3bdc275f",
+                        "date": "2025-02-03T18:26:00+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Nikolas Falco <email@domain.com>",
+                            "user": {
+                                "display_name": "Nikolas Falco",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                                    },
+                                    "avatar": {
+                                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                                    }
+                                },
+                                "type": "user",
+                                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                                "nickname": "Nikolas Falco"
+                            }
+                        },
+                        "committer": {},
+                        "message": "Test issue 819\n",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Test issue 819\n",
+                            "markup": "markdown",
+                            "html": "<p>Test issue 819</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5e13458e76a69ac3ed03925dc58d519f3bdc275f"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/5e13458e76a69ac3ed03925dc58d519f3bdc275f"
+                            },
+                            "diff": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/5e13458e76a69ac3ed03925dc58d519f3bdc275f"
+                            },
+                            "approve": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5e13458e76a69ac3ed03925dc58d519f3bdc275f/approve"
+                            },
+                            "comments": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5e13458e76a69ac3ed03925dc58d519f3bdc275f/comments"
+                            },
+                            "statuses": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/5e13458e76a69ac3ed03925dc58d519f3bdc275f/statuses"
+                            },
+                            "patch": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/5e13458e76a69ac3ed03925dc58d519f3bdc275f"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "e43fdffe2def75053da30efa8204d0317a0b932a",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e43fdffe2def75053da30efa8204d0317a0b932a"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/e43fdffe2def75053da30efa8204d0317a0b932a"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    },
+                    {
+                        "type": "commit",
+                        "hash": "e43fdffe2def75053da30efa8204d0317a0b932a",
+                        "date": "2025-01-18T16:10:05+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Nikolas Falco <email@domain.com>",
+                            "user": {
+                                "display_name": "Nikolas Falco",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                                    },
+                                    "avatar": {
+                                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                                    }
+                                },
+                                "type": "user",
+                                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                                "nickname": "Nikolas Falco"
+                            }
+                        },
+                        "committer": {},
+                        "message": "Add resource file under a folder to test resource metadata\n",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Add resource file under a folder to test resource metadata\n",
+                            "markup": "markdown",
+                            "html": "<p>Add resource file under a folder to test resource metadata</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e43fdffe2def75053da30efa8204d0317a0b932a"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/e43fdffe2def75053da30efa8204d0317a0b932a"
+                            },
+                            "diff": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/e43fdffe2def75053da30efa8204d0317a0b932a"
+                            },
+                            "approve": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e43fdffe2def75053da30efa8204d0317a0b932a/approve"
+                            },
+                            "comments": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e43fdffe2def75053da30efa8204d0317a0b932a/comments"
+                            },
+                            "statuses": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e43fdffe2def75053da30efa8204d0317a0b932a/statuses"
+                            },
+                            "patch": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/e43fdffe2def75053da30efa8204d0317a0b932a"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    },
+                    {
+                        "type": "commit",
+                        "hash": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+                        "date": "2018-09-21T14:07:25+00:00",
+                        "author": {
+                            "type": "author",
+                            "raw": "Antonio Muniz <amuniz@example.com>"
+                        },
+                        "committer": {},
+                        "message": "Add sample script hello world",
+                        "summary": {
+                            "type": "rendered",
+                            "raw": "Add sample script hello world",
+                            "markup": "markdown",
+                            "html": "<p>Add sample script hello world</p>"
+                        },
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/amuniz/test-repos/commits/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                            },
+                            "diff": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                            },
+                            "approve": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf/approve"
+                            },
+                            "comments": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf/comments"
+                            },
+                            "statuses": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf/statuses"
+                            },
+                            "patch": {
+                                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "hash": "8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1",
+                                "links": {
+                                    "self": {
+                                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1"
+                                    },
+                                    "html": {
+                                        "href": "https://bitbucket.org/amuniz/test-repos/commits/8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1"
+                                    }
+                                },
+                                "type": "commit"
+                            }
+                        ],
+                        "rendered": {},
+                        "properties": {}
+                    }
+                ]
+            }
+        ]
+    },
+    "repository": {
+        "type": "repository",
+        "full_name": "amuniz/test-repos",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos"
+            },
+            "avatar": {
+                "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+            }
+        },
+        "name": "test-repos",
+        "scm": "git",
+        "website": null,
+        "owner": {
+            "display_name": "Nikolas Falco",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                },
+                "avatar": {
+                    "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                }
+            },
+            "type": "user",
+            "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+            "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+            "nickname": "Nikolas Falco"
+        },
+        "workspace": {
+            "type": "workspace",
+            "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+            "name": "Nikolas Falco",
+            "slug": "amuniz",
+            "links": {
+                "avatar": {
+                    "href": "https://bitbucket.org/workspaces/amuniz/avatar/?ts=1737924067"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/"
+                },
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/amuniz"
+                }
+            }
+        },
+        "is_private": false,
+        "project": {
+            "type": "project",
+            "key": "PUB",
+            "uuid": "{ef731d07-06e0-46d2-9b56-2674649b0655}",
+            "name": "public",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/amuniz/projects/PUB"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/workspace/projects/PUB"
+                },
+                "avatar": {
+                    "href": "https://bitbucket.org/amuniz/workspace/projects/PUB/avatar/32?ts=1644525770"
+                }
+            }
+        },
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}",
+        "parent": null
+    },
+    "actor": {
+        "display_name": "Nikolas Falco",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+            },
+            "avatar": {
+                "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+            },
+            "html": {
+                "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+            }
+        },
+        "type": "user",
+        "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+        "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+        "nickname": "Nikolas Falco"
+    }
+}

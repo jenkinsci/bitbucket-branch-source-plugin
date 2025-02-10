@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
@@ -33,10 +34,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoi
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -323,7 +325,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setAutoRegisterHooks(boolean autoRegisterHook) {
-        traits.removeIf(trait -> trait instanceof WebhookRegistrationTrait);
+        traits.removeIf(WebhookRegistrationTrait.class::isInstance);
         traits.add(new WebhookRegistrationTrait(
                 autoRegisterHook ? WebhookRegistration.ITEM : WebhookRegistration.DISABLE
         ));
@@ -334,8 +336,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     public boolean isAutoRegisterHooks() {
         for (SCMTrait<? extends SCMTrait<?>> t : traits) {
-            if (t instanceof WebhookRegistrationTrait) {
-                return ((WebhookRegistrationTrait) t).getMode() != WebhookRegistration.DISABLE;
+            if (t instanceof WebhookRegistrationTrait hookTrait) {
+                return hookTrait.getMode() != WebhookRegistration.DISABLE;
             }
         }
         return true;
@@ -348,8 +350,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @NonNull
     public String getCheckoutCredentialsId() {
         for (SCMTrait<?> t : traits) {
-            if (t instanceof SSHCheckoutTrait) {
-                return StringUtils.defaultString(((SSHCheckoutTrait) t).getCredentialsId(), BitbucketSCMSource
+            if (t instanceof SSHCheckoutTrait sshTrait) {
+                return StringUtils.defaultString(sshTrait.getCredentialsId(), BitbucketSCMSource
                         .DescriptorImpl.ANONYMOUS);
             }
         }
@@ -361,7 +363,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     @DataBoundSetter
     public void setCheckoutCredentialsId(String checkoutCredentialsId) {
-        traits.removeIf(trait -> trait instanceof SSHCheckoutTrait);
+        traits.removeIf(SSHCheckoutTrait.class::isInstance);
         if (checkoutCredentialsId != null && !BitbucketSCMSource.DescriptorImpl.SAME.equals(checkoutCredentialsId)) {
             traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
         }
@@ -372,8 +374,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @RestrictedSince("2.2.0")
     public String getPattern() {
         for (SCMTrait<?> trait : traits) {
-            if (trait instanceof RegexSCMSourceFilterTrait) {
-                return ((RegexSCMSourceFilterTrait) trait).getRegex();
+            if (trait instanceof RegexSCMSourceFilterTrait regexTrait) {
+                return regexTrait.getRegex();
             }
         }
         return ".*";
@@ -421,8 +423,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @NonNull
     public String getIncludes() {
         for (SCMTrait<?> trait : traits) {
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                return ((WildcardSCMHeadFilterTrait) trait).getIncludes();
+            if (trait instanceof WildcardSCMHeadFilterTrait wildcardTrait) {
+                return wildcardTrait.getIncludes();
             }
         }
         return "*";
@@ -435,12 +437,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     public void setIncludes(@NonNull String includes) {
         for (int i = 0; i < traits.size(); i++) {
             SCMTrait<?> trait = traits.get(i);
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                WildcardSCMHeadFilterTrait existing = (WildcardSCMHeadFilterTrait) trait;
-                if ("*".equals(includes) && "".equals(existing.getExcludes())) {
+            if (trait instanceof WildcardSCMHeadFilterTrait wildcardTrait) {
+                if ("*".equals(includes) && "".equals(wildcardTrait.getExcludes())) {
                     traits.remove(i);
                 } else {
-                    traits.set(i, new WildcardSCMHeadFilterTrait(includes, existing.getExcludes()));
+                    traits.set(i, new WildcardSCMHeadFilterTrait(includes, wildcardTrait.getExcludes()));
                 }
                 return;
             }
@@ -456,8 +457,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @NonNull
     public String getExcludes() {
         for (SCMTrait<?> trait : traits) {
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                return ((WildcardSCMHeadFilterTrait) trait).getExcludes();
+            if (trait instanceof WildcardSCMHeadFilterTrait wildcardTrait) {
+                return wildcardTrait.getExcludes();
             }
         }
         return "";
@@ -470,12 +471,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     public void setExcludes(@NonNull String excludes) {
         for (int i = 0; i < traits.size(); i++) {
             SCMTrait<?> trait = traits.get(i);
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                WildcardSCMHeadFilterTrait existing = (WildcardSCMHeadFilterTrait) trait;
-                if ("*".equals(existing.getIncludes()) && "".equals(excludes)) {
+            if (trait instanceof WildcardSCMHeadFilterTrait wildcardTrait) {
+                if ("*".equals(wildcardTrait.getIncludes()) && "".equals(excludes)) {
                     traits.remove(i);
                 } else {
-                    traits.set(i, new WildcardSCMHeadFilterTrait(existing.getIncludes(), excludes));
+                    traits.set(i, new WildcardSCMHeadFilterTrait(wildcardTrait.getIncludes(), excludes));
                 }
                 return;
             }
@@ -569,37 +569,39 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
-        BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, null, null);
-        BitbucketTeam team = bitbucket.getTeam();
-        if (team != null) {
-            String defaultTeamUrl;
-            if (team instanceof BitbucketServerProject) {
-                defaultTeamUrl = serverUrl + "/projects/" + team.getName();
+        try (BitbucketApi client = BitbucketApiFactory.newInstance(serverUrl, authenticator, repoOwner, projectKey, null)) {
+            BitbucketTeam team = client.getTeam();
+            String avatarURL = null;
+            String teamURL;
+            String teamDisplayName;
+            if (team != null) {
+                if (showAvatar()) {
+                    avatarURL = team.getAvatar();
+                }
+                teamURL = team.getLink("html");
+                teamDisplayName = StringUtils.defaultIfBlank(team.getDisplayName(), team.getName());
+                if (StringUtils.isNotBlank(teamURL)) {
+                    if (team instanceof BitbucketCloudWorkspace wks) {
+                        teamURL = serverUrl + "/" + wks.getSlug();
+                    } else {
+                        teamURL = serverUrl + "/projects/" + team.getName();
+                    }
+                }
+                listener.getLogger().printf("Team: %s%n", HyperlinkNote.encodeTo(teamURL, teamDisplayName));
             } else {
-                defaultTeamUrl = serverUrl + "/" + team.getName();
+                teamURL = serverUrl + "/" + repoOwner;
+                teamDisplayName = repoOwner;
+                listener.getLogger().println("Could not resolve team details");
             }
-            String teamUrl = StringUtils.defaultIfBlank(team.getLink("html"), defaultTeamUrl);
-            String teamDisplayName = StringUtils.defaultIfBlank(team.getDisplayName(), team.getName());
-            result.add(new ObjectMetadataAction(
-                    teamDisplayName,
-                    null,
-                    teamUrl
-            ));
-            result.add(new BitbucketTeamMetadataAction(serverUrl, credentials, team.getName()));
-            result.add(new BitbucketLink("icon-bitbucket-logo", teamUrl));
-            listener.getLogger().printf("Team: %s%n", HyperlinkNote.encodeTo(teamUrl, teamDisplayName));
-        } else {
-            String teamUrl = serverUrl + "/" + repoOwner;
-            result.add(new ObjectMetadataAction(
-                    repoOwner,
-                    null,
-                    teamUrl
-            ));
-            result.add(new BitbucketTeamMetadataAction(null, null, null));
-            result.add(new BitbucketLink("icon-bitbucket-logo", teamUrl));
-            listener.getLogger().println("Could not resolve team details");
+            result.add(new ObjectMetadataAction(teamDisplayName, null, teamURL));
+            result.add(new BitbucketTeamAvatarMetadataAction(avatarURL, serverUrl, owner.getFullName(), credentialsId));
+            result.add(new BitbucketLink("icon-bitbucket-logo", teamURL));
+            return result;
         }
-        return result;
+    }
+
+    private boolean showAvatar() {
+        return traits.stream().anyMatch(ShowBitbucketAvatarTrait.class::isInstance);
     }
 
     @Symbol("bitbucket")
@@ -629,7 +631,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return "icon-bitbucket-scm-navigator";
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public SCMNavigator newInstance(String name) {
             BitbucketSCMNavigator instance = new BitbucketSCMNavigator(StringUtils.defaultString(name));
@@ -708,7 +709,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                 }
             }
             List<NamedArrayList<? extends SCMTraitDescriptor<?>>> result = new ArrayList<>();
-            NamedArrayList.select(all, "Repositories", it -> it instanceof SCMNavigatorTraitDescriptor, true, result);
+            NamedArrayList.select(all, "Repositories", SCMNavigatorTraitDescriptor.class::isInstance, true, result);
             NamedArrayList.select(all, "Within repository", NamedArrayList
                             .anyOf(NamedArrayList.withAnnotation(Discovery.class),
                                     NamedArrayList.withAnnotation(Selection.class)),

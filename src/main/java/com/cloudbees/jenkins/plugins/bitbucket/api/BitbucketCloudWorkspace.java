@@ -45,6 +45,13 @@ public class BitbucketCloudWorkspace implements BitbucketWorkspace {
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
     private Map<String, List<BitbucketHref>> links;
 
+    public BitbucketCloudWorkspace() {
+    }
+
+    public BitbucketCloudWorkspace(String name) {
+        this.name = name;
+    }
+
     @Override
     public String getUuid() {
         return uuid;
@@ -76,15 +83,8 @@ public class BitbucketCloudWorkspace implements BitbucketWorkspace {
     }
 
     @Override
-    public String getLink(String name) {
-        if (links == null) {
-            return null;
-        }
-        List<BitbucketHref> hrefs = links.get(name);
-        if (hrefs == null || hrefs.isEmpty()) {
-            return null;
-        }
-        BitbucketHref href = hrefs.get(0);
-        return href == null ? null : href.getHref();
+    public String getAvatar() {
+        return getLink("avatar");
     }
+
 }

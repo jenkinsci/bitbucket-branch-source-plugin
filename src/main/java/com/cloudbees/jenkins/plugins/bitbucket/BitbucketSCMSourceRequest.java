@@ -114,7 +114,6 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     @CheckForNull
     private Iterable<BitbucketBranch> branches;
-    // TODO private Iterable<BitbucketTag> tags;
     /**
      * The BitbucketApi that is used for the request.
      */
@@ -164,13 +163,13 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
             for (SCMHead h : includes) {
                 if (h instanceof BranchSCMHead) {
                     branchNames.add(h.getName());
-                } else if (h instanceof PullRequestSCMHead) {
-                    pullRequestNumbers.add(((PullRequestSCMHead) h).getId());
+                } else if (h instanceof PullRequestSCMHead prHead) {
+                    pullRequestNumbers.add(prHead.getId());
                     if (SCMHeadOrigin.DEFAULT.equals(h.getOrigin())) {
-                        branchNames.add(((PullRequestSCMHead) h).getOriginName());
+                        branchNames.add(prHead.getOriginName());
                     }
-                    if (((PullRequestSCMHead) h).getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-                        branchNames.add(((PullRequestSCMHead) h).getTarget().getName());
+                    if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
+                        branchNames.add(prHead.getTarget().getName());
                     }
                 } else if (h instanceof BitbucketTagSCMHead) {
                     tagNames.add(h.getName());
@@ -431,11 +430,11 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     @Override
     public void close() throws IOException {
-        if (pullRequests instanceof Closeable) {
-            ((Closeable) pullRequests).close();
+        if (pullRequests instanceof Closeable closable) {
+            closable.close();
         }
-        if (branches instanceof Closeable) {
-            ((Closeable) branches).close();
+        if (branches instanceof Closeable closable) {
+            closable.close();
         }
         super.close();
     }

@@ -23,17 +23,22 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.SCM;
@@ -812,6 +817,28 @@ class BitbucketSCMSourceTest {
 
         JenkinsLocationConfiguration.get().setUrl("https://ourjenkins.master:8443/ci");
         assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo("https://ourjenkins.master:8443/ci/");
+    }
+
+    @Test
+    void test_show_bitbucket_avatar_trait() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketSCMSource sut = new BitbucketSCMSource(client.getOwner(), client.getRepositoryName());
+
+        assertThat(sut.fetchActions(null, TaskListener.NULL))
+            .anySatisfy(action -> {
+                assertThat(action).isInstanceOfSatisfying(BitbucketRepoAvatarMetadataAction.class, repoAction -> {
+                    assertThat(repoAction.getAvatarURL()).isNull();
+                });
+            });
+
+        sut.setTraits(List.of(new ShowBitbucketAvatarTrait()));
+        assertThat(sut.fetchActions(null, TaskListener.NULL))
+            .anySatisfy(action -> {
+                assertThat(action).isInstanceOfSatisfying(BitbucketRepoAvatarMetadataAction.class, repoAction -> {
+                    assertThat(repoAction.getAvatarURL()).isNotNull();
+                });
+            });
     }
 
     @Test
