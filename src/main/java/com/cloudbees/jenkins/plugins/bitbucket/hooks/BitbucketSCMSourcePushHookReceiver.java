@@ -53,8 +53,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
     public static final String FULL_PATH = PATH + "/notify";
 
     @Override
-    public boolean process(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
-    throws IOException, ServletException {
+    public boolean process(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null && pathInfo.startsWith("/"+FULL_PATH)) {
             chain.doFilter(req, resp);

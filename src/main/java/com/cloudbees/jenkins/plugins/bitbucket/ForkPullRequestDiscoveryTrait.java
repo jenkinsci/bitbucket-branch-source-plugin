@@ -43,6 +43,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -301,7 +302,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
         protected boolean checkTrusted(@NonNull BitbucketSCMSourceRequest request, @NonNull PullRequestSCMHead head)
                 throws IOException, InterruptedException {
             if (!head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
-                return head.getRepoOwner().equalsIgnoreCase(request.getRepoOwner());
+                return StringUtils.equalsIgnoreCase(head.getRepoOwner(), request.getRepoOwner());
             }
             return false;
         }

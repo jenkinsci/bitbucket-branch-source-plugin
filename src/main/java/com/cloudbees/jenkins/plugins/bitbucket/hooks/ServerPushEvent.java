@@ -54,6 +54,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.apache.commons.lang.StringUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -82,7 +83,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             }
 
             if (obj instanceof CacheKey cacheKey) {
-                return Objects.equals(credentialsId, cacheKey.credentialsId) && refId.equals(cacheKey.refId);
+                return Objects.equals(credentialsId, cacheKey.credentialsId) && Objects.equals(refId, cacheKey.refId);
             }
 
             return false;
@@ -178,7 +179,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             for (final BitbucketServerPullRequest pullRequest : getPullRequests(src, change).values()) {
                 final BitbucketServerRepository targetRepo = pullRequest.getDestination().getRepository();
                 // check if the target of the PR is actually this source
-                if (!sourceOwnerName.equalsIgnoreCase(targetRepo.getOwnerName())
+                if (!StringUtils.equalsIgnoreCase(sourceOwnerName, targetRepo.getOwnerName())
                     || !sourceRepoName.equalsIgnoreCase(targetRepo.getRepositoryName())) {
                     continue;
                 }
@@ -279,7 +280,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
 
     @Override
     protected boolean eventMatchesRepo(BitbucketSCMSource source) {
-        return Objects.equals(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
+        return StringUtils.equalsIgnoreCase(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
     }
 
 }

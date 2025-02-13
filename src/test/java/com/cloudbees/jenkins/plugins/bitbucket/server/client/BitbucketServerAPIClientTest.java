@@ -210,7 +210,7 @@ class BitbucketServerAPIClientTest {
                 assertThat(head.getURI())
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
-                    .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/tags"));
+                    .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/tags/v0.0.0"));
     }
 
     @Issue("JENKINS-75119")

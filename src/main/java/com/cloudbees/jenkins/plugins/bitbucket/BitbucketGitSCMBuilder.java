@@ -214,7 +214,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         String scmSourceRepository = scmSource.getRepository();
         String pullRequestRepoOwner = head.getRepoOwner();
         String pullRequestRepository = head.getRepository();
-        boolean prFromTargetRepository = pullRequestRepoOwner.equalsIgnoreCase(scmSourceRepoOwner)
+        boolean prFromTargetRepository = StringUtils.equalsIgnoreCase(pullRequestRepoOwner, scmSourceRepoOwner)
             && pullRequestRepository.equalsIgnoreCase(scmSourceRepository);
         SCMRevision revision = revision();
         ChangeRequestCheckoutStrategy checkoutStrategy = head.getCheckoutStrategy();

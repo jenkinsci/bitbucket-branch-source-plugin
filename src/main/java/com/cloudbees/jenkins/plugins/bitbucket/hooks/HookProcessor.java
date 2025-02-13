@@ -35,6 +35,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
 import jenkins.util.SystemProperties;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -103,9 +104,9 @@ public abstract class HookProcessor {
                 for (SCMSource source : sources) {
                     // Search for the correct SCM source
                     if (source instanceof BitbucketSCMSource scmSource
-                            && scmSource.getRepoOwner().equalsIgnoreCase(owner)
+                            && StringUtils.equalsIgnoreCase(scmSource.getRepoOwner(), owner)
                             && scmSource.getRepository().equals(repository)
-                            && (mirrorId == null || mirrorId.equalsIgnoreCase(scmSource.getMirrorId()))) {
+                            && (mirrorId == null || StringUtils.equalsIgnoreCase(mirrorId, scmSource.getMirrorId()))) {
                         LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
                         // TODO: SCMSourceOwner.onSCMSourceUpdated is deprecated. We may explore options with an
                         //  SCMEventListener extension and firing SCMSourceEvents.

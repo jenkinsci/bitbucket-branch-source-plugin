@@ -76,7 +76,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                         sourceRepository.setScm(repository.getScm());
                     }
                     if (sourceRepository.getOwner() == null) {
-                        if (!sourceRepository.getOwnerName().equals(repository.getOwnerName())) { // i.e., a fork
+                        if (!StringUtils.equalsIgnoreCase(sourceRepository.getOwnerName(), repository.getOwnerName())) { // i.e., a fork
                             BitbucketCloudRepositoryOwner owner = new BitbucketCloudRepositoryOwner();
                             owner.setUsername(sourceRepository.getOwnerName());
                             owner.setDisplayName(this.pullRequest.getAuthorLogin());
@@ -111,8 +111,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                     destination.getRepository().setScm(repository.getScm());
                 }
                 if (destination.getRepository().getOwner() == null
-                    && destination.getRepository().getOwnerName()
-                    .equals(repository.getOwnerName())) {
+                        && StringUtils.equalsIgnoreCase(destination.getRepository().getOwnerName(), repository.getOwnerName())) {
                     destination.getRepository().setOwner(repository.getOwner());
                     destination.getRepository().setPrivate(repository.isPrivate());
                 }

@@ -58,7 +58,7 @@ abstract class AbstractSCMHeadEvent<P> extends SCMHeadEvent<P> {
         if (!isServerURLMatch(bbNav.getServerUrl())) {
             return false;
         }
-        return bbNav.getRepoOwner().equalsIgnoreCase(getRepository().getOwnerName());
+        return StringUtils.equalsIgnoreCase(bbNav.getRepoOwner(), getRepository().getOwnerName());
     }
 
     protected abstract BitbucketRepository getRepository();

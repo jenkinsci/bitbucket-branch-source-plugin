@@ -92,6 +92,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -115,7 +116,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private static final String API_BRANCHES_PATH = API_REPOSITORY_PATH + "/branches{?start,limit}";
     private static final String API_BRANCHES_FILTERED_PATH = API_REPOSITORY_PATH + "/branches{?filterText,start,limit}";
     private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit}";
-    private static final String API_TAGS_FILTERED_PATH = API_REPOSITORY_PATH + "/tags{?filterText,start,limit}";
+    private static final String API_TAG_PATH = API_REPOSITORY_PATH + "/tags/{tagName}";
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
@@ -375,11 +376,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("id", id)
                 .expand();
         String response = getRequest(url);
-        try {
-            return JsonParser.toJava(response, BitbucketServerPullRequestCanMerge.class).isCanMerge();
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        return JsonParser.toJava(response, BitbucketServerPullRequestCanMerge.class).isCanMerge();
     }
 
     /**
@@ -395,18 +392,14 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("id", id)
                 .expand();
         String response = getRequest(url);
-        try {
-            BitbucketServerPullRequest pr = JsonParser.toJava(response, BitbucketServerPullRequest.class);
-            setupClosureForPRBranch(pr);
+        BitbucketServerPullRequest pr = JsonParser.toJava(response, BitbucketServerPullRequest.class);
+        setupClosureForPRBranch(pr);
 
-            BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                    .findEndpoint(this.baseURL, BitbucketServerEndpoint.class)
-                    .orElse(null);
-            setupPullRequest(pr, endpoint);
-            return pr;
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                .findEndpoint(this.baseURL, BitbucketServerEndpoint.class)
+                .orElse(null);
+        setupPullRequest(pr, endpoint);
+        return pr;
     }
 
     /**
@@ -425,11 +418,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("repo", repositoryName)
                 .expand();
         String response = getRequest(url);
-        try {
-            return JsonParser.toJava(response, BitbucketServerRepository.class);
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        return JsonParser.toJava(response, BitbucketServerRepository.class);
     }
 
     /**
@@ -526,7 +515,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("path", path.split(Operator.PATH.getSeparator()))
                 .set("at", branchOrHash)
                 .expand();
-        int status = headRequestStatus(url);
+        int status = headRequestStatus(new HttpHead(url));
         if (HttpStatus.SC_OK == status) {
             return true;
             // Bitbucket returns UNAUTHORIZED when no credentials are provided
@@ -553,8 +542,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             logger.log(Level.FINE, "Could not find default branch for {0}/{1}",
                     new Object[]{this.owner, this.repositoryName});
             return null;
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
         }
     }
 
@@ -563,7 +550,18 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @Override
     public BitbucketServerBranch getTag(@NonNull String tagName) throws IOException, InterruptedException {
-        return getSingleTag(tagName);
+        String url = UriTemplate.fromTemplate(this.baseURL + API_TAG_PATH)
+            .set("owner", getUserCentricOwner())
+            .set("repo", repositoryName)
+            .set("tagName", tagName)
+            .expand();
+
+        String response = getRequest(url);
+        BitbucketServerBranch tag = JsonParser.toJava(response, BitbucketServerBranch.class);
+        if (tag != null) {
+            tag.setCommitClosure(new CommitClosure(tag.getRawNode()));
+        }
+        return tag;
     }
 
     /**
@@ -608,21 +606,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return branches;
     }
 
-    private BitbucketServerBranch getSingleTag(String tagName) throws IOException, InterruptedException {
-        UriTemplate template = UriTemplate
-            .fromTemplate(this.baseURL + API_TAGS_FILTERED_PATH)
-            .set("owner", getUserCentricOwner())
-            .set("repo", repositoryName)
-            .set("filterText", tagName);
-
-        BitbucketServerBranch tag = getResource(template, BitbucketServerBranches.class,
-            branch -> tagName.equals(branch.getName()));
-        if(tag != null) {
-            tag.setCommitClosure(new CommitClosure(tag.getRawNode()));
-        }
-        return tag;
-    }
-
     private BitbucketServerBranch getSingleBranch(String branchName) throws IOException, InterruptedException {
         UriTemplate template = UriTemplate
             .fromTemplate(this.baseURL + API_BRANCHES_FILTERED_PATH)
@@ -638,7 +621,9 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return br;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     **/
     @NonNull
     @Override
     public BitbucketCommit resolveCommit(@NonNull String hash) throws IOException, InterruptedException {
@@ -648,12 +633,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("repo", repositoryName)
                 .set("hash", hash)
                 .expand();
-        try {
-            String response = getRequest(url);
-            return JsonParser.toJava(response, BitbucketServerCommit.class);
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        String response = getRequest(url);
+        return JsonParser.toJava(response, BitbucketServerCommit.class);
     }
 
     /** {@inheritDoc} */
@@ -801,8 +782,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 return JsonParser.toJava(response, BitbucketServerProject.class);
             } catch (FileNotFoundException e) {
                 return null;
-            } catch (IOException e) {
-                throw new IOException("I/O error when accessing URL: " + url, e);
             }
         }
     }
@@ -833,8 +812,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             return new AvatarImage(response, System.currentTimeMillis());
         } catch (FileNotFoundException e) {
             return AvatarImage.EMPTY;
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
         }
     }
 
