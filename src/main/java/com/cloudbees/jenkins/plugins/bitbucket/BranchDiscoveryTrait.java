@@ -41,6 +41,7 @@ import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.trait.Discovery;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -243,7 +244,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                 String fullName = req.getRepoOwner() + "/" + req.getRepository();
                 for (BitbucketPullRequest pullRequest : req.getPullRequests()) {
                     BitbucketRepository source = pullRequest.getSource().getRepository();
-                    if (fullName.equalsIgnoreCase(source.getFullName())
+                    if (StringUtils.equalsIgnoreCase(fullName, source.getFullName())
                             && pullRequest.getSource().getBranch().getName().equals(head.getName())) {
                         request.listener().getLogger().println("Discard branch " + head.getName()
                                 + " because current strategy excludes branches that are also filed as a pull request");

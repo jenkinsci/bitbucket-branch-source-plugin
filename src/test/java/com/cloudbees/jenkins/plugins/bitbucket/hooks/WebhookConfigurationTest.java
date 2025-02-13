@@ -54,7 +54,7 @@ class WebhookConfigurationTest {
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8088";
         when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         BitbucketWebHook hook = whc.getHook(owner);
         assertThat(hook.getEvents()).contains(HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey());
     }
@@ -65,8 +65,8 @@ class WebhookConfigurationTest {
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8091";
         when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         when(owner.getMirrorId()).thenReturn("dummy-mirror-id");
         BitbucketWebHook hook = whc.getHook(owner);
         assertThat(hook.getEvents()).contains(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey());
@@ -78,7 +78,7 @@ class WebhookConfigurationTest {
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8089";
         when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         BitbucketWebHook hook = whc.getHook(owner);
         assertThat(hook.getEvents()).contains(HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey());
     }
@@ -89,7 +89,7 @@ class WebhookConfigurationTest {
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8090";
         when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         BitbucketWebHook hook = whc.getHook(owner);
         assertThat(hook.getEvents()).doesNotContain(HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey());
     }
@@ -100,7 +100,7 @@ class WebhookConfigurationTest {
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8090";
         when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         BitbucketWebHook hook = whc.getHook(owner);
         assertThat(hook.getEvents()).doesNotContain(HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey());
     }
@@ -111,7 +111,7 @@ class WebhookConfigurationTest {
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8087";
         when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootUrl()).thenReturn(server);
+        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         BitbucketWebHook hook = whc.getHook(owner);
         assertThat(hook.getEvents()).contains(HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey());
     }

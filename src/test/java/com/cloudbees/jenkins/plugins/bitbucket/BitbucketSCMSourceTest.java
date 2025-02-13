@@ -807,16 +807,16 @@ class BitbucketSCMSourceTest {
     void bitbucketJenkinsRootUrl_emptyDefaulted() throws Exception {
         loadBEC(testName);
         BitbucketSCMSource instance = load(testName);
-        assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo(ClassicDisplayURLProvider.get().getRoot());
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo(ClassicDisplayURLProvider.get().getRoot());
 
         // Verify that an empty custom URL keeps returning the
         // current global root URL (ending with a slash),
         // meaning "current value at the moment when we ask".
         JenkinsLocationConfiguration.get().setUrl("http://localjenkins:80");
-        assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo("http://localjenkins:80/");
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("http://localjenkins:80/");
 
         JenkinsLocationConfiguration.get().setUrl("https://ourjenkins.master:8443/ci");
-        assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo("https://ourjenkins.master:8443/ci/");
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://ourjenkins.master:8443/ci/");
     }
 
     @Test
@@ -845,28 +845,28 @@ class BitbucketSCMSourceTest {
     void bitbucketJenkinsRootUrl_goodAsIs() {
         loadBEC(testName);
         BitbucketSCMSource instance = load(testName);
-        assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo("http://jenkins.test:8080/");
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("http://jenkins.test:8080/");
     }
 
     @Test
     void bitbucketJenkinsRootUrl_normalized() {
         loadBEC(testName);
         BitbucketSCMSource instance = load(testName);
-        assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo("https://jenkins.test/");
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://jenkins.test/");
     }
 
     @Test
     void bitbucketJenkinsRootUrl_slashed() {
         loadBEC(testName);
         BitbucketSCMSource instance = load(testName);
-        assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo("https://jenkins.test/jenkins/");
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://jenkins.test/jenkins/");
     }
 
     @Test
     void bitbucketJenkinsRootUrl_notslashed() {
         loadBEC(testName);
         BitbucketSCMSource instance = load(testName);
-        assertThat(instance.getEndpointJenkinsRootUrl()).isEqualTo("https://jenkins.test/jenkins/");
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://jenkins.test/jenkins/");
     }
 
     @Test

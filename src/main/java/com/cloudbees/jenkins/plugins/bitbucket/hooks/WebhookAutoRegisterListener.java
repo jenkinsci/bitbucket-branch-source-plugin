@@ -47,6 +47,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * {@link SCMSourceOwner} item listener that traverse the list of {@link SCMSource} and register
@@ -128,7 +129,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             return;
         }
         for (BitbucketSCMSource source : sources) {
-            String rootUrl = source.getEndpointJenkinsRootUrl();
+            String rootUrl = source.getEndpointJenkinsRootURL();
             if (!rootUrl.startsWith("http://localhost") && !rootUrl.startsWith("http://unconfigured-jenkins-location")) {
                 registerHook(source);
             } else {
@@ -162,23 +163,22 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
 
         BitbucketWebHook existingHook;
-        String hookReceiverUrl =
-                source.getEndpointJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
+        String hookReceiverURL = source.getEndpointJenkinsRootURL() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
         // Check for all hooks pointing to us
         existingHook = bitbucket.getWebHooks().stream()
-            .filter(hook -> hook.getUrl() != null && hook.getUrl().startsWith(hookReceiverUrl))
-            .findFirst().orElse(null);
+                .filter(hook -> hook.getUrl() != null)
+                .filter(hook -> hook.getUrl().startsWith(hookReceiverURL))
+                .findFirst()
+                .orElse(null);
 
         WebhookConfiguration hookConfig = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
             .withTraits(source.getTraits())
             .webhookConfiguration();
-        if(existingHook == null) {
-            LOGGER.log(Level.INFO, "Registering hook for {0}/{1}",
-                    new Object[]{source.getRepoOwner(), source.getRepository()});
+        if (existingHook == null) {
+            LOGGER.log(Level.INFO, "Registering hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
             bitbucket.registerCommitWebHook(hookConfig.getHook(source));
         } else if (hookConfig.updateHook(existingHook, source)) {
-            LOGGER.log(Level.INFO, "Updating hook for {0}/{1}",
-                    new Object[]{source.getRepoOwner(), source.getRepository()});
+            LOGGER.log(Level.INFO, "Updating hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
             bitbucket.updateCommitWebHook(existingHook);
         }
     }
@@ -192,7 +192,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 BitbucketWebHook hook = null;
                 for (BitbucketWebHook h : existent) {
                     // Check if there is a hook pointing to us
-                    if (h.getUrl().startsWith(source.getEndpointJenkinsRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
+                    if (h.getUrl().startsWith(source.getEndpointJenkinsRootURL() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
                         hook = h;
                         break;
                     }
@@ -240,9 +240,9 @@ public class WebhookAutoRegisterListener extends ItemListener {
         for (SCMSourceOwner other : all) {
             if (owner != other) {
                 for(SCMSource otherSource : other.getSCMSources()) {
-                    if (otherSource instanceof BitbucketSCMSource
-                            && ((BitbucketSCMSource) otherSource).getRepoOwner().equals(repoOwner)
-                            && ((BitbucketSCMSource) otherSource).getRepository().equals(repoName)) {
+                    if (otherSource instanceof BitbucketSCMSource bbSCMSource
+                            && StringUtils.equalsIgnoreCase(bbSCMSource.getRepoOwner(), repoOwner)
+                            && bbSCMSource.getRepository().equals(repoName)) {
                         return true;
                     }
                 }

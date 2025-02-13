@@ -513,7 +513,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             listener.getLogger()
                     .format("Connecting to %s using %s%n", serverUrl, CredentialsNameProvider.name(credentials));
         }
-        try (final BitbucketSCMNavigatorRequest request = new BitbucketSCMNavigatorContext().withTraits(traits)
+        try (final BitbucketSCMNavigatorRequest request = new BitbucketSCMNavigatorContext()
+                .withTraits(traits)
                 .newRequest(this, observer)) {
             SourceFactory sourceFactory = new SourceFactory(request);
             WitnessImpl witness = new WitnessImpl(request, listener);
