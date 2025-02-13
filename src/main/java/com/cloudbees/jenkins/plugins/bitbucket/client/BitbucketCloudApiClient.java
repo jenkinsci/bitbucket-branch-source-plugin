@@ -75,6 +75,7 @@ import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -344,7 +345,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("branchOrHash", branchOrHash)
                 .set("path", path.split(Operator.PATH.getSeparator()))
                 .expand();
-        int status = headRequestStatus(url);
+        int status = headRequestStatus(new HttpHead(url));
         if (HttpStatus.SC_OK == status) {
             return true;
         } else if (HttpStatus.SC_NOT_FOUND == status) {

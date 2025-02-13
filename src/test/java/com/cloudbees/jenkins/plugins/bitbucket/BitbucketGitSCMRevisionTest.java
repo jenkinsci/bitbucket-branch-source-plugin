@@ -24,65 +24,50 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
-import hudson.Util;
 import hudson.model.TaskListener;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Stream;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.Mockito;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
-@RunWith(Parameterized.class)
-public class BitbucketGitSCMRevisionTest {
+@WithJenkins
+class BitbucketGitSCMRevisionTest {
 
-    @SuppressWarnings("unchecked")
-    @Parameters(name = "verify revision informations from {0}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] { //
-            { "branch on cloud", new BranchDiscoveryTrait(true, true), BitbucketCloudEndpoint.SERVER_URL }, //
-            { "branch on server", new BranchDiscoveryTrait(true, true), "localhost" }, //
-            { "PR on cloud", new OriginPullRequestDiscoveryTrait(2), BitbucketCloudEndpoint.SERVER_URL }, //
-            { "PR on server", new OriginPullRequestDiscoveryTrait(2), "localhost" }, //
-            { "forked on cloud", new ForkPullRequestDiscoveryTrait(2, Mockito.mock(SCMHeadAuthority.class)), BitbucketCloudEndpoint.SERVER_URL }, //
-            { "forked on server", new ForkPullRequestDiscoveryTrait(2, Mockito.mock(SCMHeadAuthority.class)), "localhost" }, //
-            { "Tags on cloud", new TagDiscoveryTrait(), BitbucketCloudEndpoint.SERVER_URL }, //
-            { "Tags on server", new TagDiscoveryTrait(), "localhost" } //
-        });
+    private static JenkinsRule j;
+
+    @BeforeAll
+    static void init(JenkinsRule rule) {
+        j = rule;
     }
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
-
-    private final SCMSourceTrait trait;
-    private final String serverURL;
-
-    public BitbucketGitSCMRevisionTest(String testName, SCMSourceTrait trait, String serverURL) {
-        this.trait = trait;
-        this.serverURL = serverURL;
+    private static Stream<Arguments> revisionData() {
+        return Stream.of(Arguments.of("branch on cloud", new BranchDiscoveryTrait(true, true), BitbucketCloudEndpoint.SERVER_URL), //
+                Arguments.of("branch on server", new BranchDiscoveryTrait(true, true), "localhost"), //
+                Arguments.of("PR on cloud", new OriginPullRequestDiscoveryTrait(2), BitbucketCloudEndpoint.SERVER_URL), //
+                Arguments.of("PR on server", new OriginPullRequestDiscoveryTrait(2), "localhost"), //
+                Arguments.of("forked on cloud", new ForkPullRequestDiscoveryTrait(2, mock(SCMHeadAuthority.class)), BitbucketCloudEndpoint.SERVER_URL), //
+                Arguments.of("forked on server", new ForkPullRequestDiscoveryTrait(2, mock(SCMHeadAuthority.class)), "localhost"), //
+                Arguments.of("Tags on cloud", new TagDiscoveryTrait(), BitbucketCloudEndpoint.SERVER_URL), //
+                Arguments.of("Tags on server", new TagDiscoveryTrait(), "localhost") //
+        );
     }
 
-    @Before
-    public void setup() {
-        BitbucketMockApiFactory.clear();
-    }
-
-    @Test
-    public void verify_revision_informations_are_valued() throws Exception {
+    @ParameterizedTest(name = "verify revision informations from {0}")
+    @MethodSource("revisionData")
+    void verify_revision_informations_are_valued(String testName, SCMSourceTrait trait, String serverURL) throws Exception {
         BitbucketMockApiFactory.add(serverURL, getApiMockClient(serverURL));
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setServerUrl(serverURL);
@@ -91,18 +76,17 @@ public class BitbucketGitSCMRevisionTest {
         TaskListener listener = BitbucketClientMockUtils.getTaskListenerMock();
         Set<SCMHead> heads = source.fetch(listener);
 
-        assertThat(heads.size(), Matchers.greaterThan(0));
+        assertThat(heads).isNotEmpty();
 
         for (SCMHead head : heads) {
             if (head instanceof BranchSCMHead) {
                 BitbucketGitSCMRevision revision = (BitbucketGitSCMRevision) source.retrieve(head, listener);
                 assertRevision(revision);
             } else if (head instanceof PullRequestSCMHead) {
-                @SuppressWarnings("unchecked")
                 PullRequestSCMRevision revision = (PullRequestSCMRevision) source.retrieve(head, listener);
                 assertRevision((BitbucketGitSCMRevision) revision.getPull());
                 assertRevision((BitbucketGitSCMRevision) revision.getTarget());
-            } else if(head instanceof TagSCMHead) {
+            } else if (head instanceof TagSCMHead) {
                 BitbucketTagSCMRevision revision = (BitbucketTagSCMRevision) source.retrieve(head, listener);
                 assertRevision(revision);
             }
@@ -110,9 +94,15 @@ public class BitbucketGitSCMRevisionTest {
     }
 
     private void assertRevision(BitbucketGitSCMRevision revision) {
-        assertThat("commit message is not valued for revision " + revision.getHash(), Util.fixEmptyAndTrim(revision.getMessage()), notNullValue());
-        assertThat("commit author is not valued for revision " + revision.getHash(), Util.fixEmptyAndTrim(revision.getAuthor()), notNullValue());
-        assertThat("commit date is not valued for revision " + revision.getHash(), revision.getDate(), notNullValue());
+        assertThat(revision.getMessage())
+            .describedAs("commit message is not valued for revision {}", revision.getHash())
+            .isNotEmpty();
+        assertThat(revision.getAuthor())
+            .describedAs("commit author is not valued for revision {}", revision.getHash())
+            .isNotEmpty();
+        assertThat(revision.getDate())
+            .describedAs("commit date is not valued for revision {}", revision.getHash())
+            .isNotNull();
     }
 
 }
