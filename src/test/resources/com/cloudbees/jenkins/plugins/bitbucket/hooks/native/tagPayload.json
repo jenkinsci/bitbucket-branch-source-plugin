@@ -1,0 +1,126 @@
+{
+  "actor": {
+    "active": true,
+    "displayName": "Antonio Muniz",
+    "emailAddress": "amuniz@acme.com",
+    "id": 2,
+    "links": {
+      "self": [
+        {
+          "href": "http://localhost:7990/users/amuniz"
+        }
+      ]
+    },
+    "name": "amuniz",
+    "slug": "amuniz",
+    "type": "NORMAL"
+  },
+  "changes": [
+    {
+      "fromHash": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+      "ref": {
+        "displayId": "v0.0.0",
+        "id": "refs/tags/v0.0.0",
+        "type": "TAG"
+      },
+      "refId": "refs/heads/main",
+      "toHash": "ad64eb8f05364f825e8557a7a672cc576baffb9a",
+      "type": "ADD"
+    }
+  ],
+  "commits": [
+    {
+      "author": {
+        "active": true,
+        "displayName": "Antonio Muniz",
+        "emailAddress": "amuniz@acme.com",
+        "id": 2,
+        "links": {
+          "self": [
+            {
+              "href": "http://localhost:7990/users/amuniz"
+            }
+          ]
+        },
+        "name": "amuniz",
+        "slug": "amuniz",
+        "type": "NORMAL"
+      },
+      "authorTimestamp": 1537538991000,
+      "committer": {
+        "active": true,
+        "displayName": "Antonio Muniz",
+        "emailAddress": "amuniz@acme.com",
+        "id": 2,
+        "links": {
+          "self": [
+            {
+              "href": "http://localhost:7990/users/amuniz"
+            }
+          ]
+        },
+        "name": "amuniz",
+        "slug": "amuniz",
+        "type": "NORMAL"
+      },
+      "committerTimestamp": 1537538991000,
+      "displayId": "9fdd7b96d3f",
+      "id": "9fdd7b96d3f5c276d0b9e0bf38c879eb112d889a",
+      "message": "source-2: Wed 13 Nov 2024 21:54:36 AEST",
+      "parents": [
+        {
+          "displayId": "ae995d7a370",
+          "id": "ae995d7a37069d0988462a9c92828971e8a42b5d"
+        }
+      ]
+    }
+  ],
+  "date": "2024-11-27T01:34:45+0000",
+  "eventKey": "repo:refs_changed",
+  "repository": {
+    "archived": false,
+    "forkable": true,
+    "hierarchyId": "050ab73089457a2ae375",
+    "id": 1,
+    "links": {
+      "clone": [
+        {
+          "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+          "name": "ssh"
+        },
+        {
+          "href": "http://localhost:7990/scm/amuniz/test-repos.git",
+          "name": "http"
+        }
+      ],
+      "self": [
+        {
+          "href": "http://localhost:7990/projects/AMUNIZ/repos/test-repos/browse"
+        }
+      ]
+    },
+    "name": "test-repos",
+    "project": {
+      "id": 1,
+      "key": "AMUNIZ",
+      "links": {
+        "self": [
+          {
+            "href": "http://localhost:7990/projects/AMUNIZ"
+          }
+        ]
+      },
+      "name": "prj",
+      "public": false,
+      "type": "NORMAL"
+    },
+    "public": false,
+    "scmId": "git",
+    "slug": "test-repos",
+    "state": "AVAILABLE",
+    "statusMessage": "Available"
+  },
+  "toCommit": {
+    "_comment": "NOT real payload!"
+  }
+}

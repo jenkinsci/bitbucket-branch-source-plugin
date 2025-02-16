@@ -23,8 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,13 +42,15 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 class NativeServerPushHookProcessorTest {
 
-    private static final String SERVER_URL = "http://localhost:7990/";
+    private static final String SERVER_URL = "http://localhost:7990";
     private static final String MIRROR_ID = "ABCD-1234-EFGH-5678";
     private NativeServerPushHookProcessor sut;
     private SCMHeadEvent<?> scmEvent;
@@ -78,6 +83,27 @@ class NativeServerPushHookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new BranchSCMHead("main"));
+    }
+
+    @WithJenkins
+    @Test
+    void test_tag_timestamp(JenkinsRule rule) throws Exception {
+        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/tagPayload.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        assertThat(scmEvent)
+            .isInstanceOf(ServerPushEvent.class)
+            .isNotNull();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
+        scmSource.setServerUrl(SERVER_URL);
+
+        BitbucketMockApiFactory.add(SERVER_URL, BitbucketIntegrationClientFactory.getApiMockClient(SERVER_URL));
+
+        Map<SCMHead, SCMRevision> result = scmEvent.heads(scmSource);
+        assertThat(result.keySet())
+            .hasSize(1)
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BitbucketTagSCMHead("v0.0.0", 1537538991000L));
     }
 
     @Test

@@ -145,8 +145,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             String owner = src.getRepoOwner();
             String repository = src.getRepository();
             String serverUrl = src.getServerUrl();
-            StandardCredentials credentials;
-            credentials = lookupScanCredentials(src.getOwner(), credentialsId, serverUrl);
+            StandardCredentials credentials = lookupScanCredentials(src.getOwner(), credentialsId, serverUrl);
 
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
