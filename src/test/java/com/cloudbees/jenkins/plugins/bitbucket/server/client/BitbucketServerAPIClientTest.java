@@ -30,7 +30,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IAuditable;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import hudson.ProxyConfiguration;
 import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.InputStream;
@@ -38,14 +40,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
@@ -72,6 +74,7 @@ import static org.mockito.Mockito.verify;
 @WithJenkins
 class BitbucketServerAPIClientTest {
 
+    @SuppressWarnings("unused")
     private static JenkinsRule j;
 
     @BeforeAll
@@ -90,7 +93,7 @@ class BitbucketServerAPIClientTest {
 
         client.postBuildStatus(status);
 
-        HttpRequestBase request = extractRequest(client);
+        HttpRequest request = extractRequest(client);
         assertThat(request).isNotNull()
             .isInstanceOf(HttpPost.class);
         try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
@@ -99,12 +102,12 @@ class BitbucketServerAPIClientTest {
         }
     }
 
-    private HttpRequestBase extractRequest(BitbucketApi client) {
-        assertThat(client).isInstanceOf(IRequestAudit.class);
-        IRequestAudit clientAudit = ((IRequestAudit) client).getAudit();
+    private HttpRequest extractRequest(BitbucketApi client) {
+        assertThat(client).isInstanceOf(IAuditable.class);
+        IRequestAudit audit = ((IAuditable) client).getAudit();
 
-        ArgumentCaptor<HttpRequestBase> captor = ArgumentCaptor.forClass(HttpRequestBase.class);
-        verify(clientAudit).request(captor.capture());
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(audit).request(captor.capture());
         return captor.getValue();
     }
 
@@ -118,15 +121,17 @@ class BitbucketServerAPIClientTest {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
         assertThat(client.checkPathExists("feature/pipeline", "folder/Jenkinsfile")).isTrue();
 
-        HttpRequestBase request = extractRequest(client);
+        HttpRequest request = extractRequest(client);
         assertThat(request).isNotNull()
-            .isInstanceOfSatisfying(HttpHead.class, head -> {
-                    assertThat(head.getURI())
-                        .hasScheme("https")
-                        .hasHost("acme.bitbucket.org")
-                        .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/browse/folder/Jenkinsfile")
-                        .hasQuery("at=feature/pipeline");
-            });
+            .isInstanceOf(HttpHead.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(HttpHead.class))
+            .satisfies(head ->
+                assertThat(head.getUri())
+                    .hasScheme("https")
+                    .hasHost("acme.bitbucket.org")
+                    .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/browse/folder/Jenkinsfile")
+                    .hasQuery("at=feature/pipeline")
+            );
     }
 
     @Test
@@ -134,10 +139,12 @@ class BitbucketServerAPIClientTest {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
         assertThat(client.checkPathExists("feature/pipeline", "Jenkinsfile")).isTrue();
 
-        HttpRequestBase request = extractRequest(client);
+        HttpRequest request = extractRequest(client);
         assertThat(request).isNotNull()
-            .isInstanceOfSatisfying(HttpHead.class, head ->
-                assertThat(head.getURI())
+            .isInstanceOf(HttpHead.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(HttpHead.class))
+            .satisfies(head ->
+                assertThat(head.getUri())
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
                     .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/browse/Jenkinsfile"));
@@ -188,10 +195,12 @@ class BitbucketServerAPIClientTest {
         BitbucketServerAPIClient client = (BitbucketServerAPIClient) BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
 
         client.getBranch("feature/BB-1");
-        HttpRequestBase request = extractRequest(client);
+        HttpRequest request = extractRequest(client);
         assertThat(request).isNotNull()
-            .isInstanceOfSatisfying(HttpGet.class, head ->
-                assertThat(head.getURI())
+            .isInstanceOf(HttpGet.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(HttpGet.class))
+            .satisfies(head ->
+                assertThat(head.getUri())
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
                     .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/branches"));
@@ -204,10 +213,12 @@ class BitbucketServerAPIClientTest {
         BitbucketServerAPIClient client = (BitbucketServerAPIClient) BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
 
         client.getTag("v0.0.0");
-        HttpRequestBase request = extractRequest(client);
+        HttpRequest request = extractRequest(client);
         assertThat(request).isNotNull()
-            .isInstanceOfSatisfying(HttpGet.class, head ->
-                assertThat(head.getURI())
+            .isInstanceOf(HttpGet.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(HttpGet.class))
+            .satisfies(head ->
+                assertThat(head.getUri())
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
                     .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/tags/v0.0.0"));
@@ -229,12 +240,13 @@ class BitbucketServerAPIClientTest {
     @Issue("JENKINS-75160")
     @Test
     void test_no_proxy_configurations() throws Exception {
+        String serverURL = "https://git.internaldomain.com:7990/bitbucket";
         ProxyConfiguration proxyConfiguration = spy(new ProxyConfiguration("proxy.lan", 8080, null, null, "*.internaldomain.com"));
 
         j.jenkins.setProxy(proxyConfiguration);
 
         AtomicReference<HttpClientBuilder> builderReference = new AtomicReference<>();
-        try(BitbucketApi client = new BitbucketServerAPIClient("https://git.internaldomain.com:7990/bitbucket", "amuniz", "test-repos", mock(BitbucketAuthenticator.class), false) {
+        try(BitbucketApi client = new BitbucketServerAPIClient(serverURL, "amuniz", "test-repos", mock(BitbucketAuthenticator.class), false, BitbucketServerWebhookImplementation.NATIVE) {
             @Override
             protected void setClientProxyParams(HttpClientBuilder builder) {
                 builderReference.set(spy(builder));
