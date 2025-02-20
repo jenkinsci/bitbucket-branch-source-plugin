@@ -29,11 +29,17 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerChange;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.google.common.base.Ascii;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -48,12 +54,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.apache.commons.lang.StringUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -82,7 +90,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             }
 
             if (obj instanceof CacheKey cacheKey) {
-                return Objects.equals(credentialsId, cacheKey.credentialsId) && refId.equals(cacheKey.refId);
+                return Objects.equals(credentialsId, cacheKey.credentialsId) && Objects.equals(refId, cacheKey.refId);
             }
 
             return false;
@@ -138,7 +146,19 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
                         : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
                 result.put(head, revision);
             } else if ("TAG".equals(refType)) {
-                SCMHead head = new BitbucketTagSCMHead(change.getRef().getDisplayId(), 0);
+                String tagName = change.getRef().getDisplayId();
+                // FIXME slow workaround until a real example of server tag payload has been provided
+                // I expect in the payload there is also the referred commit.
+                long tagTimestamp;
+                try (BitbucketApi client = getClient(src)) {
+//                    BitbucketBranch tag = client.getTag(tagName); // requires two API call and does not return the tag timestamp
+                    BitbucketCommit tag = client.resolveCommit(change.getFromHash());
+                    tagTimestamp = tag != null ? tag.getDateMillis() : 0;
+                } catch (InterruptedException | IOException e) {
+                    LOGGER.log(Level.SEVERE, "Fail to retrive the timestamp for tag event {0}", tagName);
+                    tagTimestamp = 0;
+                }
+                SCMHead head = new BitbucketTagSCMHead(tagName, tagTimestamp);
                 final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
                         : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
                 result.put(head, revision);
@@ -147,6 +167,19 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
                         new Object[] { change.getRef().getType(), change.getRef().getDisplayId() });
             }
         }
+    }
+
+    protected BitbucketApi getClient(BitbucketSCMSource src) {
+        String serverURL = src.getServerUrl();
+
+        StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
+            serverURL,
+            src.getOwner(),
+            src.getCredentialsId(),
+            StandardCredentials.class
+        );
+        BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
+        return BitbucketApiFactory.newInstance(serverURL, authenticator, src.getRepoOwner(), null, src.getRepository());
     }
 
     private void addPullRequests(BitbucketSCMSource src, Map<SCMHead, SCMRevision> result) throws InterruptedException {
@@ -178,7 +211,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             for (final BitbucketServerPullRequest pullRequest : getPullRequests(src, change).values()) {
                 final BitbucketServerRepository targetRepo = pullRequest.getDestination().getRepository();
                 // check if the target of the PR is actually this source
-                if (!sourceOwnerName.equalsIgnoreCase(targetRepo.getOwnerName())
+                if (!StringUtils.equalsIgnoreCase(sourceOwnerName, targetRepo.getOwnerName())
                     || !sourceRepoName.equalsIgnoreCase(targetRepo.getRepositoryName())) {
                     continue;
                 }
@@ -279,7 +312,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
 
     @Override
     protected boolean eventMatchesRepo(BitbucketSCMSource source) {
-        return Objects.equals(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
+        return StringUtils.equalsIgnoreCase(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
     }
 
 }

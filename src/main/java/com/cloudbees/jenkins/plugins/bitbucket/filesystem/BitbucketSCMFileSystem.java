@@ -56,6 +56,7 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.apache.commons.lang.StringUtils;
 
 public class BitbucketSCMFileSystem extends SCMFileSystem {
 
@@ -145,8 +146,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             String owner = src.getRepoOwner();
             String repository = src.getRepository();
             String serverUrl = src.getServerUrl();
-            StandardCredentials credentials;
-            credentials = lookupScanCredentials(src.getOwner(), credentialsId, serverUrl);
+            StandardCredentials credentials = lookupScanCredentials(src.getOwner(), credentialsId, serverUrl);
 
             BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
 
@@ -164,7 +164,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                 if (BitbucketApiUtils.isCloud(apiClient)) {
                     // support lightweight checkout for branches with same owner and repository
                     if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
-                        prHead.getRepoOwner().equals(src.getRepoOwner()) &&
+                        StringUtils.equalsIgnoreCase(prHead.getRepoOwner(), src.getRepoOwner()) &&
                         prHead.getRepository().equals(src.getRepository())) {
                         ref = prHead.getOriginName();
                     } else {

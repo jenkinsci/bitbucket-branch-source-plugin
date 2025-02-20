@@ -148,7 +148,7 @@ public class WebhookConfiguration {
             boolean updated = false;
 
             String serverUrl = owner.getServerUrl();
-            String url = getNativeServerWebhookUrl(serverUrl, owner.getEndpointJenkinsRootUrl());
+            String url = getNativeServerWebhookUrl(serverUrl, owner.getEndpointJenkinsRootURL());
 
             if (!url.equals(serverHook.getUrl())) {
                 serverHook.setUrl(url);
@@ -174,7 +174,7 @@ public class WebhookConfiguration {
 
     public BitbucketWebHook getHook(BitbucketSCMSource owner) {
         final String serverUrl = owner.getServerUrl();
-        final String rootUrl = owner.getEndpointJenkinsRootUrl();
+        final String rootUrl = owner.getEndpointJenkinsRootURL();
 
         if (BitbucketApiUtils.isCloud(serverUrl)) {
             BitbucketRepositoryHook hook = new BitbucketRepositoryHook();

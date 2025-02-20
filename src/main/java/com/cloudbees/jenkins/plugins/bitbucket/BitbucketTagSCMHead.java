@@ -38,10 +38,10 @@ public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Constructor.
+     * Default constructor.
      *
      * @param tagName        the tag name
-     * @param timestamp      the timestamp of tag
+     * @param timestamp      the timestamp of annotated tag or the commit is referring to
      */
     public BitbucketTagSCMHead(@NonNull String tagName, long timestamp) {
         super(tagName, timestamp);

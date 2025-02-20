@@ -39,6 +39,7 @@ import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import org.apache.commons.lang.StringUtils;
 
 final class PushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> {
 
@@ -62,7 +63,7 @@ final class PushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> {
         if (!isServerURLMatch(src.getServerUrl())) {
             return Collections.emptyMap();
         }
-        if (!src.getRepoOwner().equalsIgnoreCase(getPayload().getRepository().getOwnerName())) {
+        if (!StringUtils.equalsIgnoreCase(src.getRepoOwner(), getPayload().getRepository().getOwnerName())) {
             return Collections.emptyMap();
         }
         if (!src.getRepository().equalsIgnoreCase(getPayload().getRepository().getRepositoryName())) {

@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -91,7 +92,7 @@ public class BitbucketIntegrationClientFactory {
         private final IRequestAudit audit;
 
         private BitbucketServerIntegrationClient(String payloadRootPath, String baseURL, String owner, String repositoryName) {
-            super(baseURL, owner, repositoryName, mock(BitbucketAuthenticator.class), false);
+            super(baseURL, owner, repositoryName, mock(BitbucketAuthenticator.class), false, BitbucketServerWebhookImplementation.NATIVE);
 
             if (payloadRootPath == null) {
                 this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;

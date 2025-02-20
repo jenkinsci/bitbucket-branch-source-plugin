@@ -38,8 +38,6 @@ public class BitbucketServerProject implements BitbucketTeam {
     @JsonProperty("name")
     private String displayName;
 
-    private String avatar;
-
     @JsonProperty("links")
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
     private Map<String,List<BitbucketHref>> links;
@@ -61,6 +59,6 @@ public class BitbucketServerProject implements BitbucketTeam {
 
     @Override
     public String getAvatar() {
-        return avatar == null ? getLink("self") + "/avatar.png" : avatar;
+        return getLink("self") + "/avatar.png";
     }
 }

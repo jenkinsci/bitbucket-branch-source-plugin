@@ -373,7 +373,7 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @NonNull
-    public String getEndpointJenkinsRootUrl() {
+    public String getEndpointJenkinsRootURL() {
         return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
     }
 
@@ -692,10 +692,10 @@ public class BitbucketSCMSource extends SCMSource {
                     pull.getSource().getRepository().getFullName(),
                     originalBranchName
             );
-            boolean fork = !fullName.equalsIgnoreCase(pull.getSource().getRepository().getFullName());
+            boolean fork = !StringUtils.equalsIgnoreCase(fullName, pull.getSource().getRepository().getFullName());
             String pullRepoOwner = pull.getSource().getRepository().getOwnerName();
             String pullRepository = pull.getSource().getRepository().getRepositoryName();
-            final BitbucketApi pullBitbucket = fork && BitbucketApiUtils.isCloud(originBitbucket)
+            final BitbucketApi client = fork && BitbucketApiUtils.isCloud(originBitbucket)
                     ? BitbucketApiFactory.newInstance(
                     getServerUrl(),
                     authenticator(),
@@ -731,8 +731,8 @@ public class BitbucketSCMSource extends SCMSource {
                             // use branch instead of commit to postpone closure initialisation
                             return new BranchHeadCommit(pull.getSource().getBranch());
                         },  //
-                            new BitbucketProbeFactory<>(pullBitbucket, request), //
-                            new BitbucketRevisionFactory<BitbucketCommit>(pullBitbucket) {
+                            new BitbucketProbeFactory<>(client, request), //
+                            new BitbucketRevisionFactory<BitbucketCommit>(client) {
                                 @NonNull
                                 @Override
                                 public SCMRevision create(@NonNull SCMHead head, @Nullable BitbucketCommit sourceCommit)
@@ -1172,7 +1172,7 @@ public class BitbucketSCMSource extends SCMSource {
         SCMSourceOwner owner = getOwner();
         if (owner instanceof Actionable actionable) {
             for (BitbucketDefaultBranch p : actionable.getActions(BitbucketDefaultBranch.class)) {
-                if (StringUtils.equals(getRepoOwner(), p.getRepoOwner())
+                if (StringUtils.equalsIgnoreCase(getRepoOwner(), p.getRepoOwner())
                         && StringUtils.equals(repository, p.getRepository())
                         && StringUtils.equals(p.getDefaultBranch(), head.getName())) {
                     result.add(new PrimaryInstanceMetadataAction());
@@ -1202,7 +1202,7 @@ public class BitbucketSCMSource extends SCMSource {
     @NonNull
     public SCMHeadOrigin originOf(@NonNull String repoOwner, @NonNull String repository) {
         if (this.repository.equalsIgnoreCase(repository)) {
-            if (this.repoOwner.equalsIgnoreCase(repoOwner)) {
+            if (StringUtils.equalsIgnoreCase(this.repoOwner, repoOwner)) {
                 return SCMHeadOrigin.DEFAULT;
             }
             return new SCMHeadOrigin.Fork(repoOwner);

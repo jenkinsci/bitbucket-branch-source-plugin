@@ -28,26 +28,18 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClient
 import java.io.FileNotFoundException;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-@WithJenkins
 class BitbucketSCMFileTest {
 
     @SuppressWarnings("unused")
     private static JenkinsRule j;
-
-    @BeforeAll
-    static void init(JenkinsRule rule) {
-        j = rule;
-    }
 
     @Issue("JENKINS-75157")
     @Test

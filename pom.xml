@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.5</version>
+    <version>5.7</version>
     <relativePath />
   </parent>
 
@@ -26,14 +26,14 @@
   </licenses>
 
   <properties>
-    <revision>934.4.3</revision>
+    <revision>935.0.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
     <!--jenkins.version>${jenkins.baseline}.1</jenkins.version-->
     <!-- REMOVE -->
     <jenkins.version>2.495</jenkins.version>
-    <hpi.compatibleSinceVersion>934.0</hpi.compatibleSinceVersion>
+    <hpi.compatibleSinceVersion>935.0.0</hpi.compatibleSinceVersion>
     <tagNameFormat>@{project.version}</tagNameFormat>
     <!-- because eclipse generate a JUnit5 run configuration with placeholder not replaced in the jvm argument section! -->
     <surefire.forkNumber>1</surefire.forkNumber>
@@ -70,7 +70,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>4023.va_eeb_b_4e45f07</version>
+        <version>4136.vca_c3202a_7fd1</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -205,7 +205,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.21.1</version>
+              <version>10.21.2</version>
             </dependency>
           </dependencies>
         </plugin>

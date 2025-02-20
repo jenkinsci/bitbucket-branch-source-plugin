@@ -57,7 +57,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -287,15 +286,14 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         return new ClosingConnectionInputStream(response, httpget, getConnectionManager());
     }
 
-    protected int headRequestStatus(String path) throws IOException {
-        HttpHead httpHead = new HttpHead(path);
-        try (CloseableHttpResponse response = executeMethod(httpHead)) {
+    protected int headRequestStatus(HttpRequestBase request) throws IOException {
+        try (CloseableHttpResponse response = executeMethod(request)) {
             EntityUtils.consume(response.getEntity());
             return response.getStatusLine().getStatusCode();
         } catch (IOException e) {
-            throw new IOException("Communication error for url: " + path, e);
+            throw new IOException("Communication error for url: " + request, e);
         } finally {
-            release(httpHead);
+            release(request);
         }
     }
 
