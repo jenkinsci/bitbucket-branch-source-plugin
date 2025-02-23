@@ -84,16 +84,6 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         this.authenticator = authenticator;
     }
 
-    protected String truncateMiddle(@CheckForNull String value, int maxLength) {
-        int length = StringUtils.length(value);
-        if (length > maxLength) {
-            int halfLength = (maxLength - 3) / 2;
-            return StringUtils.left(value, halfLength) + "..." + StringUtils.substring(value, -halfLength);
-        } else {
-            return value;
-        }
-    }
-
     protected BitbucketRequestException buildResponseException(CloseableHttpResponse response, String errorMessage) {
         String headers = StringUtils.join(response.getAllHeaders(), "\n");
         String message = String.format("HTTP request error.%nStatus: %s%nResponse: %s%n%s", response.getStatusLine(), errorMessage, headers);

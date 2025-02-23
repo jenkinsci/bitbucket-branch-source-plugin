@@ -60,6 +60,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -70,8 +71,6 @@ import org.mockito.ArgumentCaptor;
 import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -90,20 +89,48 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         URL localJenkinsURL = new URL("http://example.com:" + r.getURL().getPort() + r.contextPath + "/");
         JenkinsLocationConfiguration.get().setUrl(localJenkinsURL.toString());
 
+        String serverURL = BitbucketCloudEndpoint.SERVER_URL;
+
         BitbucketBuildStatusNotificationsTrait trait = traitCustomizer.apply(new BitbucketBuildStatusNotificationsTrait());
-        WorkflowRun build = prepareBuildForNotification(r, trait);
+        WorkflowRun build = prepareBuildForNotification(r, trait, serverURL);
         doReturn(buildResult).when(build).getResult();
 
         FilePath workspace = r.jenkins.getWorkspaceFor(build.getParent());
 
-        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, apiClient);
+        BitbucketMockApiFactory.add(serverURL, apiClient);
 
         JobCheckoutListener listener = new JobCheckoutListener();
         listener.onCheckout(build, null, workspace, taskListener, null, SCMRevisionState.NONE);
 
         ArgumentCaptor<BitbucketBuildStatus> captor = ArgumentCaptor.forClass(BitbucketBuildStatus.class);
         verify(apiClient).postBuildStatus(captor.capture());
-        assertThat(captor.getValue().getState(), is(expectedStatus.name()));
+        assertThat(captor.getValue().getState()).isEqualTo(expectedStatus.name());
+    }
+
+    @Test
+    void test_status_notification_for_given_build_result(@NonNull JenkinsRule r) throws Exception {
+        StreamBuildListener taskListener = new StreamBuildListener(System.out, StandardCharsets.UTF_8);
+        URL jenkinsURL = new URL("http://example.com:" + r.getURL().getPort() + r.contextPath + "/");
+        JenkinsLocationConfiguration.get().setUrl(jenkinsURL.toString());
+
+        String serverURL = "https://acme.bitbucket.org";
+
+        BitbucketBuildStatusNotificationsTrait trait = new BitbucketBuildStatusNotificationsTrait();
+        trait.setUseReadableNotificationIds(true);
+        WorkflowRun build = prepareBuildForNotification(r, trait, serverURL);
+        doReturn(Result.SUCCESS).when(build).getResult();
+
+        FilePath workspace = r.jenkins.getWorkspaceFor(build.getParent());
+
+        BitbucketApi apiClient = mock(BitbucketServerAPIClient.class);
+        BitbucketMockApiFactory.add(serverURL, apiClient);
+
+        JobCheckoutListener listener = new JobCheckoutListener();
+        listener.onCheckout(build, null, workspace, taskListener, null, SCMRevisionState.NONE);
+
+        ArgumentCaptor<BitbucketBuildStatus> captor = ArgumentCaptor.forClass(BitbucketBuildStatus.class);
+        verify(apiClient).postBuildStatus(captor.capture());
+        assertThat(captor.getValue().getKey()).isEqualTo("P/BRANCH-JOB");
     }
 
     private static Stream<Arguments> buildStatusProvider() {
@@ -128,8 +155,9 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         );
     }
 
-    private WorkflowRun prepareBuildForNotification(@NonNull JenkinsRule r, @NonNull SCMSourceTrait trait) throws Exception {
+    private WorkflowRun prepareBuildForNotification(@NonNull JenkinsRule r, @NonNull SCMSourceTrait trait, @NonNull String serverURL) throws Exception {
         BitbucketSCMSource scmSource = new BitbucketSCMSource("repoOwner", "repository");
+        scmSource.setServerUrl(serverURL);
         scmSource.setTraits(List.of(trait));
 
         WorkflowMultiBranchProject project = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");

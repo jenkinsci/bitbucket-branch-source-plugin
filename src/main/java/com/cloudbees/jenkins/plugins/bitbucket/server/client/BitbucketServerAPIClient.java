@@ -87,6 +87,7 @@ import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.impl.avatars.AvatarImage;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
@@ -99,6 +100,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang.StringUtils.abbreviate;
 
 /**
  * Bitbucket API client.
@@ -493,7 +495,12 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     @Override
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
         BitbucketServerBuildStatus newStatus = new BitbucketServerBuildStatus(status);
-        newStatus.setName(truncateMiddle(newStatus.getName(), 255));
+        newStatus.setName(abbreviate(newStatus.getName(), 255));
+
+        String key = status.getKey();
+        if (StringUtils.length(key) > 255) {
+            newStatus.setKey(abbreviate(key, 255 - 33) + '/' + DigestUtils.md5Hex(key));
+        }
 
         String url = UriTemplate.fromTemplate(this.baseURL + API_COMMIT_STATUS_PATH)
                 .set("owner", getUserCentricOwner())

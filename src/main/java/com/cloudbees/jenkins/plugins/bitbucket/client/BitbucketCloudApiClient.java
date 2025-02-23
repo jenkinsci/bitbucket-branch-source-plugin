@@ -84,6 +84,7 @@ import org.apache.http.message.BasicNameValuePair;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.apache.commons.lang.StringUtils.abbreviate;
 
 public class BitbucketCloudApiClient extends AbstractBitbucketApi implements BitbucketApi {
 
@@ -610,7 +611,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @Override
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
         BitbucketBuildStatus newStatus = new BitbucketBuildStatus(status);
-        newStatus.setName(truncateMiddle(newStatus.getName(), 255));
+        newStatus.setName(abbreviate(newStatus.getName(), 255));
 
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commit/{hash}/statuses/build")
                 .set("owner", owner)

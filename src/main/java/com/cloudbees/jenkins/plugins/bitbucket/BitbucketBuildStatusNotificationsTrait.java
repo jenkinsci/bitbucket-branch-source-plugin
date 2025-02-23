@@ -44,6 +44,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     private boolean sendSuccessNotificationForUnstableBuild;
     private boolean sendStoppedNotificationForAbortBuild;
     private boolean disableNotificationForNotBuildJobs;
+    private boolean useReadableNotificationIds = false;
     // seems that this attribute as been moved out to plugin skip-notifications-trait-plugin
     @SuppressFBWarnings("UUF_UNUSED_FIELD")
     private transient boolean disableNotifications;
@@ -110,14 +111,30 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     }
 
     /**
+     * Use a readable id as key for the build notification status.
+     *
+     * @return if will not hash the generated key of the build notification
+     *         status.
+     */
+    public boolean getUseReadableNotificationIds() {
+        return useReadableNotificationIds;
+    }
+
+    @DataBoundSetter
+    public void setUseReadableNotificationIds(boolean useReadableNotificationIds) {
+        this.useReadableNotificationIds = useReadableNotificationIds;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         if (context instanceof BitbucketSCMSourceContext scmContext) {
-            scmContext.withSendStopNotificationForNotBuildJobs(getDisableNotificationForNotBuildJobs());
-            scmContext.withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild());
-            scmContext.withSendStoppedNotificationForAbortBuild(getSendStoppedNotificationForAbortBuild());
+            scmContext.withSendStopNotificationForNotBuildJobs(getDisableNotificationForNotBuildJobs())
+                .withSendSuccessNotificationForUnstableBuild(getSendSuccessNotificationForUnstableBuild())
+                .withSendStoppedNotificationForAbortBuild(getSendStoppedNotificationForAbortBuild())
+                .withUseReadableNotificationIds(getUseReadableNotificationIds());
         }
     }
 

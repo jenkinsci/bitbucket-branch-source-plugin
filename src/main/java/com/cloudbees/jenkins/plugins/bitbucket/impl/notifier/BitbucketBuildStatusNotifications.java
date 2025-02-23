@@ -58,6 +58,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
@@ -130,6 +131,7 @@ public final class BitbucketBuildStatusNotifications {
                     "IllegalStateException: " + e.getMessage());
             return;
         }
+        boolean isCloud = BitbucketApiUtils.isCloud(client);
 
         BitbucketSCMSourceContext context = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(source.getTraits()); // NOSONAR
@@ -155,7 +157,7 @@ public final class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
             if (context.sendStopNotificationForNotBuildJobs()) {
                 // Bitbucket Cloud and Server support different build states.
-                state = (client instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
+                state = isCloud ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
             } else {
                 state = BitbucketBuildStatus.Status.FAILED;
             }
@@ -163,7 +165,7 @@ public final class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
             if (context.sendStopNotificationForAbortBuild()) {
                 // Bitbucket Cloud and Server support different build states.
-                state = (client instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
+                state = isCloud ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
             } else {
                 state = BitbucketBuildStatus.Status.FAILED;
             }
@@ -174,7 +176,11 @@ public final class BitbucketBuildStatusNotifications {
 
         if (state != null) {
             BitbucketDefaulNotifier notifier = new BitbucketDefaulNotifier(client);
-            BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name, refName);
+            String notificationKey = DigestUtils.md5Hex(key);
+            if (context.useReadableNotificationIds() && !isCloud) {
+                notificationKey = key.replace(' ', '_').toUpperCase();
+            }
+            BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, notificationKey, name, refName);
             buildStatus.setBuildDuration(build.getDuration());
             buildStatus.setBuildNumber(build.getNumber());
             // TODO testResults should be provided by an extension point that integrates JUnit or anything else plugin
@@ -266,9 +272,7 @@ public final class BitbucketBuildStatusNotifications {
         return null;
     }
 
-    private static String getBuildKey(@NonNull Run<?, ?> build, String branch,
-        boolean shareBuildKeyBetweenBranchAndPR) {
-
+    private static String getBuildKey(@NonNull Run<?, ?> build, String branch, boolean shareBuildKeyBetweenBranchAndPR) {
         // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
         // build status key to be the same between the branch project and the PR project.
         // This is to avoid having two build statuses when a branch goes into PR and

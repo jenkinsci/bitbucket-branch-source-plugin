@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -81,8 +82,7 @@ class BitbucketServerAPIClientTest {
 
     @Test
     void verify_status_notitication_name_max_length() throws Exception {
-        String serverURL = "https://acme.bitbucket.org";
-        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(serverURL);
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
         BitbucketBuildStatus status = new BitbucketBuildStatus();
         status.setName(RandomStringUtils.randomAlphanumeric(300));
         status.setState(Status.INPROGRESS);
@@ -96,6 +96,29 @@ class BitbucketServerAPIClientTest {
         try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
             String json = IOUtils.toString(content, StandardCharsets.UTF_8);
             assertThatJson(json).node("name").isString().hasSize(255);
+        }
+    }
+
+    @Test
+    void verify_status_notitication_key_max_length() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
+        BitbucketBuildStatus status = new BitbucketBuildStatus();
+        status.setName("name");
+        status.setState(Status.INPROGRESS);
+        status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d3");
+        String longKey = RandomStringUtils.randomAlphabetic(260);
+        status.setKey(longKey);
+
+        client.postBuildStatus(status);
+
+        HttpRequestBase request = extractRequest(client);
+        assertThat(request).isNotNull().isInstanceOf(HttpPost.class);
+        try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
+            String json = IOUtils.toString(content, StandardCharsets.UTF_8);
+            assertThatJson(json).node("key")
+                .isString()
+                .hasSize(255)
+                .endsWith('/' + DigestUtils.md5Hex(longKey));
         }
     }
 
