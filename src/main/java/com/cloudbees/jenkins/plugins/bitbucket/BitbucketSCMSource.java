@@ -96,6 +96,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
@@ -1135,15 +1136,24 @@ public class BitbucketSCMSource extends SCMSource {
         List<Action> result = new ArrayList<>();
         UriTemplate template;
         String title = null;
-        if (BitbucketCloudEndpoint.SERVER_URL.equals(getServerUrl())) {
-            template = UriTemplate.fromTemplate(getServerUrl() + CLOUD_REPO_TEMPLATE + "/{branchOrPR}/{prIdOrHead}")
-                    .set("owner", repoOwner)
-                    .set("repo", repository);
+        if (BitbucketApiUtils.isCloud(getServerUrl())) {
+            String resourceName;
+            String resourceId;
             if (head instanceof PullRequestSCMHead prHead) {
-                template.set("branchOrPR", "pull-requests").set("prIdOrHead", prHead.getId());
+                resourceName = "pull-requests";
+                resourceId = prHead.getId();
+            } else if (head instanceof GitTagSCMHead) {
+                resourceName = "commits";
+                resourceId = head.getName();
             } else {
-                template.set("branchOrPR", "branch").set("prIdOrHead", head.getName());
+                resourceName = "branch";
+                resourceId = head.getName();
             }
+            template = UriTemplate.fromTemplate(getServerUrl() + CLOUD_REPO_TEMPLATE + "/{resourceName}/{resourceId}")
+                    .set("owner", repoOwner)
+                    .set("repo", repository)
+                    .set("resourceName", resourceName)
+                    .set("resourceId", resourceId);
         } else {
             if (head instanceof PullRequestSCMHead prHead) {
                 template = UriTemplate
