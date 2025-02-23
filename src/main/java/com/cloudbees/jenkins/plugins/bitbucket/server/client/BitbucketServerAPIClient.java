@@ -494,6 +494,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
         BitbucketServerBuildStatus newStatus = new BitbucketServerBuildStatus(status);
         newStatus.setName(truncateMiddle(newStatus.getName(), 255));
+        newStatus.setKey(truncateMiddleUnique(newStatus.getKey(), 255));
 
         String url = UriTemplate.fromTemplate(this.baseURL + API_COMMIT_STATUS_PATH)
                 .set("owner", getUserCentricOwner())

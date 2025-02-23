@@ -103,6 +103,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean sendStopNotificationForNotBuildJobs;
 
     /**
+     * {@code false} will not hash the generated key of the build notification status.
+     */
+    private boolean useReadableNotificationIds;
+
+    /**
      * Constructor.
      *
      * @param criteria (optional) criteria.
@@ -241,6 +246,10 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public boolean sendStopNotificationForNotBuildJobs() {
         return sendStopNotificationForNotBuildJobs;
+    }
+
+    public boolean useReadableNotificationIds() {
+        return useReadableNotificationIds;
     }
 
     /**
@@ -404,6 +413,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
         return this;
     }
 
+    public final BitbucketSCMSourceContext withUseReadableNotificationIds(boolean useReadableNotificationIds) {
+        this.useReadableNotificationIds = useReadableNotificationIds;
+        return this;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -412,4 +426,5 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     public BitbucketSCMSourceRequest newRequest(@NonNull SCMSource scmSource, TaskListener taskListener) {
         return new BitbucketSCMSourceRequest((BitbucketSCMSource) scmSource, this, taskListener);
     }
+
 }

@@ -611,6 +611,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException {
         BitbucketBuildStatus newStatus = new BitbucketBuildStatus(status);
         newStatus.setName(truncateMiddle(newStatus.getName(), 255));
+        newStatus.setKey(truncateMiddleUnique(newStatus.getKey(), 255));
 
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commit/{hash}/statuses/build")
                 .set("owner", owner)

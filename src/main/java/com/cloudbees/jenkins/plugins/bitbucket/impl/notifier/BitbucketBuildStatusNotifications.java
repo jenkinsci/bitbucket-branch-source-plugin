@@ -58,6 +58,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
@@ -174,7 +175,8 @@ public final class BitbucketBuildStatusNotifications {
 
         if (state != null) {
             BitbucketDefaulNotifier notifier = new BitbucketDefaulNotifier(client);
-            BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name, refName);
+            String notificationKey = context.useReadableNotificationIds() ? key.replace(' ', '_').toUpperCase() : DigestUtils.md5Hex(key);
+            BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, notificationKey, name, refName);
             buildStatus.setBuildDuration(build.getDuration());
             buildStatus.setBuildNumber(build.getNumber());
             // TODO testResults should be provided by an extension point that integrates JUnit or anything else plugin
@@ -266,9 +268,7 @@ public final class BitbucketBuildStatusNotifications {
         return null;
     }
 
-    private static String getBuildKey(@NonNull Run<?, ?> build, String branch,
-        boolean shareBuildKeyBetweenBranchAndPR) {
-
+    private static String getBuildKey(@NonNull Run<?, ?> build, String branch, boolean shareBuildKeyBetweenBranchAndPR) {
         // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
         // build status key to be the same between the branch project and the PR project.
         // This is to avoid having two build statuses when a branch goes into PR and
