@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
@@ -92,6 +93,11 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         } else {
             return value;
         }
+    }
+
+    protected String truncateMiddleUnique(@CheckForNull String value, int maxLength) {
+        String uniqueValue = StringUtils.length(value) > maxLength ? value + '/' + DigestUtils.md5Hex(value) : value;
+        return truncateMiddle(uniqueValue, maxLength);
     }
 
     protected BitbucketRequestException buildResponseException(CloseableHttpResponse response, String errorMessage) {
