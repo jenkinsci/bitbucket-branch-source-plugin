@@ -83,8 +83,9 @@ public class DiscardOldBranchTrait extends SCMSourceTrait {
 
                 for (BitbucketBranch branch : bbRequest.getBranches()) {
                     if (branchName.equals(branch.getName())) {
-                        LocalDate expiryDate = asLocalDate(branch.getDateMillis());
-                        return LocalDate.now().isAfter(expiryDate);
+                        LocalDate commitDate = asLocalDate(branch.getDateMillis());
+                        LocalDate expiryDate = LocalDate.now().minusDays(keepForDays);
+                        return commitDate.isBefore(expiryDate);
                     }
                 }
             }
