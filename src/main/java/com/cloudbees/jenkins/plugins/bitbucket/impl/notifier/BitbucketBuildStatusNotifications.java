@@ -225,22 +225,25 @@ public final class BitbucketBuildStatusNotifications {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
             PullRequestSCMHead head = (PullRequestSCMHead) rev.getHead();
             key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
-            /*
-             * Poor documentation for bitbucket cloud at:
-             * https://community.atlassian.com/t5/Bitbucket-questions/Re-Builds-not-appearing-in-pull-requests/qaq-p/1805991/comment-id/65864#M65864
-             * that means refName null or valued with only head.getBranchName()
-             *
-             * For Bitbucket Server, refName should be "refs/heads/" + the name
-             * of the source branch of the pull request, and the build status
-             * should be posted to the repository that contains that branch.
-             * If refName is null, then Bitbucket Server does not show the
-             * build status in the list of pull requests, but still shows it
-             * on the web page of the individual pull request.
-             */
-            bitbucket = source.buildBitbucketClient(head);
-            if (BitbucketApiUtils.isCloud(bitbucket)) {
+            if (BitbucketApiUtils.isCloud(source.getServerUrl())) {
+                /*
+                 * Poor documentation for bitbucket cloud at:
+                 * https://community.atlassian.com/t5/Bitbucket-questions/Re-Builds-not-appearing-in-pull-requests/qaq-p/1805991/comment-id/65864#M65864
+                 * that means refName null or valued with only head.getBranchName()
+                 */
+                bitbucket = source.buildBitbucketClient(head);
                 refName = null;
             } else {
+                // For  Bitbucket Server, notify the target of the PR. Head may point to a forked source repo that the
+                // credentials don't have access to resulting in a 401 error.
+                bitbucket = source.buildBitbucketClient();
+                // For Bitbucket Server, refName should be "refs/heads/" + the name
+                // of the source branch of the pull request, and the build status
+                // should be posted to the repository of the pull request target.
+                // If refName is null, then Bitbucket Server shows the build status
+                // for all pull requests for the commit id. When refName is provided
+                // the build status is only shown for the pull request that matches
+                // the refName and commit id.
                 refName = "refs/heads/" + head.getBranchName();
             }
         } else {
