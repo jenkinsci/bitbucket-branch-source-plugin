@@ -231,7 +231,7 @@ public final class BitbucketBuildStatusNotifications {
                  * https://community.atlassian.com/t5/Bitbucket-questions/Re-Builds-not-appearing-in-pull-requests/qaq-p/1805991/comment-id/65864#M65864
                  * that means refName null or valued with only head.getBranchName()
                  */
-                refName = null;
+                refName = head.getBranchName();
                 bitbucket = source.buildBitbucketClient(head);
             } else {
                 /*
