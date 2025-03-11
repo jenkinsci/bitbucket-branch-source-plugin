@@ -62,9 +62,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
 import hudson.model.Action;
@@ -78,7 +76,6 @@ import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
-import java.io.ObjectStreamException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -124,7 +121,6 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
-import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.Symbol;
@@ -197,49 +193,6 @@ public class BitbucketSCMSource extends SCMSource {
     private List<SCMSourceTrait> traits;
 
     /**
-     * Credentials used to clone the repository/repositories.
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    private transient String checkoutCredentialsId;
-
-    /**
-     * Ant match expression that indicates what branches to include in the retrieve process.
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    private transient String includes;
-
-    /**
-     * Ant match expression that indicates what branches to exclude in the retrieve process.
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    private transient String excludes;
-
-    /**
-     * If true, a webhook will be auto-registered in the repository managed by this source.
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    private transient boolean autoRegisterHook;
-
-    /**
-     * Bitbucket Server URL.
-     * A specific HTTP client is used if this field is not null.
-     * This value (or serverUrl if this is null) is used in particular
-     * to find the current endpoint configuration for this server.
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    private transient String bitbucketServerUrl;
-
-    /**
      * The cache of pull request titles for each open PR.
      */
     @CheckForNull
@@ -291,43 +244,6 @@ public class BitbucketSCMSource extends SCMSource {
         traits.add(new OriginPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)));
         traits.add(new ForkPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
                 new ForkPullRequestDiscoveryTrait.TrustTeamForks()));
-    }
-
-    /**
-     * Migrate legacy serialization formats.
-     *
-     * @return {@code this}
-     * @throws ObjectStreamException if things go wrong.
-     */
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Only non-null after we set them here!")
-    private Object readResolve() throws ObjectStreamException {
-        if (serverUrl == null) {
-            serverUrl = BitbucketEndpointConfiguration.get().readResolveServerUrl(bitbucketServerUrl);
-        }
-        if (serverUrl == null) {
-            LOGGER.log(Level.WARNING, "BitbucketSCMSource::readResolve : serverUrl is still empty");
-        }
-        if (traits == null) {
-            traits = new ArrayList<>();
-            if (!"*".equals(includes) || !"".equals(excludes)) {
-                traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
-            }
-            if (checkoutCredentialsId != null
-                    && !DescriptorImpl.SAME.equals(checkoutCredentialsId)
-                    && !checkoutCredentialsId.equals(credentialsId)) {
-                traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
-            }
-            traits.add(new WebhookRegistrationTrait(
-                    autoRegisterHook ? WebhookRegistration.ITEM : WebhookRegistration.DISABLE)
-            );
-            traits.add(new BranchDiscoveryTrait(true, true));
-            traits.add(new OriginPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.HEAD)));
-            traits.add(new ForkPullRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.HEAD),
-                    new ForkPullRequestDiscoveryTrait.TrustEveryone()));
-            traits.add(new PublicRepoPullRequestFilterTrait());
-        }
-        return this;
     }
 
     @CheckForNull
@@ -388,159 +304,6 @@ public class BitbucketSCMSource extends SCMSource {
     @DataBoundSetter
     public void setTraits(@CheckForNull List<SCMSourceTrait> traits) {
         this.traits = new ArrayList<>(Util.fixNull(traits));
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @DataBoundSetter
-    public void setBitbucketServerUrl(String url) {
-        url = BitbucketEndpointConfiguration.normalizeServerUrl(url);
-        url = StringUtils.defaultIfBlank(url, BitbucketCloudEndpoint.SERVER_URL);
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                .findEndpoint(url)
-                .orElse(null);
-        if (endpoint != null) {
-            // we have a match
-            setServerUrl(endpoint.getServerUrl());
-        } else {
-            LOGGER.log(Level.WARNING, "Call to legacy setBitbucketServerUrl({0}) method is configuring a url missing "
-                    + "from the global configuration.", url);
-            setServerUrl(url);
-        }
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @CheckForNull
-    public String getBitbucketServerUrl() {
-        String serverUrl = getServerUrl();
-        if (BitbucketEndpointConfiguration.get()
-                .findEndpoint(serverUrl)
-                .filter(BitbucketCloudEndpoint.class::isInstance)
-                .isPresent()) {
-            return null;
-        }
-        return serverUrl;
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @CheckForNull
-    public String getCheckoutCredentialsId() {
-        for (SCMSourceTrait t : traits) {
-            if (t instanceof SSHCheckoutTrait sshTrait) {
-                return StringUtils.defaultString(sshTrait.getCredentialsId(), DescriptorImpl.ANONYMOUS);
-            }
-        }
-        return DescriptorImpl.SAME;
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @DataBoundSetter
-    public void setCheckoutCredentialsId(String checkoutCredentialsId) {
-        traits.removeIf(trait -> trait instanceof SSHCheckoutTrait);
-        if (checkoutCredentialsId != null && !DescriptorImpl.SAME.equals(checkoutCredentialsId)) {
-            traits.add(new SSHCheckoutTrait(checkoutCredentialsId));
-        }
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @NonNull
-    public String getIncludes() {
-        for (SCMSourceTrait trait : traits) {
-            if (trait instanceof WildcardSCMHeadFilterTrait wildcardTrait) {
-                return wildcardTrait.getIncludes();
-            }
-        }
-        return "*";
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @DataBoundSetter
-    public void setIncludes(@NonNull String includes) {
-        for (int i = 0; i < traits.size(); i++) {
-            SCMSourceTrait trait = traits.get(i);
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                WildcardSCMHeadFilterTrait existing = (WildcardSCMHeadFilterTrait) trait;
-                if ("*".equals(includes) && "".equals(existing.getExcludes())) {
-                    traits.remove(i);
-                } else {
-                    traits.set(i, new WildcardSCMHeadFilterTrait(includes, existing.getExcludes()));
-                }
-                return;
-            }
-        }
-        if (!"*".equals(includes)) {
-            traits.add(new WildcardSCMHeadFilterTrait(includes, ""));
-        }
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @NonNull
-    public String getExcludes() {
-        for (SCMSourceTrait trait : traits) {
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                return ((WildcardSCMHeadFilterTrait) trait).getExcludes();
-            }
-        }
-        return "";
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @DataBoundSetter
-    public void setExcludes(@NonNull String excludes) {
-        for (int i = 0; i < traits.size(); i++) {
-            SCMSourceTrait trait = traits.get(i);
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                WildcardSCMHeadFilterTrait existing = (WildcardSCMHeadFilterTrait) trait;
-                if ("*".equals(existing.getIncludes()) && "".equals(excludes)) {
-                    traits.remove(i);
-                } else {
-                    traits.set(i, new WildcardSCMHeadFilterTrait(existing.getIncludes(), excludes));
-                }
-                return;
-            }
-        }
-        if (!"".equals(excludes)) {
-            traits.add(new WildcardSCMHeadFilterTrait("*", excludes));
-        }
-    }
-
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    @DataBoundSetter
-    public void setAutoRegisterHook(boolean autoRegisterHook) {
-        traits.removeIf(trait -> trait instanceof WebhookRegistrationTrait);
-        traits.add(new WebhookRegistrationTrait(
-                autoRegisterHook ? WebhookRegistration.ITEM : WebhookRegistration.DISABLE
-        ));
-    }
-
-    @Deprecated
-    @Restricted(NoExternalUse.class)
-    @RestrictedSince("2.2.0")
-    public boolean isAutoRegisterHook() {
-        for (SCMSourceTrait t : traits) {
-            if (t instanceof WebhookRegistrationTrait) {
-                return ((WebhookRegistrationTrait) t).getMode() != WebhookRegistration.DISABLE;
-            }
-        }
-        return true;
     }
 
     public BitbucketApi buildBitbucketClient() {

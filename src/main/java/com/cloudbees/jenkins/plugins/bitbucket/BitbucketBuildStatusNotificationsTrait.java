@@ -45,7 +45,7 @@ public class BitbucketBuildStatusNotificationsTrait extends SCMSourceTrait {
     private boolean sendStoppedNotificationForAbortBuild;
     private boolean disableNotificationForNotBuildJobs;
     private boolean useReadableNotificationIds = false;
-    // seems that this attribute as been moved out to plugin skip-notifications-trait-plugin
+    // seems that this attribute has been moved out to plugin skip-notifications-trait-plugin
     @SuppressFBWarnings("UUF_UNUSED_FIELD")
     private transient boolean disableNotifications;
 

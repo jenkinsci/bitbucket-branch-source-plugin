@@ -121,12 +121,6 @@ class BitbucketSCMSourceTest {
         assertThat(instance.getRepository()).isEqualTo("stunning-adventure");
         assertThat(instance.getCredentialsId()).isEqualTo("curl");
         assertThat(instance.getTraits()).isEmpty();
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isTrue();
     }
 
     @Test
@@ -143,12 +137,6 @@ class BitbucketSCMSourceTest {
                 publicRepoTrait(), //
                 webhookTrait(WebhookRegistration.DISABLE), //
                 forkPRTrait(2, true)));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isFalse();
     }
 
     @Test
@@ -166,12 +154,6 @@ class BitbucketSCMSourceTest {
                 publicRepoTrait(), //
                 webhookTrait(WebhookRegistration.DISABLE), //
                 forkPRTrait(2, true)));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isEqualTo("https://bitbucket.test");
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isFalse();
     }
 
     @Test
@@ -189,12 +171,6 @@ class BitbucketSCMSourceTest {
                 webhookTrait(WebhookRegistration.DISABLE), //
                 forkPRTrait(2, true), //
                 sshTrait("other-credentials")));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo("other-credentials");
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isFalse();
     }
 
     @Issue("JENKINS-45467")
@@ -213,12 +189,6 @@ class BitbucketSCMSourceTest {
                 publicRepoTrait(), //
                 webhookTrait(WebhookRegistration.DISABLE), //
                 forkPRTrait(2, true)));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isFalse();
     }
 
     @Test
@@ -240,12 +210,6 @@ class BitbucketSCMSourceTest {
                     assertThat(wildcardTrait.getIncludes()).isEqualTo("*");
                     assertThat(wildcardTrait.getExcludes()).isEqualTo("main");
                 })));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEqualTo("main");
-        assertThat(instance.isAutoRegisterHook()).isFalse();
     }
 
     @Test
@@ -267,12 +231,6 @@ class BitbucketSCMSourceTest {
                     assertThat(wildcardTrait.getIncludes()).isEqualTo("feature/*");
                     assertThat(wildcardTrait.getExcludes()).isEmpty();
                 })));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isFalse();
     }
 
     @Test
@@ -289,12 +247,6 @@ class BitbucketSCMSourceTest {
                 forkPRTrait(2, true),
                 publicRepoTrait(), //
                 webhookTrait(WebhookRegistration.ITEM)));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isTrue();
     }
 
     @Test
@@ -312,12 +264,6 @@ class BitbucketSCMSourceTest {
                 publicRepoTrait(), //
                 webhookTrait(WebhookRegistration.DISABLE), //
                 sshTrait(null)));
-        // Legacy API
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.isAutoRegisterHook()).isFalse();
     }
 
     @Test
@@ -410,391 +356,6 @@ class BitbucketSCMSourceTest {
         BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
         instance.setCredentialsId("test");
         assertThat(instance.getCredentialsId()).isEqualTo("test");
-    }
-
-    @Test
-    void given__instance__when__setBitbucketServerUrl_null__then__cloudUrlApplied() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setBitbucketServerUrl(null);
-        assertThat(instance.getServerUrl()).isEqualTo("https://bitbucket.org");
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-    }
-
-    @Test
-    void given__instance__when__setBitbucketServerUrl_value__then__valueApplied() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setBitbucketServerUrl("https://bitbucket.test");
-        assertThat(instance.getServerUrl()).isEqualTo("https://bitbucket.test");
-        assertThat(instance.getBitbucketServerUrl()).isEqualTo("https://bitbucket.test");
-    }
-
-    @Test
-    void given__instance__when__setBitbucketServerUrl_value__then__valueNormalized() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setBitbucketServerUrl("https://bitbucket.test/foo/bar/../../");
-        assertThat(instance.getServerUrl()).isEqualTo("https://bitbucket.test");
-        assertThat(instance.getBitbucketServerUrl()).isEqualTo("https://bitbucket.test");
-    }
-
-    @Test
-    void given__instance__when__setBitbucketServerUrl_cloudUrl__then__valueApplied() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setBitbucketServerUrl("https://bitbucket.org");
-        assertThat(instance.getServerUrl()).isEqualTo("https://bitbucket.org");
-        assertThat(instance.getBitbucketServerUrl()).isNull();
-    }
-
-    @Test
-    void given__legacyCode__when__setAutoRegisterHook_true__then__traitAdded() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new SSHCheckoutTrait("dummy")));
-        assertThat(instance.isAutoRegisterHook()).isTrue();
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(WebhookRegistrationTrait.class);
-        instance.setAutoRegisterHook(true);
-        assertThat(instance.isAutoRegisterHook()).isTrue();
-        assertThat(instance.getTraits()).anySatisfy(webhookTrait(WebhookRegistration.ITEM));
-    }
-
-    @Test
-    void given__legacyCode__when__setAutoRegisterHook_changes__then__traitUpdated() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(new BranchDiscoveryTrait(true, false),
-                new SSHCheckoutTrait("dummy")));
-        assertThat(instance.isAutoRegisterHook()).isTrue();
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(WebhookRegistrationTrait.class);
-        instance.setAutoRegisterHook(false);
-        assertThat(instance.isAutoRegisterHook()).isFalse();
-        assertThat(instance.getTraits()).anySatisfy(webhookTrait(WebhookRegistration.DISABLE));
-    }
-
-    @Test
-    void given__legacyCode__when__setAutoRegisterHook_false__then__traitAdded() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(new BranchDiscoveryTrait(true, false),
-                new SSHCheckoutTrait("dummy"),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.isAutoRegisterHook()).isTrue();
-        assertThat(instance.getTraits()).anySatisfy(webhookTrait(WebhookRegistration.SYSTEM));
-        instance.setAutoRegisterHook(true);
-        assertThat(instance.isAutoRegisterHook()).isTrue();
-        assertThat(instance.getTraits()).anySatisfy(webhookTrait(WebhookRegistration.ITEM));
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_SAME__then__noTraitAdded() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-        instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_SAME__then__traitRemoved() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
-                new SSHCheckoutTrait("value")));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo("value");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-            .isInstanceOfSatisfying(SSHCheckoutTrait.class, sshTrait -> assertThat(sshTrait.getCredentialsId()).isEqualTo("value")));
-        instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_null__then__noTraitAdded() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-        instance.setCheckoutCredentialsId(null);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_null__then__traitRemoved() {
-        String credentialsId = "other-credentials";
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
-                new SSHCheckoutTrait(credentialsId)));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(credentialsId);
-        assertThat(instance.getTraits()).anySatisfy(sshTrait(credentialsId));
-        instance.setCheckoutCredentialsId(null);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_value__then__traitAdded() {
-        String credentialsId = "other-credentials";
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-        instance.setCheckoutCredentialsId(credentialsId);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(credentialsId);
-        assertThat(instance.getTraits()).anySatisfy(sshTrait(credentialsId));
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_value__then__traitUpdated() {
-        String credentialsId = "other-credentials";
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
-                new SSHCheckoutTrait(null)));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
-        assertThat(instance.getTraits()).anySatisfy(sshTrait(null));
-        instance.setCheckoutCredentialsId(credentialsId);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(credentialsId);
-        assertThat(instance.getTraits()).anySatisfy(sshTrait(credentialsId));
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_ANONYMOUS__then__traitAdded() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.SAME);
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-        instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
-        assertThat(instance.getTraits()).anySatisfy(sshTrait(null));
-    }
-
-    @Test
-    void given__legacyCode__when__setCheckoutCredentials_ANONYMOUS__then__traitUpdated() {
-        String credentialsId = "other-credentials";
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM),
-                new SSHCheckoutTrait(credentialsId)));
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(credentialsId);
-        assertThat(instance.getTraits()).anySatisfy(sshTrait(credentialsId));
-        instance.setCheckoutCredentialsId(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
-        assertThat(instance.getCheckoutCredentialsId()).isEqualTo(BitbucketSCMSource.DescriptorImpl.ANONYMOUS);
-        assertThat(instance.getTraits()).anySatisfy(sshTrait(null));
-    }
-
-    @Test
-    void given__legacyCode_withoutExcludes__when__setIncludes_default__then__traitRemoved() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("feature/*", ""),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).anySatisfy(wildcardTrait("feature/*", ""));
-        instance.setIncludes("*");
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(WildcardSCMHeadFilterTrait.class);
-    }
-
-    @Test
-    void given__legacyCode_withoutExcludes__when__setIncludes_value__then__traitUpdated() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("feature/*", ""),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("feature/*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEmpty(); //
-                }));
-        instance.setIncludes("bug/*");
-        assertThat(instance.getIncludes()).isEqualTo("bug/*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("bug/*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEmpty(); //
-                }));
-    }
-
-    @Test
-    void given__legacyCode_withoutTrait__when__setIncludes_value__then__traitAdded() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(WildcardSCMHeadFilterTrait.class);
-        instance.setIncludes("feature/*");
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEqualTo("");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("feature/*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEmpty(); //
-                }));
-    }
-
-    @Test
-    void given__legacyCode_withExcludes__when__setIncludes_default__then__traitUpdated() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("feature/*", "feature/ignore"),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("feature/*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo("feature/ignore"); //
-                }));
-        instance.setIncludes("*");
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo("feature/ignore"); //
-                }));
-    }
-
-    @Test
-    void given__legacyCode_withExcludes__when__setIncludes_value__then__traitUpdated() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("feature/*", "feature/ignore"),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("feature/*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo("feature/ignore"); //
-                }));
-
-        instance.setIncludes("bug/*");
-        assertThat(instance.getIncludes()).isEqualTo("bug/*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("bug/*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo("feature/ignore"); //
-                }));
-    }
-
-    @Test
-    void given__legacyCode_withoutIncludes__when__setExcludes_default__then__traitRemoved() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("*", "feature/ignore"),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo("feature/ignore"); //
-                }));
-        instance.setExcludes("");
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(SSHCheckoutTrait.class);
-    }
-
-    @Test
-    void given__legacyCode_withoutIncludes__when__setExcludes_value__then__traitUpdated() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("*", "feature/ignore"),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo("feature/ignore"); //
-                }));
-
-        instance.setExcludes("bug/ignore");
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEqualTo("bug/ignore");
-        assertThat(instance.getTraits()).anySatisfy(trait -> assertThat(trait)
-                .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                    assertThat(wildcarTrait.getIncludes()).isEqualTo("*"); //
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo("bug/ignore"); //
-                }));
-    }
-
-    @Test
-    void given__legacyCode_withoutTrait__when__setExcludes_value__then__traitAdded() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).doesNotHaveAnyElementsOfTypes(WildcardSCMHeadFilterTrait.class);
-        instance.setExcludes("feature/ignore");
-        assertThat(instance.getIncludes()).isEqualTo("*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(wildcardTrait("*", "feature/ignore"));
-    }
-
-    @Test
-    void given__legacyCode_withIncludes__when__setExcludes_default__then__traitUpdated() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("feature/*", "feature/ignore"),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(wildcardTrait("feature/*", "feature/ignore"));
-
-        instance.setExcludes("");
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).anySatisfy(wildcardTrait("feature/*", ""));
-    }
-
-    @Test
-    void given__legacyCode_withIncludes__when__setExcludes_value__then__traitUpdated() {
-        BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(List.of(
-                new BranchDiscoveryTrait(true, false),
-                new WildcardSCMHeadFilterTrait("feature/*", ""),
-                new WebhookRegistrationTrait(WebhookRegistration.SYSTEM)));
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEmpty();
-        assertThat(instance.getTraits()).anySatisfy(wildcardTrait("feature/*", ""));
-
-        instance.setExcludes("feature/ignore");
-        assertThat(instance.getIncludes()).isEqualTo("feature/*");
-        assertThat(instance.getExcludes()).isEqualTo("feature/ignore");
-        assertThat(instance.getTraits()).anySatisfy(wildcardTrait("feature/*", "feature/ignore"));
     }
 
     // NOTE: The tests below require that a BitbucketEndpointConfiguration with

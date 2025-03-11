@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import java.io.IOException;
@@ -35,6 +34,7 @@ import jenkins.scm.api.SCMSourceObserver;
 import jenkins.scm.api.SCMSourceObserver.ProjectObserver;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.impl.NullSCMSource;
+import jenkins.scm.impl.trait.RegexSCMSourceFilterTrait;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -54,16 +54,15 @@ public class SCMNavigatorTest {
         BitbucketMockApiFactory.add("http://bitbucket.test",
                 BitbucketClientMockUtils.getAPIClientMock(true, false));
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam", null, null);
-        navigator.setPattern("repo(.*)");
-        navigator.setBitbucketServerUrl("http://bitbucket.test");
+        navigator.setServerUrl("http://bitbucket.test");
+        navigator.getTraits().add(new RegexSCMSourceFilterTrait("repo(.*)"));
+
         final SCMSourceOwner mock = Mockito.mock(SCMSourceOwner.class);
         when(mock.getSCMSources()).thenReturn(Collections.singletonList(new BitbucketSCMSource("myteam", "repo1")));
-        SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(),
-                                                                   mock);
+        SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(), mock);
         navigator.visitSources(observer);
 
         assertEquals("myteam", navigator.getRepoOwner());
-        assertEquals("repo(.*)", navigator.getPattern());
 
         List<String> observed = observer.getObserved();
         // Only 2 repositories match the pattern
@@ -88,18 +87,16 @@ public class SCMNavigatorTest {
         BitbucketMockApiFactory.add("http://bitbucket.test",
                                     BitbucketClientMockUtils.getAPIClientMock(true, false));
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam", null, null);
-        navigator.setPattern("repo(.*)");
-        navigator.setBitbucketServerUrl("http://bitbucket.test");
+        navigator.setServerUrl("http://bitbucket.test");
+        navigator.getTraits().add(new RegexSCMSourceFilterTrait("repo(.*)"));
+
         final SCMSourceOwner mock = Mockito.mock(SCMSourceOwner.class);
-        when(mock.getSCMSources())
-        .thenReturn(ImmutableList.of(new BitbucketSCMSource("myteam", "repo1"),
-                                     new NullSCMSource()));
-        SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(),
-                                                                   mock);
+        when(mock.getSCMSources()).thenReturn(List.of(new BitbucketSCMSource("myteam", "repo1"), new NullSCMSource()));
+
+        SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(), mock);
         navigator.visitSources(observer);
 
         assertEquals("myteam", navigator.getRepoOwner());
-        assertEquals("repo(.*)", navigator.getPattern());
 
         List<String> observed = observer.getObserved();
         // Only 2 repositories match the pattern

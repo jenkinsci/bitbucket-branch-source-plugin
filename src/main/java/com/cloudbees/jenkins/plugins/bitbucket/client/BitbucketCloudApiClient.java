@@ -276,15 +276,6 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         }
     }
 
-    @Deprecated
-    @CheckForNull
-    public String getLogin() {
-        if (getAuthenticator() != null) {
-            return getAuthenticator().getId();
-        }
-        return null;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -685,7 +676,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     /**
      * {@inheritDoc}
      */
-    @Deprecated
+    @Deprecated(since = "935.0.0", forRemoval = true)
     @Override
     @CheckForNull
     public AvatarImage getTeamAvatar() throws IOException {
