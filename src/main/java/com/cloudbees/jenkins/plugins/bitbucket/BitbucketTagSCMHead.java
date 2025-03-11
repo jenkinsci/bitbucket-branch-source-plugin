@@ -26,14 +26,13 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.mixin.TagSCMHead;
 
 /**
  * {@link SCMHead} for a Bitbucket tags.
  *
  * @since 2.2.11
  */
-public class BitbucketTagSCMHead extends GitTagSCMHead implements TagSCMHead {
+public class BitbucketTagSCMHead extends GitTagSCMHead {
 
     private static final long serialVersionUID = 1L;
 

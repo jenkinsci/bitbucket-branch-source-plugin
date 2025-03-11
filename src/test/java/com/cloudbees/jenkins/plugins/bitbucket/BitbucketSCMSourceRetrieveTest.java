@@ -68,6 +68,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -190,11 +191,11 @@ public class BitbucketSCMSourceRetrieveTest {
 
         // Ensures PR is properly initialized, especially fork-based PRs
         // see BitbucketServerAPIClient.setupPullRequest()
-        verify(apiClient, Mockito.times(1)).getPullRequestById(PR_ID);
+        verify(apiClient).getPullRequestById(PR_ID);
         // The event is a HasPullRequests, so this call should be skipped in favor of getting PRs from the event itself
-        verify(apiClient, Mockito.never()).getPullRequests();
+        verify(apiClient, never()).getPullRequests();
         // Fetch tags trait was not enabled on the BitbucketSCMSource
-        verify(apiClient, Mockito.never()).getTags();
+        verify(apiClient, never()).getTags();
     }
 
     private static final class HeadEvent extends SCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests {

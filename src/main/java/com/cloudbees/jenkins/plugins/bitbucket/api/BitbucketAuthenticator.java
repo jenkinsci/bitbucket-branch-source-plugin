@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import hudson.plugins.git.GitSCM;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
@@ -118,7 +119,7 @@ public interface BitbucketAuthenticator {
         }
 
         String scheme = serverUrl.split(":")[0].toLowerCase();
-        boolean isCloud = serverUrl.equals(BitbucketCloudEndpoint.SERVER_URL);
+        boolean isCloud = BitbucketApiUtils.isCloud(serverUrl);
 
         return AuthenticationTokenContext.builder(BitbucketAuthenticator.class)
                 .with(SERVER_URL, serverUrl)
