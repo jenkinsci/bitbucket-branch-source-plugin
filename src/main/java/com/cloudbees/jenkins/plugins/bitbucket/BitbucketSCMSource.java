@@ -96,6 +96,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
@@ -104,7 +105,6 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceCriteria.Probe;
 import jenkins.scm.api.SCMSourceDescriptor;
@@ -145,7 +145,7 @@ import static com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtil
  * It provides a way to discover/retrieve branches and pull requests through the Bitbucket REST API
  * which is much faster than the plain Git SCM source implementation.
  */
-public class BitbucketSCMSource extends SCMSource {
+public class BitbucketSCMSource extends AbstractGitSCMSource {
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
@@ -333,6 +333,12 @@ public class BitbucketSCMSource extends SCMSource {
     @CheckForNull
     public String getCredentialsId() {
         return credentialsId;
+    }
+
+    @Override
+    public String getRemote() {
+        initCloneLinks();
+        return BitbucketGitSCMHelper.getCloneLink(this,  primaryCloneLinks, mirrorCloneLinks);
     }
 
     @DataBoundSetter
