@@ -562,7 +562,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             .set("owner", getUserCentricOwner())
             .set("repo", repositoryName)
             .set("tagName", tagName)
-            .expand();
+            .expand()
+            .replace("%2F", "/");
 
         String response = getRequest(url);
         BitbucketServerBranch tag = JsonParser.toJava(response, BitbucketServerBranch.class);
