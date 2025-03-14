@@ -250,7 +250,7 @@ public interface BitbucketApi extends AutoCloseable {
      * @deprecated Use {@link #getAvatar(String)} with the avatar url link gather from repository, project, workspace or user.
      */
     @CheckForNull
-    @Deprecated
+    @Deprecated(since = "935.0.0", forRemoval = true)
     AvatarImage getTeamAvatar() throws IOException;
 
     /**

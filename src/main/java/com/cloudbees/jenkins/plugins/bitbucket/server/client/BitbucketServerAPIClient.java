@@ -796,7 +796,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     /**
      * {@inheritDoc}
      */
-    @Deprecated
+    @Deprecated(since = "935.0.0", forRemoval = true)
     @Override
     public AvatarImage getTeamAvatar() throws IOException {
         if (userCentric) {

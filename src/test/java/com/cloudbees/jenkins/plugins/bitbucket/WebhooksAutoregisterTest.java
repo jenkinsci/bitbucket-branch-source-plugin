@@ -33,34 +33,42 @@ import hudson.util.RingBufferLogHandler;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Collections;
+import java.util.List;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import jenkins.branch.BranchSource;
 import jenkins.branch.DefaultBranchPropertyStrategy;
 import jenkins.model.JenkinsLocationConfiguration;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
-public class WebhooksAutoregisterTest {
+@WithJenkins
+class WebhooksAutoregisterTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private static JenkinsRule j;
+
+    @BeforeAll
+    static void init(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void registerHookTest() throws Exception {
+    void registerHookTest() throws Exception {
         BitbucketApi mock = Mockito.mock(BitbucketApi.class);
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
         RingBufferLogHandler log = createJULTestHandler();
 
         MultiBranchProjectImpl p = j.jenkins.createProject(MultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource( "amuniz", "test-repos");
-        source.setAutoRegisterHook(true);
-        p.getSourcesList().add(new BranchSource(source, new DefaultBranchPropertyStrategy(null)));
+        source.getTraits().add(new WebhookRegistrationTrait(WebhookRegistration.ITEM));
+        BranchSource branchSource = new BranchSource(source);
+        branchSource.setStrategy(new DefaultBranchPropertyStrategy(null));
+        p.getSourcesList().add(branchSource);
         p.scheduleBuild2(0);
         waitForLogFileMessage("Can not register hook. Jenkins root URL is not valid", log);
 
@@ -72,9 +80,8 @@ public class WebhooksAutoregisterTest {
     }
 
     @Test
-    public void registerHookTest2() throws Exception {
-        BitbucketEndpointConfiguration.get().setEndpoints(Collections.singletonList(
-                new BitbucketCloudEndpoint(true, "dummy")));
+    void registerHookTest2() throws Exception {
+        BitbucketEndpointConfiguration.get().setEndpoints(List.of(new BitbucketCloudEndpoint(true, "dummy")));
         BitbucketApi mock = Mockito.mock(BitbucketApi.class);
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
         RingBufferLogHandler log = createJULTestHandler();
@@ -114,11 +121,11 @@ public class WebhooksAutoregisterTest {
                 limit++;
             }
         }
-        Assert.fail("Expected log not found: " + string);
+        Assertions.fail("Expected log not found: " + string);
     }
 
-    private RingBufferLogHandler createJULTestHandler() throws SecurityException, IOException {
-        RingBufferLogHandler handler = new RingBufferLogHandler();
+    private RingBufferLogHandler createJULTestHandler() throws SecurityException {
+        RingBufferLogHandler handler = new RingBufferLogHandler(RingBufferLogHandler.getDefaultRingBufferSize());
         SimpleFormatter formatter = new SimpleFormatter();
         handler.setFormatter(formatter);
         Logger logger = Logger.getLogger(WebhookAutoRegisterListener.class.getName());

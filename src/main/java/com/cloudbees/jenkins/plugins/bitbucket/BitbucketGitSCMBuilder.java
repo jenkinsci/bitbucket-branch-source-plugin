@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource.DescriptorImpl;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
@@ -168,7 +167,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
                 scmSource.getServerUrl(),
                 scmSource.getOwner(),
-                DescriptorImpl.SAME.equals(scmSource.getCheckoutCredentialsId()) ? credentialsId : scmSource.getCheckoutCredentialsId(),
+                credentialsId,
                 StandardCredentials.class
             );
 
@@ -259,9 +258,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             }
         }
         if (head.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-            String hash = revision instanceof PullRequestSCMRevision
-                ? ((PullRequestSCMRevision) revision).getTargetImpl().getHash()
-                : null;
+            String hash = revision instanceof PullRequestSCMRevision prRevision ? prRevision.getTargetImpl().getHash() : null;
             String refSpec = "+refs/heads/" + targetBranch + ":refs/remotes/@{remote}/" + targetBranch;
             if (!prFromTargetRepository && scmSource.isCloud()) {
                 String upstreamRemoteName = remoteName().equals("upstream") ? "upstream-upstream" : "upstream";

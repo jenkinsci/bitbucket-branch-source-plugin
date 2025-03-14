@@ -34,6 +34,7 @@ import jenkins.branch.MultiBranchProjectFactoryDescriptor;
 import jenkins.branch.OrganizationFolder;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.impl.trait.RegexSCMSourceFilterTrait;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -57,8 +58,8 @@ public class SCMNavigatorIntegrationTest {
 
         OrganizationFolder teamFolder = j.jenkins.createProject(OrganizationFolder.class, "test");
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam", null, null);
-        navigator.setPattern("test-repos");
-        navigator.setBitbucketServerUrl("http://bitbucket.test");
+        navigator.setServerUrl("http://bitbucket.test");
+        navigator.getTraits().add(new RegexSCMSourceFilterTrait("repo(.*)"));
         teamFolder.getNavigators().add(navigator);
         teamFolder.scheduleBuild2(0).getFuture().get();
         teamFolder.getComputation().writeWholeLogTo(System.out);
