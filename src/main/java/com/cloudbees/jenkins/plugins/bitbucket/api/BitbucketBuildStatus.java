@@ -82,6 +82,11 @@ public class BitbucketBuildStatus {
     private String key;
 
     /**
+     * The parent key
+     */
+    private String parent;
+
+    /**
      * A short name, usually #job-name, #build-number (will be shown as link
      * text in BB UI)
      */
@@ -136,6 +141,7 @@ public class BitbucketBuildStatus {
         this.name = other.name;
         this.refname = other.refname;
         this.buildDuration = other.buildDuration;
+        this.parent = other.parent;
     }
 
     public String getHash() {
@@ -210,4 +216,11 @@ public class BitbucketBuildStatus {
         this.buildNumber = buildNumber;
     }
 
+    public void setParent(String parent) {
+        this.parent = parent;
+    }
+
+    public String getParent() {
+        return parent;
+    }
 }

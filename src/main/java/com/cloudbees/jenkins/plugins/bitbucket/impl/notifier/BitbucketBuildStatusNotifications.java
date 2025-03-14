@@ -177,12 +177,15 @@ public final class BitbucketBuildStatusNotifications {
         if (state != null) {
             BitbucketDefaulNotifier notifier = new BitbucketDefaulNotifier(client);
             String notificationKey = DigestUtils.md5Hex(key);
+            String notificationParentKey = null;
             if (context.useReadableNotificationIds() && !isCloud) {
                 notificationKey = key.replace(' ', '_').toUpperCase();
+                notificationParentKey = getBuildParentKey(build).replace(' ', '_').toUpperCase();
             }
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, notificationKey, name, refName);
             buildStatus.setBuildDuration(build.getDuration());
             buildStatus.setBuildNumber(build.getNumber());
+            buildStatus.setParent(notificationParentKey);
             // TODO testResults should be provided by an extension point that integrates JUnit or anything else plugin
             notifier.notifyBuildStatus(buildStatus);
             if (result != null) {
@@ -294,6 +297,10 @@ public final class BitbucketBuildStatusNotifications {
         }
 
         return key;
+    }
+
+    private static String getBuildParentKey(@NonNull Run<?, ?> build) {
+        return build.getParent().getParent().getFullName();
     }
 
     /**

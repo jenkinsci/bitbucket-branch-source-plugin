@@ -140,6 +140,35 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         ArgumentCaptor<BitbucketBuildStatus> captor = ArgumentCaptor.forClass(BitbucketBuildStatus.class);
         verify(apiClient).postBuildStatus(captor.capture());
         assertThat(captor.getValue().getKey()).isEqualTo("P/BRANCH-JOB");
+        assertThat(captor.getValue().getParent()).isEqualTo("P");
+    }
+
+    @Issue("JENKINS-75203")
+    @Test
+    void test_status_notification_parent_key_null_if_cloud_is_true(@NonNull JenkinsRule r) throws Exception {
+        StreamBuildListener taskListener = new StreamBuildListener(System.out, StandardCharsets.UTF_8);
+        URL jenkinsURL = new URL("http://example.com:" + r.getURL().getPort() + r.contextPath + "/");
+        JenkinsLocationConfiguration.get().setUrl(jenkinsURL.toString());
+
+        String serverURL = BitbucketCloudEndpoint.SERVER_URL;
+
+        BitbucketBuildStatusNotificationsTrait trait = new BitbucketBuildStatusNotificationsTrait();
+
+        WorkflowRun build = prepareBuildForNotification(r, trait, serverURL);
+        doReturn(Result.SUCCESS).when(build).getResult();
+
+        FilePath workspace = r.jenkins.getWorkspaceFor(build.getParent());
+
+        BitbucketApi apiClient = mock(BitbucketCloudApiClient.class);
+        BitbucketMockApiFactory.add(serverURL, apiClient);
+
+        JobCheckoutListener listener = new JobCheckoutListener();
+        listener.onCheckout(build, null, workspace, taskListener, null, SCMRevisionState.NONE);
+
+        ArgumentCaptor<BitbucketBuildStatus> captor = ArgumentCaptor.forClass(BitbucketBuildStatus.class);
+        verify(apiClient).postBuildStatus(captor.capture());
+        assertThat(captor.getValue().getKey()).isNotEmpty();
+        assertThat(captor.getValue().getParent()).isNull();
     }
 
     @Issue("JENKINS-74970")
@@ -173,6 +202,7 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         assertThat(captor.getValue()).satisfies(status -> {
             assertThat(status.getHash()).isEqualTo(prRevision.getHash());
             assertThat(status.getKey()).isEqualTo(DigestUtils.md5Hex("p/branch-job"));
+            assertThat(status.getParent()).isNull();
             assertThat(status.getRefname()).isEqualTo("refs/heads/" + scmHead.getBranchName());
         });
     }
