@@ -34,6 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.TestResults;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
@@ -46,6 +47,7 @@ import hudson.model.Result;
 import hudson.model.StreamBuildListener;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
+import hudson.tasks.test.AbstractTestResultAction;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -115,7 +117,7 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         assertThat(captor.getValue().getState()).isEqualTo(expectedStatus.name());
     }
 
-    @Issue("JENKINS-72780")
+    @Issue({"JENKINS-72780", "JENKINS-75082"})
     @Test
     void test_status_notification_name_when_UseReadableNotificationIds_is_true(@NonNull JenkinsRule r) throws Exception {
         StreamBuildListener taskListener = new StreamBuildListener(System.out, StandardCharsets.UTF_8);
@@ -141,9 +143,12 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         verify(apiClient).postBuildStatus(captor.capture());
         assertThat(captor.getValue().getKey()).isEqualTo("P/BRANCH-JOB");
         assertThat(captor.getValue().getParent()).isEqualTo("P");
+        assertThat(captor.getValue().getTestResults())
+            .extracting(TestResults::getSuccessful, TestResults::getFailed, TestResults::getSkipped)
+            .containsExactly(3, 2, 1);
     }
 
-    @Issue("JENKINS-75203")
+    @Issue({"JENKINS-75203", "JENKINS-75082"})
     @Test
     void test_status_notification_parent_key_null_if_cloud_is_true(@NonNull JenkinsRule r) throws Exception {
         StreamBuildListener taskListener = new StreamBuildListener(System.out, StandardCharsets.UTF_8);
@@ -169,6 +174,7 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         verify(apiClient).postBuildStatus(captor.capture());
         assertThat(captor.getValue().getKey()).isNotEmpty();
         assertThat(captor.getValue().getParent()).isNull();
+        assertThat(captor.getValue().getTestResults()).isNull();
     }
 
     @Issue("JENKINS-74970")
@@ -259,6 +265,12 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         Branch branch = new Branch(scmSource.getId(), scmRevision.getHead(), scm, Collections.emptyList());
         when(projectFactory.getBranch(job)).thenReturn(branch);
         project.setProjectFactory(projectFactory);
+        AbstractTestResultAction<?> testResultAction = mock(AbstractTestResultAction.class);
+        when(testResultAction.getTotalCount()).thenReturn(6);
+        when(testResultAction.getFailCount()).thenReturn(2);
+        when(testResultAction.getSkipCount()).thenReturn(1);
+        doReturn(List.of(testResultAction)).when(build).getActions(AbstractTestResultAction.class);
+
 
         return build;
     }

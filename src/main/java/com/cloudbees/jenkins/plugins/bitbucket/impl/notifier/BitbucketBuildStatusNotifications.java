@@ -186,7 +186,9 @@ public final class BitbucketBuildStatusNotifications {
             buildStatus.setBuildDuration(build.getDuration());
             buildStatus.setBuildNumber(build.getNumber());
             buildStatus.setParent(notificationParentKey);
-            // TODO testResults should be provided by an extension point that integrates JUnit or anything else plugin
+            if(!isCloud) {
+                buildStatus.setTestResults(TestResultsAdapter.getTestResults(build));
+            }
             notifier.notifyBuildStatus(buildStatus);
             if (result != null) {
                 listener.getLogger().println("[Bitbucket] Build result notified");
