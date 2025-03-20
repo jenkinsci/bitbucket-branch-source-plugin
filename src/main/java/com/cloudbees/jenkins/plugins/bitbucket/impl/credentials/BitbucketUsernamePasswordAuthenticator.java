@@ -28,26 +28,17 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import hudson.util.Secret;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.hc.client5.http.auth.AuthCache;
-import org.apache.hc.client5.http.auth.AuthScope;
-import org.apache.hc.client5.http.auth.CredentialsStore;
-import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
-import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
-import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
-import org.apache.hc.client5.http.impl.auth.BasicScheme;
-import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.core5.http.HttpHost;
+import java.nio.charset.StandardCharsets;
+import org.apache.hc.client5.http.utils.Base64;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpRequest;
 
 /**
  * Authenticator that uses a username and password (probably the default)
  */
 public class BitbucketUsernamePasswordAuthenticator implements BitbucketAuthenticator {
 
-    private static final Logger LOGGER = Logger.getLogger(BitbucketUsernamePasswordAuthenticator.class.getName());
-
-    private final UsernamePasswordCredentials httpCredentials;
+    private final String encodedAuth;
     private final String credentialsId;
 
     /**
@@ -57,24 +48,14 @@ public class BitbucketUsernamePasswordAuthenticator implements BitbucketAuthenti
     public BitbucketUsernamePasswordAuthenticator(StandardUsernamePasswordCredentials credentials) {
         credentialsId = credentials.getId();
         String password = Secret.toString(credentials.getPassword());
-        httpCredentials = new UsernamePasswordCredentials(credentials.getUsername(), password.toCharArray());
+        String auth = credentials.getUsername() + ":" + password;
+        encodedAuth = Base64.encodeBase64String(auth.getBytes(StandardCharsets.ISO_8859_1));
     }
 
-    /**
-     * Sets up HTTP Basic Auth with the provided username/password
-     *
-     * @param context The connection context
-     * @param host host being connected to
-     */
     @Override
-    public void configureContext(HttpClientContext context, HttpHost host) {
-        CredentialsStore credentialsStore = new BasicCredentialsProvider();
-        credentialsStore.setCredentials(new AuthScope(host), httpCredentials);
-        AuthCache authCache = new BasicAuthCache();
-        LOGGER.log(Level.FINE,"Add host={0} to authCache.", host);
-        authCache.put(host, new BasicScheme());
-        context.setCredentialsProvider(credentialsStore);
-        context.setAuthCache(authCache);
+    public void configureRequest(HttpRequest request) {
+        final String authHeader = "Basic " + encodedAuth;
+        request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
     }
 
     @Override

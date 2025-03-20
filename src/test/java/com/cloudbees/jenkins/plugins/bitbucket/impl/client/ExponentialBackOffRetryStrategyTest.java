@@ -68,8 +68,8 @@ class ExponentialBackOffRetryStrategyTest {
                 false,
                 mock(BitbucketServerWebhookImplementation.class)) {
             @Override
-            protected HttpClientBuilder setupClientBuilder(String host) {
-                return super.setupClientBuilder(host)
+            protected HttpClientBuilder setupClientBuilder() {
+                return super.setupClientBuilder()
                         .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, 5, 100))
                         .addResponseInterceptorFirst(counterInterceptor);
             }

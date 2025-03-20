@@ -69,19 +69,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import static java.util.concurrent.TimeUnit.HOURS;
@@ -97,7 +93,8 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     // Limit images to 16k
     private static final int MAX_AVATAR_LENGTH = 16384;
     private static final int MAX_PAGE_LENGTH = 100;
-    protected static final HttpClientConnectionManager connectionManager = connectionManager();
+
+    private static final HttpClientConnectionManager connectionManager = buildConnectionManager();
 
     private final CloseableHttpClient client;
     private final String owner;
@@ -109,32 +106,6 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     private static final Cache<String, BitbucketCloudCommit> cachedCommits = new Cache<>(24, HOURS);
     private transient BitbucketRepository cachedRepository;
     private transient String cachedDefaultBranch;
-
-    private static HttpClientConnectionManager connectionManager() {
-        try {
-            int connectTimeout = Integer.getInteger("http.connect.timeout", 10);
-            int socketTimeout = Integer.getInteger("http.socket.timeout", 60);
-
-            ConnectionConfig connCfg = ConnectionConfig.custom()
-                    .setConnectTimeout(connectTimeout, TimeUnit.SECONDS)
-                    .setSocketTimeout(socketTimeout, TimeUnit.SECONDS)
-                    .build();
-
-            SocketConfig socketConfig = SocketConfig.custom()
-                    .setSoTimeout(60, TimeUnit.SECONDS)
-                    .build();
-
-            return PoolingHttpClientConnectionManagerBuilder.create()
-                    .setMaxConnPerRoute(20)
-                    .setMaxConnTotal(22)
-                    .setDefaultConnectionConfig(connCfg)
-                    .setSocketConfigResolver(host -> host.getTargetHost().equals(API_HOST) ? socketConfig : SocketConfig.DEFAULT)
-                    .build();
-        } catch (Exception e) {
-            // in case of exception this avoids ClassNotFoundError which prevents the classloader from loading this class again
-            return null;
-        }
-    }
 
     public static List<String> stats() {
         List<String> stats = new ArrayList<>();
@@ -168,7 +139,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             cachedTeam.setExpireDuration(teamCacheDuration, MINUTES);
             cachedRepositories.setExpireDuration(repositoriesCacheDuration, MINUTES);
         }
-        this.client = super.setupClientBuilder("bitbucket.org").build();
+        this.client = super.setupClientBuilder().build();
     }
 
     /**

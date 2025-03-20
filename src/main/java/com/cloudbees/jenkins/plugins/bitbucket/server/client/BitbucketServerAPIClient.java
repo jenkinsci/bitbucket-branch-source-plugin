@@ -91,7 +91,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
@@ -139,19 +138,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private static final String API_MIRRORS_PATH = "/rest/mirroring/1.0/mirrorServers";
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
 
-    protected static final HttpClientConnectionManager connectionManager = connectionManager();
-
-    private static HttpClientConnectionManager connectionManager() {
-        try {
-            PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(); // NOSONAR
-            connManager.setDefaultMaxPerRoute(20);
-            connManager.setMaxTotal(22);
-            return connManager;
-        } catch (Exception e) {
-            // in case of exception this avoids ClassNotFoundError which prevents the classloader from loading this class again
-            return null;
-        }
-    }
+    private static final HttpClientConnectionManager connectionManager = buildConnectionManager();
 
     /**
      * Repository owner.
@@ -190,7 +177,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         this.repositoryName = repositoryName;
         this.baseURL = Util.removeTrailingSlash(baseURL);
         this.webhookImplementation = requireNonNull(webhookImplementation);
-        this.client = setupClientBuilder(baseURL).build();
+        this.client = setupClientBuilder().build();
     }
 
     /**

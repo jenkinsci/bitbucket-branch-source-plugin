@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import java.io.FileNotFoundException;
@@ -54,6 +53,7 @@ import org.apache.hc.client5.http.classic.methods.HttpHead;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
@@ -61,6 +61,7 @@ import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 import org.apache.hc.client5.http.impl.auth.BasicScheme;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.ClassicHttpResponse;
@@ -133,20 +134,35 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         return len;
     }
 
-    protected HttpClientBuilder setupClientBuilder(@Nullable String host) {
+    protected static HttpClientConnectionManager buildConnectionManager() {
+        int connectTimeout = Integer.getInteger("http.connect.timeout", 10);
+        int socketTimeout = Integer.getInteger("http.socket.timeout", 60);
+        ConnectionConfig connectionConfig = ConnectionConfig.custom()
+                .setConnectTimeout(connectTimeout, TimeUnit.SECONDS)
+                .setSocketTimeout(socketTimeout, TimeUnit.SECONDS)
+                .build();
+
+        HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                        .setMaxConnPerRoute(20)
+                        .setMaxConnTotal(22)
+                        .setDefaultConnectionConfig(connectionConfig)
+                        .build();
+        return connectionManager;
+    }
+
+    protected HttpClientBuilder setupClientBuilder() {
         int connectionRequestTimeout = Integer.getInteger("http.connect.request.timeout", 60);
 
-        RequestConfig config = RequestConfig.custom()
+        RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(connectionRequestTimeout, TimeUnit.SECONDS)
                 .build();
 
-        HttpClientConnectionManager connectionManager = getConnectionManager();
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
                 .useSystemProperties()
-                .setConnectionManager(connectionManager)
-                .setConnectionManagerShared(connectionManager != null)
+                .setConnectionManager(getConnectionManager())
+                .setConnectionManagerShared(true)
                 .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
-                .setDefaultRequestConfig(config)
+                .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofSeconds(2))
                 .disableCookieManagement();
@@ -269,7 +285,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
             String content = getResponseContent(response);
             throw buildResponseException(response, content);
         }
-        return new ClosingConnectionInputStream(response, httpget, getConnectionManager());
+        return new ClosingConnectionInputStream(response, httpget);
     }
 
     protected int headRequestStatus(String path) throws IOException {

@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 import java.io.IOException;
 import java.io.InputStream;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
-import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 
@@ -36,16 +35,12 @@ public class ClosingConnectionInputStream extends InputStream {
 
     private final HttpUriRequest method;
 
-    private final HttpClientConnectionManager connectionManager;
-
     private final InputStream delegate;
 
     public ClosingConnectionInputStream(final ClassicHttpResponse response,
-                                        final HttpUriRequest method,
-                                        final HttpClientConnectionManager connectionmanager) throws IOException {
+                                        final HttpUriRequest method) throws IOException {
         this.response = response;
         this.method = method;
-        this.connectionManager = connectionmanager;
         this.delegate = response.getEntity().getContent();
     }
 
@@ -58,8 +53,7 @@ public class ClosingConnectionInputStream extends InputStream {
     public void close() throws IOException {
         EntityUtils.consume(response.getEntity());
         delegate.close();
-//FIXME        method.releaseConnection();
-//FIXME        connectionManager.closeExpiredConnections();
+//        method.releaseConnection();
     }
 
     @Override
