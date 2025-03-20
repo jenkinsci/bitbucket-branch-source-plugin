@@ -35,6 +35,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
@@ -579,7 +580,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                 if (showAvatar()) {
                     avatarURL = team.getAvatar();
                 }
-                teamURL = team.getLink("html");
+                teamURL = BitbucketApiUtils.isCloud(client) ? team.getLink("html") : team.getLink("self");
                 teamDisplayName = StringUtils.defaultIfBlank(team.getDisplayName(), team.getName());
                 if (StringUtils.isNotBlank(teamURL)) {
                     if (team instanceof BitbucketCloudWorkspace wks) {

@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
@@ -235,6 +236,16 @@ class BitbucketServerAPIClientTest {
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
                     .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/tags/v0.0.0"));
+    }
+
+    @Issue("JENKINS-75440")
+    @Test
+    void verify_avatar_URL() throws Exception {
+        String serverURL = "http://localhost:7990/bitbucket";
+        BitbucketServerAPIClient client = (BitbucketServerAPIClient) BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+
+        BitbucketTeam project = client.getTeam();
+        assertThat(project.getAvatar()).isEqualTo("http://localhost:7990/bitbucket/rest/api/1.0/projects/amuniz/avatar.png");
     }
 
     @Issue("JENKINS-75119")

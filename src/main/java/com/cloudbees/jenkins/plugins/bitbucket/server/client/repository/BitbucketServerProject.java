@@ -59,6 +59,7 @@ public class BitbucketServerProject implements BitbucketTeam {
 
     @Override
     public String getAvatar() {
-        return getLink("self") + "/avatar.png";
+        String baseURL = getLink("self").replace("/projects", "/rest/api/1.0/projects");
+        return baseURL + "/avatar.png";
     }
 }
