@@ -64,6 +64,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -145,6 +146,9 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
                 .setServiceUnavailableRetryStrategy(serviceUnavailableStrategy)
                 .setRetryHandler(new StandardHttpRequestRetryHandler())
                 .setDefaultRequestConfig(config)
+                .evictExpiredConnections()
+                .evictIdleConnections(5, TimeUnit.SECONDS)
+                .setConnectionReuseStrategy(new NoConnectionReuseStrategy())
                 .disableCookieManagement();
 
         if (authenticator != null) {
@@ -255,6 +259,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         HttpClientConnectionManager connectionManager = getConnectionManager();
         if (connectionManager != null) {
             connectionManager.closeExpiredConnections();
+            connectionManager.closeIdleConnections(5, TimeUnit.SECONDS);
         }
     }
 
