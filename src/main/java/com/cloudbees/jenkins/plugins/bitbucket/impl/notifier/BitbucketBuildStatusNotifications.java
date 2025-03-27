@@ -268,7 +268,11 @@ public final class BitbucketBuildStatusNotifications {
                 }
             }
         }
-        createStatus(build, listener, bitbucket, key, hash, refName);
+        try {
+            createStatus(build, listener, bitbucket, key, hash, refName);
+        } finally {
+            bitbucket.close();
+        }
     }
 
     @CheckForNull

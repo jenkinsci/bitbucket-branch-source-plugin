@@ -81,6 +81,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
@@ -145,7 +146,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     private static HttpClientConnectionManager connectionManager() {
         try {
-            PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(); // NOSONAR
+            PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(1, TimeUnit.SECONDS); // NOSONAR
             connManager.setDefaultMaxPerRoute(20);
             connManager.setMaxTotal(22);
             return connManager;
