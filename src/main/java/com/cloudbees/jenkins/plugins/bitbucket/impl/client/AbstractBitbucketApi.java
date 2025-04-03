@@ -242,8 +242,8 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         try (ClassicHttpResponse response =  executeMethod(getHost(), request, requireAuthentication)) {
             int statusCode = response.getCode();
             if (statusCode == HttpStatus.SC_NOT_FOUND) {
-                EntityUtils.consumeQuietly(response.getEntity());
-                throw new FileNotFoundException("URL: " + request.getRequestUri());
+                String errorMessage = getResponseContent(response);
+                throw new FileNotFoundException("Resource " + request.getRequestUri() + " not found: " + errorMessage);
             }
             if (statusCode == HttpStatus.SC_NO_CONTENT) {
                 EntityUtils.consumeQuietly(response.getEntity());
@@ -258,7 +258,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         } catch (FileNotFoundException | BitbucketRequestException e) {
             throw e;
         } catch (IOException e) {
-            throw new IOException("Communication error for url: " + request, e);
+            throw new IOException("Communication error for URL: " + request, e);
         }
     }
 
@@ -274,8 +274,8 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         ClassicHttpResponse response =  executeMethod(httpget);
         int statusCode = response.getCode();
         if (statusCode == HttpStatus.SC_NOT_FOUND) {
-            EntityUtils.consume(response.getEntity());
-            throw new FileNotFoundException("URL: " + path);
+            String errorMessage = getResponseContent(response);
+            throw new FileNotFoundException("Resource " + path + " not found: " + errorMessage);
         }
         if (statusCode != HttpStatus.SC_OK) {
             String content = getResponseContent(response);

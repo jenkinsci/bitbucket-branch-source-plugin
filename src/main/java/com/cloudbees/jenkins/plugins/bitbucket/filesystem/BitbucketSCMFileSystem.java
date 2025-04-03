@@ -84,6 +84,13 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
         return new BitbucketSCMFile(api, ref, revision == null ? null : revision.toString());
     }
 
+    @Override
+    public void close() throws IOException {
+        if (api != null) {
+            api.close();
+        }
+    }
+
     @Extension
     public static class BuilderImpl extends SCMFileSystem.Builder {
 
@@ -145,12 +152,11 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             String credentialsId = src.getCredentialsId();
             String owner = src.getRepoOwner();
             String repository = src.getRepository();
-            String serverUrl = src.getServerUrl();
-            StandardCredentials credentials = lookupScanCredentials(src.getOwner(), credentialsId, serverUrl);
+            String serverURL = src.getServerUrl();
+            StandardCredentials credentials = lookupScanCredentials(src.getOwner(), credentialsId, serverURL);
 
-            BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverUrl), credentials);
+            BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
 
-            BitbucketApi apiClient = BitbucketApiFactory.newInstance(serverUrl, authenticator, owner, null, repository);
             String ref = null;
 
             if (head instanceof BranchSCMHead) {
@@ -161,7 +167,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     return null;
                 }
 
-                if (BitbucketApiUtils.isCloud(apiClient)) {
+                if (BitbucketApiUtils.isCloud(serverURL)) {
                     // support lightweight checkout for branches with same owner and repository
                     if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
                         StringUtils.equalsIgnoreCase(prHead.getRepoOwner(), src.getRepoOwner()) &&
@@ -179,7 +185,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                     // Bitbucket server v7 doesn't have the `merge` ref for PRs
                     // We don't return `ref` when working with v7
                     // so that pipeline falls back to heavyweight checkout properly
-                    boolean ligthCheckout = BitbucketServerEndpoint.findServerVersion(serverUrl) != BitbucketServerVersion.VERSION_7;
+                    boolean ligthCheckout = BitbucketServerEndpoint.findServerVersion(serverURL) != BitbucketServerVersion.VERSION_7;
                     if (ligthCheckout) {
                         ref = "pull-requests/" + prHead.getId() + "/merge";
                     } else {
@@ -193,7 +199,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                 return null;
             }
 
-            return new BitbucketSCMFileSystem(apiClient, ref, rev);
+            return new BitbucketSCMFileSystem(BitbucketApiFactory.newInstance(serverURL, authenticator, owner, null, repository), ref, rev);
         }
     }
 }
