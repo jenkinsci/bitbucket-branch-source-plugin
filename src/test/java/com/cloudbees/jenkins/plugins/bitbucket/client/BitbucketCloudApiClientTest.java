@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
@@ -50,6 +51,8 @@ import org.mockito.ArgumentCaptor;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -113,6 +116,14 @@ class BitbucketCloudApiClientTest {
         assertThat(repository.getUpdatedOn()).describedAs("update on date is null").isNotNull();
         Date expectedDate = DateUtils.getDate(2025, 1, 27, 14, 15, 58, 600);
         assertThat(repository.getUpdatedOn()).isEqualTo(expectedDate);
+    }
+
+    @Test
+    void verify_avatar_does_not_authenticate_request() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketAuthenticator authenticator = BitbucketIntegrationClientFactory.extractAuthenticator(client);
+        client.getAvatar("https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=default");
+        verify(authenticator, never()).configureRequest(any(HttpRequest.class));
     }
 
     @Test

@@ -74,8 +74,7 @@ public class BitbucketApiUtils {
                                                 String credentialsId,
                                                 String repoOwner,
                                                 String repository,
-                                                BitbucketSupplier<ListBoxModel> listBoxModelSupplier)
-        throws FormFillFailure {
+                                                BitbucketSupplier<ListBoxModel> listBoxModelSupplier) throws FormFillFailure {
         repoOwner = Util.fixEmptyAndTrim(repoOwner);
         if (repoOwner == null) {
             return new ListBoxModel();
@@ -101,29 +100,32 @@ public class BitbucketApiUtils {
 
         BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
 
-        try {
-            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverURL, authenticator, repoOwner, null, repository);
+        try (BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverURL, authenticator, repoOwner, null, repository)) {
             return listBoxModelSupplier.get(bitbucket);
-        } catch (FormFillFailure | OutOfMemoryError e) {
+        } catch (FormFillFailure e) {
             throw e;
-        } catch (IOException e) {
-            if (e instanceof BitbucketRequestException bbe) {
-                if (bbe.getHttpCode() == 401) {
-                    throw FormFillFailure.error(credentials == null
-                        ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
-                        : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
-                }
-            } else if (e.getCause() instanceof BitbucketRequestException cause && cause.getHttpCode() == 401) {
+        } catch (InterruptedException | IOException e) { // NOSONAR
+            BitbucketRequestException bbe = BitbucketApiUtils.unwrap(e);
+            if (bbe != null && bbe.getHttpCode() == 401) {
                 throw FormFillFailure.error(credentials == null
                     ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
                     : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
             }
             logger.log(Level.SEVERE, e.getMessage(), e);
             throw FormFillFailure.error(e.getMessage());
-        } catch (Throwable e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw FormFillFailure.error(e.getMessage());
         }
+    }
+
+    public static BitbucketRequestException unwrap(Exception e) {
+        Throwable cause = e;
+        while (cause != null) {
+            if (e instanceof BitbucketRequestException bbException) {
+                return bbException;
+            } else {
+                cause = e.getCause();
+            }
+        }
+        return null;
     }
 
     public static HttpHost toHttpHost(String url) {
@@ -139,20 +141,6 @@ public class BitbucketApiUtils {
         } catch (URISyntaxException e) {
             throw new RuntimeException("Invalid URL " + url, e);
         }
-//
-//        String checkedURL = url;
-//        try {
-//            URL tmp = new URL(url);
-//            if (tmp.getProtocol() == null) {
-//                checkedURL = new URL("http", tmp.getHost(), tmp.getPort(), tmp.getFile()).toString();
-//            }
-//        } catch (MalformedURLException e) {
-//        }
-//        try {
-//            return HttpHost.create(checkedURL);
-//        } catch (URISyntaxException e) {
-//            throw new RuntimeException("Invalid URL " + checkedURL, e);
-//        }
     }
 
 }

@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
@@ -668,6 +669,8 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 return new AvatarImage(avatar, System.currentTimeMillis());
             } catch (FileNotFoundException e) {
                 logger.log(Level.FINE, "Failed to get avatar from URL {0}", url);
+            } catch (BitbucketRequestException e) {
+                throw e;
             } catch (IOException e) {
                 throw new IOException("I/O error when parsing response from URL: " + url, e);
             }

@@ -25,12 +25,15 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import hudson.model.TaskListener;
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -38,8 +41,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMHeadOrigin;
+import jenkins.scm.api.SCMProbe;
+import jenkins.scm.api.SCMProbeStat;
+import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMSourceCriteria.Probe;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceRequest;
 
@@ -49,6 +58,139 @@ import jenkins.scm.api.trait.SCMSourceRequest;
  * @since 2.2.0
  */
 public class BitbucketSCMSourceRequest extends SCMSourceRequest {
+
+    private class BitbucketProbeFactory<I> implements SCMSourceRequest.ProbeLambda<SCMHead, I> {
+        private transient final BitbucketApi client;
+
+        public BitbucketProbeFactory(BitbucketApi client) {
+            this.client = client;
+        }
+
+        @SuppressFBWarnings("SE_BAD_FIELD")
+        @SuppressWarnings("serial")
+        @NonNull
+        @Override
+        public Probe create(@NonNull final SCMHead head, @CheckForNull final I revisionInfo) throws IOException, InterruptedException {
+            final String hash = (revisionInfo instanceof BitbucketCommit bbRevision) //
+                    ? bbRevision.getHash() //
+                    : (String) revisionInfo;
+
+            return new SCMProbe() {
+
+                @Override
+                public void close() throws IOException {
+                    // client will be closed by BitbucketSCMSourceRequest
+                }
+
+                @Override
+                public String name() {
+                    return head.getName();
+                }
+
+                @Override
+                public long lastModified() {
+                    try {
+                        BitbucketCommit commit = null;
+                        if (hash != null) {
+                            commit = (revisionInfo instanceof BitbucketCommit bbRevision) //
+                                    ? bbRevision //
+                                    : client.resolveCommit(hash);
+                        }
+
+                        if (commit == null) {
+                            listener().getLogger().format("Can not resolve commit by hash [%s] on repository %s/%s%n", //
+                                    hash, client.getOwner(), client.getRepositoryName());
+                            return 0;
+                        }
+                        return commit.getDateMillis();
+                    } catch (InterruptedException | IOException e) {
+                        listener().getLogger().format("Can not resolve commit by hash [%s] on repository %s/%s%n", //
+                                hash, client.getOwner(), client.getRepositoryName());
+                        return 0;
+                    }
+                }
+
+                @Override
+                public SCMProbeStat stat(@NonNull String path) throws IOException {
+                    if (hash == null) {
+                        listener().getLogger() //
+                                .format("Can not resolve path for hash [%s] on repository %s/%s%n", //
+                                        hash, client.getOwner(), client.getRepositoryName());
+                        return SCMProbeStat.fromType(Type.NONEXISTENT);
+                    }
+
+                    try {
+                        Type pathType = new BitbucketSCMFile(client, name(), hash).child(path).getType();
+                        return SCMProbeStat.fromType(pathType);
+                    } catch (InterruptedException e) {
+                        throw new IOException("Interrupted", e);
+                    }
+                }
+            };
+        }
+    }
+
+    public static class BitbucketRevisionFactory<I> implements SCMSourceRequest.LazyRevisionLambda<SCMHead, SCMRevision, I> {
+        private final BitbucketApi client;
+
+        public BitbucketRevisionFactory(BitbucketApi client) {
+            this.client = client;
+        }
+
+        @NonNull
+        @Override
+        public SCMRevision create(@NonNull SCMHead head, @Nullable I input) throws IOException, InterruptedException {
+            return create(head, input, null);
+        }
+
+        @NonNull
+        public SCMRevision create(@NonNull SCMHead head,
+                                  @Nullable I sourceInput,
+                                  @Nullable I targetInput) throws IOException, InterruptedException {
+            BitbucketCommit sourceCommit = asCommit(sourceInput);
+            BitbucketCommit targetCommit = asCommit(targetInput);
+
+            SCMRevision revision;
+            if (head instanceof PullRequestSCMHead prHead) {
+                SCMHead targetHead = prHead.getTarget();
+
+                return new PullRequestSCMRevision( //
+                        prHead, //
+                        new BitbucketGitSCMRevision(targetHead, targetCommit), //
+                        new BitbucketGitSCMRevision(prHead, sourceCommit));
+            } else {
+                revision = new BitbucketGitSCMRevision(head, sourceCommit);
+            }
+            return revision;
+        }
+
+        @Nullable
+        private BitbucketCommit asCommit(I input) throws IOException, InterruptedException {
+            if (input instanceof String value) {
+                return client.resolveCommit(value);
+            } else if (input instanceof BitbucketCommit commit) {
+                return commit;
+            }
+            return null;
+        }
+    }
+
+    private class CriteriaWitness implements SCMSourceRequest.Witness {
+        @Override
+        public void record(@NonNull SCMHead scmHead, SCMRevision revision, boolean isMatch) { // NOSONAR
+            if (revision == null) {
+                listener().getLogger().println("    Skipped");
+            } else {
+                if (isMatch) {
+                    listener().getLogger().println("    Met criteria");
+                } else {
+                    listener().getLogger().println("    Does not meet criteria");
+                }
+
+            }
+        }
+    }
+
     /**
      * {@code true} if branch details need to be fetched.
      */
@@ -355,9 +497,14 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      * or if the pull request details have not been provided by {@link #setPullRequests(Iterable)} yet.
      *
      * @return the pull request details (may be empty)
+     * @throws IOException If the request to retrieve the full details encounters an issue.
+     * @throws InterruptedException If the request to retrieve the full details is interrupted.
      */
     @NonNull
-    public final Iterable<BitbucketPullRequest> getPullRequests() {
+    public final Iterable<BitbucketPullRequest> getPullRequests() throws IOException, InterruptedException {
+        if (pullRequests == null) {
+            pullRequests = (Iterable<BitbucketPullRequest>) getBitbucketApiClient().getPullRequests();
+        }
         return Util.fixNull(pullRequests);
     }
 
@@ -399,9 +546,14 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      * or if the branch details have not been provided by {@link #setBranches(Iterable)} yet.
      *
      * @return the branch details (may be empty)
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    public final Iterable<BitbucketBranch> getBranches() {
+    public final Iterable<BitbucketBranch> getBranches() throws IOException, InterruptedException {
+        if (branches == null) {
+            branches = (Iterable<BitbucketBranch>) getBitbucketApiClient().getBranches();
+        }
         return Util.fixNull(branches);
     }
 
@@ -419,9 +571,14 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      * or if the tag details have not been provided by {@link #setTags(Iterable)} yet.
      *
      * @return the tag details (may be empty)
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    public final Iterable<BitbucketBranch> getTags() {
+    public final Iterable<BitbucketBranch> getTags() throws IOException, InterruptedException {
+        if (tags == null) {
+            tags = (Iterable<BitbucketBranch>) getBitbucketApiClient().getTags();
+        }
         return Util.fixNull(tags);
     }
 
@@ -430,12 +587,54 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     @Override
     public void close() throws IOException {
-        if (pullRequests instanceof Closeable closable) {
-            closable.close();
-        }
-        if (branches instanceof Closeable closable) {
-            closable.close();
+        if (api != null) {
+            api.close();
         }
         super.close();
+    }
+
+    /**
+     * Processes a head in the context of the current request where an intermediary operation is required before
+     * the {@link SCMRevision} can be instantiated.
+     *
+     * @param head                the {@link SCMHead} to process.
+     * @param intermediateFactory factory method that provides the seed information for both the {@link ProbeLambda}
+     *                            and the {@link LazyRevisionLambda}.
+     * @param <H>                 the type of {@link SCMHead}.
+     * @param <I>                 the type of the intermediary operation result.
+     * @param <R>                 the type of {@link SCMRevision}.
+     * @return {@code true} if the {@link SCMHeadObserver} for this request has completed observing, {@code false} to
+     * continue processing.
+     * @throws IOException          if there was an I/O error.
+     * @throws InterruptedException if the processing was interrupted.
+     */
+    public final <H extends SCMHead, I, R extends SCMRevision> boolean process(@NonNull H head,
+                                                                               @CheckForNull IntermediateLambda<I> intermediateFactory)
+                                                                               throws IOException, InterruptedException {
+        return super.process(head, //
+                       intermediateFactory, //
+                       defaultProbeLamda(), //
+                       defaultRevisionLamda(), //
+                       new CriteriaWitness());
+    }
+
+    @NonNull
+    <I> ProbeLambda<SCMHead, I> defaultProbeLamda() {
+        return this.new BitbucketProbeFactory<>(getBitbucketApiClient());
+    }
+
+    @NonNull
+    <I> ProbeLambda<SCMHead, I> buildProbeLamda(@NonNull BitbucketApi client) {
+        return this.new BitbucketProbeFactory<>(client);
+    }
+
+    @NonNull
+    <I> LazyRevisionLambda<SCMHead, SCMRevision, I> defaultRevisionLamda() {
+        return new BitbucketRevisionFactory<>(getBitbucketApiClient());
+    }
+
+    @NonNull
+    Witness defaultWitness() {
+        return this.new CriteriaWitness();
     }
 }

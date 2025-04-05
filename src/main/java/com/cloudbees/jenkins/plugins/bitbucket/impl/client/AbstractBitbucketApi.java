@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -225,21 +226,25 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     @NonNull
     protected abstract CloseableHttpClient getClient();
 
-    protected ClassicHttpResponse executeMethod(HttpHost host,
-                                                HttpUriRequest request,
-                                                boolean requireAuthentication) throws IOException {
-        if (requireAuthentication && authenticator != null) {
+    protected ClassicHttpResponse executeMethod(HttpUriRequest request) throws IOException {
+        HttpHost targetHost = getHost();
+        HttpHost requestHost;
+        try {
+            requestHost = HttpHost.create(request.getUri());
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+
+        // some request could have different host than serverURL, for example avatar images or mirror clone URL
+        // for all these host authentication will be not applied
+        if (authenticator != null && targetHost.equals(requestHost)) {
             authenticator.configureRequest(request);
         }
-        return getClient().executeOpen(host, request, context);
+        return getClient().executeOpen(requestHost, request, context);
     }
 
-    protected ClassicHttpResponse executeMethod(HttpUriRequest httpMethod) throws IOException {
-        return executeMethod(getHost(), httpMethod, true);
-    }
-
-    protected String doRequest(HttpUriRequest request, boolean requireAuthentication) throws IOException {
-        try (ClassicHttpResponse response =  executeMethod(getHost(), request, requireAuthentication)) {
+    protected String doRequest(HttpUriRequest request) throws IOException {
+        try (ClassicHttpResponse response =  executeMethod(request)) {
             int statusCode = response.getCode();
             if (statusCode == HttpStatus.SC_NOT_FOUND) {
                 String errorMessage = getResponseContent(response);
@@ -260,10 +265,6 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         } catch (IOException e) {
             throw new IOException("Communication error for URL: " + request, e);
         }
-    }
-
-    protected String doRequest(HttpUriRequest request) throws IOException {
-        return doRequest(request, true);
     }
 
     /*

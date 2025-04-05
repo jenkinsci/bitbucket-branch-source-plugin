@@ -175,7 +175,7 @@ Bitbucket https://community.atlassian.com/t5/Bitbucket-articles/Announcement-Bit
 
 The plugin can make use of an app password instead of the standard username/password.
 
-First, create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
+First, create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories and pull requests. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
 
 Then create a new _Username with password credentials_ in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created app password in the _Password_ field.
 

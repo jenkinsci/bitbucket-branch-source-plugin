@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
+import java.io.IOException;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
@@ -242,14 +243,19 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             if (head instanceof BranchSCMHead && request instanceof BitbucketSCMSourceRequest) {
                 BitbucketSCMSourceRequest req = (BitbucketSCMSourceRequest) request;
                 String fullName = req.getRepoOwner() + "/" + req.getRepository();
-                for (BitbucketPullRequest pullRequest : req.getPullRequests()) {
-                    BitbucketRepository source = pullRequest.getSource().getRepository();
-                    if (StringUtils.equalsIgnoreCase(fullName, source.getFullName())
-                            && pullRequest.getSource().getBranch().getName().equals(head.getName())) {
-                        request.listener().getLogger().println("Discard branch " + head.getName()
-                                + " because current strategy excludes branches that are also filed as a pull request");
-                        return true;
+                try {
+                    for (BitbucketPullRequest pullRequest : req.getPullRequests()) {
+                        BitbucketRepository source = pullRequest.getSource().getRepository();
+                        if (StringUtils.equalsIgnoreCase(fullName, source.getFullName())
+                                && pullRequest.getSource().getBranch().getName().equals(head.getName())) {
+                            request.listener().getLogger().println("Discard branch " + head.getName()
+                                    + " because current strategy excludes branches that are also filed as a pull request");
+                            return true;
+                        }
                     }
+                } catch (IOException | InterruptedException e) {
+                    // should never happens because data in the requests has been already initialised
+                    e.printStackTrace(request.listener().getLogger());
                 }
             }
             return false;
@@ -268,16 +274,21 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             if (head instanceof BranchSCMHead && request instanceof BitbucketSCMSourceRequest) {
                 BitbucketSCMSourceRequest req = (BitbucketSCMSourceRequest) request;
                 String fullName = req.getRepoOwner() + "/" + req.getRepository();
-                for (BitbucketPullRequest pullRequest : req.getPullRequests()) {
-                    BitbucketRepository source = pullRequest.getSource().getRepository();
-                    if (fullName.equalsIgnoreCase(source.getFullName())
-                            && pullRequest.getSource().getBranch().getName().equals(head.getName())) {
-                        return false;
+                try {
+                    for (BitbucketPullRequest pullRequest : req.getPullRequests()) {
+                        BitbucketRepository source = pullRequest.getSource().getRepository();
+                        if (fullName.equalsIgnoreCase(source.getFullName())
+                                && pullRequest.getSource().getBranch().getName().equals(head.getName())) {
+                            return false;
+                        }
                     }
+                    request.listener().getLogger().println("Discard branch " + head.getName()
+                            + " because current strategy excludes branches that are not also filed as a pull request");
+                    return true;
+                } catch (IOException | InterruptedException e) {
+                    // should never happens because data in the requests has been already initialised
+                    e.printStackTrace(request.listener().getLogger());
                 }
-                request.listener().getLogger().println("Discard branch " + head.getName()
-                        + " because current strategy excludes branches that are not also filed as a pull request");
-                return true;
             }
             return false;
         }

@@ -222,7 +222,7 @@ public final class BitbucketBuildStatusNotifications {
 
         final String key;
         final String refName;
-        final BitbucketApi bitbucket;
+        final BitbucketApi client;
         if (rev instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
             PullRequestSCMHead head = (PullRequestSCMHead) rev.getHead();
@@ -234,14 +234,14 @@ public final class BitbucketBuildStatusNotifications {
                  * that means refName null or valued with only head.getBranchName()
                  */
                 refName = head.getBranchName();
-                bitbucket = source.buildBitbucketClient(head);
+                client = source.buildBitbucketClient(head);
             } else {
                 /*
                  * Head may point to a forked repository that the credentials do
                  * not have access to, resulting in a 401 error. So we need to
                  * push build status to the target repository
                  */
-                bitbucket = source.buildBitbucketClient();
+                client = source.buildBitbucketClient();
                 /*
                  * For Bitbucket Server, refName should be "refs/heads/" + the
                  * name of the source branch of the pull request, and the build
@@ -256,8 +256,8 @@ public final class BitbucketBuildStatusNotifications {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
             SCMHead head = rev.getHead();
             key = getBuildKey(build, head.getName(), shareBuildKeyBetweenBranchAndPR);
-            bitbucket = source.buildBitbucketClient();
-            if (BitbucketApiUtils.isCloud(bitbucket)) {
+            client = source.buildBitbucketClient();
+            if (BitbucketApiUtils.isCloud(client)) {
                 refName = head.getName();
             } else {
                 if (rev instanceof BitbucketTagSCMRevision || head instanceof BitbucketTagSCMHead) {
@@ -267,7 +267,11 @@ public final class BitbucketBuildStatusNotifications {
                 }
             }
         }
-        createStatus(build, listener, bitbucket, key, hash, refName);
+        try {
+            createStatus(build, listener, client, key, hash, refName);
+        } finally {
+            client.close();
+        }
     }
 
     @CheckForNull

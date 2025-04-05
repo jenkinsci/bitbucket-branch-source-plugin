@@ -263,16 +263,12 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
         return pullRequests;
     }
 
-    private Map<String, BitbucketServerPullRequest> loadPullRequests(BitbucketSCMSource src,
-        NativeServerChange change) throws InterruptedException {
-
+    private Map<String, BitbucketServerPullRequest> loadPullRequests(BitbucketSCMSource src, NativeServerChange change) throws InterruptedException {
         final BitbucketServerRepository eventRepo = repository;
-        final BitbucketServerAPIClient api = (BitbucketServerAPIClient) src
-            .buildBitbucketClient(eventRepo.getOwnerName(), eventRepo.getRepositoryName());
-
         final Map<String, BitbucketServerPullRequest> pullRequests = new HashMap<>();
 
-        try {
+        try (BitbucketServerAPIClient api = (BitbucketServerAPIClient) src
+                .buildBitbucketClient(eventRepo.getOwnerName(), eventRepo.getRepositoryName())) {
             try {
                 for (final BitbucketServerPullRequest pullRequest : api.getOutgoingOpenPullRequests(change.getRefId())) {
                     pullRequests.put(pullRequest.getId(), pullRequest);
@@ -294,6 +290,8 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             }
         } catch (FileNotFoundException e) {
             LOGGER.log(Level.INFO, "No such Repository on Bitbucket: {0}", e.getMessage());
+        } catch (IOException e1) {
+            LOGGER.log(Level.INFO, "Comunication fail with server", e1);
         }
 
         return pullRequests;
