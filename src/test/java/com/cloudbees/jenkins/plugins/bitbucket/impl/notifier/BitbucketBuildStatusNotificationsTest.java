@@ -34,11 +34,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
-import hudson.model.Descriptor.FormException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.TaskListener;
+import hudson.model.Descriptor.FormException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -68,6 +68,7 @@ import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -133,7 +134,7 @@ class BitbucketBuildStatusNotificationsTest {
                 )
         );
         when(api.getRepository()).thenReturn(repository);
-        when(api.getFileContent(any(BitbucketSCMFile.class))).thenReturn(
+        when(api.getFileContent(anyString(), anyString())).thenReturn(
                 new ByteArrayInputStream(dsl.getBytes()));
         when(api.getFile(any(BitbucketSCMFile.class))).thenReturn(new BitbucketSCMFile(mock(BitbucketSCMFile.class), "master", Type.REGULAR_FILE, "hash"));
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, api);

@@ -824,13 +824,13 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     }
 
     @Override
-    public InputStream getFileContent(@NonNull BitbucketSCMFile file) throws IOException, InterruptedException {
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}{?at}")
+    public InputStream getFileContent(@NonNull String branchOrHash, @NonNull String path) throws IOException, InterruptedException {
+        // https://developer.atlassian.com/cloud/bitbucket/rest/api-group-source/#api-repositories-workspace-repo-slug-src-commit-path-get
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/src{/branchOrHash,path}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
-                .set("branchOrHash", file.getHash())
-                .set("path", file.getPath())
-                .set("at", file.getRef())
+                .set("branchOrHash", branchOrHash)
+                .set("path", path)
                 .expand();
         return getRequestAsInputStream(url);
     }

@@ -321,13 +321,27 @@ public interface BitbucketApi extends AutoCloseable {
     /**
      * Return an input stream for the given file.
      *
+     * @param branchOrHash the branch name or commit SHA1 where lookup the file
+     * @param path of the file to retrieve the content
+     * @return the stream of the given {@link SCMFile}
+     * @throws IOException if there was a network communications error.
+     * @throws InterruptedException if interrupted while waiting on remote communications.
+     */
+    InputStream getFileContent(@NonNull String branchOrHash, @NonNull String path) throws IOException, InterruptedException;
+
+    /**
+     * Return an input stream for the given file.
+     *
      * @param file an instance of SCM file
      * @return the stream of the given {@link SCMFile}
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
+    @Deprecated(since = "936.0.0", forRemoval = true)
     @Restricted(NoExternalUse.class)
-    InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException;
+    default InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
+        return getFileContent(file.getHash() != null && !file.getHash().contains("+") ? file.getHash() : file.getRef(), file.getPath());
+    }
 
     /**
      * Return the metadata for the given file.

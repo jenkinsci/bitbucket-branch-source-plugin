@@ -986,15 +986,15 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     @Override
-    public InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException {
+    public InputStream getFileContent(String branchOrHash, String path) throws IOException, InterruptedException {
+        // https://developer.atlassian.com/server/bitbucket/rest/v906/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-browse-path-get
         List<String> lines = new ArrayList<>();
         int start=0;
-        String branchOrHash = file.getHash().contains("+") ? file.getRef() : file.getHash();
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + API_BROWSE_PATH + "{&start,limit}")
                 .set("owner", getUserCentricOwner())
                 .set("repo", repositoryName)
-                .set("path", file.getPath().split(Operator.PATH.getSeparator()))
+                .set("path", path.split(Operator.PATH.getSeparator()))
                 .set("at", branchOrHash)
                 .set("start", start)
                 .set("limit", 500);

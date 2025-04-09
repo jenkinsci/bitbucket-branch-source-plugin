@@ -91,7 +91,7 @@ public class BitbucketSCMFile extends SCMFile {
     @NonNull
     public InputStream content() throws IOException, InterruptedException {
         if (this.isFile()) {
-            return api.getFileContent(this);
+            return api.getFileContent(hash != null ? hash : ref, getPath());
         } else {
             throw new IOException("Cannot get raw content from a directory");
         }
