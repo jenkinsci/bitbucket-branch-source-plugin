@@ -53,7 +53,7 @@ class BitbucketGitSCMRevisionTest {
         j = rule;
     }
 
-    private static Stream<Arguments> revisionData() {
+    private static Stream<Arguments> revisionDataProvider() {
         return Stream.of(Arguments.of("branch on cloud", new BranchDiscoveryTrait(true, true), BitbucketCloudEndpoint.SERVER_URL), //
                 Arguments.of("branch on server", new BranchDiscoveryTrait(true, true), "localhost"), //
                 Arguments.of("PR on cloud", new OriginPullRequestDiscoveryTrait(2), BitbucketCloudEndpoint.SERVER_URL), //
@@ -66,7 +66,7 @@ class BitbucketGitSCMRevisionTest {
     }
 
     @ParameterizedTest(name = "verify revision informations from {0}")
-    @MethodSource("revisionData")
+    @MethodSource("revisionDataProvider")
     void verify_revision_informations_are_valued(String testName, SCMSourceTrait trait, String serverURL) throws Exception {
         BitbucketMockApiFactory.add(serverURL, getApiMockClient(serverURL));
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");

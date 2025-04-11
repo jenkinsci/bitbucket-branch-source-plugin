@@ -29,7 +29,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalDate;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.TagSCMHead;
@@ -70,21 +70,28 @@ public class DiscardOldTagTrait extends SCMSourceTrait {
 
     public static final class ExcludeOldSCMTag extends SCMHeadPrefilter {
 
-        private final long expiryMs;
+        private final int keepForDays;
 
         public ExcludeOldSCMTag(int keepForDays) {
-            this.expiryMs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(keepForDays);
+            this.keepForDays = keepForDays;
         }
 
         @Override
         public boolean isExcluded(@NonNull SCMSource source, @NonNull SCMHead head) {
-            if (!(head instanceof TagSCMHead tagHead)) {
+            if (!(head instanceof TagSCMHead tagHead) || tagHead.getTimestamp() == 0) {
+                // it's not a tag or can not resolve tag commit timestamp
                 return false;
             }
-            long tagTimestamp = tagHead.getTimestamp();
-            return tagTimestamp > 0 && tagTimestamp < expiryMs;
+
+            LocalDate commitDate = asLocalDate(tagHead.getTimestamp());
+            LocalDate expiryDate = LocalDate.now().minusDays(keepForDays);
+            return commitDate.isBefore(expiryDate);
         }
 
+        @NonNull
+        private LocalDate asLocalDate(@NonNull long milliseconds) {
+            return new java.sql.Date(milliseconds).toLocalDate();
+        }
     }
 
     @Symbol("bitbucketDiscardOldTag")

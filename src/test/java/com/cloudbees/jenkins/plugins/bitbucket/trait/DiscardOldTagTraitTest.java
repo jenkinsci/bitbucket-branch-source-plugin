@@ -34,7 +34,6 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
 import jenkins.scm.impl.NullSCMSource;
 import org.apache.commons.lang3.time.DateUtils;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -43,41 +42,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DiscardOldTagTraitTest {
 
-    static Stream<Arguments> verify_that_tag_is_not_excluded_args() {
+    static Stream<Arguments> tagSCMHeadProvider() {
         return Stream.of(
-            Arguments.argumentSet("too_recent",
-                new BitbucketTagSCMHead("tag/1234", DateUtils.addDays(new Date(), -4).getTime())),
-            Arguments.argumentSet("no_timestamp", new BitbucketTagSCMHead("tag/zer0", 0L)),
-            Arguments.argumentSet("not_a_tag", new BranchSCMHead("someBranch"))
+            Arguments.argumentSet("expired", new BitbucketTagSCMHead("tag/1234", DateUtils.addDays(new Date(), -6).getTime()), true),
+            Arguments.argumentSet("too_recent", new BitbucketTagSCMHead("tag/1234", DateUtils.addDays(new Date(), -4).getTime()), false),
+            Arguments.argumentSet("no_timestamp", new BitbucketTagSCMHead("tag/zer0", 0L), false),
+            Arguments.argumentSet("not_a_tag", new BranchSCMHead("someBranch"), false)
         );
     }
 
     @ParameterizedTest
-    @MethodSource("verify_that_tag_is_not_excluded_args")
-    void verify_that_tag_is_not_excluded(SCMHead head) {
+    @MethodSource("tagSCMHeadProvider")
+    void verify_that_tag_is_not_excluded(SCMHead head, boolean expectedResult) {
         DiscardOldTagTrait trait = new DiscardOldTagTrait(5);
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         trait.decorateContext(ctx);
         assertThat(ctx.prefilters()).hasAtLeastOneElementOfType(ExcludeOldSCMTag.class);
 
         for (SCMHeadPrefilter filter : ctx.prefilters()) {
-            assertThat(filter.isExcluded(new NullSCMSource(), head)).isFalse();
-        }
-    }
-
-    @Test
-    void verify_that_tag_is_excluded_if_expired() {
-        DiscardOldTagTrait trait = new DiscardOldTagTrait(5);
-        BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        trait.decorateContext(ctx);
-        assertThat(ctx.prefilters()).hasAtLeastOneElementOfType(ExcludeOldSCMTag.class);
-
-        Date now = new Date();
-
-        BitbucketTagSCMHead head = new BitbucketTagSCMHead("tag/1234", DateUtils.addDays(now, -6).getTime());
-
-        for (SCMHeadPrefilter filter : ctx.prefilters()) {
-            assertThat(filter.isExcluded(new NullSCMSource(), head)).isTrue();
+            assertThat(filter.isExcluded(new NullSCMSource(), head)).isEqualTo(expectedResult);
         }
     }
 

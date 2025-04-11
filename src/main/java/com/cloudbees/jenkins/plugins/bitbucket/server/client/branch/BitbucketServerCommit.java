@@ -48,7 +48,7 @@ public class BitbucketServerCommit implements BitbucketCommit {
     @JsonCreator
     public BitbucketServerCommit(@NonNull @JsonProperty("message") String message, //
                                  @NonNull @JsonProperty("id") String hash, //
-                                 @NonNull @JsonProperty("authorTimestamp") long dateMillis, //
+                                 @NonNull @JsonProperty("committerTimestamp") long dateMillis, //
                                  @Nullable @JsonProperty("author") BitbucketServerAuthor author) {
         // date it is not in the payload
         this(message, hash, dateMillis, author != null ? MessageFormat.format(GIT_COMMIT_AUTHOR, author.getName(), author.getEmail()) : null);
