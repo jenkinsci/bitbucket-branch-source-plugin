@@ -63,13 +63,11 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
-import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -124,7 +122,6 @@ class BitbucketBuildStatusNotificationsTest {
         BitbucketCommit commit = mock(BitbucketCommit.class);
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
-        when(api.checkPathExists(Mockito.anyString(), eq(jenkinsfile))).thenReturn(true);
         BitbucketRepository repository = mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
         when(repository.getOwnerName()).thenReturn(repoOwner);

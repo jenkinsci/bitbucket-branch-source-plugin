@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.BitbucketServerIntegrationClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IAuditable;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
@@ -136,11 +135,6 @@ class BitbucketServerAPIClientTest {
         return captor.getValue();
     }
 
-    private BitbucketAuthenticator extractAuthenticator(BitbucketApi client) {
-        assertThat(client).isInstanceOf(BitbucketServerIntegrationClient.class);
-        return ((BitbucketServerIntegrationClient) client).getAuthenticator();
-    }
-
     @Test
     void verify_checkPathExists_given_a_path() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
@@ -207,7 +201,7 @@ class BitbucketServerAPIClientTest {
         String serverURL = "https://acme.bitbucket.org";
         BitbucketServerAPIClient client = (BitbucketServerAPIClient) BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
 
-        BitbucketAuthenticator authenticator = extractAuthenticator(client);
+        BitbucketAuthenticator authenticator = BitbucketIntegrationClientFactory.extractAuthenticator(client);
         String url = serverURL + "/rest/mirroring/latest/upstreamServers/1/repos/1?jwt=TOKEN";
         client.getMirroredRepository(url);
         verify(authenticator, never()).configureRequest(any(HttpRequest.class));
@@ -263,9 +257,9 @@ class BitbucketServerAPIClientTest {
     @Test
     void verify_HttpHost_built_when_server_has_context_root() throws Exception {
         String serverURL = "https://acme.bitbucket.org/bitbucket";
-        BitbucketServerAPIClient client = (BitbucketServerAPIClient) BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
 
-        BitbucketAuthenticator authenticator = extractAuthenticator(client);
+        BitbucketAuthenticator authenticator = BitbucketIntegrationClientFactory.extractAuthenticator(client);
         client.getRepository();
 
         HttpHost expectedHost = HttpHost.create("https://acme.bitbucket.org");

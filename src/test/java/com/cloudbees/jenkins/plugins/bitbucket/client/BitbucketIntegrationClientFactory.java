@@ -34,12 +34,18 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.tools.ant.filters.StringInputStream;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -87,7 +93,7 @@ public class BitbucketIntegrationClientFactory {
         return getClient(null, serverURL, owner, repositoryName);
     }
 
-    public static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient implements IAuditable {
+    private static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient implements IAuditable {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/server/payload/";
 
         private final String payloadRootPath;
@@ -107,9 +113,7 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected ClassicHttpResponse executeMethod(HttpHost host,
-                                                    HttpUriRequest httpMethod,
-                                                    boolean requireAuthentication) throws IOException {
+        protected ClassicHttpResponse executeMethod(HttpUriRequest httpMethod) throws IOException {
             String requestURI = httpMethod.getRequestUri();
             audit.request(httpMethod);
 
@@ -158,20 +162,30 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
-        protected ClassicHttpResponse executeMethod(HttpHost host,
-                                                    HttpUriRequest httpMethod,
-                                                    boolean requireAuthentication) throws IOException {
-            String uri = httpMethod.getRequestUri();
-            audit.request(httpMethod);
+        protected CloseableHttpClient getClient() {
+            CloseableHttpClient client = mock(CloseableHttpClient.class);
+            try {
+                when(client.executeOpen(any(HttpHost.class), any(ClassicHttpRequest.class), any(HttpContext.class))).thenAnswer(new Answer<ClassicHttpResponse>() {
+                    @Override
+                    public ClassicHttpResponse answer(InvocationOnMock invocation) throws Throwable {
+                        HttpRequest httpMethod = invocation.getArgument(1);
+                        String uri = httpMethod.getRequestUri();
+                        audit.request(httpMethod);
 
-            String path = uri.replace(API_ENDPOINT, "");
-            if (path.startsWith("/")) {
-                path = path.replaceFirst("/", "");
+                        String path = uri.replace(API_ENDPOINT, "");
+                        if (path.startsWith("/")) {
+                            path = path.replaceFirst("/", "");
+                        }
+                        String payloadPath = path.replace('/', '-').replaceAll("[=%&?]", "_");
+                        payloadPath = payloadRootPath + payloadPath + ".json";
+
+                        return loadResponseFromResources(getClass(), uri, payloadPath);
+                    }
+                });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            String payloadPath = path.replace('/', '-').replaceAll("[=%&?]", "_");
-            payloadPath = payloadRootPath + payloadPath + ".json";
-
-            return loadResponseFromResources(getClass(), uri, payloadPath);
+            return client;
         }
 
         @Override
@@ -189,4 +203,13 @@ public class BitbucketIntegrationClientFactory {
         return BitbucketIntegrationClientFactory.getClient(null, serverURL, "amuniz", "test-repos");
     }
 
+    public static BitbucketAuthenticator extractAuthenticator(BitbucketApi client) {
+        if (client instanceof BitbucketClouldIntegrationClient cloudClient) {
+            return cloudClient.getAuthenticator();
+        } else if (client instanceof BitbucketServerIntegrationClient serverClient) {
+            return serverClient.getAuthenticator();
+        } else {
+            throw new IllegalArgumentException("client class not supported");
+        }
+    }
 }

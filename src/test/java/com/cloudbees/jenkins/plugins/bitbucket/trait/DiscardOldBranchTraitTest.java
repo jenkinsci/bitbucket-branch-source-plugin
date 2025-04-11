@@ -92,7 +92,7 @@ class DiscardOldBranchTraitTest {
         return branch;
     }
 
-    private BitbucketSCMSourceRequest prepareRequest(BitbucketBranch ...branches) {
+    private BitbucketSCMSourceRequest prepareRequest(BitbucketBranch ...branches) throws Exception {
         BitbucketSCMSourceRequest request = mock(BitbucketSCMSourceRequest.class);
         when(request.getBranches()).thenReturn(Arrays.asList(branches));
         return request;

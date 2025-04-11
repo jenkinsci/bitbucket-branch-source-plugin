@@ -36,6 +36,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullR
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
+import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import hudson.model.TaskListener;
 import java.io.IOException;
@@ -45,6 +46,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMFile;
+import jenkins.scm.api.SCMFile.Type;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -54,7 +59,7 @@ public class BitbucketClientMockUtils {
 
     public static BitbucketCloudApiClient getAPIClientMock(boolean includePullRequests,
             boolean includeWebHooks) throws IOException, InterruptedException {
-        BitbucketCloudApiClient bitbucket = mock(BitbucketCloudApiClient.class);
+        BitbucketCloudApiClient client = mock(BitbucketCloudApiClient.class);
 
         // mock branches
         BitbucketCloudBranch branch1 = getBranch("branch1", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a");
@@ -65,43 +70,55 @@ public class BitbucketClientMockUtils {
         branches.add(branch1);
         branches.add(branch2);
         // add branches
-        when(bitbucket.getBranches()).thenReturn(branches);
-        when(bitbucket.getBranch("branch1")).thenReturn(branch1);
-        when(bitbucket.getBranch("branch2")).thenReturn(branch2);
-        withMockGitRepos(bitbucket);
+        when(client.getBranches()).thenReturn(branches);
+        when(client.getBranch("branch1")).thenReturn(branch1);
+        when(client.getBranch("branch2")).thenReturn(branch2);
+        withMockGitRepos(client);
 
         if (includePullRequests) {
-            when(bitbucket.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
-            when(bitbucket.checkPathExists("e851558f77c098d21af6bb8cc54a423f7cf12147", "markerfile.txt"))
-                    .thenReturn(true);
-            when(bitbucket.resolveSourceFullHash(any(BitbucketPullRequestValue.class)))
+            when(client.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
+            when(client.resolveSourceFullHash(any(BitbucketPullRequestValue.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
 
             BitbucketCloudAuthor author = new BitbucketCloudAuthor();
             author.setRaw("amuniz <amuniz@mail.com");
-            when(bitbucket.resolveCommit("e851558f77c098d21af6bb8cc54a423f7cf12147"))
+            when(client.resolveCommit("e851558f77c098d21af6bb8cc54a423f7cf12147"))
                 .thenReturn(new BitbucketCloudCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", author));
-            when(bitbucket.resolveCommit("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"))
+            when(client.resolveCommit("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"))
                 .thenReturn(new BitbucketCloudCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", author));
         }
 
         // mock file exists
-        when(bitbucket.checkPathExists("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", "markerfile.txt")).thenReturn(true);
-        when(bitbucket.checkPathExists("707c59ce8292c927dddb6807fcf9c3c5e7c9b00f", "markerfile.txt")).thenReturn(false);
+        when(client.getFile(any()))
+            .then(new Answer<SCMFile>() {
+                @Override
+                public SCMFile answer(InvocationOnMock invocation) throws Throwable {
+                    BitbucketSCMFile scmFile = invocation.getArgument(0);
+                    Type type;
+                    if ("markerfile.txt".equals(scmFile.getName())
+                            && (scmFile.getHash().equals("e851558f77c098d21af6bb8cc54a423f7cf12147")
+                                    || scmFile.getHash().equals("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"))) {
+                        type = Type.REGULAR_FILE;
+                    } else {
+                        type = Type.NONEXISTENT;
+                    }
+                    return new BitbucketSCMFile(scmFile, scmFile.getPath(), type, scmFile.getHash());
+                }
+            });
 
         // Team discovering mocks
-        when(bitbucket.getTeam()).thenReturn(getTeam());
-        when(bitbucket.getRepositories()).thenReturn(getRepositories());
+        when(client.getTeam()).thenReturn(getTeam());
+        when(client.getRepositories()).thenReturn(getRepositories());
 
         // Auto-registering hooks
         if (includeWebHooks) {
-            when(bitbucket.getWebHooks()).thenReturn(Collections.EMPTY_LIST)
+            when(client.getWebHooks()).thenReturn(Collections.EMPTY_LIST)
                 // Second call
                 .thenReturn(getWebHooks());
         }
-        when(bitbucket.isPrivate()).thenReturn(true);
+        when(client.isPrivate()).thenReturn(true);
 
-        return bitbucket;
+        return client;
     }
 
     private static List<BitbucketRepositoryHook> getWebHooks() {

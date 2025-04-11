@@ -452,7 +452,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     @NonNull
     public BitbucketMirroredRepository getMirroredRepository(@NonNull String url) throws IOException, InterruptedException {
         HttpGet request = new HttpGet(url);
-        String response = doRequest(request, false);
+        String response = doRequest(request);
         try {
             return JsonParser.toJava(response, BitbucketMirroredRepository.class);
         } catch (IOException e) {
