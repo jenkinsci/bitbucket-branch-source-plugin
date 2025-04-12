@@ -66,6 +66,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import java.awt.image.BufferedImage;
@@ -89,7 +90,6 @@ import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.core5.http.HttpHost;
@@ -277,7 +277,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return pullRequests;
     }
 
-    private void setupPullRequest(BitbucketServerPullRequest pullRequest, BitbucketServerEndpoint endpoint) throws IOException, InterruptedException {
+    private void setupPullRequest(@NonNull BitbucketServerPullRequest pullRequest, @Nullable BitbucketServerEndpoint endpoint) throws IOException, InterruptedException {
         // set commit closure to make commit information available when needed, in a similar way to when request branches
         setupClosureForPRBranch(pullRequest);
 
@@ -334,7 +334,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "TODO needs triage")
-    private void setupClosureForPRBranch(BitbucketServerPullRequest pr) {
+    private void setupClosureForPRBranch(@NonNull BitbucketServerPullRequest pr) {
         try {
             BitbucketServerBranch branch = (BitbucketServerBranch) pr.getSource().getBranch();
             if (branch != null) {
@@ -451,13 +451,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @NonNull
     public BitbucketMirroredRepository getMirroredRepository(@NonNull String url) throws IOException, InterruptedException {
-        HttpGet request = new HttpGet(url);
-        String response = doRequest(request);
-        try {
-            return JsonParser.toJava(response, BitbucketMirroredRepository.class);
-        } catch (IOException e) {
-            throw new IOException("I/O error when accessing URL: " + url, e);
-        }
+        String response = getRequest(url);
+        return JsonParser.toJava(response, BitbucketMirroredRepository.class);
     }
 
     /**
@@ -862,23 +857,17 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                     .set("limit", limit) //
                     .expand();
             String response = getRequest(url);
-            try {
-                page = JsonParser.toJava(response, clazz);
-            } catch (IOException e) {
-                throw new IOException("I/O error when parsing response from URL: " + url, e);
-            }
+            page = JsonParser.toJava(response, clazz);
             resources.addAll(page.getValues());
 
             limit = page.getLimit();
             pageNumber = page.getNextPageStart();
         } while (!page.isLastPage());
 
-
         return resources;
     }
 
     private <V> V getResource(UriTemplate template, Class<? extends PagedApiResponse<V>> clazz, Predicate<V> filter) throws IOException, InterruptedException {
-
         PagedApiResponse<V> page;
         Integer pageNumber = 0;
         Integer limit = DEFAULT_PAGE_LIMIT;
@@ -897,8 +886,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 throw new IOException("I/O error when parsing response from URL: " + url, e);
             }
 
-            for(V item : page.getValues()) {
-                if(filter.test(item)) {
+            for (V item : page.getValues()) {
+                if (filter.test(item)) {
                     return item;
                 }
             }
@@ -906,7 +895,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             limit = page.getLimit();
             pageNumber = page.getNextPageStart();
         } while (!page.isLastPage());
-
 
         return null;
     }

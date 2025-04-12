@@ -34,6 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
@@ -182,7 +183,8 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
 
         ForkPullRequestDiscoveryTrait trait = new ForkPullRequestDiscoveryTrait(2, new TrustEveryone());
         BranchSCMHead targetHead = new BranchSCMHead("master");
-        PullRequestSCMHead scmHead = new PullRequestSCMHead("name", "repoOwner", "repository1", "feature1", "1", "title", targetHead, new Fork("repository1"), ChangeRequestCheckoutStrategy.HEAD);
+        PullRequestSCMHead scmHead = new PullRequestSCMHead("name", "repoOwner", "repository1", "feature1",
+                PullRequestBranchType.BRANCH, "1", "title", targetHead, new Fork("repository1"), ChangeRequestCheckoutStrategy.HEAD);
         SCMRevisionImpl prRevision = new SCMRevisionImpl(scmHead, "cff417db");
         SCMRevisionImpl targetRevision = new SCMRevisionImpl(targetHead, "c341232342311");
         SCMRevision scmRevision = new PullRequestSCMRevision(scmHead, targetRevision, prRevision);

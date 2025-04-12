@@ -99,4 +99,5 @@ Support to run Server under Windows has been dismissed since version 7.14+
 2. run `docker run -it -p 7990:7990 -p 7999:7999 -v %USER%\.m2:/root/.m2 nolddor/atlassian-sdk:17-jdk`
 3. Inside the container:
    - install git with `apk add git`
+   - install git support for http with `apk add git-daemon`
    - run `/opt/atlassian-plugin-sdk/bin/atlas-run-standalone --product bitbucket --version 9.5.2`

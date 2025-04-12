@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2025, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 /**
- * Represents a pull request source, which is a repository, a branch in that repository and the head commit.
+ * Enumerated type of source HEAD for a pull request.
+ * @since 936.0.0
  */
-public interface BitbucketPullRequestSource {
-
-    /**
-     * @return source repository
-     */
-    BitbucketRepository getRepository();
-
-    /**
-     * @return source branch to be merged in the pull request
-     */
-    BitbucketBranch getBranch();
-
-    /**
-     * Returns the type of the source branch.
-     * <p>
-     * In some server implementations the source HEAD could be a tag.
-     *
-     * @return the source branch type
-     */
-    @NonNull
-    PullRequestBranchType getBranchType();
-
-    /**
-     * @return the branch head commit
-     */
-    BitbucketCommit getCommit();
-
+public enum PullRequestBranchType {
+    TAG, BRANCH
 }

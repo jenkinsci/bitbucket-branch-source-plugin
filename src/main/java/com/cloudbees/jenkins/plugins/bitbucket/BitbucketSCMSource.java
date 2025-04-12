@@ -37,6 +37,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
@@ -408,9 +409,10 @@ public class BitbucketSCMSource extends SCMSource {
         for (final BitbucketPullRequest pull : request.getPullRequests()) {
             String originalBranchName = pull.getSource().getBranch().getName();
             request.listener().getLogger().printf(
-                    "Checking PR-%s from %s and branch %s%n",
+                    "Checking PR-%s from %s and %s %s%n",
                     pull.getId(),
                     pull.getSource().getRepository().getFullName(),
+                    pull.getSource().getBranchType() == PullRequestBranchType.TAG ? "tag" : "branch",
                     originalBranchName
             );
             boolean fork = !StringUtils.equalsIgnoreCase(fullName, pull.getSource().getRepository().getFullName());

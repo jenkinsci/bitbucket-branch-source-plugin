@@ -243,7 +243,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         return getClient().executeOpen(requestHost, request, context);
     }
 
-    protected String doRequest(HttpUriRequest request) throws IOException {
+    private String doRequest(HttpUriRequest request) throws IOException {
         try (ClassicHttpResponse response =  executeMethod(request)) {
             int statusCode = response.getCode();
             if (statusCode == HttpStatus.SC_NOT_FOUND) {

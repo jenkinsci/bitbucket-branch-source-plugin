@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
@@ -208,7 +209,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         return this;
     }
 
-    private void withPullRequestRemote(PullRequestSCMHead head, String headName) {
+    private void withPullRequestRemote(PullRequestSCMHead head, String headName) { // NOSONAR
         String scmSourceRepoOwner = scmSource.getRepoOwner();
         String scmSourceRepository = scmSource.getRepository();
         String pullRequestRepoOwner = head.getRepoOwner();
@@ -226,7 +227,11 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         String branchName = head.getBranchName();
         boolean scmCloud = BitbucketApiUtils.isCloud(scmSource.getServerUrl());
         if (prFromTargetRepository) {
-            withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + branchName);
+            if (head.getBranchType() == PullRequestBranchType.TAG) {
+                withRefSpec("+refs/tags/" + branchName + ":refs/remotes/@{remote}/" + branchName); // NOSONAR
+            } else {
+                withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + branchName); // NOSONAR
+            }
             if (cloneFromMirror) {
                 PullRequestSCMRevision pullRequestSCMRevision = (PullRequestSCMRevision) revision;
                 String primaryRemoteName = remoteName().equals("primary") ? "primary-primary" : "primary";

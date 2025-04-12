@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Date;
 
 public class BitbucketPullRequestValueRepository implements BitbucketPullRequestSource {
@@ -94,5 +96,12 @@ public class BitbucketPullRequestValueRepository implements BitbucketPullRequest
 
     public void setCommit(BitbucketCloudCommit commit) {
         this.commit = commit;
+    }
+
+    @NonNull
+    @Override
+    public PullRequestBranchType getBranchType() {
+        // cloud does not support any other kind od source branch
+        return PullRequestBranchType.BRANCH;
     }
 }

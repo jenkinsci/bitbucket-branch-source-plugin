@@ -31,7 +31,7 @@
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
         <jenkins.baseline>2.479</jenkins.baseline>
-        <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <hpi.compatibleSinceVersion>936.0.0</hpi.compatibleSinceVersion>
         <!-- Jenkins.MANAGE is still in Beta -->
         <useBeta>true</useBeta>

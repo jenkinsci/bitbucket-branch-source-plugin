@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
@@ -45,6 +46,8 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     private final String branchName;
 
+    private final PullRequestBranchType branchType;
+
     private final String number;
 
     private final String title;
@@ -55,13 +58,14 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     private final ChangeRequestCheckoutStrategy strategy;
 
-    public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
+    public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName, PullRequestBranchType branchType,
                               String number, String title, BranchSCMHead target, SCMHeadOrigin origin,
                               ChangeRequestCheckoutStrategy strategy) {
         super(name);
         this.repoOwner = repoOwner;
         this.repository = repository;
         this.branchName = branchName;
+        this.branchType = branchType;
         this.number = number;
         this.title = title;
         this.target = target;
@@ -71,7 +75,7 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
 
     public PullRequestSCMHead(String name, String repoOwner, String repository, String branchName,
                               BitbucketPullRequest pr, SCMHeadOrigin origin, ChangeRequestCheckoutStrategy strategy) {
-        this(name, repoOwner, repository, branchName,
+        this(name, repoOwner, repository, branchName, pr.getSource().getBranchType(),
              pr.getId(), pr.getTitle(), new BranchSCMHead(pr.getDestination().getBranch().getName()),
              origin, strategy);
     }
@@ -128,6 +132,10 @@ public class PullRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2
     @Override
     public SCMHeadOrigin getOrigin() {
         return origin == null ? SCMHeadOrigin.DEFAULT : origin;
+    }
+
+    public PullRequestBranchType getBranchType() {
+        return branchType;
     }
 
 }

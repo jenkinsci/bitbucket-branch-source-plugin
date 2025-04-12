@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,6 +45,7 @@ public class BitbucketServerBranch implements BitbucketBranch {
     private Long timestamp;
     private Callable<BitbucketCommit> commitClosure;
     private boolean callableInitialised = false;
+    private PullRequestBranchType type = PullRequestBranchType.BRANCH;
 
     public BitbucketServerBranch() {
     }
@@ -150,5 +152,13 @@ public class BitbucketServerBranch implements BitbucketBranch {
             this.author = "Unknown";
         }
         callableInitialised = true;
+    }
+
+    public PullRequestBranchType getType() {
+        return type;
+    }
+
+    public void setType(PullRequestBranchType type) {
+        this.type = type;
     }
 }
