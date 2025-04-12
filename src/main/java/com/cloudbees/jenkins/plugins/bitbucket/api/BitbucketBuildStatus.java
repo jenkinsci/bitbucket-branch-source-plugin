@@ -56,6 +56,50 @@ public class BitbucketBuildStatus {
     }
 
     /**
+     * A summary of the passed, failed and skipped tests
+     */
+    public static class TestResults {
+
+        private int successful;
+        private int failed;
+        private int skipped;
+
+        @Restricted(DoNotUse.class)
+        public TestResults() {
+        }
+
+        public TestResults(int successful, int failed, int skipped) {
+            this.successful = successful;
+            this.failed = failed;
+            this.skipped = skipped;
+        }
+
+        public int getSuccessful() {
+            return successful;
+        }
+
+        public void setSuccessful(int successful) {
+            this.successful = successful;
+        }
+
+        public int getFailed() {
+            return failed;
+        }
+
+        public void setFailed(int failed) {
+            this.failed = failed;
+        }
+
+        public int getSkipped() {
+            return skipped;
+        }
+
+        public void setSkipped(int skipped) {
+            this.skipped = skipped;
+        }
+    }
+
+    /**
      * The commit hash to set the status on
      */
     @JsonIgnore
@@ -107,6 +151,11 @@ public class BitbucketBuildStatus {
      */
     private int buildNumber;
 
+    /**
+     * A summary of the test results.
+     */
+    private TestResults testResults;
+
     // Used for marshalling/unmarshalling
     @Restricted(DoNotUse.class)
     public BitbucketBuildStatus() {}
@@ -142,6 +191,9 @@ public class BitbucketBuildStatus {
         this.refname = other.refname;
         this.buildDuration = other.buildDuration;
         this.parent = other.parent;
+        if(other.testResults != null) {
+            this.testResults = new TestResults(other.testResults.failed, other.testResults.successful, other.testResults.skipped);
+        }
     }
 
     public String getHash() {
@@ -222,5 +274,13 @@ public class BitbucketBuildStatus {
 
     public String getParent() {
         return parent;
+    }
+
+    public TestResults getTestResults() {
+        return testResults;
+    }
+
+    public void setTestResults(TestResults testResults) {
+        this.testResults = testResults;
     }
 }
