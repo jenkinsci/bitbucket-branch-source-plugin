@@ -23,28 +23,61 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.extension;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
+import hudson.model.Item;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.util.Objects;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GitClientAuthenticatorExtension extends GitSCMExtension {
 
-    private final StandardUsernameCredentials credentials;
+    @Deprecated
+    private transient StandardUsernameCredentials credentials;
     private final String url;
+    private final String serverURL;
+    private final String scmOwner;
+    private final String credentialsId;
 
-    // @DataBoundConstructor causes a failure: Could not instantiate arguments for com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl. Secrets are involved, so details are available on more verbose logging levels.
+    @Deprecated(since = "936.0.0", forRemoval = true)
     public GitClientAuthenticatorExtension(String url, StandardUsernameCredentials credentials) {
         this.url = url;
+        this.credentialsId = credentials != null ? credentials.getId() : null;
         this.credentials = credentials;
+        this.serverURL = null;
+        this.scmOwner = null;
+    }
+
+    @DataBoundConstructor
+    public GitClientAuthenticatorExtension(@NonNull String url, @NonNull String serverURL, @CheckForNull String scmOwner, @Nullable String credentialsId) {
+        this.url = url;
+        this.serverURL = serverURL;
+        this.scmOwner = scmOwner;
+        this.credentialsId = credentialsId;
     }
 
     @Override
     public GitClient decorate(GitSCM scm, GitClient git) throws GitException {
+        StandardUsernameCredentials credentials = this.credentials;
+        if (credentialsId != null) {
+            BitbucketAuthenticator authenticator = authenticator();
+            if (authenticator == null) {
+                throw new IllegalStateException("No credentialsId " + getCredentialsId() + " found for project " + scmOwner + " and server " + serverURL);
+            }
+            credentials = authenticator.getCredentialsForSCM();
+        }
         if (credentials != null) {
             if (url == null) {
                 git.setCredentials(credentials);
@@ -52,10 +85,28 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
                 git.addCredentials(url, credentials);
             }
         }
-
         return git;
     }
 
+    @CheckForNull
+    private BitbucketAuthenticator authenticator() {
+        if (serverURL == null) {
+            throw new IllegalStateException("Some required data are missing, perform a 'Scan project Now' action to refresh old data");
+        }
+        StandardCredentials credentials;
+        if (scmOwner != null) {
+            Item owner = Jenkins.get().getItemByFullName(scmOwner, Item.class);
+            if (owner == null) {
+                throw new IllegalStateException("Item " + scmOwner + " seems to be relocated, perform a 'Scan project Now' action to refresh old data");
+            }
+            credentials = BitbucketCredentials.lookupCredentials(serverURL, owner, credentialsId, StandardCredentials.class);
+        } else {
+            credentials = BitbucketCredentials.lookupCredentials(serverURL, Jenkins.get(), credentialsId, StandardCredentials.class);
+        }
+        return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
+    }
+
+    @Deprecated(since = "936.0.0", forRemoval = true)
     public StandardUsernameCredentials getCredentials() {
         return credentials;
     }
@@ -64,9 +115,21 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
         return url;
     }
 
+    public String getServerURL() {
+        return serverURL;
+    }
+
+    public String getScmOwner() {
+        return scmOwner;
+    }
+
+    public String getCredentialsId() {
+        return credentialsId;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(credentials != null ? credentials.getId() : null, credentials);
+        return Objects.hash(url, serverURL, scmOwner, credentialsId);
     }
 
     @Override
@@ -81,7 +144,9 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
             return false;
         }
         GitClientAuthenticatorExtension other = (GitClientAuthenticatorExtension) obj;
-        return Objects.equals(credentials != null ? credentials.getId() : credentials, other.credentials != null ? other.credentials.getId() : other.credentials)
+        return Objects.equals(credentialsId, other.credentialsId)
+                && Objects.equals(serverURL, other.serverURL)
+                && Objects.equals(scmOwner, other.scmOwner)
                 && Objects.equals(url, other.url);
     }
 

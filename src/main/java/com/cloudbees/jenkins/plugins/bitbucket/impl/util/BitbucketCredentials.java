@@ -33,6 +33,8 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Queue;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
@@ -53,27 +55,49 @@ public class BitbucketCredentials {
     }
 
     @CheckForNull
-    public static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverUrl,
-                                                                      @CheckForNull SCMSourceOwner context,
+    public static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverURL,
+                                                                      @CheckForNull Item item,
                                                                       @CheckForNull String id,
                                                                       @NonNull Class<T> type) {
-        if (StringUtils.isNotBlank(id) && context != null) {
-            Authentication authentication = context instanceof Queue.Task task
+        if (StringUtils.isNotBlank(id)) {
+            Authentication authentication = item instanceof Queue.Task task
                     ? task.getDefaultAuthentication2()
                     : ACL.SYSTEM2;
 
             return CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentialsInItem(
                             type,
-                            context,
+                            item,
                             authentication,
-                            URIRequirementBuilder.fromUri(serverUrl).build()
+                            URIRequirementBuilder.fromUri(serverURL).build()
                     ),
                     CredentialsMatchers.allOf(
                             CredentialsMatchers.withId(id),
                             CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(type))
                     )
             );
+        }
+        return null;
+    }
+
+    @CheckForNull
+    public static <T extends StandardCredentials> T lookupCredentials(@CheckForNull String serverURL,
+                                                                      @CheckForNull ItemGroup<?> itemGroup,
+                                                                      @CheckForNull String id,
+                                                                      @NonNull Class<T> type) {
+        if (StringUtils.isNotBlank(id)) {
+            return CredentialsMatchers.firstOrNull(
+                    CredentialsProvider.lookupCredentialsInItemGroup(
+                            type,
+                            itemGroup,
+                            null,
+                            URIRequirementBuilder.fromUri(serverURL).build()
+                            ),
+                    CredentialsMatchers.allOf(
+                            CredentialsMatchers.withId(id),
+                            CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(type))
+                            )
+                    );
         }
         return null;
     }

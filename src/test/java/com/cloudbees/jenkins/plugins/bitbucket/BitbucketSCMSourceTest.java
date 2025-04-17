@@ -288,7 +288,7 @@ class BitbucketSCMSourceTest {
 
     @Test
     void verify_built_scm_with_username_password_authenticator() throws Exception {
-        UsernamePasswordCredentialsImpl userCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "token-id", "desc", "user", "passqword");
+        UsernamePasswordCredentialsImpl userCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "username-password", "desc", "user", "password");
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         store.addCredentials(Domain.global(), userCredentials);
@@ -307,6 +307,7 @@ class BitbucketSCMSourceTest {
         for (GitSCMExtension ext : scm.getExtensions()) {
             c = ext.decorate(scm, c);
         }
+        // GitClientAuthenticatorExtension never inject custom credentials for standard username/password
         verify(c, never()).setCredentials(any(StandardUsernameCredentials.class));
         verify(c, never()).addCredentials(anyString(), any(StandardUsernameCredentials.class));
     }

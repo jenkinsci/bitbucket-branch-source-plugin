@@ -723,10 +723,11 @@ public class BitbucketSCMSource extends SCMSource {
                 .withTraits(traits);
 
         boolean sshAuth = SCMTrait.find(traits, SSHCheckoutTrait.class) != null;
-        BitbucketAuthenticator authenticator = authenticator();
 
+        SCMSourceOwner owner = getOwner();
+        String scmOwner = owner != null ? owner.getFullName() : null;
         return scmBuilder
-                .withExtension(new GitClientAuthenticatorExtension(scmBuilder.remote(), authenticator == null || sshAuth ? null : authenticator.getCredentialsForSCM()))
+                .withExtension(new GitClientAuthenticatorExtension(scmBuilder.remote(), serverUrl, scmOwner, sshAuth ? null : credentialsId))
                 .build();
     }
 
