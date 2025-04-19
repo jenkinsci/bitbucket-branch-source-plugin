@@ -31,7 +31,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
@@ -51,8 +53,6 @@ import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
-import org.apache.commons.lang.StringUtils;
 import org.assertj.core.api.ThrowingConsumer;
 import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -344,26 +344,6 @@ class BitbucketSCMSourceTest {
                 .isInstanceOfSatisfying(WebhookRegistrationTrait.class, trait -> assertThat(trait.getMode()).isEqualTo(registeredOn));
     }
 
-    private ThrowingConsumer<SCMSourceTrait> sshTrait(String credentialsId) {
-        return t -> assertThat(t)
-                .isInstanceOfSatisfying(SSHCheckoutTrait.class, trait -> assertThat(trait.getCredentialsId()).isEqualTo(credentialsId));
-    }
-
-    private ThrowingConsumer<SCMSourceTrait> originPRTrait() {
-        return t -> assertThat(t)
-                .isInstanceOfSatisfying(OriginPullRequestDiscoveryTrait.class, trait -> assertThat(trait.getStrategyId()).isEqualTo(2));
-    }
-
-    private ThrowingConsumer<SCMSourceTrait> forkPRTrait(int strategyId, boolean trusted) {
-        return t -> assertThat(t)
-                .isInstanceOfSatisfying(ForkPullRequestDiscoveryTrait.class, trait -> { //
-                    assertThat(trait.getStrategyId()).isEqualTo(2); //
-                    if (trusted) {
-                        assertThat(trait.getTrust()).isInstanceOf(ForkPullRequestDiscoveryTrait.TrustEveryone.class);
-                    }
-                });
-    }
-
     private ThrowingConsumer<SCMSourceTrait> branchTrait(boolean buildBranch, boolean buildPR) {
         return t -> assertThat(t)
                 .isInstanceOfSatisfying(BranchDiscoveryTrait.class, trait -> { //
@@ -374,22 +354,6 @@ class BitbucketSCMSourceTest {
                         assertThat(trait.isBuildBranchesWithPR()).isTrue();
                     }
                 });
-    }
-
-    private ThrowingConsumer<? super SCMSourceTrait> wildcardTrait(String includePattern, String excludePattern) {
-        return trait -> assertThat(trait)
-            .isInstanceOfSatisfying(WildcardSCMHeadFilterTrait.class, wildcarTrait -> { //
-                assertThat(wildcarTrait.getIncludes()).isEqualTo(includePattern); //
-                if (StringUtils.isBlank(excludePattern)) {
-                    assertThat(wildcarTrait.getExcludes()).isEmpty();
-                } else {
-                    assertThat(wildcarTrait.getExcludes()).isEqualTo(excludePattern);
-                }
-            });
-    }
-
-    private ThrowingConsumer<SCMSourceTrait> publicRepoTrait() {
-        return trait -> assertThat(trait).isInstanceOf(PublicRepoPullRequestFilterTrait.class);
     }
 
 }

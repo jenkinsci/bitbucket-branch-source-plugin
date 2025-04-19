@@ -25,9 +25,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.OriginPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.io.InputStream;

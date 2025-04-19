@@ -21,8 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookConfiguration;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;

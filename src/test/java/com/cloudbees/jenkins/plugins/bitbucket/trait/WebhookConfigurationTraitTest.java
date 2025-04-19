@@ -21,27 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookConfigurationTrait;
 import jenkins.scm.api.SCMHeadObserver;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assume.assumeThat;
+import static org.junit.Assert.assertEquals;
 
-public class PublicRepoPullRequestFilterTraitTest {
+public class WebhookConfigurationTraitTest {
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void given__instance__when__decoratingContext__then__filterApplied() throws Exception {
-        PublicRepoPullRequestFilterTrait instance = new PublicRepoPullRequestFilterTrait();
-        BitbucketSCMSourceContext probe = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(probe.skipPublicPRs(), is(false));
-        instance.decorateContext(probe);
-        assertThat(probe.skipPublicPRs(), is(true));
+    public void ignoredCommittersDefault()
+            throws Exception {
+        BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
+        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), null);
+        WebhookConfigurationTrait instance = new WebhookConfigurationTrait("");
+        instance.decorateContext(ctx);
+        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), "");
+    }
+
+    @Test
+    public void ignoredCommittersWithValue()
+            throws Exception {
+        BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
+        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), null);
+        WebhookConfigurationTrait instance = new WebhookConfigurationTrait("jenkins");
+        instance.decorateContext(ctx);
+        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), "jenkins");
     }
 }

@@ -23,12 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.notifier;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketBuildStatusNotificationsTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.ForkPullRequestDiscoveryTrait;
-import com.cloudbees.jenkins.plugins.bitbucket.ForkPullRequestDiscoveryTrait.TrustEveryone;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
@@ -41,6 +38,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.notifier.BitbucketBuildStatusNotifications.JobCheckoutListener;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BitbucketBuildStatusNotificationsTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait.TrustEveryone;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.model.Result;

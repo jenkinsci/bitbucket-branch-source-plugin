@@ -26,6 +26,9 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -34,36 +37,21 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.Extension;
-import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
-import hudson.model.TaskListener;
-import hudson.model.TopLevelItem;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.List;
 import jenkins.branch.Branch;
-import jenkins.branch.BranchProjectFactory;
 import jenkins.branch.BranchSource;
-import jenkins.branch.DefaultBranchPropertyStrategy;
-import jenkins.branch.MultiBranchProject;
-import jenkins.branch.MultiBranchProjectDescriptor;
-import jenkins.scm.api.SCMSource;
-import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public class BranchScanningIntegrationTest {
@@ -77,7 +65,7 @@ public class BranchScanningIntegrationTest {
                 .addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test", false, null));
         BitbucketMockApiFactory.add("http://bitbucket.test", BitbucketClientMockUtils.getAPIClientMock(false, false));
 
-        MultiBranchProjectImpl p = j.jenkins.createProject(MultiBranchProjectImpl.class, "test");
+        MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, true),
@@ -89,7 +77,7 @@ public class BranchScanningIntegrationTest {
         ));
         source.setServerUrl("http://bitbucket.test");
         source.setOwner(p);
-        p.getSourcesList().add(new BranchSource(source, new DefaultBranchPropertyStrategy(null)));
+        p.getSourcesList().add(new BranchSource(source));
         p.scheduleBuild2(0);
         j.waitUntilNoActivity();
 
@@ -135,101 +123,6 @@ public class BranchScanningIntegrationTest {
                 BasicSSHUserPrivateKey.class
         );
         assertThat(creds, instanceOf(BasicSSHUserPrivateKey.class));
-    }
-
-    public static class MultiBranchProjectImpl extends MultiBranchProject<FreeStyleProject, FreeStyleBuild> {
-
-        static final SCMSourceCriteria CRITERIA = new SCMSourceCriteria() {
-            @Override public boolean isHead(SCMSourceCriteria.Probe probe, TaskListener listener) throws IOException {
-                return probe.exists("markerfile.txt");
-            }
-
-            @Override
-            public int hashCode() {
-                return getClass().hashCode();
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                return getClass().isInstance(obj);
-            }
-        };
-
-        protected MultiBranchProjectImpl(ItemGroup parent, String name) {
-            super(parent, name);
-        }
-
-        @Override
-        public Authentication getDefaultAuthentication(hudson.model.Queue.Item item) {
-            return getDefaultAuthentication();
-        }
-
-        @Override
-        protected BranchProjectFactory<FreeStyleProject, FreeStyleBuild> newProjectFactory() {
-            return new BranchProjectFactoryImpl();
-        }
-
-        @Override
-        public SCMSourceCriteria getSCMSourceCriteria(SCMSource source) {
-            return CRITERIA;
-        }
-
-        @Override
-        public List<SCMSource> getSCMSources() {
-            if (getSourcesList() == null) {
-                // test code is generating a NullPointer when calling it from an ItemListener on the SCMSourceOwner
-                // It seems that the object is not fully initialized when the ItemListener uses it.
-                // Perhaps it needs to be reproduced and investigated in a branch-api test.
-                return new ArrayList<>();
-            }
-            return super.getSCMSources();
-        }
-
-        public static class BranchProjectFactoryImpl extends BranchProjectFactory<FreeStyleProject, FreeStyleBuild> {
-
-            @Override
-            public FreeStyleProject newInstance(Branch branch) {
-                FreeStyleProject job = new FreeStyleProject(getOwner(), branch.getEncodedName());
-                setBranch(job, branch);
-                return job;
-            }
-
-            @Override
-            public Branch getBranch(FreeStyleProject project) {
-                return project.getProperty(BranchProperty.class).getBranch();
-            }
-
-            @Override
-            public FreeStyleProject setBranch(FreeStyleProject project, Branch branch) {
-                try {
-                    project.addProperty(new BranchProperty(branch));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return project;
-            }
-
-            @Override
-            public boolean isProject(Item item) {
-                return item instanceof FreeStyleProject && ((FreeStyleProject) item).getProperty(BranchProperty.class) != null;
-            }
-
-        }
-
-        @Extension
-        public static class DescriptorImpl extends MultiBranchProjectDescriptor {
-
-            @Override
-            public String getDisplayName() {
-                return "Test Multibranch";
-            }
-
-            @Override
-            public TopLevelItem newInstance(ItemGroup parent, String name) {
-                return new MultiBranchProjectImpl(parent, name);
-            }
-
-        }
     }
 
     public static class BranchProperty extends JobProperty<FreeStyleProject> {

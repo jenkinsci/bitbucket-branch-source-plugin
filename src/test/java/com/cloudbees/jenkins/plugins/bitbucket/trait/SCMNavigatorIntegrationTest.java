@@ -21,8 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketClientMockUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketMockApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
+import com.cloudbees.jenkins.plugins.bitbucket.MockMultiBranchProjectImpl;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import hudson.model.ItemGroup;
@@ -81,12 +85,12 @@ class SCMNavigatorIntegrationTest {
 
         @Override
         protected SCMSourceCriteria getSCMSourceCriteria(SCMSource source) {
-            return BranchScanningIntegrationTest.MultiBranchProjectImpl.CRITERIA;
+            return MockMultiBranchProjectImpl.CRITERIA;
         }
 
         @Override
         protected MultiBranchProject<?,?> doCreateProject(ItemGroup<?> parent, String name, Map<String,Object> attributes) {
-            return new BranchScanningIntegrationTest.MultiBranchProjectImpl(parent, name);
+            return new MockMultiBranchProjectImpl(parent, name);
         }
 
         @TestExtension

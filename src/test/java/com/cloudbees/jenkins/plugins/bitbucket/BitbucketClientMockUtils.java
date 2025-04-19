@@ -172,7 +172,6 @@ public class BitbucketClientMockUtils {
 
     private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {
         BitbucketCloudRepository repo = new BitbucketCloudRepository();
-        repo.setScm("git");
         repo.setFullName("amuniz/test-repos");
         repo.setPrivate(true);
         HashMap<String, List<BitbucketHref>> links = new HashMap<>();

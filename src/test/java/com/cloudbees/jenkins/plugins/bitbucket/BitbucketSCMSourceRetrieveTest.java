@@ -35,19 +35,21 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait.TrustEveryone;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.scm.SCM;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
@@ -55,18 +57,19 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -79,8 +82,10 @@ import static org.mockito.Mockito.when;
  * This test was created to validate a fix for the issue described in:
  * https://github.com/jenkinsci/bitbucket-branch-source-plugin/issues/469
  */
-@RunWith(MockitoJUnitRunner.class)
-public class BitbucketSCMSourceRetrieveTest {
+@WithJenkins
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class BitbucketSCMSourceRetrieveTest {
 
     private static final String CLOUD_REPO_OWNER = "cloudbeers";
     private static final String SERVER_REPO_OWNER = "DUB";
@@ -90,7 +95,6 @@ public class BitbucketSCMSourceRetrieveTest {
     private static final String COMMIT_HASH = "e851558f77c098d21af6bb8cc54a423f7cf12147";
     private static final Integer PR_ID = 1;
 
-    @ClassRule
     public static JenkinsRule jenkinsRule = new JenkinsRule();
 
     @Mock
@@ -110,8 +114,13 @@ public class BitbucketSCMSourceRetrieveTest {
     @Mock
     private SCMSourceCriteria criteria;
 
-    @Before
-    public void setUp() {
+    @BeforeAll
+    static void init(JenkinsRule r) {
+        jenkinsRule = r;
+    }
+
+    @BeforeEach
+    void setUp() {
         when(prDestination.getRepository()).thenReturn(repository);
         when(prDestination.getBranch()).thenReturn(destinationBranch);
         when(destinationBranch.getName()).thenReturn("main");
@@ -128,12 +137,16 @@ public class BitbucketSCMSourceRetrieveTest {
     }
 
     @Test
-    public void retrieveTriggersRequiredApiCalls_cloud() throws Exception {
+    void retrieveTriggersRequiredApiCalls_cloud() throws Exception {
         BitbucketSCMSource instance = load("retrieve_prs_test_cloud");
-        assertThat(instance.getId(), is("retrieve_prs_test_cloud"));
-        assertThat(instance.getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
-        assertThat(instance.getRepoOwner(), is(CLOUD_REPO_OWNER));
-        assertThat(instance.getRepository(), is(REPO_NAME));
+        assertThat(instance.getId()).isEqualTo("retrieve_prs_test_cloud");
+        assertThat(instance.getServerUrl()).isEqualTo(BitbucketCloudEndpoint.SERVER_URL);
+        assertThat(instance.getRepoOwner()).isEqualTo(CLOUD_REPO_OWNER);
+        assertThat(instance.getRepository()).isEqualTo(REPO_NAME);
+        assertThat(instance.getTraits())
+            .usingRecursiveFieldByFieldElementComparator()
+            .contains(new ForkPullRequestDiscoveryTrait(1, new TrustEveryone()));
+
         BitbucketCloudApiClient client = BitbucketClientMockUtils.getAPIClientMock(true, false);
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
 
@@ -145,11 +158,15 @@ public class BitbucketSCMSourceRetrieveTest {
     }
 
     @Test
-    public void retrieveTriggersRequiredApiCalls_server() throws Exception {
+    void retrieveTriggersRequiredApiCalls_server() throws Exception {
         BitbucketSCMSource instance = load("retrieve_prs_test_server");
-        assertThat(instance.getServerUrl(), is(SERVER_REPO_URL));
-        assertThat(instance.getRepoOwner(), is(SERVER_REPO_OWNER));
-        assertThat(instance.getRepository(), is(REPO_NAME));
+        assertThat(instance.getId()).isEqualTo("retrieve_prs_test_server");
+        assertThat(instance.getServerUrl()).isEqualTo(SERVER_REPO_URL);
+        assertThat(instance.getRepoOwner()).isEqualTo(SERVER_REPO_OWNER);
+        assertThat(instance.getRepository()).isEqualTo(REPO_NAME);
+        assertThat(instance.getTraits())
+            .usingRecursiveFieldByFieldElementComparator()
+            .contains(new ForkPullRequestDiscoveryTrait(1, new TrustEveryone()));
 
         BitbucketServerAPIClient client = mock(BitbucketServerAPIClient.class);
         BitbucketMockApiFactory.add(SERVER_REPO_URL, client);
@@ -187,7 +204,7 @@ public class BitbucketSCMSourceRetrieveTest {
         // Expect the observer to collect the branch and the PR
         Set<String> heads =
             headObserver.result().keySet().stream().map(SCMHead::getName).collect(Collectors.toSet());
-        assertThat(heads, Matchers.containsInAnyOrder("PR-1", BRANCH_NAME));
+        assertThat(heads).containsExactlyInAnyOrder("PR-1", BRANCH_NAME);
 
         // Ensures PR is properly initialized, especially fork-based PRs
         // see BitbucketServerAPIClient.setupPullRequest()
@@ -235,8 +252,8 @@ public class BitbucketSCMSourceRetrieveTest {
     }
 
     private BitbucketSCMSource load(String configuration) {
-        String path = getClass().getSimpleName() + "/" + configuration + ".xml";
-        URL url = getClass().getResource(path);
-        return (BitbucketSCMSource) Jenkins.XSTREAM2.fromXML(url);
+        BitbucketPlugin.aliases();
+        String resource = this.getClass().getSimpleName() + "/" + configuration + ".xml";
+        return (BitbucketSCMSource) Items.XSTREAM2.fromXML(this.getClass().getResource(resource));
     }
 }

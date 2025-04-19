@@ -26,6 +26,9 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
@@ -43,35 +46,36 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class BranchScanningTest {
+@WithJenkins
+class BranchScanningTest {
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    public static JenkinsRule rule = new JenkinsRule();
 
-    private static final String repoOwner = "amuniz";
-    private static final String repoName = "test";
     private static final String branchName = "branch1";
 
-    @Before
-    public void clearMockFactory() {
+    @BeforeAll
+    static void init(JenkinsRule r) {
+        rule = r;
+    }
+
+    @BeforeEach
+    void clearMockFactory() {
         BitbucketMockApiFactory.clear();
     }
 
     @Test
-    public void uriResolverTest() throws Exception {
+    void uriResolverTest() throws Exception {
 
         // When there is no checkout credentials set, https must be resolved
         BitbucketGitSCMBuilder builder = new BitbucketGitSCMBuilder(
@@ -85,11 +89,11 @@ public class BranchScanningTest {
             ),
             List.of()
         );
-        assertThat(builder.remote(), is("https://bitbucket.org/amuniz/test-repos.git"));
+        assertThat(builder.remote()).isEqualTo("https://bitbucket.org/amuniz/test-repos.git");
     }
 
     @Test
-    public void retrieveTest() throws Exception {
+    void retrieveTest() throws Exception {
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL,
                 BitbucketClientMockUtils.getAPIClientMock(false, false));
         BitbucketSCMSource source = getBitbucketSCMSourceMock(false);
@@ -98,12 +102,12 @@ public class BranchScanningTest {
         SCMRevision rev = source.retrieve(head, BitbucketClientMockUtils.getTaskListenerMock());
 
         // Last revision on branch1 must be returned
-        assertEquals("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", ((SCMRevisionImpl) rev).getHash());
+        assertThat(((SCMRevisionImpl) rev).getHash()).isEqualTo("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a");
 
     }
 
     @Test
-    public void scanTest() throws Exception {
+    void scanTest() throws Exception {
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL,
                 BitbucketClientMockUtils.getAPIClientMock(false, false));
         BitbucketSCMSource source = getBitbucketSCMSourceMock(false);
@@ -111,12 +115,13 @@ public class BranchScanningTest {
         source.fetch(observer, BitbucketClientMockUtils.getTaskListenerMock());
 
         // Only branch1 must be observed
-        assertEquals(1, observer.getBranches().size());
-        assertEquals("branch1", observer.getBranches().get(0));
+        assertThat(observer.getBranches())
+            .hasSize(1)
+            .contains("branch1");
     }
 
     @Test
-    public void scanTestPullRequests() throws Exception {
+    void scanTestPullRequests() throws Exception {
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL,
                 BitbucketClientMockUtils.getAPIClientMock(true, false));
         BitbucketSCMSource source = getBitbucketSCMSourceMock(true);
@@ -124,19 +129,19 @@ public class BranchScanningTest {
         source.fetch(observer, BitbucketClientMockUtils.getTaskListenerMock());
 
         // Only branch1 and my-feature-branch PR must be observed
-        assertEquals(2, observer.getBranches().size());
-        assertEquals("branch1", observer.getBranches().get(0));
-        assertEquals("PR-23", observer.getBranches().get(1));
+        assertThat(observer.getBranches())
+            .hasSize(2)
+            .contains("branch1", "PR-23");
     }
 
     @Test
-    public void gitSCMTest() throws Exception {
+    void gitSCMTest() throws Exception {
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL,
                 BitbucketClientMockUtils.getAPIClientMock(false, false));
 
         BitbucketSCMSource source = getBitbucketSCMSourceMock(false);
         SCM scm = source.build(new BranchSCMHead("branch1"));
-        assertTrue("SCM must be an instance of GitSCM", scm instanceof GitSCM);
+        assertThat(scm).as("SCM must be an instance of GitSCM").isInstanceOf(GitSCM.class);
     }
 
     private BitbucketSCMSource getBitbucketSCMSourceMock(boolean includePullRequests)
@@ -184,6 +189,7 @@ public class BranchScanningTest {
 
         public List<String> branches = new ArrayList<>();
 
+        @Override
         public void observe(@NonNull SCMHead head, @NonNull SCMRevision revision) {
             branches.add(head.getName());
         }

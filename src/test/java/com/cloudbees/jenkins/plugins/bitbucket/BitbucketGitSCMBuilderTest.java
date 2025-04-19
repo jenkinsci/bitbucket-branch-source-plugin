@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.FallbackToOtherRepositoryGitSCMExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.SSHCheckoutTrait;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -60,6 +61,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import jenkins.scm.api.trait.SCMBuilder;
 import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -81,6 +83,16 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 public class BitbucketGitSCMBuilderTest {
+    private static class SSHCheckoutTraitWrapper extends SSHCheckoutTrait {
+        public SSHCheckoutTraitWrapper(String credentialsId) {
+            super(credentialsId);
+        }
+
+        @Override
+        public void decorateBuilder(SCMBuilder<?, ?> builder) {
+            super.decorateBuilder(builder);
+        }
+    }
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
     private BitbucketSCMSource source;
@@ -1097,7 +1109,7 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
-        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait(null);
+        SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper(null);
         sshTrait.decorateBuilder(instance);
 
         GitSCM actual = instance.build();
@@ -1155,7 +1167,7 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
-        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait(null);
+        SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper(null);
         sshTrait.decorateBuilder(instance);
 
         GitSCM actual = instance.build();
@@ -1212,7 +1224,7 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
-        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait(null);
+        SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper(null);
         sshTrait.decorateBuilder(instance);
 
         GitSCM actual = instance.build();
@@ -1270,7 +1282,7 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
-        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait("user-key");
+        SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper("user-key");
         sshTrait.decorateBuilder(instance);
 
         GitSCM actual = instance.build();
@@ -1328,7 +1340,7 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote(), is("https://bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
-        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait("user-key");
+        SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper("user-key");
         sshTrait.decorateBuilder(instance);
 
         GitSCM actual = instance.build();
@@ -1386,7 +1398,7 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote(), is("ssh://git@bitbucket.org/qa/qa-repo.git"));
         assertThat(instance.refSpecs(), contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1"));
 
-        SSHCheckoutTrait sshTrait = new SSHCheckoutTrait("user-key");
+        SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper("user-key");
         sshTrait.decorateBuilder(instance);
 
         GitSCM actual = instance.build();

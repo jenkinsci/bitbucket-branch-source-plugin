@@ -24,6 +24,8 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import java.util.Arrays;
 import java.util.Collections;
 import jenkins.model.Jenkins;

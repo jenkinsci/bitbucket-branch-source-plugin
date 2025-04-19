@@ -23,11 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BranchScanningIntegrationTest.MultiBranchProjectImpl;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookAutoRegisterListener;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import hudson.model.listeners.ItemListener;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
@@ -63,7 +63,7 @@ class WebhooksAutoregisterTest {
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
         RingBufferLogHandler log = createJULTestHandler();
 
-        MultiBranchProjectImpl p = j.jenkins.createProject(MultiBranchProjectImpl.class, "test");
+        MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setTraits(List.of(new WebhookRegistrationTrait(WebhookRegistration.ITEM)));
         BranchSource branchSource = new BranchSource(source);
@@ -86,7 +86,7 @@ class WebhooksAutoregisterTest {
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
         RingBufferLogHandler log = createJULTestHandler();
 
-        MultiBranchProjectImpl p = j.jenkins.createProject(MultiBranchProjectImpl.class, "test");
+        MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource( "amuniz", "test-repos");
         p.getSourcesList().add(new BranchSource(source));
         p.scheduleBuild2(0);

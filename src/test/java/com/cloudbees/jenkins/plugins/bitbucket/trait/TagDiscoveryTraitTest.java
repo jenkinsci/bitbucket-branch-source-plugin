@@ -21,50 +21,44 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
-import hudson.util.ListBoxModel;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.TagDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.TagDiscoveryTrait.TagSCMHeadAuthority;
+import java.util.Collections;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.trait.SCMHeadFilter;
+import jenkins.scm.api.trait.SCMHeadPrefilter;
+import org.hamcrest.Matcher;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
-public class WebhookRegistrationTraitTest {
+public class TagDiscoveryTraitTest {
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void given__webhookRegistrationDisabled__when__appliedToContext__then__webhookRegistrationDisabled()
-            throws Exception {
+    public void given__discoverAll__when__appliedToContext__then__noFilter() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(ctx.webhookRegistration(), is(WebhookRegistration.SYSTEM));
-        WebhookRegistrationTrait instance = new WebhookRegistrationTrait(WebhookRegistration.DISABLE.toString());
+        assumeThat(ctx.wantTags(), is(false));
+        assumeThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
+        assumeThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
+        assumeThat(ctx.authorities(), not((Matcher) hasItem(instanceOf(TagSCMHeadAuthority.class))));
+
+        TagDiscoveryTrait instance = new TagDiscoveryTrait();
         instance.decorateContext(ctx);
-        assertThat(ctx.webhookRegistration(), is(WebhookRegistration.DISABLE));
+        assertThat(ctx.wantTags(), is(true));
+        assertThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
+        assertThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
+        assertThat(ctx.authorities(), (Matcher) hasItem(instanceOf(TagSCMHeadAuthority.class)));
     }
-
-    @Test
-    public void given__webhookRegistrationFromItem__when__appliedToContext__then__webhookRegistrationFromItem()
-            throws Exception {
-        BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(ctx.webhookRegistration(), is(WebhookRegistration.SYSTEM));
-        WebhookRegistrationTrait instance = new WebhookRegistrationTrait(WebhookRegistration.ITEM.toString());
-        instance.decorateContext(ctx);
-        assertThat(ctx.webhookRegistration(), is(WebhookRegistration.ITEM));
-    }
-
-    @Test
-    public void given__descriptor__when__displayingOptions__then__SYSTEM_not_present() {
-        ListBoxModel options =
-                j.jenkins.getDescriptorByType(WebhookRegistrationTrait.DescriptorImpl.class).doFillModeItems();
-        for (ListBoxModel.Option o : options) {
-            assertThat(o.value, not(is(WebhookRegistration.SYSTEM.name())));
-        }
-    }
-
 }

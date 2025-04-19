@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,36 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
 
+package com.cloudbees.jenkins.plugins.bitbucket.trait;
+
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import jenkins.plugins.git.GitTagSCMRevision;
-import jenkins.scm.api.SCMHeadCategory;
-import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMSource;
-import jenkins.scm.api.trait.SCMHeadAuthority;
-import jenkins.scm.api.trait.SCMHeadAuthorityDescriptor;
 import jenkins.scm.api.trait.SCMSourceContext;
-import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
-import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * A {@link Discovery} trait for bitbucket that will discover tags on the repository.
+ * A {@link SCMSourceTrait} that suppresses all pull requests if the repository is public.
  *
- * @since 2.2.11
+ * @since 2.2.0
  */
-public class TagDiscoveryTrait extends SCMSourceTrait {
+public class PublicRepoPullRequestFilterTrait extends SCMSourceTrait {
     /**
-     * Constructor for stapler.
+     * Constructor.
      */
     @DataBoundConstructor
-    public TagDiscoveryTrait() {
+    public PublicRepoPullRequestFilterTrait() {
     }
 
     /**
@@ -58,33 +55,23 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        BitbucketSCMSourceContext ctx = (BitbucketSCMSourceContext) context;
-        ctx.wantTags(true);
-        ctx.withAuthority(new TagSCMHeadAuthority());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean includeCategory(@NonNull SCMHeadCategory category) {
-        return category instanceof TagSCMHeadCategory;
+        ((BitbucketSCMSourceContext) context).skipPublicPRs(true);
     }
 
     /**
      * Our descriptor.
      */
-    @Symbol("bitbucketTagDiscovery")
+    @Symbol("bitbucketPublicRepoPullRequestFilter")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
-
         /**
          * {@inheritDoc}
          */
+        @NonNull
         @Override
         public String getDisplayName() {
-            return Messages.TagDiscoveryTrait_displayName();
+            return Messages.PublicRepoPullRequestFilterTrait_displayName();
         }
 
         /**
@@ -102,40 +89,6 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return BitbucketSCMSource.class;
         }
-    }
 
-    /**
-     * Trusts tags from the origin repository.
-     */
-    public static class TagSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, BitbucketTagSCMHead, GitTagSCMRevision> {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull BitbucketTagSCMHead head) {
-            return true;
-        }
-
-        /**
-         * Out descriptor.
-         */
-        @Extension
-        public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getDisplayName() {
-                return "Trust origin tags";
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
-                return SCMHeadOrigin.Default.class.isAssignableFrom(originClass);
-            }
-        }
     }
 }
