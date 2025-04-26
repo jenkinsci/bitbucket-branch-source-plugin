@@ -56,6 +56,10 @@
             <id>casz</id>
             <name>Joseph Petersen</name>
         </developer>
+        <developer>
+            <id>nfalco79</id>
+            <name>Nikolas Falco</name>
+        </developer>
     </developers>
 
     <scm>

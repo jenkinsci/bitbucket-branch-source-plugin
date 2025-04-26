@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommi
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Date;
@@ -87,8 +86,8 @@ public class BitbucketPullRequestValueRepository implements BitbucketPullRequest
             if (commit.getMessage() == null) {
                 commit.setMessage(branch.getMessage());
             }
-            if (commit.getDateMillis() == 0) {
-                commit.setDate(new StdDateFormat().format(new Date(branch.getDateMillis())));
+            if (commit.getCommitterDate() == null && branch.getDateMillis() > 0) {
+                commit.setCommitterDate(new Date(branch.getDateMillis()));
             }
         }
         return commit;

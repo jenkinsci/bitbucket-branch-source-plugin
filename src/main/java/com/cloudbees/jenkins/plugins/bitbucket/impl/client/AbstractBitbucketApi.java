@@ -263,7 +263,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
         } catch (FileNotFoundException | BitbucketRequestException e) {
             throw e;
         } catch (IOException e) {
-            throw new IOException("Communication error for URL: " + request, e);
+            throw new IOException("Communication error, requested URL: " + request, e);
         }
     }
 

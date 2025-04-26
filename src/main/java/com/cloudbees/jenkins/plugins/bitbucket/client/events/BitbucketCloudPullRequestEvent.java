@@ -34,9 +34,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullR
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepositoryOwner;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 import org.apache.commons.lang.StringUtils;
 
 public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent {
@@ -97,10 +94,10 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                 if (sourceCommit != null
                     && sourceBranch != null) {
                     if (sourceBranch.getRawNode() == null) {
-                        sourceBranch.setRawNode(source.getCommit().getHash());
+                        sourceBranch.setRawNode(sourceCommit.getHash());
                     }
-                    if (sourceBranch.getDateMillis() == 0) {
-                        sourceBranch.setDateMillis(toDate(sourceCommit.getDate()));
+                    if (sourceBranch.getDateMillis() == 0 && sourceCommit.getCommitterDate() != null) {
+                        sourceBranch.setDateMillis(sourceCommit.getCommitterDate().getTime());
                     }
                 }
             }
@@ -123,19 +120,6 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                 destination.getBranch()
                     .setRawNode(destination.getCommit().getHash());
             }
-        }
-    }
-
-    private long toDate(String dateStr){
-        if(StringUtils.isBlank(dateStr)){
-            return 0;
-        }
-        final SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        dateParser.setTimeZone(TimeZone.getTimeZone("GMT"));
-        try {
-            return dateParser.parse(dateStr).getTime();
-        } catch (ParseException e) {
-            return 0;
         }
     }
 

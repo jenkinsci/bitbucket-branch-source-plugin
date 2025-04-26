@@ -50,6 +50,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthentic
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.BitbucketSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
@@ -63,7 +64,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -1216,7 +1216,7 @@ public class BitbucketSCMSource extends SCMSource {
 
         @Override
         public String getDate() {
-            return new StdDateFormat().format(new Date(branch.getDateMillis()));
+            return DateUtils.formatToISO(new Date(branch.getDateMillis()));
         }
 
         @Override

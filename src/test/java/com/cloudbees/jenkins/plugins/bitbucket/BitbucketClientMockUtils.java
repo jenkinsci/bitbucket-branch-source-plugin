@@ -80,12 +80,10 @@ public class BitbucketClientMockUtils {
             when(client.resolveSourceFullHash(any(BitbucketPullRequestValue.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
 
-            BitbucketCloudAuthor author = new BitbucketCloudAuthor();
-            author.setRaw("amuniz <amuniz@mail.com");
             when(client.resolveCommit("e851558f77c098d21af6bb8cc54a423f7cf12147"))
-                .thenReturn(new BitbucketCloudCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", author));
+                .thenReturn(buildCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", "amuniz <amuniz@mail.com"));
             when(client.resolveCommit("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"))
-                .thenReturn(new BitbucketCloudCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", author));
+                .thenReturn(buildCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", "amuniz <amuniz@mail.com>"));
         }
 
         // mock file exists
@@ -194,15 +192,13 @@ public class BitbucketClientMockUtils {
         BitbucketPullRequestValue pr = new BitbucketPullRequestValue();
 
         BitbucketCloudBranch branch = new BitbucketCloudBranch("my-feature-branch", null, 0);
-        BitbucketCloudAuthor author = new BitbucketCloudAuthor();
-        author.setRaw("amuniz <amuniz@mail.com>");
-        BitbucketCloudCommit commit = new BitbucketCloudCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", author);
+        BitbucketCloudCommit commit = buildCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", "amuniz <amuniz@mail.com>");
         BitbucketCloudRepository repository = new BitbucketCloudRepository();
         repository.setFullName("otheruser/test-repos");
 
         pr.setSource(new BitbucketPullRequestValueRepository(repository, branch, commit));
 
-        commit = new BitbucketCloudCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", author);
+        commit = buildCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", "amuniz <amuniz@mail.com>");
         branch = new BitbucketCloudBranch("branch1", null, 0);
         repository = new BitbucketCloudRepository();
         repository.setFullName("amuniz/test-repos");
@@ -212,6 +208,12 @@ public class BitbucketClientMockUtils {
         pr.setAuthor(new BitbucketPullRequestValue.Author());
         pr.setLinks(new BitbucketPullRequestValue.Links("https://bitbucket.org/amuniz/test-repos/pull-requests/23"));
         return pr;
+    }
+
+    private static BitbucketCloudCommit buildCommit(String message, String date, String hash, String authorName) {
+        BitbucketCloudAuthor author = new BitbucketCloudAuthor();
+        author.setRaw(authorName);
+        return new BitbucketCloudCommit(message, date, hash, author, author, Collections.emptyList());
     }
 
     public static TaskListener getTaskListenerMock() {

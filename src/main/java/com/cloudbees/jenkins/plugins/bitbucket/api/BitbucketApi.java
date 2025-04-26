@@ -126,10 +126,9 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @return a branch in the repository.
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @CheckForNull
-    BitbucketBranch getBranch(@NonNull String branchName) throws IOException, InterruptedException;
+    BitbucketBranch getBranch(@NonNull String branchName) throws IOException;
 
     /**
      * Returns the branches in the repository.
@@ -346,4 +345,31 @@ public interface BitbucketApi extends AutoCloseable {
      */
     @Override
     void close() throws IOException;
+
+    /**
+     * Return a set of base informations between the two given commits.
+     *
+     * @param from the commit or reference containing the changes we wish to
+     *        preview or {@code null} to get changes since the beginning.
+     * @param to the commit or reference representing the state to which we want
+     *        to compare the first commit
+     * @return the list of commit between first commit and second source commit.
+     * @throws IOException if there was a network communications error.
+     */
+    @NonNull
+    List<BitbucketCommit> getCommits(@CheckForNull String from, @NonNull String to) throws IOException;
+
+//    /**
+//     * Return a set changes between the two given commits.
+//     *
+//     * @param firstCommit the commit containing the changes we wish to preview
+//     *        or {@code null} to use the unique parent of secondCommit
+//     * @param secondCommit the commit representing the state to which we want to
+//     *        compare the first commit
+//     * @return the file changes between first commit and second source commit.
+//     * @throws IOException if there was a network communications error.
+//     */
+//    @NonNull
+//    List<BitbucketCloudCommitDiffStat> getCommitsChanges(String fromCommit, String toCommit) throws IOException;
+
 }

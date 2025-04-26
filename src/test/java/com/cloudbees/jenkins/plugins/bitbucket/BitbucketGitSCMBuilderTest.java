@@ -141,7 +141,7 @@ public class BitbucketGitSCMBuilderTest {
     @Test
     public void given_cloud_endpoint_than_use_BitbucketWeb_browser() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
-        BitbucketGitSCMRevision revision = new BitbucketGitSCMRevision(head, new BitbucketCloudCommit(null, null, "046d9a3c1532acf4cf08fe93235c00e4d673c1d2", null));
+        BitbucketGitSCMRevision revision = new BitbucketGitSCMRevision(head, new BitbucketCloudCommit(null, null, "046d9a3c1532acf4cf08fe93235c00e4d673c1d2", null, null, null));
 
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, null);
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());

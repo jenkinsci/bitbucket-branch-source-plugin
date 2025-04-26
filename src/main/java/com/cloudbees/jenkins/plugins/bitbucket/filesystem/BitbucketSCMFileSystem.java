@@ -30,8 +30,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -43,12 +45,17 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.annotation.Inherited;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -58,12 +65,13 @@ import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.lang.StringUtils;
 
-public class BitbucketSCMFileSystem extends SCMFileSystem {
+import static org.apache.commons.lang.StringUtils.defaultString;
 
+public class BitbucketSCMFileSystem extends SCMFileSystem {
     private final String ref;
     private final BitbucketApi api;
 
-    protected BitbucketSCMFileSystem(BitbucketApi api, String ref, SCMRevision rev) throws IOException {
+    protected BitbucketSCMFileSystem(BitbucketApi api, String ref, @CheckForNull SCMRevision rev) {
         super(rev);
         this.ref = ref;
         this.api = api;
@@ -74,7 +82,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
      */
     @Override
     public long lastModified() throws IOException {
-        return 0L;
+        return 0L; // api.getBranch(ref).getDateMillis() or api.getTag(ref).getDateMillis()
     }
 
     @NonNull
@@ -91,12 +99,112 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
         }
     }
 
+    @Override
+    public boolean changesSince(@CheckForNull SCMRevision fromRevision, @NonNull OutputStream changeLogStream)
+            throws UnsupportedOperationException, IOException, InterruptedException {
+        SCMRevision currentRevision = getRevision();
+        if (Objects.equals(currentRevision, fromRevision)) {
+            // special case where somebody is asking one of two stupid questions:
+            // 1. what has changed between the latest and the latest
+            // 2. what has changed between the current revision and the current revision
+            return false;
+        }
+        int count = 0;
+        StringBuilder log = new StringBuilder(1024);
+        String startHash = null;
+        if (fromRevision instanceof AbstractGitSCMSource.SCMRevisionImpl gitRev) {
+            startHash = gitRev.getHash();
+        }
+        /*
+         * Simulate what the CliGitAPIImpl.ChangelogCommand execute does:
+         * - git whatchanged --no-abbrev -M --format=commit %H%ntree %T%nparent %P%nauthor %aN <%aE> %ai%ncommitter %cN <%cE> %ci%n%n%w(0,4,4)%B -n 1024 8d0fa145 e43fdffe
+         * so we need to format each commit with the same format
+         * commit %H%ntree %T%nparent %P%nauthor %aN <%aE> %ai%ncommitter %cN <%cE> %ci%n%n%w(0,4,4)%B
+         * @see org.jenkinsci.plugins.gitclient.new ChangelogCommand() {...}.RAW
+         */
+        for (BitbucketCommit commit : api.getCommits(startHash, ref)) {
+            log.setLength(0);
+            log.append("commit ").append(commit.getHash()).append('\n');
+//            log.append("tree ").append(commit.getTree().getSha()).append('\n');
+            log.append("parent ").append(StringUtils.join(commit.getParents(), " ")).append('\n');
+            log.append("author ").append(commit.getAuthor()).append(' ').append(defaultString(DateUtils.formatToISO(commit.getAuthorDate()))).append('\n');
+            log.append("committer ").append(commit.getAuthor()).append(' ').append(defaultString(DateUtils.formatToISO(commit.getCommitterDate()))).append('\n');
+            log.append('\n');
+            String msg = commit.getMessage();
+            if (msg.endsWith("\r\n")) {
+                msg = msg.substring(0, msg.length() - 2);
+            } else if (msg.endsWith("\n")) {
+                msg = msg.substring(0, msg.length() - 1);
+            }
+            msg = msg.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\n    ");
+            log.append("    ").append(msg).append('\n');
+/*
+            String NULL_HASH = "0000000000000000000000000000000000000000";
+
+            if (count == 0) {
+                String fromHash = commit.getHash();
+                String toHash = NULL_HASH;
+                if (currentRevision instanceof SCMRevisionImpl gitRev) {
+                    toHash = gitRev.getHash();
+                } else if (currentRevision instanceof ChangeRequestSCMRevision<?> prRev
+                        && prRev.getTarget() instanceof SCMRevisionImpl targetRev) {
+                    toHash = targetRev.getHash();
+                }
+                toHash = StringUtils.rightPad(toHash, 40, '0');
+
+                // in BB diff changes are not related to a specific commit so we put all of them into the most recent commit
+                for (BitbucketCloudCommitDiffStat change : api.getCommitsChanges(startHash, ref)) {
+                    log.append('\n').append(':');
+                    switch (change.getStatus()) {
+                    case added:
+                        log.append("000000").append(' ').append("100644")
+                            .append(' ')
+                            .append(NULL_HASH).append(' ').append(toHash)
+                            .append(' ')
+                            .append('A').append("\t").append(change.getNewPath());
+                        break;
+                    case modified:
+                        log.append("100644").append(' ').append("100644")
+                            .append(' ')
+                            .append(fromHash).append(' ').append(toHash)
+                            .append(' ')
+                            .append('M').append("\t").append(change.getNewPath());
+                        break;
+                    case removed:
+                        log.append("100644").append(' ').append("000000")
+                            .append(' ')
+                            .append(fromHash).append(' ').append(NULL_HASH)
+                            .append(' ')
+                            .append('D').append("\t").append(change.getOldPath());
+                        break;
+                    case renamed:
+                        log.append("100644").append(' ').append("100644")
+                            .append(' ')
+                            .append(fromHash).append(' ').append(toHash)
+                            .append(' ')
+                            .append('R').append("\t").append(change.getOldPath()).append(' ').append(change.getNewPath());
+                        break;
+                    }
+                }
+                log.append('\n');
+            }
+*/
+            changeLogStream.write(log.toString().getBytes(StandardCharsets.UTF_8));
+            changeLogStream.flush();
+            count++;
+            if (count >= GitSCM.MAX_CHANGELOG) {
+                break;
+            }
+        }
+
+        return count > 0;
+    }
+
     @Extension
     public static class BuilderImpl extends SCMFileSystem.Builder {
 
         @Override
         public boolean supports(SCM source) {
-            //TODO: Determine supported by checking if its git bitbucket scm with proper credentials and non wildcard branch
             return false;
         }
 

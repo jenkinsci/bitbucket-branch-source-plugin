@@ -21,8 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.client;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -32,10 +37,31 @@ public final class DateUtils {
     private DateUtils() {
     }
 
+    @Nullable
+    public static String formatToISO(@CheckForNull Date date) {
+        return date != null ? new StdDateFormat().format(date) : null;
+    }
+
+    @Nullable
+    public static Date parseISODate(@CheckForNull String isoDate) {
+        try {
+            return isoDate != null ? new StdDateFormat().parse(isoDate) : null;
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
+    public static long isoDateToMillis(@CheckForNull String isoDate) {
+        Date date = parseISODate(isoDate);
+        return date != null ? date.getTime() : 0L;
+    }
+
+    @NonNull
     public static Date getDate(int year, int month, int day, int hours, int minutes, int seconds, int milliseconds) {
         return getDate(year, month, day, hours, minutes, seconds, milliseconds, "UTC");
     }
 
+    @NonNull
     public static Date getDate(int year, int month, int day, int hours, int minutes, int seconds, int milliseconds, String timezoneId) {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(timezoneId));
         cal.set(year, month - 1, day, hours, minutes);
