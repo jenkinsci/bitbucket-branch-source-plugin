@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.events;
 
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +32,8 @@ public class NativeServerRefsChangedEvent {
 
     private BitbucketServerRepository repository;
     private List<NativeServerChange> changes;
+    // The details of the new head commit.
+    private BitbucketServerCommit toCommit;
 
     public BitbucketServerRepository getRepository() {
         return repository;
@@ -38,6 +41,10 @@ public class NativeServerRefsChangedEvent {
 
     public List<NativeServerChange> getChanges() {
         return changes == null ? Collections.<NativeServerChange> emptyList() : Collections.unmodifiableList(changes);
-        }
+    }
+
+    public BitbucketServerCommit getToCommit() {
+        return toCommit;
+    }
 
 }

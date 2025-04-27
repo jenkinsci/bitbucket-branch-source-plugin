@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerChange;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerMirrorRepoSynchronizedEvent;
@@ -58,6 +59,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
         }
 
         final BitbucketServerRepository repository;
+        final BitbucketServerCommit refCommit;
         final List<NativeServerChange> changes;
         final String mirrorId;
         try {
@@ -65,11 +67,13 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 final NativeServerRefsChangedEvent event = JsonParser.toJava(payload, NativeServerRefsChangedEvent.class);
                 repository = event.getRepository();
                 changes = event.getChanges();
+                refCommit = event.getToCommit();
                 mirrorId = null;
             } else if (hookEvent == HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED) {
                 final NativeServerMirrorRepoSynchronizedEvent event = JsonParser.toJava(payload, NativeServerMirrorRepoSynchronizedEvent.class);
                 repository = event.getRepository();
                 changes = event.getChanges();
+                refCommit = null;
                 mirrorId = event.getMirrorServer().getId();
                 // If too many changes, this event set refLimitExceeded to true
                 // https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html#Eventpayload-Mirrorsynchronized
@@ -118,7 +122,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
             }
 
             for (final SCMEvent.Type type : events.keySet()) {
-                ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, mirrorId);
+                ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, refCommit, mirrorId);
                 notifyEvent(headEvent, BitbucketSCMSource.getEventDelaySeconds());
             }
         }
