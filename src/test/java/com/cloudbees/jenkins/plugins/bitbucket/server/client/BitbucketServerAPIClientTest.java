@@ -34,13 +34,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClient
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IRequestAudit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import hudson.ProxyConfiguration;
-import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpHead;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -75,7 +75,6 @@ import static org.mockito.Mockito.verify;
 @WithJenkins
 class BitbucketServerAPIClientTest {
 
-    @SuppressWarnings("unused")
     private static JenkinsRule j;
 
     @BeforeAll
@@ -87,7 +86,7 @@ class BitbucketServerAPIClientTest {
     void verify_status_notitication_name_max_length() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient("https://acme.bitbucket.org");
         BitbucketBuildStatus status = new BitbucketBuildStatus();
-        status.setName(RandomStringUtils.randomAlphanumeric(300));
+        status.setName(RandomStringUtils.secure().nextAlphanumeric(300));
         status.setState(Status.INPROGRESS);
         status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d3");
 
@@ -109,7 +108,7 @@ class BitbucketServerAPIClientTest {
         status.setName("name");
         status.setState(Status.INPROGRESS);
         status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d3");
-        String longKey = RandomStringUtils.randomAlphabetic(260);
+        String longKey = RandomStringUtils.secure().nextAlphabetic(260);
         status.setKey(longKey);
 
         client.postBuildStatus(status);

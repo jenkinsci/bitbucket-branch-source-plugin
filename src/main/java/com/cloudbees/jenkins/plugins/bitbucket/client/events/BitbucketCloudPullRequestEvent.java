@@ -34,7 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloud
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepositoryOwner;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent {
 

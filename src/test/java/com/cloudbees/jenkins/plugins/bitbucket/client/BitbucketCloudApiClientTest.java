@@ -35,13 +35,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
-import io.jenkins.cli.shaded.org.apache.commons.lang.RandomStringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.core5.http.HttpRequest;
@@ -83,7 +83,7 @@ class BitbucketCloudApiClientTest {
     void verify_status_notitication_name_max_length() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
         BitbucketBuildStatus status = new BitbucketBuildStatus();
-        status.setName(RandomStringUtils.randomAlphanumeric(300));
+        status.setName(RandomStringUtils.secure().nextAlphanumeric(300));
         status.setState(Status.INPROGRESS);
         status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d3");
         status.setKey("PRJ/REPO");

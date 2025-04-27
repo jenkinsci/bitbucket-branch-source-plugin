@@ -43,7 +43,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import jenkins.util.SetContextClassLoader;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.core5.http.HttpRequest;
 
 public class BitbucketOAuthAuthenticator implements BitbucketAuthenticator {

@@ -33,7 +33,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @Extension(ordinal = 1000)
 public class BitbucketMockApiFactory extends BitbucketApiFactory {

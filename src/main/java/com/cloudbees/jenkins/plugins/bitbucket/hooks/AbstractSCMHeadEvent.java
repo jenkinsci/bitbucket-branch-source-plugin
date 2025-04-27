@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMNavigator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 abstract class AbstractSCMHeadEvent<P> extends SCMHeadEvent<P> {
 
