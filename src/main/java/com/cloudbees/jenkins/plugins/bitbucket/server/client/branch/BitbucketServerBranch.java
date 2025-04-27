@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -141,7 +142,8 @@ public class BitbucketServerBranch implements BitbucketBranch {
         try {
             BitbucketCommit commit = commitClosure.call();
 
-            this.timestamp = commit.getDateMillis();
+            Date committerDate = commit.getCommitterDate();
+            this.timestamp = committerDate != null ? committerDate.getTime() : 0L;
             this.message = commit.getMessage();
             this.author = commit.getAuthor();
         } catch (Exception e) {

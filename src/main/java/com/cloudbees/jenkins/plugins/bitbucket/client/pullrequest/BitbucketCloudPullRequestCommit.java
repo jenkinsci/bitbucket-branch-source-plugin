@@ -28,7 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAutho
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import java.util.Date;
 
-public class BitbucketPullRequestCommit implements BitbucketCommit {
+public class BitbucketCloudPullRequestCommit implements BitbucketCommit {
     private String hash;
     private BitbucketCloudAuthor author;
     private Date date;

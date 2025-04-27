@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2025, Falco Nikolas
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,29 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
-import java.util.List;
-
-public class BitbucketPullRequestCommits {
-    private String next;
-
-    private List<BitbucketPullRequestCommit> values;
-
-    public String getNext() {
-        return next;
-    }
-
-    public void setNext(String next) {
-        this.next = next;
-    }
-
-    public List<BitbucketPullRequestCommit> getValues() {
-        return values;
-    }
-
-    public void setValues(List<BitbucketPullRequestCommit> values) {
-        this.values = values;
-    }
-
+@FunctionalInterface
+public interface ICheckedCallable<V, E extends Exception> {
+    /**
+     * Computes a result, or throws an exception if unable to do so.
+     *
+     * @return computed result
+     * @throws E if unable to compute a result
+     */
+    V call() throws E;
 }

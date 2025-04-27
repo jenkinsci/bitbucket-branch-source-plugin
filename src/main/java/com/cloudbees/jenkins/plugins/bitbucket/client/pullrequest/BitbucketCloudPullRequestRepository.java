@@ -35,13 +35,13 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Date;
 
-public class BitbucketPullRequestValueRepository implements BitbucketPullRequestSource {
+public class BitbucketCloudPullRequestRepository implements BitbucketPullRequestSource {
     private BitbucketCloudRepository repository;
     private BitbucketCloudBranch branch;
     private BitbucketCloudCommit commit;
 
     @JsonCreator
-    public BitbucketPullRequestValueRepository(@JsonProperty("repository") BitbucketCloudRepository repository,
+    public BitbucketCloudPullRequestRepository(@JsonProperty("repository") BitbucketCloudRepository repository,
                                                @JsonProperty("branch") BitbucketCloudBranch branch,
                                                @JsonProperty("commit") BitbucketCloudCommit commit) {
         this.repository = repository;

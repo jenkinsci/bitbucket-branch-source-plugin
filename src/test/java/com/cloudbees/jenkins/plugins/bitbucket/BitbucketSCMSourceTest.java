@@ -25,7 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
@@ -125,7 +125,7 @@ class BitbucketSCMSourceTest {
     @Test
     void test_that_clone_url_does_not_contains_username() {
         BranchSCMHead head = new BranchSCMHead("master");
-        BitbucketPullRequestCommit commit = new BitbucketPullRequestCommit();
+        BitbucketCloudPullRequestCommit commit = new BitbucketCloudPullRequestCommit();
         commit.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d2");
         commit.setDate(new Date());
 
@@ -144,7 +144,7 @@ class BitbucketSCMSourceTest {
     @Test
     void verify_envvar() {
         BranchSCMHead head = new BranchSCMHead("master");
-        BitbucketPullRequestCommit commit = new BitbucketPullRequestCommit();
+        BitbucketCloudPullRequestCommit commit = new BitbucketCloudPullRequestCommit();
         commit.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d2");
         commit.setDate(new Date());
 

@@ -357,7 +357,7 @@ public interface BitbucketApi extends AutoCloseable {
      * @throws IOException if there was a network communications error.
      */
     @NonNull
-    List<BitbucketCommit> getCommits(@CheckForNull String from, @NonNull String to) throws IOException;
+    List<? extends BitbucketCommit> getCommits(@CheckForNull String from, @NonNull String to) throws IOException;
 
 //    /**
 //     * Return a set changes between the two given commits.

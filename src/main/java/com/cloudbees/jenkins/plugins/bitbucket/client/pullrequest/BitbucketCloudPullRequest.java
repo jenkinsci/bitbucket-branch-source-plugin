@@ -30,9 +30,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
-public class BitbucketPullRequestValue implements BitbucketPullRequest {
-    private BitbucketPullRequestValueDestination destination;
-    private BitbucketPullRequestValueRepository source;
+public class BitbucketCloudPullRequest implements BitbucketPullRequest {
+    private BitbucketCloudPullRequestDestination destination;
+    private BitbucketCloudPullRequestRepository source;
     private String id;
     private String title;
 
@@ -44,23 +44,25 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
     @JsonProperty("participants")
     private List<BitbucketReviewer> reviewers;
 
-    public BitbucketPullRequestValueRepository getSource() {
+    @Override
+    public BitbucketCloudPullRequestRepository getSource() {
         return source;
     }
 
-    public void setSource(BitbucketPullRequestValueRepository source) {
+    public void setSource(BitbucketCloudPullRequestRepository source) {
         this.source = source;
     }
 
     @Override
-    public BitbucketPullRequestValueDestination getDestination() {
+    public BitbucketCloudPullRequestDestination getDestination() {
         return destination;
     }
 
-    public void setDestination(BitbucketPullRequestValueDestination destination) {
+    public void setDestination(BitbucketCloudPullRequestDestination destination) {
         this.destination = destination;
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -134,6 +136,7 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
             this.html = html;
         }
 
+        @SuppressWarnings("unused")
         private static class Html {
             private String href;
             public Html() {}

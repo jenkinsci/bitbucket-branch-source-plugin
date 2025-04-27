@@ -282,7 +282,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
             String content = getResponseContent(response);
             throw buildResponseException(response, content);
         }
-        return new ClosingConnectionInputStream(response, httpget);
+        return new ClosingConnectionInputStream(response);
     }
 
     protected int headRequestStatus(String path) throws IOException {

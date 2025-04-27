@@ -31,9 +31,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestDestination;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
@@ -77,7 +77,7 @@ public class BitbucketClientMockUtils {
 
         if (includePullRequests) {
             when(client.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
-            when(client.resolveSourceFullHash(any(BitbucketPullRequestValue.class)))
+            when(client.resolveSourceFullHash(any(BitbucketCloudPullRequest.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
 
             when(client.resolveCommit("e851558f77c098d21af6bb8cc54a423f7cf12147"))
@@ -188,25 +188,25 @@ public class BitbucketClientMockUtils {
         return new BitbucketCloudBranch(name,hash,0);
     }
 
-    private static BitbucketPullRequestValue getPullRequest() {
-        BitbucketPullRequestValue pr = new BitbucketPullRequestValue();
+    private static BitbucketCloudPullRequest getPullRequest() {
+        BitbucketCloudPullRequest pr = new BitbucketCloudPullRequest();
 
         BitbucketCloudBranch branch = new BitbucketCloudBranch("my-feature-branch", null, 0);
         BitbucketCloudCommit commit = buildCommit("no message", "2018-09-13T15:29:23+00:00", "e851558f77c098d21af6bb8cc54a423f7cf12147", "amuniz <amuniz@mail.com>");
         BitbucketCloudRepository repository = new BitbucketCloudRepository();
         repository.setFullName("otheruser/test-repos");
 
-        pr.setSource(new BitbucketPullRequestValueRepository(repository, branch, commit));
+        pr.setSource(new BitbucketCloudPullRequestRepository(repository, branch, commit));
 
         commit = buildCommit("initial commit", "2018-09-10T15:29:23+00:00", "52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a", "amuniz <amuniz@mail.com>");
         branch = new BitbucketCloudBranch("branch1", null, 0);
         repository = new BitbucketCloudRepository();
         repository.setFullName("amuniz/test-repos");
-        pr.setDestination(new BitbucketPullRequestValueDestination(repository, branch, commit));
+        pr.setDestination(new BitbucketCloudPullRequestDestination(repository, branch, commit));
 
         pr.setId("23");
-        pr.setAuthor(new BitbucketPullRequestValue.Author());
-        pr.setLinks(new BitbucketPullRequestValue.Links("https://bitbucket.org/amuniz/test-repos/pull-requests/23"));
+        pr.setAuthor(new BitbucketCloudPullRequest.Author());
+        pr.setLinks(new BitbucketCloudPullRequest.Links("https://bitbucket.org/amuniz/test-repos/pull-requests/23"));
         return pr;
     }
 

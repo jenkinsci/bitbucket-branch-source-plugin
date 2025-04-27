@@ -28,9 +28,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestDestination;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepositoryOwner;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -39,7 +39,7 @@ import org.apache.commons.lang.StringUtils;
 public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent {
 
     @JsonProperty("pullrequest")
-    private BitbucketPullRequestValue pullRequest;
+    private BitbucketCloudPullRequest pullRequest;
 
     private BitbucketCloudRepository repository;
 
@@ -48,7 +48,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
         return pullRequest;
     }
 
-    public void setPullRequest(BitbucketPullRequestValue pullRequest) {
+    public void setPullRequest(BitbucketCloudPullRequest pullRequest) {
         this.pullRequest = pullRequest;
         reconstructMissingData();
     }
@@ -65,7 +65,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
 
     private void reconstructMissingData() {
         if (this.repository != null && this.pullRequest != null) {
-            BitbucketPullRequestValueRepository source = this.pullRequest.getSource();
+            BitbucketCloudPullRequestRepository source = this.pullRequest.getSource();
             if (source != null) {
                 BitbucketCloudRepository sourceRepository = source.getRepository();
                 if (sourceRepository != null) {
@@ -101,7 +101,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                     }
                 }
             }
-            BitbucketPullRequestValueDestination destination = this.pullRequest.getDestination();
+            BitbucketCloudPullRequestDestination destination = this.pullRequest.getDestination();
             if (destination != null
                 && destination.getRepository() != null) {
                 if (destination.getRepository().getScm() == null) {
