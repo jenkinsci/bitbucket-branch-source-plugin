@@ -211,8 +211,7 @@ public class BitbucketClientMockUtils {
     }
 
     private static BitbucketCloudCommit buildCommit(String message, String date, String hash, String authorName) {
-        BitbucketCloudAuthor author = new BitbucketCloudAuthor();
-        author.setRaw(authorName);
+        BitbucketCloudAuthor author = new BitbucketCloudAuthor(authorName);
         return new BitbucketCloudCommit(message, date, hash, author, author, Collections.emptyList());
     }
 

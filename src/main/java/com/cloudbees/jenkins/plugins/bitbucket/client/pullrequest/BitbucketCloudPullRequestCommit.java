@@ -50,9 +50,10 @@ public class BitbucketCloudPullRequestCommit implements BitbucketCommit {
 
     public void setAuthor(String author) {
         if (this.author == null) {
-            this.author = new BitbucketCloudAuthor();
+            this.author = new BitbucketCloudAuthor(author);
+        } else {
+            this.author.setRaw(author);
         }
-        this.author.setRaw(author);
     }
 
     @Override

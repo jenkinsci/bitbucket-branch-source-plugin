@@ -25,7 +25,10 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit.Parent;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.FallbackToOtherRepositoryGitSCMExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.SSHCheckoutTrait;
@@ -62,7 +65,6 @@ import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMBuilder;
-import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
@@ -73,6 +75,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
+import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -120,6 +124,46 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
+    public void give_PR_revision_build_valid_GitSCM() throws Exception {
+        PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "amuniz", "test-repo", "release/release-1",
+                PullRequestBranchType.BRANCH, "1", "Release/release 1",
+                new BranchSCMHead("master"), SCMHeadOrigin.DEFAULT,
+                ChangeRequestCheckoutStrategy.HEAD);
+        BitbucketCloudCommit targetCommit = new BitbucketCloudCommit(
+                "Add sample script hello world",
+                "2018-09-21T14:07:25+00:00",
+                "bf4f4ce8a3a8", // must be a short commit
+                new BitbucketCloudAuthor("Antonio Muniz <amuniz@example.com>"),
+                null,
+                List.of(new Parent("8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1")));
+        BitbucketCloudCommit sourceCommit = new BitbucketCloudCommit(
+                "[CI] Release version 1.0.0",
+                "2018-09-21T14:53:12+00:00",
+                "bf0e8b7962c0", // must be a short commit
+                new BitbucketCloudAuthor("Builder <no-reply@acme.com>"),
+                null,
+                List.of(new Parent("8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1")));
+        PullRequestSCMRevision revision = new PullRequestSCMRevision(head, new BitbucketGitSCMRevision(head.getTarget(), targetCommit), new BitbucketGitSCMRevision(head.getTarget(), sourceCommit));
+
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, getApiMockClient(BitbucketCloudEndpoint.SERVER_URL));
+        BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, null);
+        instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
+
+        GitSCM gitSCM = instance.build();
+        assertThat(gitSCM).isNotNull();
+        assertThat(gitSCM.getExtensions()).hasAtLeastOneElementOfType(BuildChooserSetting.class);
+        assertThat(gitSCM.getExtensions().get(BuildChooserSetting.class)).satisfies(ext -> {
+            Collection<Revision> candidates = ext.getBuildChooser().getCandidateRevisions(false, null, (GitClient) null, null, null, null);
+            assertThat(candidates)
+                .hasSize(1)
+                .element(0)
+                .satisfies(rev -> {
+                    assertThat(rev.getSha1String()).isEqualTo("bf0e8b7962c024026ad01ae09d3a11732e26c0d4"); // source commit hash
+            });
+        });
+    }
+
+    @Test
     public void given_server_endpoint_than_use_BitbucketServer_browser() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         BranchSCMHead head = new BranchSCMHead("test-branch");
@@ -128,14 +172,14 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, null);
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
 
-        Assertions.assertThat(instance.browser())
+        assertThat(instance.browser())
             .isInstanceOf(BitbucketServer.class)
-            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+            .satisfies(browser -> assertThat(browser.getRepoUrl()).isEqualTo("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
 
         GitSCM actual = instance.build();
-        Assertions.assertThat(actual.getBrowser())
+        assertThat(actual.getBrowser())
             .isInstanceOf(BitbucketServer.class)
-            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
+            .satisfies(browser -> assertThat(browser.getRepoUrl()).isEqualTo("https://www.bitbucket.test/web/projects/tester/repos/test-repo"));
     }
 
     @Test
@@ -146,14 +190,14 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, null);
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
 
-        Assertions.assertThat(instance.browser())
+        assertThat(instance.browser())
             .isInstanceOf(BitbucketWeb.class)
-            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://bitbucket.org/tester/test-repo"));
+            .satisfies(browser -> assertThat(browser.getRepoUrl()).isEqualTo("https://bitbucket.org/tester/test-repo"));
 
         GitSCM actual = instance.build();
-        Assertions.assertThat(actual.getBrowser())
+        assertThat(actual.getBrowser())
             .isInstanceOf(BitbucketWeb.class)
-            .satisfies(browser -> Assertions.assertThat(browser.getRepoUrl()).isEqualTo("https://bitbucket.org/tester/test-repo"));
+            .satisfies(browser -> assertThat(browser.getRepoUrl()).isEqualTo("https://bitbucket.org/tester/test-repo"));
     }
 
     @Test

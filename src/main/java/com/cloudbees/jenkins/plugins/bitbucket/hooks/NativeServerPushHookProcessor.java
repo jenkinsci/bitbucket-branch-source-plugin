@@ -87,7 +87,8 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                     return;
                 }
             } else {
-                throw new UnsupportedOperationException("Unsupported hook event " + hookEvent);
+                throw new UnsupportedOperationException("Hook event of type " + hookEvent + " is not supported.\n"
+                        + "Please fill an issue at https://issues.jenkins.io to the bitbucket-branch-source-plugin component.");
             }
         } catch (final IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
