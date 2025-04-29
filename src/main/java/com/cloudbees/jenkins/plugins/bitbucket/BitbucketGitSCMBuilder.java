@@ -286,7 +286,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     }
 
     @NonNull
-    public String getCloudRepositoryUri(@NonNull String owner, @NonNull String repository) {
+    private String getCloudRepositoryUri(@NonNull String owner, @NonNull String repository) {
         switch (protocol) {
             case HTTP:
                 return "https://bitbucket.org/" + owner + "/" + repository + ".git";

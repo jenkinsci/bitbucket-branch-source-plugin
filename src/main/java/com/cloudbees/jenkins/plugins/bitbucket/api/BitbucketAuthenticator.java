@@ -110,19 +110,19 @@ public interface BitbucketAuthenticator {
      * Generates context that sub-classes can use to determine if they would be able to authenticate against the
      * provided server.
      *
-     * @param serverUrl The URL being authenticated against
+     * @param serverURL The URL being authenticated against
      * @return an {@link AuthenticationTokenContext} for use with the AuthenticationTokens APIs
      */
-    public static AuthenticationTokenContext<BitbucketAuthenticator> authenticationContext(String serverUrl) {
-        if (serverUrl == null) {
-            serverUrl = BitbucketCloudEndpoint.SERVER_URL;
+    public static AuthenticationTokenContext<BitbucketAuthenticator> authenticationContext(String serverURL) {
+        if (serverURL == null) {
+            serverURL = BitbucketCloudEndpoint.SERVER_URL;
         }
 
-        String scheme = serverUrl.split(":")[0].toLowerCase();
-        boolean isCloud = BitbucketApiUtils.isCloud(serverUrl);
+        String scheme = serverURL.split(":")[0].toLowerCase();
+        boolean isCloud = BitbucketApiUtils.isCloud(serverURL);
 
         return AuthenticationTokenContext.builder(BitbucketAuthenticator.class)
-                .with(SERVER_URL, serverUrl)
+                .with(SERVER_URL, serverURL)
                 .with(SCHEME, scheme)
                 .with(BITBUCKET_INSTANCE_TYPE, isCloud ? BITBUCKET_INSTANCE_TYPE_CLOUD : BITBUCKET_INSTANCE_TYPE_SERVER)
                 .build();

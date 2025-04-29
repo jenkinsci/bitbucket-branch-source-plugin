@@ -91,6 +91,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -721,17 +722,21 @@ public class BitbucketSCMSource extends SCMSource {
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
         initCloneLinks();
 
-        BitbucketGitSCMBuilder scmBuilder = new BitbucketGitSCMBuilder(this, head, revision, credentialsId)
+        SSHCheckoutTrait sshTrait = SCMTrait.find(traits, SSHCheckoutTrait.class);
+        String checkoutCredentialsId = sshTrait != null ? sshTrait.getCredentialsId() : credentialsId;
+
+        BitbucketGitSCMBuilder scmBuilder = new BitbucketGitSCMBuilder(this, head, revision, checkoutCredentialsId)
                 .withExtension(new BitbucketEnvVarExtension(getRepoOwner(), getRepository(), getProjectKey(), getServerUrl()))
                 .withCloneLinks(primaryCloneLinks, mirrorCloneLinks)
                 .withTraits(traits);
 
-        boolean sshAuth = SCMTrait.find(traits, SSHCheckoutTrait.class) != null;
-
-        SCMSourceOwner owner = getOwner();
-        String scmOwner = owner != null ? owner.getFullName() : null;
+        // checkoutURL must be calculated after set withCloneLinks and credentials
+        String checkoutURL = scmBuilder.remote();
+        String scmOwner = Optional.ofNullable(getOwner())
+                .map(SCMSourceOwner::getFullName)
+                .orElse(null);
         return scmBuilder
-                .withExtension(new GitClientAuthenticatorExtension(scmBuilder.remote(), serverUrl, scmOwner, sshAuth ? null : credentialsId))
+                .withExtension(new GitClientAuthenticatorExtension(checkoutURL, serverUrl, scmOwner, sshTrait != null ? null : checkoutCredentialsId))
                 .build();
     }
 
