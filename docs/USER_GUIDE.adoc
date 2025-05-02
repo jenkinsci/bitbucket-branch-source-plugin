@@ -287,6 +287,11 @@ In case of slow network, you can increase socket timeout using the link:https://
 System.setProperty("http.socket.timeout", "300") // 5 minutes
 ----
 
+=== Client OAuth2 cache Timeout
+
+In case Bitbucket has been configured to expire OAuth2 tokens before 5 minutes, you can configure via a JVM property the release time of the cache where all obtained OAuth2 tokens are stored. This setting is to avoid requests with expired tokens that will produce HTTP 401 responses. link:https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/[Bitbucket Cloud] access tokens expire in two hours.
+To change this amount of time (default is 300 seconds), add the system property `bitbucket.oauth2.cache.timeout=60` on Jenkins startup.
+
 === Disable Branch Indexing on Empty changes
 
 By default, the plugin triggers *a full branch indexing* when a push event contains *empty* changes. This may happen on various scenario, mainly in Bitbucket Data Center, such as:

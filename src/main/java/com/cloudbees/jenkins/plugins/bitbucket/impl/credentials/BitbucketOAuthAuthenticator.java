@@ -42,12 +42,14 @@ import hudson.util.Secret;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import jenkins.util.SetContextClassLoader;
+import jenkins.util.SystemProperties;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.core5.http.HttpRequest;
 
 public class BitbucketOAuthAuthenticator implements BitbucketAuthenticator {
-    private static final Cache<String, OAuth2AccessToken> cacheToken = new Cache<>(5, TimeUnit.MINUTES);
+    private static final String OAUTH2_CACHE_TIMEOUT_PROPERTY_NAME = "bitbucket.oauth2.cache.timeout";
+    private static final Cache<String, OAuth2AccessToken> cacheToken = new Cache<>(SystemProperties.getInteger(OAUTH2_CACHE_TIMEOUT_PROPERTY_NAME, 300), TimeUnit.SECONDS);
 
     private final String credentialsId;
     private final String username;
@@ -70,20 +72,20 @@ public class BitbucketOAuthAuthenticator implements BitbucketAuthenticator {
             String cacheKey = DigestUtils.md2Hex(StringUtils.join(new String[] { credentialsId, username, plainSecret }, '/'));
             return cacheToken.get(cacheKey, () -> {
                 try (SetContextClassLoader cl = new SetContextClassLoader(this.getClass());
-                        OAuth20Service service = new ServiceBuilder(username)
-                            .apiSecret(plainSecret)
-                            .httpClientConfig(JDKHttpClientConfig.defaultConfig())
-                            .build(BitbucketOAuth.instance())) {
+                    OAuth20Service service = new ServiceBuilder(username)
+                        .apiSecret(plainSecret)
+                        .httpClientConfig(JDKHttpClientConfig.defaultConfig())
+                        .build(BitbucketOAuth.instance())) {
                     return service.getAccessTokenClientCredentialsGrant();
                 }
             });
         } catch (ExecutionException e) {
-            // unwrap exception
-            Throwable cause = e.getCause();
-            if (cause instanceof OAuth2AccessTokenErrorResponse oauthEx) {
+            OAuth2AccessTokenErrorResponse oauthEx = BitbucketAuthenticatorUtils.unwrap(e, OAuth2AccessTokenErrorResponse.class);
+            if (oauthEx != null) {
                 throw new BitbucketException(oauthEx.getErrorDescription() + ". Please check configured OAuth credentials client id and secret are correct.", e);
+            } else {
+                throw new RuntimeException(e);
             }
-            throw new RuntimeException(cause);
         }
     }
 

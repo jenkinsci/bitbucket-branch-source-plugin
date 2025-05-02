@@ -119,10 +119,10 @@ public class BitbucketApiUtils {
     public static BitbucketRequestException unwrap(Exception e) {
         Throwable cause = e;
         while (cause != null) {
-            if (e instanceof BitbucketRequestException bbException) {
+            if (cause instanceof BitbucketRequestException bbException) {
                 return bbException;
-            } else if (cause != e.getCause()) { // avoid stackoverflow when cause is also the exception
-                cause = e.getCause();
+            } else if (cause != cause.getCause()) { // avoid stackoverflow when exception contains itself as cause
+                cause = cause.getCause();
             } else {
                 break;
             }

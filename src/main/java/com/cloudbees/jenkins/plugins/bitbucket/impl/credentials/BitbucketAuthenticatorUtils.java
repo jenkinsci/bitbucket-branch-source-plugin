@@ -49,4 +49,19 @@ final class BitbucketAuthenticatorUtils {
             throw new RuntimeException(e);
         }
     }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Exception> T unwrap(@NonNull Exception e, Class<T> exClass) {
+        Throwable cause = e;
+        while (cause != null) {
+            if (exClass.isInstance(cause)) {
+                return (T) cause;
+            } else if (cause != cause.getCause()) { // avoid stackoverflow when exception contains itself as cause
+                cause = cause.getCause();
+            } else {
+                break;
+            }
+        }
+        return null;
+    }
 }
