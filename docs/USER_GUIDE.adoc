@@ -88,7 +88,7 @@ image::images/screenshot-9.png[scaledwidth=90%]
 
 This plugin have customized icon designed for the "Organization Folder" image:/src/main/webapp/images/bitbucket-logo.svg[icon,20,20], for "Multibranch Pipeline", for Single Repository image:/src/main/webapp/images/bitbucket-repository-git.svg[icon,20,20] and Folder image:/src/main/webapp/images/bitbucket-scmnavigator.svg[icon,20,20] project type. This is the default behaviour of the plugin starting from version 935.
 It is possible associate the Bitbucket avatar to the project item selecting the "Show Bitbucket avatar images" behaviour in the project configuration.
-+
+
 image::images/screenshot-19.png[scaledwidth=90%]
 
 The supported avatars are:
