@@ -387,12 +387,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return instance;
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public boolean isServerUrlSelectable() {
             return BitbucketEndpointConfiguration.get().isEndpointSelectable();
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
@@ -402,7 +400,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         @RequirePOST
-        @SuppressWarnings("unused") // used By stapler
         public static FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
                                                           @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
                                                           @QueryParameter String value) {
@@ -410,7 +407,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         @RequirePOST
-        @SuppressWarnings("unused") // used By stapler
         public static FormValidation doCheckMirrorId(@QueryParameter String value,
                                                      @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             if (!value.isEmpty()) {
@@ -423,13 +419,11 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return FormValidation.ok();
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             return BitbucketCredentials.fillCredentialsIdItems(context, serverURL);
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
                                                 @QueryParameter(fixEmpty = true, value = "serverUrl") String serverUrl,
                                                 @QueryParameter String credentialsId,

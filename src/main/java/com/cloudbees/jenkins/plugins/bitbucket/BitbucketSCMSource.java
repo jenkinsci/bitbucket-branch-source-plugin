@@ -326,14 +326,14 @@ public class BitbucketSCMSource extends SCMSource {
     public void afterSave() {
         try (BitbucketApi client = buildBitbucketClient()) {
             gatherPrimaryCloneLinks(client);
-        } catch (InterruptedException | IOException e) {
+        } catch (IOException e) {
             LOGGER.log(Level.SEVERE,
                     "Could not determine clone links of " + getRepoOwner() + "/" + getRepository() +
                     " on " + getServerUrl() + " for " + getOwner() + " falling back to generated links", e);
         }
     }
 
-    private void gatherPrimaryCloneLinks(@NonNull BitbucketApi apiClient) throws IOException, InterruptedException {
+    private void gatherPrimaryCloneLinks(@NonNull BitbucketApi apiClient) throws IOException {
         BitbucketRepository r = apiClient.getRepository();
         Map<String, List<BitbucketHref>> links = r.getLinks();
         if (links != null && links.containsKey("clone")) {
@@ -374,8 +374,6 @@ public class BitbucketSCMSource extends SCMSource {
                 // Search tags
                 retrieveTags(request);
             }
-        } catch (IOException | InterruptedException e) {
-             throw e;
         }
     }
 
@@ -558,14 +556,14 @@ public class BitbucketSCMSource extends SCMSource {
                     BitbucketBranch targetBranch = client.getBranch(prHead.getTarget().getName());
 
                     if(targetBranch == null) {
-                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                        listener.getLogger().format("No branch found in %s/%s with name [%s]",
                             repoOwner, repository, prHead.getTarget().getName());
                         return null;
                     }
                     targetRevision = findCommit(targetBranch, listener);
 
                     if (targetRevision == null) {
-                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                        listener.getLogger().format("No branch found in %s/%s with name [%s]",
                             repoOwner, repository, prHead.getTarget().getName());
                         return null;
                     }
@@ -582,7 +580,7 @@ public class BitbucketSCMSource extends SCMSource {
                     }
 
                     if(branch == null) {
-                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                        listener.getLogger().format("No branch found in %s/%s with name [%s]",
                             repoOwner, repository, head.getName());
                         return null;
                     }
@@ -601,7 +599,7 @@ public class BitbucketSCMSource extends SCMSource {
                     targetRevision = findPRDestinationCommit(pr, listener);
 
                     if (targetRevision == null) {
-                        listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                        listener.getLogger().format("No branch found in %s/%s with name [%s]",
                             repoOwner, repository, prHead.getTarget().getName());
                         return null;
                     }
@@ -610,7 +608,7 @@ public class BitbucketSCMSource extends SCMSource {
                 }
 
                 if (sourceRevision == null) {
-                    listener.getLogger().format("No revision found in {0}/{1} for PR-{2} [{3}]",
+                    listener.getLogger().format("No revision found in %s/%s for PR-%s [%s]",
                         prHead.getRepoOwner(),
                         prHead.getRepository(),
                         prHead.getId(),
@@ -626,13 +624,13 @@ public class BitbucketSCMSource extends SCMSource {
             } else if (head instanceof BitbucketTagSCMHead tagHead) {
                 BitbucketBranch tag = client.getTag(tagHead.getName());
                 if(tag == null) {
-                    listener.getLogger().format( "No tag found in {0}/{1} with name [{2}]",
+                    listener.getLogger().format( "No tag found in %s/%s with name [%s]",
                         repoOwner, repository, head.getName());
                     return null;
                 }
                 BitbucketCommit revision = findCommit(tag, listener);
                 if (revision == null) {
-                    listener.getLogger().format( "No revision found in {0}/{1} with name [{2}]",
+                    listener.getLogger().format( "No revision found in %s/%s with name [%s]",
                         repoOwner, repository, head.getName());
                     return null;
                 }
@@ -640,13 +638,13 @@ public class BitbucketSCMSource extends SCMSource {
             } else {
                 BitbucketBranch branch = client.getBranch(head.getName());
                 if(branch == null) {
-                    listener.getLogger().format("No branch found in {0}/{1} with name [{2}]",
+                    listener.getLogger().format("No branch found in %s/%s with name [%s]",
                         repoOwner, repository, head.getName());
                     return null;
                 }
                 BitbucketCommit revision = findCommit(branch, listener);
                 if (revision == null) {
-                    listener.getLogger().format("No revision found in {0}/{1} with name [{2}]",
+                    listener.getLogger().format("No revision found in %s/%s with name [%s]",
                         repoOwner, repository, head.getName());
                     return null;
                 }
@@ -749,7 +747,7 @@ public class BitbucketSCMSource extends SCMSource {
             if (project != null) {
                 projectKey = project.getKey();
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             LOGGER.severe("Failure getting the project key of repository " + getRepository() + " : " + e.getMessage());
         }
         return projectKey;
@@ -975,7 +973,40 @@ public class BitbucketSCMSource extends SCMSource {
 
     private void initMirrorCloneLinks(BitbucketServerAPIClient bitbucket, String mirrorIdLocal) {
         try {
-            mirrorCloneLinks = getCloneLinksFromMirror(bitbucket, mirrorIdLocal);
+            // Mirrors are supported only by Bitbucket Server
+            BitbucketServerRepository r = (BitbucketServerRepository) bitbucket.getRepository();
+            List<BitbucketMirroredRepositoryDescriptor> mirrors = bitbucket.getMirrors(r.getId());
+            BitbucketMirroredRepositoryDescriptor mirroredRepositoryDescriptor = mirrors.stream()
+                .filter(it -> mirrorIdLocal.equals(it.getMirrorServer().getId()))
+                .findFirst()
+                .orElseThrow(() ->
+                    new IllegalStateException("Could not find mirror descriptor for mirror id " + mirrorIdLocal)
+                );
+            if (!mirroredRepositoryDescriptor.getMirrorServer().isEnabled()) {
+                throw new IllegalStateException("Mirror is disabled for mirror id " + mirrorIdLocal);
+            }
+            Map<String, List<BitbucketHref>> mirrorDescriptorLinks = mirroredRepositoryDescriptor.getLinks();
+            if (mirrorDescriptorLinks == null) {
+                throw new IllegalStateException("There is no repository descriptor links for mirror id " + mirrorIdLocal);
+            }
+            List<BitbucketHref> self = mirrorDescriptorLinks.get("self");
+            if (self == null || self.isEmpty()) {
+                throw new IllegalStateException("There is no self-link for mirror id " + mirrorIdLocal);
+            }
+            String selfLink = self.get(0).getHref();
+            BitbucketMirroredRepository mirroredRepository = bitbucket.getMirroredRepository(selfLink);
+            if (!mirroredRepository.isAvailable()) {
+                throw new IllegalStateException("Mirrored repository is not available for mirror id " + mirrorIdLocal);
+            }
+            Map<String, List<BitbucketHref>> mirroredRepositoryLinks = mirroredRepository.getLinks();
+            if (mirroredRepositoryLinks == null) {
+                throw new IllegalStateException("There is no mirrored repository links for mirror id " + mirrorIdLocal);
+            }
+            List<BitbucketHref> mirroredRepositoryCloneLinks = mirroredRepositoryLinks.get("clone");
+            if (mirroredRepositoryCloneLinks == null) {
+                throw new IllegalStateException("There is no mirrored repository clone links for mirror id " + mirrorIdLocal);
+            }
+            mirrorCloneLinks = mirroredRepositoryCloneLinks;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE,
                 "Could not determine mirror clone links of " + getRepoOwner() + "/" + getRepository()
@@ -984,68 +1015,20 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
-    private List<BitbucketHref> getCloneLinksFromMirror(
-        BitbucketServerAPIClient bitbucket,
-        String mirrorIdLocal
-    ) throws IOException, InterruptedException {
-        // Mirrors are supported only by Bitbucket Server
-        BitbucketServerRepository r = (BitbucketServerRepository) bitbucket.getRepository();
-        List<BitbucketMirroredRepositoryDescriptor> mirrors = bitbucket.getMirrors(r.getId());
-        BitbucketMirroredRepositoryDescriptor mirroredRepositoryDescriptor = mirrors.stream()
-            .filter(it -> mirrorIdLocal.equals(it.getMirrorServer().getId()))
-            .findFirst()
-            .orElseThrow(() ->
-                new IllegalStateException("Could not find mirror descriptor for mirror id " + mirrorIdLocal)
-            );
-        if (!mirroredRepositoryDescriptor.getMirrorServer().isEnabled()) {
-            throw new IllegalStateException("Mirror is disabled for mirror id " + mirrorIdLocal);
-        }
-        Map<String, List<BitbucketHref>> mirrorDescriptorLinks = mirroredRepositoryDescriptor.getLinks();
-        if (mirrorDescriptorLinks == null) {
-            throw new IllegalStateException("There is no repository descriptor links for mirror id " + mirrorIdLocal);
-        }
-        List<BitbucketHref> self = mirrorDescriptorLinks.get("self");
-        if (self == null || self.isEmpty()) {
-            throw new IllegalStateException("There is no self-link for mirror id " + mirrorIdLocal);
-        }
-        String selfLink = self.get(0).getHref();
-        BitbucketMirroredRepository mirroredRepository = bitbucket.getMirroredRepository(selfLink);
-        if (!mirroredRepository.isAvailable()) {
-            throw new IllegalStateException("Mirrored repository is not available for mirror id " + mirrorIdLocal);
-        }
-        Map<String, List<BitbucketHref>> mirroredRepositoryLinks = mirroredRepository.getLinks();
-        if (mirroredRepositoryLinks == null) {
-            throw new IllegalStateException("There is no mirrored repository links for mirror id " + mirrorIdLocal);
-        }
-        List<BitbucketHref> mirroredRepositoryCloneLinks = mirroredRepositoryLinks.get("clone");
-        if (mirroredRepositoryCloneLinks == null) {
-            throw new IllegalStateException("There is no mirrored repository clone links for mirror id " + mirrorIdLocal);
-        }
-        return mirroredRepositoryCloneLinks;
-    }
-
     private void initPrimaryCloneLinks(BitbucketApi bitbucket) {
         try {
-            setPrimaryCloneLinks(getCloneLinksFromPrimary(bitbucket));
-        } catch (Exception e) {
+            BitbucketRepository r = bitbucket.getRepository();
+            List<BitbucketHref> cloneLinks = r.getCloneLinks();
+            if (cloneLinks.isEmpty()) {
+                throw new IllegalStateException("There is no clone links");
+            }
+            setPrimaryCloneLinks(cloneLinks);
+        } catch (IOException e) {
             throw new IllegalStateException(
                 "Could not determine clone links of " + getRepoOwner() + "/" + getRepository()
                     + " on " + getServerUrl() + " for " + getOwner() + " falling back to generated links",
                 e);
         }
-    }
-
-    private List<BitbucketHref> getCloneLinksFromPrimary(BitbucketApi bitbucket) throws IOException, InterruptedException {
-        BitbucketRepository r = bitbucket.getRepository();
-        Map<String, List<BitbucketHref>> links = r.getLinks();
-        if (links == null) {
-            throw new IllegalStateException("There is no links");
-        }
-        List<BitbucketHref> cloneLinksLocal = links.get("clone");
-        if (cloneLinksLocal == null) {
-            throw new IllegalStateException("There is no clone links");
-        }
-        return cloneLinksLocal;
     }
 
     @Deprecated(since = "936.0.0", forRemoval = true)
@@ -1065,28 +1048,25 @@ public class BitbucketSCMSource extends SCMSource {
             return "Bitbucket";
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
                                                    @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             return BitbucketCredentials.checkCredentialsId(context, value, serverURL);
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
             if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE)
                 || context != null && !context.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.error(
                     "Unauthorized to validate Server URL"); // not supposed to be seeing this form
             }
-            if (BitbucketEndpointConfiguration.get().findEndpoint(value) == null) {
+            if (BitbucketEndpointConfiguration.get().findEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
             }
             return FormValidation.ok();
         }
 
         @RequirePOST
-        @SuppressWarnings("unused") // used By stapler
         public static FormValidation doCheckMirrorId(@QueryParameter String value,
                                                      @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             if (!value.isEmpty()) {
@@ -1099,12 +1079,10 @@ public class BitbucketSCMSource extends SCMSource {
             return FormValidation.ok();
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public boolean isServerUrlSelectable() {
             return BitbucketEndpointConfiguration.get().isEndpointSelectable();
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
@@ -1113,12 +1091,10 @@ public class BitbucketSCMSource extends SCMSource {
             return BitbucketEndpointConfiguration.get().getEndpointItems();
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
             return BitbucketCredentials.fillCredentialsIdItems(context, serverUrl);
         }
 
-        @SuppressWarnings("unused") // used By stapler
         @RequirePOST
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
@@ -1140,7 +1116,6 @@ public class BitbucketSCMSource extends SCMSource {
             return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, null, listBoxModelSupplier);
         }
 
-        @SuppressWarnings("unused") // used By stapler
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
                                                 @QueryParameter String serverUrl,
                                                 @QueryParameter String credentialsId,

@@ -367,7 +367,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                 if (commit != null) {
                     revision = new AbstractGitSCMSource.SCMRevisionImpl(prHead, commit.getHash());
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 logger.log(Level.SEVERE, "Can not retrieve commit for hash " + hash, e);
                 throw new RuntimeException(e);
             }

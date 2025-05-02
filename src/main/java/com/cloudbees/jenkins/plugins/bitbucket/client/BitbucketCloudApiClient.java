@@ -162,7 +162,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudPullRequest> getPullRequests() throws InterruptedException, IOException {
+    public List<BitbucketCloudPullRequest> getPullRequests() throws IOException {
         // we can not use the default max pagelen also if documented
         // https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests#get
         // so because with values greater than 50 the API returns HTTP 400

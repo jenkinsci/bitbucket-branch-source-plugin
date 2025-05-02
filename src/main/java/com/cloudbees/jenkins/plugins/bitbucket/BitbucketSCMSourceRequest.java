@@ -36,10 +36,12 @@ import hudson.Util;
 import hudson.model.TaskListener;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.api.SCMHead;
@@ -102,8 +104,8 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
                                     hash, client.getOwner(), client.getRepositoryName());
                             return 0;
                         }
-                        return commit.getDateMillis();
-                    } catch (InterruptedException | IOException e) {
+                        return Optional.ofNullable(commit.getCommitterDate()).map(Date::getTime).orElse(0L);
+                    } catch (IOException e) {
                         listener().getLogger().format("Can not resolve commit by hash [%s] on repository %s/%s%n", //
                                 hash, client.getOwner(), client.getRepositoryName());
                         return 0;
@@ -175,6 +177,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private class CriteriaWitness implements SCMSourceRequest.Witness {
         @Override
         public void record(@NonNull SCMHead scmHead, SCMRevision revision, boolean isMatch) { // NOSONAR
@@ -513,10 +516,8 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      * @param id The id of the pull request to retrieve the details about.
      * @return The {@link BitbucketPullRequest} object.
      * @throws IOException If the request to retrieve the full details encounters an issue.
-     * @throws InterruptedException If the request to retrieve the full details is interrupted.
      */
-    @SuppressWarnings("unused") // Used by extension trait plugin
-    public final BitbucketPullRequest getPullRequestById(Integer id) throws IOException, InterruptedException {
+    public final BitbucketPullRequest getPullRequestById(Integer id) throws IOException {
         if (!pullRequestData.containsKey(id)) {
             pullRequestData.put(id, getBitbucketApiClient().getPullRequestById(id));
         }
@@ -549,6 +550,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
+    @SuppressWarnings("unchecked")
     @NonNull
     public final Iterable<BitbucketBranch> getBranches() throws IOException, InterruptedException {
         if (branches == null) {
@@ -574,6 +576,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
+    @SuppressWarnings("unchecked")
     @NonNull
     public final Iterable<BitbucketBranch> getTags() throws IOException, InterruptedException {
         if (tags == null) {
@@ -633,6 +636,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         return new BitbucketRevisionFactory<>(getBitbucketApiClient());
     }
 
+    @SuppressWarnings("rawtypes")
     @NonNull
     Witness defaultWitness() {
         return this.new CriteriaWitness();

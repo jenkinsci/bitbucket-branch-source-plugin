@@ -73,10 +73,9 @@ public interface BitbucketApi extends AutoCloseable {
      * @param id the pull request ID
      * @return the pull request or null if the PR does not exist
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException;
+    BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException;
 
     /**
      * Returns the repository details.
@@ -84,10 +83,9 @@ public interface BitbucketApi extends AutoCloseable {
      * @return the repository specified by {@link #getOwner()}/{@link #getRepositoryName()}
      *      (or null if repositoryName is not set)
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    BitbucketRepository getRepository() throws IOException, InterruptedException;
+    BitbucketRepository getRepository() throws IOException;
 
     /**
      * Post a comment to a given commit hash.
@@ -95,9 +93,8 @@ public interface BitbucketApi extends AutoCloseable {
      * @param hash commit hash
      * @param comment string to post as comment
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    void postCommitComment(@NonNull String hash, @NonNull String comment) throws IOException, InterruptedException;
+    void postCommitComment(@NonNull String hash, @NonNull String comment) throws IOException;
 
     /**
      * Checks if the given path exists in the repository at the specified branch.
@@ -106,20 +103,18 @@ public interface BitbucketApi extends AutoCloseable {
      * @param path the path to check for
      * @return true if the path exists
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     boolean checkPathExists(@NonNull String branchOrHash, @NonNull String path)
-            throws IOException, InterruptedException;
+            throws IOException;
 
     /**
      * Gets the default branch in the repository.
      *
      * @return the default branch in the repository or null if no default branch set
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @CheckForNull
-    String getDefaultBranch() throws IOException, InterruptedException;
+    String getDefaultBranch() throws IOException;
 
     /**
      * Returns a branch in the repository.
@@ -145,10 +140,9 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @return a tag in the repository.
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @CheckForNull
-    BitbucketBranch getTag(@NonNull String tagName) throws IOException, InterruptedException;
+    BitbucketBranch getTag(@NonNull String tagName) throws IOException;
 
      /**
      * Returns the tags in the repository.
@@ -166,10 +160,9 @@ public interface BitbucketApi extends AutoCloseable {
      * @param hash the hash to resolve
      * @return the commit object or null if the hash does not exist
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @CheckForNull
-    BitbucketCommit resolveCommit(@NonNull String hash) throws IOException, InterruptedException;
+    BitbucketCommit resolveCommit(@NonNull String hash) throws IOException;
 
     /**
      * Resolve the head commit object of the pull request source repository branch.
@@ -177,11 +170,10 @@ public interface BitbucketApi extends AutoCloseable {
      * @param pull the pull request to resolve the source hash from
      * @return the source head commit object
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      * @since 2.2.14
      */
     @NonNull
-    BitbucketCommit resolveCommit(@NonNull BitbucketPullRequest pull) throws IOException, InterruptedException;
+    BitbucketCommit resolveCommit(@NonNull BitbucketPullRequest pull) throws IOException;
 
     /**
      * Resolve the head commit hash of the pull request source repository branch.
@@ -189,37 +181,33 @@ public interface BitbucketApi extends AutoCloseable {
      * @param pull the pull request to resolve the source hash from
      * @return the source head hash
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    String resolveSourceFullHash(@NonNull BitbucketPullRequest pull) throws IOException, InterruptedException;
+    String resolveSourceFullHash(@NonNull BitbucketPullRequest pull) throws IOException;
 
     /**
      * Register a webhook on the repository.
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    void registerCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException;
+    void registerCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException;
 
     /**
      * Update a webhook on the repository.
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException;
+    void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException;
 
     /**
      * Remove the webhook (ID field required) from the repository.
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    void removeCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException, InterruptedException;
+    void removeCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException;
 
     /**
      * Returns the webhooks defined in the repository.
@@ -236,10 +224,9 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @return the team profile of the current owner, or {@code null} if {@link #getOwner()} is not a team ID.
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @CheckForNull
-    BitbucketTeam getTeam() throws IOException, InterruptedException;
+    BitbucketTeam getTeam() throws IOException;
 
     /**
      * Returns the team Avatar of the current owner or {@code null} if the current owner is not a team.
@@ -292,18 +279,16 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @param status the status object to be serialized
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException, InterruptedException;
+    void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException;
 
     /**
      * Returns {@code true} if and only if the repository is private.
      *
      * @return {@code true} if the repository ({@link #getOwner()}/{@link #getRepositoryName()}) is private.
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
-    boolean isPrivate() throws IOException, InterruptedException;
+    boolean isPrivate() throws IOException;
 
     /**
      * Returns a list of all children file for the given folder.
@@ -323,10 +308,9 @@ public interface BitbucketApi extends AutoCloseable {
      * @param file an instance of SCM file
      * @return the stream of the given {@link SCMFile}
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @Restricted(NoExternalUse.class)
-    InputStream getFileContent(BitbucketSCMFile file) throws IOException, InterruptedException;
+    InputStream getFileContent(BitbucketSCMFile file) throws IOException;
 
     /**
      * Return the metadata for the given file.
@@ -334,11 +318,10 @@ public interface BitbucketApi extends AutoCloseable {
      * @param file an instance of SCM file
      * @return a {@link SCMFile} file with updated the metadata
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
     @Restricted(NoExternalUse.class)
-    SCMFile getFile(@NonNull BitbucketSCMFile file) throws IOException, InterruptedException;
+    SCMFile getFile(@NonNull BitbucketSCMFile file) throws IOException;
 
     /**
      * {@inheritDoc}

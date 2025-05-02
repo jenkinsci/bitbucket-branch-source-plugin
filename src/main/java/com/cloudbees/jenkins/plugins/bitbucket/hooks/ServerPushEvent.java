@@ -180,7 +180,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
                                     .orElse(0L);
                         }
                     }
-                } catch (InterruptedException | IOException e) {
+                } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Fail to retrive the timestamp for tag event {0}", tagName);
                 }
                 SCMHead head = new BitbucketTagSCMHead(tagName, tagTimestamp);

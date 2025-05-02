@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMSourceDefaults;
 import jenkins.plugins.git.GitSampleRepoRule;
@@ -158,10 +157,10 @@ public class BitbucketSCMSourceBuildTest {
             new SSHCheckoutTrait(sshCredentials.getId())));
 
         BitbucketRepository repository = mock(BitbucketRepository.class);
-        when(repository.getLinks()).thenReturn(Map.of("clone", List.of(
+        when(repository.getCloneLinks()).thenReturn(List.of(
             new BitbucketHref("http", sampleRepo.toString()),
             new BitbucketHref("ssh", String.format("ssh://user@localhost/%s", sampleRepo))
-        )));
+        ));
         BitbucketApi client = mock(BitbucketApi.class);
         BitbucketMockApiFactory.add(scmSource.getServerUrl(), client);
         when(client.getRepository()).thenReturn(repository);
@@ -213,10 +212,10 @@ public class BitbucketSCMSourceBuildTest {
         scmSource.setTraits(List.of(new BranchDiscoveryTrait(1)));
 
         BitbucketRepository repository = mock(BitbucketRepository.class);
-        when(repository.getLinks()).thenReturn(Map.of("clone", List.of(
+        when(repository.getCloneLinks()).thenReturn(List.of(
             new BitbucketHref("http", sampleRepo.toString()),
             new BitbucketHref("ssh", String.format("ssh://localhost:%s", sampleRepo))
-        )));
+        ));
         BitbucketServerAPIClient client = mock(BitbucketServerAPIClient.class);
         BitbucketMockApiFactory.add(scmSource.getServerUrl(), client);
         when(client.getRepository()).thenReturn(repository);
@@ -267,10 +266,10 @@ public class BitbucketSCMSourceBuildTest {
         String sshCloneURL = String.format("ssh://user@localhost::7999/%s/%s.git", CLOUD_REPO_OWNER, REPO_NAME);
 
         BitbucketRepository repository = mock(BitbucketRepository.class);
-        when(repository.getLinks()).thenReturn(Map.of("clone", List.of(
+        when(repository.getCloneLinks()).thenReturn(List.of(
             new BitbucketHref("http", sampleRepo.toString()),
             new BitbucketHref("ssh", sshCloneURL)
-        )));
+        ));
         BitbucketApi client = mock(BitbucketApi.class);
         BitbucketMockApiFactory.add(scmSource.getServerUrl(), client);
         when(client.getRepository()).thenReturn(repository);

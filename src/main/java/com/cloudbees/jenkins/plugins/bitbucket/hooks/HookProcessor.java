@@ -36,8 +36,6 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
 import jenkins.util.SystemProperties;
 import org.apache.commons.lang3.StringUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Abstract hook processor.
@@ -51,20 +49,6 @@ public abstract class HookProcessor {
     protected static final boolean SCAN_ON_EMPTY_CHANGES = SystemProperties.getBoolean(SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME, true);
 
     private static final Logger LOGGER = Logger.getLogger(HookProcessor.class.getName());
-
-    /**
-     * See <a href="https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html">Event Payloads</a> for more
-     * information about the payload parameter format.
-     * @param payload the hook payload
-     * @param instanceType the Bitbucket type that called the hook
-     * @deprecated use {@link #process(HookEventType, String, BitbucketType, String)}
-     */
-    @Deprecated
-    @Restricted(NoExternalUse.class) // retained for binary compatibility only
-    public void process(String payload, BitbucketType instanceType) {
-        // no-op as the only caller tries the new method first and falls back to this only for legacy implementations
-        // so either this method will not be called or it is overridden anyway
-    }
 
     /**
      * See <a href="https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html">Event Payloads</a> for more
