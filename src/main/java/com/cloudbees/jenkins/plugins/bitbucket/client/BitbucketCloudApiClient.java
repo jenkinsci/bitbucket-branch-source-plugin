@@ -276,7 +276,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         } catch (UnsupportedEncodingException e) {
             throw e;
         } catch (IOException e) {
-            throw new IOException("Cannot comment on commit, url: " + path, e);
+            throw new IOException("Cannot attach comment to commit, request URL: " + path, e);
         }
     }
 
@@ -298,10 +298,10 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             return false;
         } else if (HttpStatus.SC_FORBIDDEN == status) {
             // Needs to skip over the branch if there are permissions issues but let you know in the logs
-            logger.log(Level.FINE, "You currently do not have permissions to pull from repo: {0} at branch {1}", new Object[]{repositoryName, branchOrHash});
+            logger.log(Level.FINE, "You currently do not have permissions to pull from repo: {0} at branch {1}", new Object[] { repositoryName, branchOrHash });
             return false;
         } else {
-            throw new IOException("Communication error for url: " + path + " status code: " + status);
+            throw new IOException("Communication error requesting URL: " + path + " status code: " + status);
         }
     }
 

@@ -62,6 +62,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryT
 import com.cloudbees.jenkins.plugins.bitbucket.trait.SSHCheckoutTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -352,6 +353,7 @@ public class BitbucketSCMSource extends SCMSource {
             if (scanCredentials == null) {
                 listener.getLogger().format("Connecting to %s with no credentials, anonymous access%n", getServerUrl());
             } else {
+                Optional.ofNullable(getOwner()).ifPresent(item -> CredentialsProvider.track(item, scanCredentials));
                 listener.getLogger().format("Connecting to %s using %s%n", getServerUrl(),
                         CredentialsNameProvider.name(scanCredentials));
             }
@@ -554,14 +556,13 @@ public class BitbucketSCMSource extends SCMSource {
                     // Bitbucket Cloud /pullrequests/{id} API endpoint only returns short commit IDs of the source
                     // and target branch. We therefore retrieve the branches directly
                     BitbucketBranch targetBranch = client.getBranch(prHead.getTarget().getName());
-
                     if(targetBranch == null) {
                         listener.getLogger().format("No branch found in %s/%s with name [%s]",
                             repoOwner, repository, prHead.getTarget().getName());
                         return null;
                     }
-                    targetRevision = findCommit(targetBranch, listener);
 
+                    targetRevision = findCommit(targetBranch, listener);
                     if (targetRevision == null) {
                         listener.getLogger().format("No branch found in %s/%s with name [%s]",
                             repoOwner, repository, prHead.getTarget().getName());
