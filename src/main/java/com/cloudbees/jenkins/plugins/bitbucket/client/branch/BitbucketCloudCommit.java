@@ -24,31 +24,58 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.branch;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.text.ParseException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 public class BitbucketCloudCommit implements BitbucketCommit {
 
+    public static class Parent {
+        private final String hash;
+
+        @JsonCreator
+        public Parent(@NonNull @JsonProperty("hash") String hash) {
+            this.hash = hash;
+        }
+
+        public String getHash() {
+            return hash;
+        }
+    }
+
     private String message;
-    private String date;
-    private transient long dateInMillis;
     private String hash;
     private String author;
+    private String committer;
+    private Date committerDate;
+    private List<String> parents;
 
     @JsonCreator
     public BitbucketCloudCommit(@Nullable @JsonProperty("message") String message,
                                 @Nullable @JsonProperty("date") String date,
                                 @NonNull @JsonProperty("hash") String hash,
-                                @Nullable @JsonProperty("author") BitbucketCloudAuthor author) {
+                                @Nullable @JsonProperty("author") BitbucketCloudAuthor author,
+                                @Nullable @JsonProperty("committer") BitbucketCloudAuthor committer,
+                                @Nullable @JsonProperty("parents") List<Parent> parents) {
         this.message = message;
-        this.date = date;
+        if (date != null) {
+            this.committerDate = DateUtils.parseISODate(date);
+        }
         this.hash = hash;
         if (author != null) {
             this.author = author.getRaw();
+        }
+        if (committer != null) {
+            this.committer = committer.getRaw();
+        }
+        if (parents != null) {
+            this.parents = parents.stream().map(Parent::getHash).toList();
         }
     }
 
@@ -57,9 +84,8 @@ public class BitbucketCloudCommit implements BitbucketCommit {
         return message;
     }
 
-    @Override
-    public String getDate() {
-        return date;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     @Override
@@ -67,30 +93,20 @@ public class BitbucketCloudCommit implements BitbucketCommit {
         return hash;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-        // calculated on demand
-        this.dateInMillis = 0;
-    }
-
     public void setHash(String hash) {
         this.hash = hash;
     }
 
+    @Deprecated(since = "936.1.0", forRemoval = true)
+    @Override
+    public String getDate() {
+        return DateUtils.formatToISO(committerDate);
+    }
+
+    @Deprecated(since = "936.1.0", forRemoval = true)
     @Override
     public long getDateMillis() {
-        try {
-            if (dateInMillis == 0 && date != null) {
-                dateInMillis = new StdDateFormat().parse(date).getTime();
-            }
-        } catch (ParseException e) {
-            dateInMillis = 0;
-        }
-        return dateInMillis;
+        return committerDate != null ? committerDate.getTime() : 0;
     }
 
     @Override
@@ -102,4 +118,31 @@ public class BitbucketCloudCommit implements BitbucketCommit {
         this.author = author;
     }
 
+    @Override
+    public Date getAuthorDate() {
+        return getCommitterDate(); // is it better than null?
+    }
+
+    @Override
+    public String getCommitter() {
+        return committer;
+    }
+
+    public void setCommitter(String committer) {
+        this.committer = committer;
+    }
+
+    @Override
+    public Date getCommitterDate() {
+        return committerDate;
+    }
+
+    public void setCommitterDate(Date committerDate) {
+        this.committerDate = committerDate;
+    }
+
+    @Override
+    public Collection<String> getParents() {
+        return Collections.unmodifiableCollection(parents);
+    }
 }

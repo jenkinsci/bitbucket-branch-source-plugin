@@ -30,8 +30,8 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Descriptor.FormException;
 import hudson.util.Secret;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpRequest;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 /**
@@ -57,6 +57,7 @@ public class BitbucketAccessTokenAuthenticator implements BitbucketAuthenticator
      *
      * @param request to configure with the access token
      */
+    @Override
     public void configureRequest(HttpRequest request) {
         request.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + Secret.toString(token));
     }
@@ -73,7 +74,7 @@ public class BitbucketAccessTokenAuthenticator implements BitbucketAuthenticator
     @Override
     public StandardUsernameCredentials getCredentialsForSCM() {
         try {
-            return new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, getId(), null, "x-token-auth", Secret.toString(token));
+            return new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, getId(), "HTTP Access Token for " + getId(), "x-token-auth", Secret.toString(token));
         } catch (FormException e) {
             throw new RuntimeException(e);
         }

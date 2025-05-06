@@ -39,7 +39,7 @@ import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 final class PushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> {
 

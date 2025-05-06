@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.notifier;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.FirstCheckoutCompletedInvisibleAction;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
@@ -34,6 +33,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import hudson.model.Descriptor.FormException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -63,13 +63,11 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
-import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -124,7 +122,6 @@ class BitbucketBuildStatusNotificationsTest {
         BitbucketCommit commit = mock(BitbucketCommit.class);
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
-        when(api.checkPathExists(Mockito.anyString(), eq(jenkinsfile))).thenReturn(true);
         BitbucketRepository repository = mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
         when(repository.getOwnerName()).thenReturn(repoOwner);

@@ -26,38 +26,43 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.SSHCheckoutTrait;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.Descriptor.FormException;
+import hudson.model.Item;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMSourceDefaults;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.WithTimeout;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -71,7 +76,8 @@ import static org.mockito.Mockito.when;
  * Tests different scenarios of the
  * {@link BitbucketSCMSource#build(jenkins.scm.api.SCMHead, jenkins.scm.api.SCMRevision)} method.
  */
-@RunWith(MockitoJUnitRunner.class)
+@WithJenkins
+@WithGitSampleRepo
 public class BitbucketSCMSourceBuildTest {
 
     private static final String CLOUD_REPO_OWNER = "cloudbeers";
@@ -107,53 +113,63 @@ public class BitbucketSCMSourceBuildTest {
         "sroT/IHW2jKMD0v8kKLUnKCZYzlw0By7+RvJ8lgzHB0D71f6EC1UWg==\n" +
         "-----END RSA PRIVATE KEY-----\n";
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    public static JenkinsRule rule = new JenkinsRule();
 
-    @Rule
+    @BeforeAll
+    static void init(JenkinsRule r) {
+        rule = r;
+    }
+
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
+    @BeforeEach
+    void setup(GitSampleRepoRule gitRule) {
+        sampleRepo = gitRule;
+    }
+
+    @AfterEach
+    void setup() throws Exception {
+        for (Item item : rule.jenkins.getAllItems()) {
+            item.delete();
+        }
+    }
 
     @Test
     @Issue("JENKINS-73471")
     @WithTimeout(120)
-    public void buildWhenSetSSHCheckoutTraitThenEmptyAuthenticatorExtension() throws Exception {
+    void buildWhenSetSSHCheckoutTraitThenEmptyAuthenticatorExtension() throws Exception {
         String jenkinsFile = "Jenkinsfile";
         sampleRepo.init();
         sampleRepo.write(jenkinsFile, "node { checkout scm }");
         sampleRepo.git("add", jenkinsFile);
         sampleRepo.git("commit", "--all", "--message=defined");
 
-        StandardUsernameCredentials userPassCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-            "user-pass", null, "user", "pass");
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next()
-            .addCredentials(Domain.global(), userPassCredentials);
-        StandardUsernameCredentials sshCredentials = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "user-key", "user",
-            new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(PRIVATE_KEY), null, null);
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next()
-            .addCredentials(Domain.global(), sshCredentials);
+        StandardUsernameCredentials userPassCredentials = registerUserCredentials();
+        StandardUsernameCredentials sshCredentials = registerSSHCredentials();
 
-        WorkflowMultiBranchProject owner = j.createProject(WorkflowMultiBranchProject.class, "testMultibranch");
-        BitbucketSCMSource instance = new BitbucketSCMSource(CLOUD_REPO_OWNER, REPO_NAME);
-        instance.setOwner(owner);
-        instance.setCredentialsId(userPassCredentials.getId());
-        instance.setTraits(Arrays.asList(
+        WorkflowMultiBranchProject owner = rule.createProject(WorkflowMultiBranchProject.class, "testMultibranch");
+        BitbucketSCMSource scmSource = new BitbucketSCMSource(CLOUD_REPO_OWNER, REPO_NAME);
+        scmSource.setServerUrl("http://localhost:7990/bitbucket");
+        scmSource.setOwner(owner);
+        scmSource.setCredentialsId(userPassCredentials.getId());
+        scmSource.setTraits(Arrays.asList(
             new BranchDiscoveryTrait(1),
             new SSHCheckoutTrait(sshCredentials.getId())));
 
         BitbucketRepository repository = mock(BitbucketRepository.class);
-        when(repository.getLinks()).thenReturn(Map.of("clone", List.of(
+        when(repository.getCloneLinks()).thenReturn(List.of(
             new BitbucketHref("http", sampleRepo.toString()),
             new BitbucketHref("ssh", String.format("ssh://user@localhost/%s", sampleRepo))
-        )));
+        ));
         BitbucketApi client = mock(BitbucketApi.class);
-        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketMockApiFactory.add(scmSource.getServerUrl(), client);
         when(client.getRepository()).thenReturn(repository);
 
         BranchSCMHead head = new BranchSCMHead(BRANCH_NAME);
         AbstractGitSCMSource.SCMRevisionImpl revision =
             new AbstractGitSCMSource.SCMRevisionImpl(head, sampleRepo.head());
-        GitSCM build = (GitSCM)instance.build(head, revision);
+        GitSCM build = (GitSCM) scmSource.build(head, revision);
+
         assertThat(build.getUserRemoteConfigs().size(), is(1));
         UserRemoteConfig remoteConfig = build.getUserRemoteConfigs().get(0);
         assertThat(remoteConfig.getUrl(), is(String.format("ssh://user@localhost/%s", sampleRepo)));
@@ -168,7 +184,7 @@ public class BitbucketSCMSourceBuildTest {
 
         // Create a Pipeline with CpsScmFlowDefinition based of the GitSCM produced
         // Then check that the checkout uses GIT_SSH from the git-client logs
-        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "testGitScm");
+        WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "testGitScm");
         job.setDefinition(new CpsScmFlowDefinition(build, jenkinsFile));
         WorkflowRun run = job.scheduleBuild2(0).get();
 
@@ -179,37 +195,36 @@ public class BitbucketSCMSourceBuildTest {
 
     @Test
     @WithTimeout(120)
-    public void buildBasicAuthThenAuthenticatorExtension() throws Exception {
+    void buildBasicAuthThenAuthenticatorExtension() throws Exception {
         String jenkinsFile = "Jenkinsfile";
         sampleRepo.init();
         sampleRepo.write(jenkinsFile, "node { checkout scm }");
         sampleRepo.git("add", jenkinsFile);
         sampleRepo.git("commit", "--all", "--message=defined");
 
-        StandardUsernameCredentials userPassCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-            "user-pass", null, "user", "pass");
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next()
-            .addCredentials(Domain.global(), userPassCredentials);
+        StandardUsernameCredentials userPassCredentials = registerUserCredentials();
 
-        WorkflowMultiBranchProject owner = j.createProject(WorkflowMultiBranchProject.class, "testMultibranch");
-        BitbucketSCMSource instance = new BitbucketSCMSource(CLOUD_REPO_OWNER, REPO_NAME);
-        instance.setOwner(owner);
-        instance.setCredentialsId(userPassCredentials.getId());
-        instance.setTraits(List.of(new BranchDiscoveryTrait(1)));
+        WorkflowMultiBranchProject owner = rule.createProject(WorkflowMultiBranchProject.class, "testMultibranch");
+        BitbucketSCMSource scmSource = new BitbucketSCMSource(CLOUD_REPO_OWNER, REPO_NAME);
+        scmSource.setServerUrl("http://localhost:7990/bitbucket");
+        scmSource.setOwner(owner);
+        scmSource.setCredentialsId(userPassCredentials.getId());
+        scmSource.setTraits(List.of(new BranchDiscoveryTrait(1)));
 
         BitbucketRepository repository = mock(BitbucketRepository.class);
-        when(repository.getLinks()).thenReturn(Map.of("clone", List.of(
+        when(repository.getCloneLinks()).thenReturn(List.of(
             new BitbucketHref("http", sampleRepo.toString()),
             new BitbucketHref("ssh", String.format("ssh://localhost:%s", sampleRepo))
-        )));
+        ));
         BitbucketServerAPIClient client = mock(BitbucketServerAPIClient.class);
-        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketMockApiFactory.add(scmSource.getServerUrl(), client);
         when(client.getRepository()).thenReturn(repository);
 
         BranchSCMHead head = new BranchSCMHead(BRANCH_NAME);
         AbstractGitSCMSource.SCMRevisionImpl revision =
             new AbstractGitSCMSource.SCMRevisionImpl(head, sampleRepo.head());
-        GitSCM build = (GitSCM)instance.build(head, revision);
+        GitSCM build = (GitSCM) scmSource.build(head, revision);
+
         assertThat(build.getUserRemoteConfigs().size(), is(1));
         UserRemoteConfig remoteConfig = build.getUserRemoteConfigs().get(0);
         assertThat(remoteConfig.getUrl(), is(sampleRepo.toString()));
@@ -224,12 +239,71 @@ public class BitbucketSCMSourceBuildTest {
 
         // Create a Pipeline with CpsScmFlowDefinition based of the GitSCM produced
         // Then check that the checkout scm uses GIT_ASKPASS from the git-client logs
-        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "testGitScm");
+        WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "testGitScm");
         job.setDefinition(new CpsScmFlowDefinition(build, jenkinsFile));
         WorkflowRun run = job.scheduleBuild2(0).get();
 
         ByteArrayOutputStream byteArrayOutStr = new ByteArrayOutputStream();
         run.writeWholeLogTo(byteArrayOutStr);
         assertThat(byteArrayOutStr.toString(StandardCharsets.UTF_8), containsString("using GIT_ASKPASS to set credentials"));
+    }
+
+    @Test
+    @Issue("JENKINS-75611")
+    void verify_ssh_trait_on_data_center_with_disabled_https_protocol() throws Exception {
+        StandardUsernameCredentials userPassCredentials = registerUserCredentials();
+        StandardUsernameCredentials sshCredentials = registerSSHCredentials();
+
+        WorkflowMultiBranchProject owner = rule.createProject(WorkflowMultiBranchProject.class, "testMultibranch");
+        BitbucketSCMSource scmSource = new BitbucketSCMSource(CLOUD_REPO_OWNER, REPO_NAME);
+        scmSource.setServerUrl("http://localhost:7990/bitbucket");
+        scmSource.setOwner(owner);
+        scmSource.setCredentialsId(userPassCredentials.getId());
+        scmSource.setTraits(Arrays.asList(
+            new BranchDiscoveryTrait(1),
+            new SSHCheckoutTrait(sshCredentials.getId())));
+
+        String sshCloneURL = String.format("ssh://user@localhost::7999/%s/%s.git", CLOUD_REPO_OWNER, REPO_NAME);
+
+        BitbucketRepository repository = mock(BitbucketRepository.class);
+        when(repository.getCloneLinks()).thenReturn(List.of(
+            new BitbucketHref("http", sampleRepo.toString()),
+            new BitbucketHref("ssh", sshCloneURL)
+        ));
+        BitbucketApi client = mock(BitbucketApi.class);
+        BitbucketMockApiFactory.add(scmSource.getServerUrl(), client);
+        when(client.getRepository()).thenReturn(repository);
+
+        BranchSCMHead head = new BranchSCMHead(BRANCH_NAME);
+        AbstractGitSCMSource.SCMRevisionImpl revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "1dbb02d4c1b99f1e84459c6947e3caa53cadfad1");
+        GitSCM build = (GitSCM) scmSource.build(head, revision);
+
+        assertThat(build.getUserRemoteConfigs().size(), is(1));
+        UserRemoteConfig remoteConfig = build.getUserRemoteConfigs().get(0);
+        assertThat(remoteConfig.getUrl(), is(sshCloneURL));
+        assertThat(remoteConfig.getRefspec(), is(String.format("+refs/heads/%s:refs/remotes/origin/%s", BRANCH_NAME, BRANCH_NAME)));
+        assertThat(remoteConfig.getCredentialsId(), is(sshCredentials.getId()));
+        assertThat(build.getExtensions(), containsInAnyOrder(
+            instanceOf(BuildChooserSetting.class),
+            instanceOf(GitSCMSourceDefaults.class),
+            instanceOf(GitClientAuthenticatorExtension.class),
+            instanceOf(BitbucketEnvVarExtension.class))
+        );
+    }
+
+    private StandardUsernameCredentials registerSSHCredentials() throws IOException {
+        StandardUsernameCredentials sshCredentials = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "user-key", "user",
+            new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(PRIVATE_KEY), null, null);
+        CredentialsProvider.lookupStores(rule.jenkins).iterator().next()
+            .addCredentials(Domain.global(), sshCredentials);
+        return sshCredentials;
+    }
+
+    private StandardUsernameCredentials registerUserCredentials() throws FormException, IOException {
+        StandardUsernameCredentials userPassCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+                "user-pass", null, "user", "pass");
+        CredentialsProvider.lookupStores(rule.jenkins).iterator().next()
+            .addCredentials(Domain.global(), userPassCredentials);
+        return userPassCredentials;
     }
 }

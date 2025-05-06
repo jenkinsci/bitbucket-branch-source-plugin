@@ -2,31 +2,33 @@
 
 [IMPORTANT]
 =====================================================================
-On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7] which removed some undocumented features related to pull requests.
+On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7]
+which removed some undocumented features related to pull requests.
 
 . With Bitbucket Server 7.x, Jenkins Pipeline jobs can no longer perform a lightweight checkout of the `Jenkinsfile` if you are using the merge strategy for builds.
 .. This is due to Bitbucket Server 7.x no longer storing the merge commit for PRs to `refs/pull-requests/*/merge` which was a prerequisite for lightweight checkout.
 .. Bitbucket Server Pipeline jobs will automatically fall back to heavyweight checkout.
-.. link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-2389584[Atlassian has explained their reasons for making this change] and has made it clear they will not be re-adding this behavior.
-. For Jenkins Pipeline jobs to function for pull requests on Bitbucket Server 7.x, you need to enable "Call Changes api" option in the plugin configuration.
-.. Bitbucket Server 7.x no longer automatically creates the required refs for pull requests. Calls to this new API are required to trigger ref creation.
+.. link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-2389584[Atlassian
+has explained their reasons for making this change] and has made it clear they will not be re-adding this behavior.
+. For Jenkins Pipeline jobs to function for pull requests on Bitbucket Data Center 8.x and above, you need to enable "Call Changes api" option in the plugin configuration.
+.. Since Bitbucket Server 7.x no longer automatically creates the required refs for pull requests. Calls to this new API are required to trigger ref creation.
 
 =====================================================================
 
 [id=bitbucket-sect-intro]
 
-_Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Server
+_Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Data Center
 as a multi-branch project source in two different ways:
 
  * *Single repository source*: automatic creation of jobs for branches and pull requests in a specific repository.
  * *Organization folders*: automatic creation of multi-branch projects for each visible repository in a specific Bitbucket Team or Project.
 
- IMPORTANT: This plugin is not compatible with versions of Bitbucket Server previous to 4.0.
+IMPORTANT: This plugin officially supports versions of Bitbucket Data Center not declared in link:https://confluence.atlassian.com/support/atlassian-end-of-support-policy-201851003.html[End Of Support (EOS)].
 
-[id=bitbucket-server-7]
-== Bitbucket Server 7 compatibility
+[id=bitbucket-data_center]
+== Bitbucket Data Center compatibility
 
-_Bitbucket Server 7.x_ is supported but does no longer support lightweight checkout for pull requests when merge strategy is used for build.
+_Bitbucket Data Cebter_ is supported but does no longer support lightweight checkout for pull requests when merge strategy is used for build.
 
 IMPORTANT: In order to have the pull request process working the "Call Changes api" option must be
 enabled in _Manage Jenkins_ » _Configure System_
@@ -39,7 +41,7 @@ Once configured, branches and pull requests are automatically created and built 
 
 Follow these steps to create a multi-branch project with Bitbucket as a source:
 
-. If using Bitbucket Server, the server base URL needs to be added to the Bitbucket Endpoints first in the "Manage Jenkins" > "System" configuration.
+. If using Bitbucket Data Center, the server base URL needs to be added to the Bitbucket Endpoints first in the "Manage Jenkins" > "System" configuration.
 . Create the multi-branch project. This step depends on which multi-branch plugin is installed.
 For example, "Multibranch Pipeline" should be available as a project type if Pipeline Multibranch plugin is installed.
 +
@@ -71,7 +73,7 @@ image::images/screenshot-6.png[scaledwidth=70%]
 . If you configured more than one _Bitbucket Endpoint_, choose the _Server_ and appropriate _Credential_
 . Configure the repository owner. It could be:
 .. A Bitbucket Cloud Workspace ID (aka workspace slug): all repositories in the workspace are imported as Multibranch projects.
-.. A Bitbucket Server Project ID: all repositories in the project are imported as Multibranch projects. *Note that the project ID needs to be used instead of the project name*.
+.. A Bitbucket Data Center Project ID: all repositories in the project are imported as Multibranch projects. *Note that the project ID needs to be used instead of the project name*.
 .. A regular username: all repositories which the username is owner of are imported.
 +
 image::images/screenshot-8.png[scaledwidth=90%]
@@ -86,7 +88,7 @@ image::images/screenshot-9.png[scaledwidth=90%]
 
 This plugin have customized icon designed for the "Organization Folder" image:/src/main/webapp/images/bitbucket-logo.svg[icon,20,20], for "Multibranch Pipeline", for Single Repository image:/src/main/webapp/images/bitbucket-repository-git.svg[icon,20,20] and Folder image:/src/main/webapp/images/bitbucket-scmnavigator.svg[icon,20,20] project type. This is the default behaviour of the plugin starting from version 935.
 It is possible associate the Bitbucket avatar to the project item selecting the "Show Bitbucket avatar images" behaviour in the project configuration.
-+
+
 image::images/screenshot-19.png[scaledwidth=90%]
 
 The supported avatars are:
@@ -113,7 +115,7 @@ check "Manage hooks" and select a "Credential" with enough access to add webhook
 it can be a System scoped credential, which will restrict its usage from Pipelines.
 You can setup a custom Jenkins URL to be used as callback URL by the webhooks.
 
-For Bitbucket Server only it is possible chose which webhooks implementation server side to use:
+For Bitbucket Data Center only it is possible chose which webhooks implementation server side to use:
 
 - Native implementation will configure the webhooks provided by default with the Server, so it will always be available.
 
@@ -175,7 +177,7 @@ Bitbucket https://community.atlassian.com/t5/Bitbucket-articles/Announcement-Bit
 
 The plugin can make use of an app password instead of the standard username/password.
 
-First, create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
+First, create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories and pull requests. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
 
 Then create a new _Username with password credentials_ in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created app password in the _Password_ field.
 
@@ -226,7 +228,7 @@ Follow a summary of all possible values:
 |===
 | Jenkins
 | Bitbucket Cloud
-| Bitbucket Data Center and Server
+| Bitbucket Data Center
 
 | https://javadoc.jenkins.io/hudson/model/Result.html#SUCCESS[SUCCESS]
 | SUCCESSFUL
@@ -266,7 +268,7 @@ This plugin contribute to the enviroment the following variables:
 - BITBUCKET_REPOSITORY: the repository name/slug
 - BITBUCKET_OWNER: the repository owner name/slug, in Bitbucket Cloud is the equivalent of workspace name
 - BITBUCKET_PROJECT_KEY: the project key in which the repository is contained
-- BITBUCKET_SERVER_URL: the Bitbucket server URL
+- BITBUCKET_SERVER_URL: the Bitbucket endpoint URL
 
 These variables were added to allow users to easily integrate calls to Bitbucket's REST APIs into their own pipelines to implement own business logics.
 
@@ -285,9 +287,14 @@ In case of slow network, you can increase socket timeout using the link:https://
 System.setProperty("http.socket.timeout", "300") // 5 minutes
 ----
 
+=== Client OAuth2 cache Timeout
+
+In case Bitbucket has been configured to expire OAuth2 tokens before 5 minutes, you can configure via a JVM property the release time of the cache where all obtained OAuth2 tokens are stored. This setting is to avoid requests with expired tokens that will produce HTTP 401 responses. link:https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/[Bitbucket Cloud] access tokens expire in two hours.
+To change this amount of time (default is 300 seconds), add the system property `bitbucket.oauth2.cache.timeout=60` on Jenkins startup.
+
 === Disable Branch Indexing on Empty changes
 
-By default, the plugin triggers *a full branch indexing* when a push event contains *empty* changes. This may happen on various scenario, mainly in Bitbucket Server, such as:
+By default, the plugin triggers *a full branch indexing* when a push event contains *empty* changes. This may happen on various scenario, mainly in Bitbucket Data Center, such as:
 
 * When manually merging remote **Open** pull requests. This particular scenario produces 2 events and cause duplicated builds.
 * For a fork, when link:https://confluence.atlassian.com/bitbucketserver/keeping-forks-synchronized-776639961.html[Auto-Sync] is on and a branch cannot be synchronized

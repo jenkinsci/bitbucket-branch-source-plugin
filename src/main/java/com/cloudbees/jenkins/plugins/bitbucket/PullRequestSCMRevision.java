@@ -23,9 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
@@ -42,7 +40,7 @@ public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequest
      * The pull head revision.
      */
     @NonNull
-    private final AbstractGitSCMSource.SCMRevisionImpl pull;
+    private final SCMRevision pull;
 
     /**
      * Constructor.
@@ -51,7 +49,7 @@ public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequest
      * @param target the target revision.
      * @param pull   the pull revision.
      */
-    public PullRequestSCMRevision(@NonNull PullRequestSCMHead head, @NonNull AbstractGitSCMSource.SCMRevisionImpl target, @NonNull AbstractGitSCMSource.SCMRevisionImpl pull) {
+    public PullRequestSCMRevision(@NonNull PullRequestSCMHead head, @NonNull SCMRevision target, @NonNull SCMRevision pull) {
         super(head, target);
         this.pull = pull;
     }
@@ -61,8 +59,8 @@ public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequest
      *
      * @return the pull revision.
      */
-    @NonNull @WithBridgeMethods(SCMRevision.class)
-    public AbstractGitSCMSource.SCMRevisionImpl getPull() {
+    @NonNull
+    public SCMRevision getPull() {
         return pull;
     }
 
@@ -76,10 +74,6 @@ public class PullRequestSCMRevision extends ChangeRequestSCMRevision<PullRequest
         }
         PullRequestSCMRevision other = (PullRequestSCMRevision) o;
         return getHead().equals(other.getHead()) && pull.equals(other.pull);
-    }
-
-    public AbstractGitSCMSource.SCMRevisionImpl getTargetImpl() {
-        return (AbstractGitSCMSource.SCMRevisionImpl) getTarget();
     }
 
     /**

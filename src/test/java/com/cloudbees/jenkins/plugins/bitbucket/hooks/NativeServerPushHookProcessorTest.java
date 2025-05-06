@@ -39,6 +39,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMRevision;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
@@ -48,12 +49,20 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+@WithJenkins
 class NativeServerPushHookProcessorTest {
 
     private static final String SERVER_URL = "http://localhost:7990";
     private static final String MIRROR_ID = "ABCD-1234-EFGH-5678";
     private NativeServerPushHookProcessor sut;
     private SCMHeadEvent<?> scmEvent;
+
+    private static JenkinsRule rule;
+
+    @BeforeAll
+    static void init(JenkinsRule r) {
+        rule = r;
+    }
 
     @BeforeEach
     void setup() {
@@ -85,10 +94,10 @@ class NativeServerPushHookProcessorTest {
             .isEqualTo(new BranchSCMHead("main"));
     }
 
-    @WithJenkins
     @Test
-    void test_tag_timestamp(JenkinsRule rule) throws Exception {
-        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/tagPayload.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+    @Issue("JENKINS-75604")
+    void test_annotated_tag_create_event() throws Exception {
+        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/annotated_tag_created.json"), BitbucketType.SERVER, "origin", SERVER_URL);
         assertThat(scmEvent)
             .isInstanceOf(ServerPushEvent.class)
             .isNotNull();
@@ -103,7 +112,49 @@ class NativeServerPushHookProcessorTest {
             .hasSize(1)
             .first()
             .usingRecursiveComparison()
-            .isEqualTo(new BitbucketTagSCMHead("v0.0.0", 1537538991000L));
+            .isEqualTo(new BitbucketTagSCMHead("annotated-tag", 1537538991000L));
+    }
+
+    @Test
+    @Issue("JENKINS-75604")
+    void test_tag_created_event() throws Exception {
+        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/tag_created.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        assertThat(scmEvent)
+            .isInstanceOf(ServerPushEvent.class)
+            .isNotNull();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
+        scmSource.setServerUrl(SERVER_URL);
+
+        BitbucketMockApiFactory.add(SERVER_URL, BitbucketIntegrationClientFactory.getApiMockClient(SERVER_URL));
+
+        Map<SCMHead, SCMRevision> result = scmEvent.heads(scmSource);
+        assertThat(result.keySet())
+            .hasSize(1)
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1537538991000L));
+    }
+
+    @Test
+    @Issue("JENKINS-75604")
+    void test_tag_deleted_event() throws Exception {
+        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/tag_deleted.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        assertThat(scmEvent)
+            .isInstanceOf(ServerPushEvent.class)
+            .isNotNull();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
+        scmSource.setServerUrl(SERVER_URL);
+
+        BitbucketMockApiFactory.add(SERVER_URL, BitbucketIntegrationClientFactory.getApiMockClient(SERVER_URL));
+
+        Map<SCMHead, SCMRevision> result = scmEvent.heads(scmSource);
+        assertThat(result.keySet())
+            .hasSize(1)
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1537538991000L));
     }
 
     @Test

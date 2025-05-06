@@ -28,21 +28,18 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueDestination;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValueRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestDestination;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepositoryOwner;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent {
 
     @JsonProperty("pullrequest")
-    private BitbucketPullRequestValue pullRequest;
+    private BitbucketCloudPullRequest pullRequest;
 
     private BitbucketCloudRepository repository;
 
@@ -51,7 +48,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
         return pullRequest;
     }
 
-    public void setPullRequest(BitbucketPullRequestValue pullRequest) {
+    public void setPullRequest(BitbucketCloudPullRequest pullRequest) {
         this.pullRequest = pullRequest;
         reconstructMissingData();
     }
@@ -68,7 +65,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
 
     private void reconstructMissingData() {
         if (this.repository != null && this.pullRequest != null) {
-            BitbucketPullRequestValueRepository source = this.pullRequest.getSource();
+            BitbucketCloudPullRequestRepository source = this.pullRequest.getSource();
             if (source != null) {
                 BitbucketCloudRepository sourceRepository = source.getRepository();
                 if (sourceRepository != null) {
@@ -97,14 +94,14 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                 if (sourceCommit != null
                     && sourceBranch != null) {
                     if (sourceBranch.getRawNode() == null) {
-                        sourceBranch.setRawNode(source.getCommit().getHash());
+                        sourceBranch.setRawNode(sourceCommit.getHash());
                     }
-                    if (sourceBranch.getDateMillis() == 0) {
-                        sourceBranch.setDateMillis(toDate(sourceCommit.getDate()));
+                    if (sourceBranch.getDateMillis() == 0 && sourceCommit.getCommitterDate() != null) {
+                        sourceBranch.setDateMillis(sourceCommit.getCommitterDate().getTime());
                     }
                 }
             }
-            BitbucketPullRequestValueDestination destination = this.pullRequest.getDestination();
+            BitbucketCloudPullRequestDestination destination = this.pullRequest.getDestination();
             if (destination != null
                 && destination.getRepository() != null) {
                 if (destination.getRepository().getScm() == null) {
@@ -123,19 +120,6 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                 destination.getBranch()
                     .setRawNode(destination.getCommit().getHash());
             }
-        }
-    }
-
-    private long toDate(String dateStr){
-        if(StringUtils.isBlank(dateStr)){
-            return 0;
-        }
-        final SimpleDateFormat dateParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        dateParser.setTimeZone(TimeZone.getTimeZone("GMT"));
-        try {
-            return dateParser.parse(dateStr).getTime();
-        } catch (ParseException e) {
-            return 0;
         }
     }
 

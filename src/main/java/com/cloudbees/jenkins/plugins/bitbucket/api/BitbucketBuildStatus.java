@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
@@ -83,6 +82,11 @@ public class BitbucketBuildStatus {
     private String key;
 
     /**
+     * The parent key
+     */
+    private String parent;
+
+    /**
      * A short name, usually #job-name, #build-number (will be shown as link
      * text in BB UI)
      */
@@ -118,7 +122,7 @@ public class BitbucketBuildStatus {
         this.description = description;
         this.state = state;
         this.url = url;
-        this.key = DigestUtils.md5Hex(key);
+        this.key = key;
         this.name = name;
         this.refname = refname;
     }
@@ -137,6 +141,7 @@ public class BitbucketBuildStatus {
         this.name = other.name;
         this.refname = other.refname;
         this.buildDuration = other.buildDuration;
+        this.parent = other.parent;
     }
 
     public String getHash() {
@@ -176,7 +181,7 @@ public class BitbucketBuildStatus {
     }
 
     public void setKey(String key) {
-        this.key = DigestUtils.md5Hex(key);
+        this.key = key;
     }
 
     public String getName() {
@@ -211,4 +216,11 @@ public class BitbucketBuildStatus {
         this.buildNumber = buildNumber;
     }
 
+    public void setParent(String parent) {
+        this.parent = parent;
+    }
+
+    public String getParent() {
+        return parent;
+    }
 }

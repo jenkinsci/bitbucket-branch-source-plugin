@@ -25,27 +25,17 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 
 public class ClosingConnectionInputStream extends InputStream {
 
-    private final CloseableHttpResponse response;
-
-    private final HttpRequestBase method;
-
-    private final HttpClientConnectionManager connectionManager;
+    private final ClassicHttpResponse response;
 
     private final InputStream delegate;
 
-    public ClosingConnectionInputStream(final CloseableHttpResponse response, final HttpRequestBase method,
-            final HttpClientConnectionManager connectionmanager)
-            throws UnsupportedOperationException, IOException {
+    public ClosingConnectionInputStream(final ClassicHttpResponse response) throws IOException {
         this.response = response;
-        this.method = method;
-        this.connectionManager = connectionmanager;
         this.delegate = response.getEntity().getContent();
     }
 
@@ -58,8 +48,6 @@ public class ClosingConnectionInputStream extends InputStream {
     public void close() throws IOException {
         EntityUtils.consume(response.getEntity());
         delegate.close();
-        method.releaseConnection();
-        connectionManager.closeExpiredConnections();
     }
 
     @Override

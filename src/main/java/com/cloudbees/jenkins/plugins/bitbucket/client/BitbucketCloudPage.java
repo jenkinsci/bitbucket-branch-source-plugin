@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * Bitbucket paginated resource
  */
-public class BitbucketCloudPage<T> extends BitbucketPage<T> {
+public class BitbucketCloudPage<T> {
     private final int pageLength;
     private final int page;
     private final int size;

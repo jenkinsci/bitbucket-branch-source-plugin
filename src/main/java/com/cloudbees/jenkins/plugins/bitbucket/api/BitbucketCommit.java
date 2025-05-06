@@ -23,6 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+
 /**
  * Bitbucket commit.
  */
@@ -37,6 +41,40 @@ public interface BitbucketCommit {
     String getAuthor();
 
     /**
+     * Returns the head commit author date for this branch.
+     * <p>
+     * If not supported by the server returns the same value of committer date.
+     *
+     * @return the author date in ISO format
+     * @since 936.1.0
+     */
+    default Date getAuthorDate() {
+        long millis = getDateMillis();
+        return millis > 0 ? new Date(millis) : null;
+    }
+
+    /**
+     * Returns the head committer for this branch.
+     *
+     * @return the head committer author of this branch
+     * @since 936.1.0
+     */
+    default String getCommitter() {
+        return getAuthor();
+    }
+
+    /**
+     * Returns the head committer date for this branch.
+     *
+     * @return the author date in ISO format
+     * @since 936.1.0
+     */
+    default Date getCommitterDate() {
+        long millis = getDateMillis();
+        return millis > 0 ? new Date(millis) : null;
+    }
+
+    /**
      * @return commit message
      */
     String getMessage();
@@ -44,6 +82,7 @@ public interface BitbucketCommit {
     /**
      * @return the commit date in ISO format
      */
+    @Deprecated(since = "936.1.0", forRemoval = true)
     String getDate();
 
     /**
@@ -54,6 +93,15 @@ public interface BitbucketCommit {
     /**
      * @return commit time in milliseconds (Java timestamp)
      */
+    @Deprecated(since = "936.1.0", forRemoval = true)
     long getDateMillis();
 
+    /**
+     * Returns the SHA1 parents of this commit.
+     *
+     * @return a list of parent SHA1 commit.
+     */
+    default Collection<String> getParents() {
+        return Collections.emptyList();
+    }
 }

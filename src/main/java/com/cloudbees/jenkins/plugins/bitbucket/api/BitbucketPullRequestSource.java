@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 /**
  * Represents a pull request source, which is a repository, a branch in that repository and the head commit.
  */
@@ -37,6 +39,16 @@ public interface BitbucketPullRequestSource {
      * @return source branch to be merged in the pull request
      */
     BitbucketBranch getBranch();
+
+    /**
+     * Returns the type of the source branch.
+     * <p>
+     * In some server implementations the source HEAD could be a tag.
+     *
+     * @return the source branch type
+     */
+    @NonNull
+    PullRequestBranchType getBranchType();
 
     /**
      * @return the branch head commit

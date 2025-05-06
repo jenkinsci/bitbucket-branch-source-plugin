@@ -28,11 +28,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.DiscardOldBranchTrait.ExcludeOldSCMHeadBranch;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.trait.SCMHeadFilter;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,21 +48,15 @@ class DiscardOldBranchTraitTest {
         trait.decorateContext(ctx);
         assertThat(ctx.filters()).hasAtLeastOneElementOfType(ExcludeOldSCMHeadBranch.class);
 
-        long lastCommitDate = new Date().getTime();
+        Date now = new Date();
 
         SCMHead head = mock(SCMHead.class);
         when(head.getName()).thenReturn("feature/release");
 
-        BitbucketBranch branch1 = mock(BitbucketBranch.class);
-        when(branch1.getName()).thenReturn("feature/xyz");
-        when(branch1.getDateMillis()).thenReturn(lastCommitDate);
-
-        BitbucketBranch branch2 = mock(BitbucketBranch.class);
-        when(branch2.getName()).thenReturn("feature/release");
-        when(branch2.getDateMillis()).thenReturn(lastCommitDate);
-
-        BitbucketSCMSourceRequest request = mock(BitbucketSCMSourceRequest.class);
-        when(request.getBranches()).thenReturn(Arrays.asList(branch1, branch2));
+        BitbucketSCMSourceRequest request = prepareRequest(
+                buildBranch("feature/xyz", DateUtils.addDays(now, -1).getTime()),
+                buildBranch("feature/release", DateUtils.addDays(now, -10).getTime())
+        );
 
         for (SCMHeadFilter filter : ctx.filters()) {
             assertThat(filter.isExcluded(request, head)).isFalse();
@@ -76,27 +70,32 @@ class DiscardOldBranchTraitTest {
         trait.decorateContext(ctx);
         assertThat(ctx.filters()).hasAtLeastOneElementOfType(ExcludeOldSCMHeadBranch.class);
 
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.DAY_OF_MONTH, -100);
-        long lastCommitDate = c.getTimeInMillis();
+        Date now = new Date();
 
         SCMHead head = mock(SCMHead.class);
         when(head.getName()).thenReturn("feature/release");
 
-        BitbucketBranch branch1 = mock(BitbucketBranch.class);
-        when(branch1.getName()).thenReturn("feature/xyz");
-        when(branch1.getDateMillis()).thenReturn(lastCommitDate);
-
-        BitbucketBranch branch2 = mock(BitbucketBranch.class);
-        when(branch2.getName()).thenReturn("feature/release");
-        when(branch2.getDateMillis()).thenReturn(lastCommitDate);
-
-        BitbucketSCMSourceRequest request = mock(BitbucketSCMSourceRequest.class);
-        when(request.getBranches()).thenReturn(Arrays.asList(branch1, branch2));
+        BitbucketSCMSourceRequest request = prepareRequest(
+                buildBranch("feature/xyz", DateUtils.addDays(now, -6).getTime()),
+                buildBranch("feature/release", DateUtils.addDays(now, -10).getTime())
+        );
 
         for (SCMHeadFilter filter : ctx.filters()) {
             assertThat(filter.isExcluded(request, head)).isTrue();
         }
+    }
+
+    private BitbucketBranch buildBranch(String name, long date) {
+        BitbucketBranch branch = mock(BitbucketBranch.class);
+        when(branch.getName()).thenReturn(name);
+        when(branch.getDateMillis()).thenReturn(date);
+        return branch;
+    }
+
+    private BitbucketSCMSourceRequest prepareRequest(BitbucketBranch ...branches) throws Exception {
+        BitbucketSCMSourceRequest request = mock(BitbucketSCMSourceRequest.class);
+        when(request.getBranches()).thenReturn(Arrays.asList(branches));
+        return request;
     }
 
 }

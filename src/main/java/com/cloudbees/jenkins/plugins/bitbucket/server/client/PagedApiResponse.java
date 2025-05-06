@@ -26,6 +26,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
+/**
+ * Bitbucket Server paginated resource
+ */
 public class PagedApiResponse<V> {
 
     private List<V> values;

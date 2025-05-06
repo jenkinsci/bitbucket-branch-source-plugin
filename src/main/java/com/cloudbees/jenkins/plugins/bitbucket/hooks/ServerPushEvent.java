@@ -36,6 +36,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerChange;
@@ -47,10 +48,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,7 +64,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -101,18 +104,21 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
     private static final Logger LOGGER = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
 
     private final BitbucketServerRepository repository;
+    private final BitbucketServerCommit refCommit;
     private final Map<CacheKey, Map<String, BitbucketServerPullRequest>> cachedPullRequests = new HashMap<>();
     private final String mirrorId;
 
-    ServerPushEvent(String serverUrl,
+    ServerPushEvent(String serverURL,
                     Type type,
                     Collection<NativeServerChange> payload,
                     String origin,
                     BitbucketServerRepository repository,
+                    @CheckForNull BitbucketServerCommit headCommit,
                     String mirrorId) {
-        super(serverUrl, type, payload, origin);
+        super(serverURL, type, payload, origin);
         this.repository = repository;
         this.mirrorId = mirrorId;
+        this.refCommit = headCommit;
     }
 
     @Override
@@ -128,11 +134,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
         }
 
         addBranchesAndTags(source, result);
-        try {
-            addPullRequests(source, result);
-        } catch (InterruptedException interrupted) {
-            LOGGER.log(Level.INFO, "Interrupted while fetching Pull Requests from Bitbucket, results may be incomplete.");
-        }
+        addPullRequests(source, result);
         return result;
     }
 
@@ -147,16 +149,39 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
                 result.put(head, revision);
             } else if ("TAG".equals(refType)) {
                 String tagName = change.getRef().getDisplayId();
-                // FIXME slow workaround until a real example of server tag payload has been provided
-                // I expect in the payload there is also the referred commit.
-                long tagTimestamp;
+                long tagTimestamp = 0L;
                 try (BitbucketApi client = getClient(src)) {
 //                    BitbucketBranch tag = client.getTag(tagName); // requires two API call and does not return the tag timestamp
-                    BitbucketCommit tag = client.resolveCommit(change.getFromHash());
-                    tagTimestamp = tag != null ? tag.getDateMillis() : 0;
-                } catch (InterruptedException | IOException e) {
+                    String tagHash;
+                    switch (change.getType()) {
+                    case "ADD": {
+                        tagHash = change.getToHash();
+                        break;
+                    }
+                    case "DELETE": {
+                        tagHash = change.getFromHash();
+                        break;
+                    }
+                    default:
+                        throw new UnsupportedOperationException("Tag event of type " + change.getType()
+                            + " is not supported.\nPlease fill an issue at https://issues.jenkins.io to the bitbucket-branch-source-plugin component.");
+                    }
+                    if (refCommit != null) {
+                        // the annotated tag hash it's an alias of a real commit and it's the refCommit (new head commit)
+                        // it's not needed check if refCommit and tagCommit are equals
+                        tagTimestamp = Optional.ofNullable(refCommit.getCommitterDate())
+                                .map(Date::getTime)
+                                .orElse(0L);
+                    } else {
+                        BitbucketCommit tag = client.resolveCommit(tagHash);
+                        if (tag != null) {
+                            tagTimestamp = Optional.ofNullable(tag.getCommitterDate())
+                                    .map(Date::getTime)
+                                    .orElse(0L);
+                        }
+                    }
+                } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Fail to retrive the timestamp for tag event {0}", tagName);
-                    tagTimestamp = 0;
                 }
                 SCMHead head = new BitbucketTagSCMHead(tagName, tagTimestamp);
                 final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
@@ -182,7 +207,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
         return BitbucketApiFactory.newInstance(serverURL, authenticator, src.getRepoOwner(), null, src.getRepository());
     }
 
-    private void addPullRequests(BitbucketSCMSource src, Map<SCMHead, SCMRevision> result) throws InterruptedException {
+    private void addPullRequests(BitbucketSCMSource src, Map<SCMHead, SCMRevision> result) {
         if (getType() != SCMEvent.Type.UPDATED) {
             return; // adds/deletes won't be handled here
         }
@@ -248,8 +273,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
         }
     }
 
-    private Map<String, BitbucketServerPullRequest> getPullRequests(BitbucketSCMSource src, NativeServerChange change)
-        throws InterruptedException {
+    private Map<String, BitbucketServerPullRequest> getPullRequests(BitbucketSCMSource src, NativeServerChange change) {
 
         Map<String, BitbucketServerPullRequest> pullRequests;
         final CacheKey cacheKey = new CacheKey(src, change);
@@ -263,16 +287,12 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
         return pullRequests;
     }
 
-    private Map<String, BitbucketServerPullRequest> loadPullRequests(BitbucketSCMSource src,
-        NativeServerChange change) throws InterruptedException {
-
+    private Map<String, BitbucketServerPullRequest> loadPullRequests(BitbucketSCMSource src, NativeServerChange change) {
         final BitbucketServerRepository eventRepo = repository;
-        final BitbucketServerAPIClient api = (BitbucketServerAPIClient) src
-            .buildBitbucketClient(eventRepo.getOwnerName(), eventRepo.getRepositoryName());
-
         final Map<String, BitbucketServerPullRequest> pullRequests = new HashMap<>();
 
-        try {
+        try (BitbucketServerAPIClient api = (BitbucketServerAPIClient) src
+                .buildBitbucketClient(eventRepo.getOwnerName(), eventRepo.getRepositoryName())) {
             try {
                 for (final BitbucketServerPullRequest pullRequest : api.getOutgoingOpenPullRequests(change.getRefId())) {
                     pullRequests.put(pullRequest.getId(), pullRequest);
@@ -294,6 +314,8 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             }
         } catch (FileNotFoundException e) {
             LOGGER.log(Level.INFO, "No such Repository on Bitbucket: {0}", e.getMessage());
+        } catch (IOException e1) {
+            LOGGER.log(Level.INFO, "Comunication fail with server", e1);
         }
 
         return pullRequests;

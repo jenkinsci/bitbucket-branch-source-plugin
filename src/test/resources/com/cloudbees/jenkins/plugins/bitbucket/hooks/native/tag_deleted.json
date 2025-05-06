@@ -1,0 +1,76 @@
+{
+    "actor": {
+        "active": true,
+        "displayName": "Administrator",
+        "emailAddress": "admin@example.com",
+        "id": 2,
+        "links": {
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/users/admin"
+                }
+            ]
+        },
+        "name": "admin",
+        "slug": "admin",
+        "type": "NORMAL"
+    },
+    "changes": [
+        {
+            "fromHash": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+            "ref": {
+                "displayId": "simple-tag",
+                "id": "refs/tags/simple-tag",
+                "type": "TAG"
+            },
+            "refId": "refs/tags/simple-tag",
+            "toHash": "0000000000000000000000000000000000000000",
+            "type": "DELETE"
+        }
+    ],
+    "date": "2025-04-27T11:04:00+0000",
+    "eventKey": "repo:refs_changed",
+    "repository": {
+        "archived": false,
+        "forkable": true,
+        "hierarchyId": "42de05bfcae63156a3b4",
+        "id": 2,
+        "links": {
+            "clone": [
+                {
+                    "href": "http://localhost:7990/bitbucket/scm/amuniz/test-repos.git",
+                    "name": "http"
+                },
+                {
+                    "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+                    "name": "ssh"
+                }
+            ],
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/projects/AMUNIZ/repos/test-repos/browse"
+                }
+            ]
+        },
+        "name": "test-repos",
+        "project": {
+            "id": 2,
+            "key": "AMUNIZ",
+            "links": {
+                "self": [
+                    {
+                        "href": "http://localhost:7990/bitbucket/projects/AMUNIZ"
+                    }
+                ]
+            },
+            "name": "amuniz",
+            "public": false,
+            "type": "NORMAL"
+        },
+        "public": false,
+        "scmId": "git",
+        "slug": "test-repos",
+        "state": "AVAILABLE",
+        "statusMessage": "Available"
+    }
+}

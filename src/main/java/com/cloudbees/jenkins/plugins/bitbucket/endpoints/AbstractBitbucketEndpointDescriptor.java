@@ -59,7 +59,7 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
         jenkins.checkPermission(Jenkins.MANAGE);
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeMatchingAs(
-                ACL.SYSTEM,
+                ACL.SYSTEM2,
                 jenkins,
                 StandardCredentials.class,
                 URIRequirementBuilder.fromUri(serverUrl).build(),

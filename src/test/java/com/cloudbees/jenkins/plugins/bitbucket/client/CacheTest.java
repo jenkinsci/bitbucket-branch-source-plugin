@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
-import java.util.concurrent.Callable;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
@@ -39,7 +39,8 @@ public class CacheTest {
     @Test
     public void ensure_cache_hit() throws Exception {
         final Cache<String, Long> cache = new Cache<>(5, TimeUnit.HOURS);
-        final Callable<Long> callable = mock(Callable.class);
+        @SuppressWarnings("unchecked")
+        final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
         when(callable.call()).thenReturn(1L);
 
         assertEquals(Long.valueOf(1L), cache.get("a key", callable));
@@ -52,7 +53,8 @@ public class CacheTest {
     @Test
     public void ensure_expiration_works() throws Exception {
         final Cache<String, Long> cache = new Cache<>(1, TimeUnit.NANOSECONDS);
-        final Callable<Long> callable = mock(Callable.class);
+        @SuppressWarnings("unchecked")
+        final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
         when(callable.call()).thenReturn(1L);
 
         assertEquals(Long.valueOf(1L), cache.get("a key", callable));
@@ -66,7 +68,8 @@ public class CacheTest {
     @Test
     public void ensure_max_entries_works() throws Exception {
         final Cache<String, Long> cache = new Cache<>(1, TimeUnit.NANOSECONDS, 10);
-        final Callable<Long> callable = mock(Callable.class);
+        @SuppressWarnings("unchecked")
+        final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
         when(callable.call()).thenReturn(1L);
 
         for (int i = 0; i < 10; i++) {

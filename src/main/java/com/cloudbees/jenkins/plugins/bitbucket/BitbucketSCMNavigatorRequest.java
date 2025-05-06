@@ -79,7 +79,7 @@ public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
                                                                .filter(BitbucketSCMSource.class::isInstance)
                                                                .map(BitbucketSCMSource.class::cast)
                                                                .map(BitbucketSCMSource::getRepository)
-                                                               .collect(Collectors.toList());
+                                                               .toList();
         // process new repositories first
         final Set<BitbucketRepository> newRepositories = this.repositoryMap.entrySet()
                                                                            .stream()

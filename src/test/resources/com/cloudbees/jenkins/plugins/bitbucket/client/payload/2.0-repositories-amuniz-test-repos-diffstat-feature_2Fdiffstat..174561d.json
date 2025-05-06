@@ -1,0 +1,93 @@
+{
+    "values": [
+        {
+            "type": "diffstat",
+            "lines_added": 1,
+            "lines_removed": 0,
+            "status": "modified",
+            "old": {
+                "path": "Jenkinsfile",
+                "type": "commit_file",
+                "escaped_path": "Jenkinsfile",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/174561d625c9623b60d8aba09b7f08ddc9df45cd/Jenkinsfile"
+                    }
+                }
+            },
+            "new": {
+                "path": "Jenkinsfile",
+                "type": "commit_file",
+                "escaped_path": "Jenkinsfile",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/251fce291f086cdde68ae2a896148abb5b58033e/Jenkinsfile"
+                    }
+                }
+            }
+        },
+        {
+            "type": "diffstat",
+            "lines_added": 1,
+            "lines_removed": 0,
+            "status": "added",
+            "old": null,
+            "new": {
+                "path": "resources/README.md",
+                "type": "commit_file",
+                "escaped_path": "resources/README.md",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/251fce291f086cdde68ae2a896148abb5b58033e/resources/README.md"
+                    }
+                }
+            }
+        },
+        {
+            "type": "diffstat",
+            "lines_added": 0,
+            "lines_removed": 0,
+            "status": "renamed",
+            "old": {
+                "path": "folder/file.properties",
+                "type": "commit_file",
+                "escaped_path": "folder/file.properties",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/174561d625c9623b60d8aba09b7f08ddc9df45cd/folder/file.properties"
+                    }
+                }
+            },
+            "new": {
+                "path": "resources/file.properties",
+                "type": "commit_file",
+                "escaped_path": "resources/file.properties",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/251fce291f086cdde68ae2a896148abb5b58033e/resources/file.properties"
+                    }
+                }
+            }
+        },
+        {
+            "type": "diffstat",
+            "lines_added": 0,
+            "lines_removed": 0,
+            "status": "added",
+            "old": null,
+            "new": {
+                "path": "resources/image.png",
+                "type": "commit_file",
+                "escaped_path": "resources/image.png",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/src/251fce291f086cdde68ae2a896148abb5b58033e/resources/image.png"
+                    }
+                }
+            }
+        }
+    ],
+    "pagelen": 500,
+    "size": 4,
+    "page": 1
+}

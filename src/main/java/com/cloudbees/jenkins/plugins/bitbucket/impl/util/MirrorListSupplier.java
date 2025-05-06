@@ -35,10 +35,10 @@ public class MirrorListSupplier implements BitbucketApiUtils.BitbucketSupplier<L
     public static final MirrorListSupplier INSTANCE = new MirrorListSupplier();
 
     @Override
-    public ListBoxModel get(BitbucketApi bitbucketApi) throws IOException, InterruptedException {
+    public ListBoxModel get(BitbucketApi client) throws IOException, InterruptedException {
         ListBoxModel result = new ListBoxModel(new ListBoxModel.Option("Primary server", ""));
-        if (bitbucketApi instanceof BitbucketServerAPIClient) {
-            BitbucketServerAPIClient bitbucketServerAPIClient = (BitbucketServerAPIClient) bitbucketApi;
+        if (!BitbucketApiUtils.isCloud(client)) {
+            BitbucketServerAPIClient bitbucketServerAPIClient = (BitbucketServerAPIClient) client;
             List<BitbucketMirrorServer> mirrors = bitbucketServerAPIClient.getMirrors();
             for (BitbucketMirrorServer mirror : mirrors) {
                 result.add(new ListBoxModel.Option(mirror.getName(), mirror.getId()));

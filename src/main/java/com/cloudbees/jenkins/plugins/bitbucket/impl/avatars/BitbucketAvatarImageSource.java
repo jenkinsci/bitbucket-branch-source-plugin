@@ -30,6 +30,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -59,7 +61,12 @@ public class BitbucketAvatarImageSource implements AvatarImageSource {
     public AvatarImage fetch() {
         try {
             if (canFetch()) {
-                SCMNavigatorOwner owner = Jenkins.get().getItemByFullName(scmOwner, SCMNavigatorOwner.class);
+                SCMNavigatorOwner owner = null;
+                // to access item when security (not matrix) is enabled or
+                // logged user does not have READ(DISCOVER) access on the item
+                try (ACLContext as = ACL.as2(ACL.SYSTEM2)) { // JENKINS-75609
+                    owner = Jenkins.get().getItemByFullName(scmOwner, SCMNavigatorOwner.class);
+                }
                 if (owner != null) {
                     StandardCredentials credentials = BitbucketCredentials.lookupCredentials(serverURL, owner, credentialsId, StandardCredentials.class);
                     BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);

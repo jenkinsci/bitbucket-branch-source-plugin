@@ -36,7 +36,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.security.ACL;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
 import org.kohsuke.stapler.DataBoundSetter;
 

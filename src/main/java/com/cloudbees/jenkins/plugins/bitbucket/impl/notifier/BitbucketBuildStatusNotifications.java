@@ -27,14 +27,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMRevision;
-import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter;
 import com.cloudbees.jenkins.plugins.bitbucket.FirstCheckoutCompletedInvisibleAction;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -58,7 +57,8 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
@@ -85,9 +85,9 @@ public final class BitbucketBuildStatusNotifications {
      * Throws an IllegalStateException if it is not valid, or return the url otherwise
      *
      * @param url the URL of the build to check
-     * @param bitbucket the bitbucket client we are facing.
+     * @param client the bitbucket client we are facing.
      */
-    static String checkURL(@NonNull String url, BitbucketApi bitbucket) {
+    static String checkURL(@NonNull String url, BitbucketApi client) {
         try {
             URL anURL = new URL(url);
             if ("localhost".equals(anURL.getHost())) {
@@ -96,7 +96,7 @@ public final class BitbucketBuildStatusNotifications {
             if ("unconfigured-jenkins-location".equals(anURL.getHost())) {
                 throw new IllegalStateException("Could not determine Jenkins URL.");
             }
-            if (bitbucket instanceof BitbucketCloudApiClient && !anURL.getHost().contains(".")) {
+            if (BitbucketApiUtils.isCloud(client) && !anURL.getHost().contains(".")) {
                 throw new IllegalStateException(
                     "Please use a fully qualified name or an IP address for Jenkins URL, this is required by Bitbucket cloud");
             }
@@ -130,6 +130,7 @@ public final class BitbucketBuildStatusNotifications {
                     "IllegalStateException: " + e.getMessage());
             return;
         }
+        boolean isCloud = BitbucketApiUtils.isCloud(client);
 
         BitbucketSCMSourceContext context = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(source.getTraits()); // NOSONAR
@@ -155,7 +156,7 @@ public final class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "This commit was not built (probably the build was skipped)");
             if (context.sendStopNotificationForNotBuildJobs()) {
                 // Bitbucket Cloud and Server support different build states.
-                state = (client instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
+                state = isCloud ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
             } else {
                 state = BitbucketBuildStatus.Status.FAILED;
             }
@@ -163,7 +164,7 @@ public final class BitbucketBuildStatusNotifications {
             statusDescription = StringUtils.defaultIfBlank(buildDescription, "Something is wrong with the build of this commit.");
             if (context.sendStopNotificationForAbortBuild()) {
                 // Bitbucket Cloud and Server support different build states.
-                state = (client instanceof BitbucketCloudApiClient) ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
+                state = isCloud ? BitbucketBuildStatus.Status.STOPPED : BitbucketBuildStatus.Status.CANCELLED;
             } else {
                 state = BitbucketBuildStatus.Status.FAILED;
             }
@@ -174,9 +175,16 @@ public final class BitbucketBuildStatusNotifications {
 
         if (state != null) {
             BitbucketDefaulNotifier notifier = new BitbucketDefaulNotifier(client);
-            BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, key, name, refName);
+            String notificationKey = DigestUtils.md5Hex(key);
+            String notificationParentKey = null;
+            if (context.useReadableNotificationIds() && !isCloud) {
+                notificationKey = key.replace(' ', '_').toUpperCase();
+                notificationParentKey = getBuildParentKey(build).replace(' ', '_').toUpperCase();
+            }
+            BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(hash, statusDescription, state, url, notificationKey, name, refName);
             buildStatus.setBuildDuration(build.getDuration());
             buildStatus.setBuildNumber(build.getNumber());
+            buildStatus.setParent(notificationParentKey);
             // TODO testResults should be provided by an extension point that integrates JUnit or anything else plugin
             notifier.notifyBuildStatus(buildStatus);
             if (result != null) {
@@ -212,37 +220,44 @@ public final class BitbucketBuildStatusNotifications {
             .filters().stream()
             .anyMatch(ExcludeOriginPRBranchesSCMHeadFilter.class::isInstance);
 
-        String key;
-        String refName;
-        BitbucketApi bitbucket;
+        final String key;
+        final String refName;
+        final BitbucketApi client;
         if (rev instanceof PullRequestSCMRevision) {
             listener.getLogger().println("[Bitbucket] Notifying pull request build result");
             PullRequestSCMHead head = (PullRequestSCMHead) rev.getHead();
             key = getBuildKey(build, head.getOriginName(), shareBuildKeyBetweenBranchAndPR);
-            /*
-             * Poor documentation for bitbucket cloud at:
-             * https://community.atlassian.com/t5/Bitbucket-questions/Re-Builds-not-appearing-in-pull-requests/qaq-p/1805991/comment-id/65864#M65864
-             * that means refName null or valued with only head.getBranchName()
-             *
-             * For Bitbucket Server, refName should be "refs/heads/" + the name
-             * of the source branch of the pull request, and the build status
-             * should be posted to the repository that contains that branch.
-             * If refName is null, then Bitbucket Server does not show the
-             * build status in the list of pull requests, but still shows it
-             * on the web page of the individual pull request.
-             */
-            bitbucket = source.buildBitbucketClient(head);
-            if (BitbucketApiUtils.isCloud(bitbucket)) {
-                refName = null;
+            if (BitbucketApiUtils.isCloud(source.getServerUrl())) {
+                /*
+                 * Poor documentation for bitbucket cloud at:
+                 * https://community.atlassian.com/t5/Bitbucket-questions/Re-Builds-not-appearing-in-pull-requests/qaq-p/1805991/comment-id/65864#M65864
+                 * that means refName null or valued with only head.getBranchName()
+                 */
+                refName = head.getBranchName();
+                client = source.buildBitbucketClient(head);
             } else {
+                /*
+                 * Head may point to a forked repository that the credentials do
+                 * not have access to, resulting in a 401 error. So we need to
+                 * push build status to the target repository
+                 */
+                client = source.buildBitbucketClient();
+                /*
+                 * For Bitbucket Server, refName should be "refs/heads/" + the
+                 * name of the source branch of the pull request, and the build
+                 * status should be posted to the repository that contains that
+                 * branch. If refName is null, then Bitbucket Server does not
+                 * show the build status in the list of pull requests, but still
+                 * shows it on the web page of the individual pull request.
+                 */
                 refName = "refs/heads/" + head.getBranchName();
             }
         } else {
             listener.getLogger().println("[Bitbucket] Notifying commit build result");
             SCMHead head = rev.getHead();
             key = getBuildKey(build, head.getName(), shareBuildKeyBetweenBranchAndPR);
-            bitbucket = source.buildBitbucketClient();
-            if (BitbucketApiUtils.isCloud(bitbucket)) {
+            client = source.buildBitbucketClient();
+            if (BitbucketApiUtils.isCloud(client)) {
                 refName = head.getName();
             } else {
                 if (rev instanceof BitbucketTagSCMRevision || head instanceof BitbucketTagSCMHead) {
@@ -252,7 +267,11 @@ public final class BitbucketBuildStatusNotifications {
                 }
             }
         }
-        createStatus(build, listener, bitbucket, key, hash, refName);
+        try {
+            createStatus(build, listener, client, key, hash, refName);
+        } finally {
+            client.close();
+        }
     }
 
     @CheckForNull
@@ -266,9 +285,7 @@ public final class BitbucketBuildStatusNotifications {
         return null;
     }
 
-    private static String getBuildKey(@NonNull Run<?, ?> build, String branch,
-        boolean shareBuildKeyBetweenBranchAndPR) {
-
+    private static String getBuildKey(@NonNull Run<?, ?> build, String branch, boolean shareBuildKeyBetweenBranchAndPR) {
         // When the ExcludeOriginPRBranchesSCMHeadFilter filter is active, we want the
         // build status key to be the same between the branch project and the PR project.
         // This is to avoid having two build statuses when a branch goes into PR and
@@ -283,6 +300,10 @@ public final class BitbucketBuildStatusNotifications {
         }
 
         return key;
+    }
+
+    private static String getBuildParentKey(@NonNull Run<?, ?> build) {
+        return build.getParent().getParent().getFullName();
     }
 
     /**

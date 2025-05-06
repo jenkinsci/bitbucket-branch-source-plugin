@@ -85,7 +85,19 @@ In a shell or Windows terminal run
 
 ## How-to run and test with Bitbucket Server locally
 
-* [Install the Atlassian SDK on Linux or Mac](https://developer.atlassian.com/server/framework/atlassian-sdk/install-the-atlassian-sdk-on-a-linux-or-mac-system/) 
-* To run 8.0.0 server: `atlas-run-standalone --product bitbucket --version 8.0.0 --data-version 8.0.0`
+### Install in local PC
+
+1. [Install the Atlassian SDK on Linux or Mac](https://developer.atlassian.com/server/framework/atlassian-sdk/install-the-atlassian-sdk-on-a-linux-or-mac-system/)
+2. Install git
+3. To run latest server: `atlas-run-standalone --product bitbucket`
 
 Support to run Server under Windows has been dismissed since version 7.14+
+
+### Run inside docker
+
+1. run `docker pull nolddor/atlassian-sdk:17-jdk`
+2. run `docker run -it -p 7990:7990 -p 7999:7999 -v %USER%\.m2:/root/.m2 nolddor/atlassian-sdk:17-jdk`
+3. Inside the container:
+   - install git with `apk add git`
+   - install git support for http with `apk add git-daemon`
+   - run `/opt/atlassian-plugin-sdk/bin/atlas-run-standalone --product bitbucket --version 9.5.2`

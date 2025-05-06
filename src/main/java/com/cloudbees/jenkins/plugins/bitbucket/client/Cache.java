@@ -23,12 +23,12 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +51,7 @@ public class Cache<K, V> {
         this.entries = new LimitedMap<>(maxEntries);
     }
 
-    public synchronized V get(final K key, final Callable<V> callable) throws ExecutionException {
+    public synchronized <E extends Exception> V get(final K key, final ICheckedCallable<V, E> request) throws ExecutionException {
         if (isExpired(key)) {
             doRemove(key);
         }
@@ -62,7 +62,7 @@ public class Cache<K, V> {
 
         V result;
         try {
-            result = callable.call();
+            result = request.call();
         } catch (final Exception e) {
             throw new ExecutionException("Cannot load value for key: " + key, e);
         }
@@ -110,7 +110,9 @@ public class Cache<K, V> {
         return value;
     }
 
-    private static class LimitedMap<K, V> extends LinkedHashMap<K, V> {
+    private static class LimitedMap<K, V> extends LinkedHashMap<K, V> { // NOSONAR
+        private static final long serialVersionUID = 12492123640782072L;
+
         private final int maxEntries;
 
         public LimitedMap(final int maxEntries) {
@@ -119,7 +121,7 @@ public class Cache<K, V> {
 
         @Override
         protected boolean removeEldestEntry(final java.util.Map.Entry<K, V> eldest) {
-            return size() > maxEntries;
+            return super.size() > maxEntries;
         }
     }
 

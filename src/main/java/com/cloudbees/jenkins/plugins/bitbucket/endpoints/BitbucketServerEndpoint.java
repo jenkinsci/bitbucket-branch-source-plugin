@@ -38,7 +38,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 import jenkins.scm.api.SCMName;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;

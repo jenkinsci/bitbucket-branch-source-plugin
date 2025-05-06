@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -37,6 +38,8 @@ public class BitbucketServerPullRequestSource implements BitbucketPullRequestSou
     private String refId;
     @JsonProperty("displayId")
     private String branchName;
+    @JsonProperty("type")
+    private PullRequestBranchType branchType;
     @JsonProperty
     private String latestCommit;
 
@@ -61,6 +64,7 @@ public class BitbucketServerPullRequestSource implements BitbucketPullRequestSou
     public BitbucketBranch getBranch() {
         if (branch == null) {
             branch = new BitbucketServerBranch(branchName, latestCommit);
+            branch.setType(branchType);
         }
         return branch;
     }
@@ -75,6 +79,15 @@ public class BitbucketServerPullRequestSource implements BitbucketPullRequestSou
 
     public void setRepository(BitbucketServerRepository repository) {
         this.repository = repository;
+    }
+
+    @Override
+    public PullRequestBranchType getBranchType() {
+        return branchType;
+    }
+
+    public void setBranchType(PullRequestBranchType branchType) {
+        this.branchType = branchType;
     }
 
 }

@@ -23,15 +23,16 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
-import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -48,10 +49,14 @@ public final class JsonParser {
     }
 
     public static <T> T toJava(InputStream data, Class<T> type) throws IOException {
-        return toJava(new InputStreamReader(data, Charsets.UTF_8), type);
+        return toJava(new InputStreamReader(data, StandardCharsets.UTF_8), type);
     }
 
     public static <T> T toJava(Reader data, Class<T> type) throws IOException{
+        return mapper.readValue(data, type);
+    }
+
+    public static <T> T toJava(String data, TypeReference<T> type) throws IOException{
         return mapper.readValue(data, type);
     }
 

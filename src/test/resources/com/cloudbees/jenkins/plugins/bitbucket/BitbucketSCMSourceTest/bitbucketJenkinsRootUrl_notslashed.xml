@@ -2,14 +2,7 @@
 <com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
   <id>com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator::https://bitbucket.test::DUB::stunning-adventure</id>
   <credentialsId>bb-beescloud</credentialsId>
-  <checkoutCredentialsId>SAME</checkoutCredentialsId>
   <repoOwner>DUB</repoOwner>
   <repository>stunning-adventure</repository>
-  <includes>*</includes>
-  <excludes></excludes>
-  <autoRegisterHook>true</autoRegisterHook>
-  <manageHooks>true</manageHooks>
-  <bitbucketServerUrl>https://bitbucket-hook-4.test</bitbucketServerUrl>
-  <sshPort>7999</sshPort>
-  <repositoryType>GIT</repositoryType>
+  <serverUrl>https://bitbucket-hook-4.test</serverUrl>
 </com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>

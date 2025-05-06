@@ -67,10 +67,16 @@ public class DiscardOldBranchTrait extends SCMSourceTrait {
 
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        context.withFilter(new ExcludeOldSCMHeadBranch());
+        context.withFilter(new ExcludeOldSCMHeadBranch(keepForDays));
     }
 
-    public final class ExcludeOldSCMHeadBranch extends SCMHeadFilter {
+    public static final class ExcludeOldSCMHeadBranch extends SCMHeadFilter {
+        private int keepForDays;
+
+        public ExcludeOldSCMHeadBranch(int keepForDays) {
+            this.keepForDays = keepForDays;
+        }
+
         @Override
         public boolean isExcluded(SCMSourceRequest request, SCMHead head) throws IOException, InterruptedException {
             if (keepForDays > 0) {
@@ -83,8 +89,9 @@ public class DiscardOldBranchTrait extends SCMSourceTrait {
 
                 for (BitbucketBranch branch : bbRequest.getBranches()) {
                     if (branchName.equals(branch.getName())) {
-                        LocalDate expiryDate = asLocalDate(branch.getDateMillis());
-                        return LocalDate.now().isAfter(expiryDate);
+                        LocalDate commitDate = asLocalDate(branch.getDateMillis());
+                        LocalDate expiryDate = LocalDate.now().minusDays(keepForDays);
+                        return commitDate.isBefore(expiryDate);
                     }
                 }
             }

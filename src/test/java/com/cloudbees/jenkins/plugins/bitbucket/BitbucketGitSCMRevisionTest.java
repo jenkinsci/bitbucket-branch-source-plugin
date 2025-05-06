@@ -24,13 +24,17 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait.TrustTeamForks;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.TagDiscoveryTrait;
 import hudson.model.TaskListener;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Stream;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.TagSCMHead;
-import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,11 +45,11 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 @WithJenkins
 class BitbucketGitSCMRevisionTest {
 
+    @SuppressWarnings("unused")
     private static JenkinsRule j;
 
     @BeforeAll
@@ -53,20 +57,20 @@ class BitbucketGitSCMRevisionTest {
         j = rule;
     }
 
-    private static Stream<Arguments> revisionData() {
+    private static Stream<Arguments> revisionDataProvider() {
         return Stream.of(Arguments.of("branch on cloud", new BranchDiscoveryTrait(true, true), BitbucketCloudEndpoint.SERVER_URL), //
                 Arguments.of("branch on server", new BranchDiscoveryTrait(true, true), "localhost"), //
                 Arguments.of("PR on cloud", new OriginPullRequestDiscoveryTrait(2), BitbucketCloudEndpoint.SERVER_URL), //
                 Arguments.of("PR on server", new OriginPullRequestDiscoveryTrait(2), "localhost"), //
-                Arguments.of("forked on cloud", new ForkPullRequestDiscoveryTrait(2, mock(SCMHeadAuthority.class)), BitbucketCloudEndpoint.SERVER_URL), //
-                Arguments.of("forked on server", new ForkPullRequestDiscoveryTrait(2, mock(SCMHeadAuthority.class)), "localhost"), //
+                Arguments.of("forked on cloud", new ForkPullRequestDiscoveryTrait(2, new TrustTeamForks()), BitbucketCloudEndpoint.SERVER_URL), //
+                Arguments.of("forked on server", new ForkPullRequestDiscoveryTrait(2, new TrustTeamForks()), "localhost"), //
                 Arguments.of("Tags on cloud", new TagDiscoveryTrait(), BitbucketCloudEndpoint.SERVER_URL), //
                 Arguments.of("Tags on server", new TagDiscoveryTrait(), "localhost") //
         );
     }
 
     @ParameterizedTest(name = "verify revision informations from {0}")
-    @MethodSource("revisionData")
+    @MethodSource("revisionDataProvider")
     void verify_revision_informations_are_valued(String testName, SCMSourceTrait trait, String serverURL) throws Exception {
         BitbucketMockApiFactory.add(serverURL, getApiMockClient(serverURL));
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");

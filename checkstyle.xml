@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.2//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
 <module name="Checker">
-  <!-- Headers -->
-  <module name="RegexpHeader">
-    <property name="headerFile" value="license.header" />
-    <property name="fileExtensions" value="jelly, properties, java" />
-  </module>
-
-  <module name="FileTabCharacter"/>
-  <module name="NewlineAtEndOfFile">
-  </module>
-  <module name="RegexpSingleline">
-    <property name="format" value="\s+$"/>
-    <property name="message" value="Trailing spaces are not allowed."/>
-  </module>
-  <module name="TreeWalker">
-    <module name="ImportOrder">
-      <property name="separatedStaticGroups" value="true"/>
-      <property name="option" value="bottom"/>
+    <!-- Headers -->
+    <module name="RegexpHeader">
+        <property name="headerFile" value="license.header" />
+        <property name="fileExtensions" value="jelly, properties, java" />
     </module>
-    <module name="UnusedImports"/>
-    <module name="AvoidStarImport"/>
-  </module>
+
+    <module name="FileTabCharacter" />
+
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$" />
+        <property name="message" value="Trailing spaces are not allowed." />
+    </module>
+    <module name="TreeWalker">
+        <module name="ImportOrder">
+            <property name="separatedStaticGroups" value="true" />
+            <property name="option" value="bottom" />
+        </module>
+        <module name="LeftCurly">
+            <property name="option" value="eol" />
+        </module>
+        <module name="UnusedImports" />
+        <module name="AvoidStarImport" />
+    </module>
 </module>

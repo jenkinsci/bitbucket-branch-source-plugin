@@ -1,0 +1,195 @@
+{
+    "actor": {
+        "active": true,
+        "displayName": "Administrator",
+        "emailAddress": "admin@example.com",
+        "id": 2,
+        "links": {
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/users/admin"
+                }
+            ]
+        },
+        "name": "admin",
+        "slug": "admin",
+        "type": "NORMAL"
+    },
+    "changes": [
+        {
+            "fromHash": "0000000000000000000000000000000000000000",
+            "ref": {
+                "displayId": "simple-tag",
+                "id": "refs/tags/simple-tag",
+                "type": "TAG"
+            },
+            "refId": "refs/tags/simple-tag",
+            "toHash": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+            "type": "ADD"
+        }
+    ],
+    "commits": [
+        {
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": 1537538991000,
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": 1537538991000,
+            "displayId": "fb522a6f08c",
+            "id": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+            "message": "Suppress echo command part",
+            "parents": [
+                {
+                    "displayId": "ae995d7a370",
+                    "id": "ae995d7a37069d0988462a9c92828971e8a42b5d"
+                }
+            ]
+        },
+        {
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": 1537538960000,
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": 1537538960000,
+            "displayId": "ae995d7a370",
+            "id": "ae995d7a37069d0988462a9c92828971e8a42b5d",
+            "message": "Support also windows environments",
+            "parents": [
+                {
+                    "displayId": "bf4f4ce8a3a",
+                    "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                }
+            ]
+        },
+        {
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": 1537538845000,
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": 1537538845000,
+            "displayId": "bf4f4ce8a3a",
+            "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+            "message": "Add sample script hello world",
+            "parents": [
+                {
+                    "displayId": "8d0fa145bde",
+                    "id": "8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1"
+                }
+            ]
+        },
+        {
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": 1537538695000,
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": 1537538695000,
+            "displayId": "8d0fa145bde",
+            "id": "8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1",
+            "message": "Initial commit",
+            "parents": []
+        }
+    ],
+    "date": "2025-04-27T11:07:31+0000",
+    "eventKey": "repo:refs_changed",
+    "repository": {
+        "archived": false,
+        "forkable": true,
+        "hierarchyId": "42de05bfcae63156a3b4",
+        "id": 2,
+        "links": {
+            "clone": [
+                {
+                    "href": "http://localhost:7990/bitbucket/scm/amuniz/test-repos.git",
+                    "name": "http"
+                },
+                {
+                    "href": "ssh://git@localhost:7999/amuniz/test-repos.git",
+                    "name": "ssh"
+                }
+            ],
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/projects/AMUNIZ/repos/test-repos/browse"
+                }
+            ]
+        },
+        "name": "test-repos",
+        "project": {
+            "id": 2,
+            "key": "AMUNIZ",
+            "links": {
+                "self": [
+                    {
+                        "href": "http://localhost:7990/bitbucket/projects/AMUNIZ"
+                    }
+                ]
+            },
+            "name": "amuniz",
+            "public": false,
+            "type": "NORMAL"
+        },
+        "public": false,
+        "scmId": "git",
+        "slug": "test-repos",
+        "state": "AVAILABLE",
+        "statusMessage": "Available"
+    },
+    "toCommit": {
+        "author": {
+            "emailAddress": "amuniz@example.com",
+            "name": "Antonio Muniz"
+        },
+        "authorTimestamp": 1537538991000,
+        "committer": {
+            "emailAddress": "amuniz@example.com",
+            "name": "Antonio Muniz"
+        },
+        "committerTimestamp": 1537538991000,
+        "displayId": "fb522a6f08c",
+        "id": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+        "message": "Suppress echo command part",
+        "parents": [
+            {
+                "author": {
+                    "emailAddress": "amuniz@example.com",
+                    "name": "Antonio Muniz"
+                },
+                "authorTimestamp": 1537538960000,
+                "committer": {
+                    "emailAddress": "amuniz@example.com",
+                    "name": "Antonio Muniz"
+                },
+                "committerTimestamp": 1537538960000,
+                "displayId": "ae995d7a370",
+                "id": "ae995d7a37069d0988462a9c92828971e8a42b5d",
+                "message": "Support also windows environments",
+                "parents": [
+                    {
+                        "displayId": "bf4f4ce8a3a",
+                        "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf"
+                    }
+                ]
+            }
+        ]
+    }
+}

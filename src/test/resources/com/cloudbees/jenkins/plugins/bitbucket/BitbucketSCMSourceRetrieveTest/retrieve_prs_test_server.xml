@@ -1,16 +1,16 @@
 <com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
   <id>retrieve_prs_test_server</id>
   <credentialsId>bb-server-creds</credentialsId>
-  <checkoutCredentialsId>SAME</checkoutCredentialsId>
   <repoOwner>DUB</repoOwner>
   <repository>stunning-adventure</repository>
-  <includes>*</includes>
-  <excludes></excludes>
-  <autoRegisterHook>false</autoRegisterHook>
-  <bitbucketServerUrl>https://bitbucket.test</bitbucketServerUrl>
-  <sshPort>7999</sshPort>
-  <repositoryType>GIT</repositoryType>
+  <serverUrl>https://bitbucket.test</serverUrl>
   <traits>
+    <com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistrationTrait>
+      <mode>DISABLE</mode>
+    </com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistrationTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.SSHCheckoutTrait>
+      <credentialsId>SAME</credentialsId>
+    </com.cloudbees.jenkins.plugins.bitbucket.SSHCheckoutTrait>
     <jenkins.scm.impl.trait.RegexSCMHeadFilterTrait>
       <regex>.*</regex>
     </jenkins.scm.impl.trait.RegexSCMHeadFilterTrait>

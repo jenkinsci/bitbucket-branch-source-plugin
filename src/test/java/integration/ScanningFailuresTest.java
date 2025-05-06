@@ -25,18 +25,20 @@ package integration;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait;
-import com.cloudbees.jenkins.plugins.bitbucket.ForkPullRequestDiscoveryTrait;
-import com.cloudbees.jenkins.plugins.bitbucket.OriginPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import hudson.model.Result;
 import hudson.model.TopLevelItem;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -48,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 import jenkins.branch.Branch;
 import jenkins.branch.BranchSource;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.scm.api.SCMFile;
+import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -60,6 +64,8 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -68,7 +74,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Issue("JENKINS-36029")
@@ -131,6 +140,7 @@ public class ScanningFailuresTest {
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
         BitbucketApi api = Mockito.mock(BitbucketApi.class);
+        when(api.getFile(any())).thenReturn(new BitbucketSCMFile(mock(BitbucketSCMFile.class), "Jenkinsfile", Type.REGULAR_FILE, "hash"));
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
@@ -141,8 +151,6 @@ public class ScanningFailuresTest {
         BitbucketCommit commit = Mockito.mock(BitbucketCommit.class);
         when(api.resolveCommit(sampleRepo.head())).thenReturn(commit);
         when(commit.getDateMillis()).thenReturn(System.currentTimeMillis());
-
-        when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenReturn(true);
 
         BitbucketRepository repository = Mockito.mock(BitbucketRepository.class);
         when(api.getRepository()).thenReturn(repository);
@@ -199,6 +207,13 @@ public class ScanningFailuresTest {
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
         BitbucketApi api = Mockito.mock(BitbucketApi.class);
+        when(api.getFile(any())).thenAnswer(new Answer<SCMFile>() {
+            @Override
+            public SCMFile answer(InvocationOnMock invocation) throws Throwable {
+                BitbucketSCMFile scmFile = invocation.getArgument(0);
+                return new BitbucketSCMFile((BitbucketSCMFile) scmFile.parent(), scmFile.getName(), Type.REGULAR_FILE, scmFile.getHash());
+            }
+        });
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
@@ -234,20 +249,19 @@ public class ScanningFailuresTest {
 
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
+        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8), not(containsString(message)));
         j.waitUntilNoActivity();
         WorkflowJob master = mp.getItem("main");
         assertThat(master, notNullValue());
 
         // an error in checkPathExists(...)
-        when(api.checkPathExists(Mockito.anyString(), eq("Jenkinsfile"))).thenThrow(new IOException(message));
+        doThrow(new IOException(message)).when(api).getFile(any(BitbucketSCMFile.class));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.FAILURE));
-        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), containsString(message));
+        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
+        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8), containsString("‘Jenkinsfile’ not found"));
         master = mp.getItem("main");
-        assertThat(master, notNullValue());
-        assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
+        assertThat(master, nullValue());
     }
 
     @Test
@@ -259,6 +273,7 @@ public class ScanningFailuresTest {
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
         BitbucketApi api = Mockito.mock(BitbucketApi.class);
+        when(api.getFile(any())).thenReturn(new BitbucketSCMFile(mock(BitbucketSCMFile.class), "Jenkinsfile", Type.REGULAR_FILE, "hash"));
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
@@ -322,6 +337,7 @@ public class ScanningFailuresTest {
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
         BitbucketApi api = Mockito.mock(BitbucketApi.class);
+        when(api.getFile(any())).thenReturn(new BitbucketSCMFile(mock(BitbucketSCMFile.class), "Jenkinsfile", Type.REGULAR_FILE, "hash"));
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);

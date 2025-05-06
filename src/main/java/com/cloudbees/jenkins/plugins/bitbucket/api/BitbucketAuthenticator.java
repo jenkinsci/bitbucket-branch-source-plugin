@@ -24,13 +24,14 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import hudson.plugins.git.GitSCM;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
 
 /**
  * Support for various different methods of authenticating with Bitbucket
@@ -109,19 +110,19 @@ public interface BitbucketAuthenticator {
      * Generates context that sub-classes can use to determine if they would be able to authenticate against the
      * provided server.
      *
-     * @param serverUrl The URL being authenticated against
+     * @param serverURL The URL being authenticated against
      * @return an {@link AuthenticationTokenContext} for use with the AuthenticationTokens APIs
      */
-    public static AuthenticationTokenContext<BitbucketAuthenticator> authenticationContext(String serverUrl) {
-        if (serverUrl == null) {
-            serverUrl = BitbucketCloudEndpoint.SERVER_URL;
+    public static AuthenticationTokenContext<BitbucketAuthenticator> authenticationContext(String serverURL) {
+        if (serverURL == null) {
+            serverURL = BitbucketCloudEndpoint.SERVER_URL;
         }
 
-        String scheme = serverUrl.split(":")[0].toLowerCase();
-        boolean isCloud = serverUrl.equals(BitbucketCloudEndpoint.SERVER_URL);
+        String scheme = serverURL.split(":")[0].toLowerCase();
+        boolean isCloud = BitbucketApiUtils.isCloud(serverURL);
 
         return AuthenticationTokenContext.builder(BitbucketAuthenticator.class)
-                .with(SERVER_URL, serverUrl)
+                .with(SERVER_URL, serverURL)
                 .with(SCHEME, scheme)
                 .with(BITBUCKET_INSTANCE_TYPE, isCloud ? BITBUCKET_INSTANCE_TYPE_CLOUD : BITBUCKET_INSTANCE_TYPE_SERVER)
                 .build();

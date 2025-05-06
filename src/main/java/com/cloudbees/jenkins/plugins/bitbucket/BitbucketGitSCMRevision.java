@@ -24,9 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.Objects;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
@@ -55,15 +53,7 @@ public class BitbucketGitSCMRevision extends SCMRevisionImpl {
         super(head, commit.getHash());
         this.message = commit.getMessage();
         this.author = commit.getAuthor();
-        Date commitDate = null;
-        try {
-            if (commit.getDate() != null) {
-                commitDate = new StdDateFormat().parse(commit.getDate());
-            }
-        } catch (ParseException e) {
-            commitDate = null;
-        }
-        this.date = commitDate;
+        this.date = commit.getCommitterDate();
     }
 
     /**

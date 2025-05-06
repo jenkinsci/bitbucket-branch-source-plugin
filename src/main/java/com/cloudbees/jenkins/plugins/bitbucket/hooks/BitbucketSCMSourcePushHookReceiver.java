@@ -84,7 +84,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
         }
         HookEventType type = HookEventType.fromString(eventKey);
         if (type == null) {
-            LOGGER.info("Received unknown Bitbucket hook: " + eventKey + ". Skipping.");
+            LOGGER.info(() -> "Received unknown Bitbucket hook: " + eventKey + ". Skipping.");
             return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST, "X-Event-Key HTTP header invalid: " + eventKey);
         }
 
@@ -102,11 +102,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
         }
 
         HookProcessor hookProcessor = getHookProcessor(type);
-        try {
-            hookProcessor.process(type, body, instanceType, origin, serverUrl);
-        } catch (AbstractMethodError e) {
-            hookProcessor.process(body, instanceType);
-        }
+        hookProcessor.process(type, body, instanceType, origin, serverUrl);
         return HttpResponses.ok();
     }
 

@@ -23,8 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * Represents a Bitbucket repository.
@@ -102,9 +105,28 @@ public interface BitbucketRepository {
     Map<String, List<BitbucketHref>> getLinks();
 
     /**
-     * Return the avatar associated to the team or project name.
+     * Returns the avatar associated to the team or project name.
      *
      * @return the URL of the avatar
      */
     String getAvatar();
+
+    /**
+     * Returns the clone link available for this repository.
+     *
+     * @return a list of git URL available to clone.
+     */
+    @NonNull
+    default List<BitbucketHref> getCloneLinks() {
+        Map<String, List<BitbucketHref>> links = getLinks();
+        if (links == null) {
+            return Collections.emptyList();
+        }
+        List<BitbucketHref> hrefs = links.get("clone");
+        if (CollectionUtils.isEmpty(hrefs)) {
+            return Collections.emptyList();
+        } else {
+            return Collections.unmodifiableList(hrefs);
+        }
+    }
 }

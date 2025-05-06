@@ -39,12 +39,16 @@ import hudson.model.Item;
 import hudson.util.FormFillFailure;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.http.HttpHost;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -62,7 +66,7 @@ public class BitbucketApiUtils {
     }
 
     public static boolean isCloud(@NonNull String serverURL) {
-        return StringUtils.startsWithAny(serverURL, new String[] { BitbucketCloudEndpoint.SERVER_URL, BitbucketCloudEndpoint.BAD_SERVER_URL });
+        return StringUtils.startsWithAny(serverURL, BitbucketCloudEndpoint.SERVER_URL, BitbucketCloudEndpoint.BAD_SERVER_URL);
     }
 
     public static ListBoxModel getFromBitbucket(SCMSourceOwner context,
@@ -70,8 +74,7 @@ public class BitbucketApiUtils {
                                                 String credentialsId,
                                                 String repoOwner,
                                                 String repository,
-                                                BitbucketSupplier<ListBoxModel> listBoxModelSupplier)
-        throws FormFillFailure {
+                                                BitbucketSupplier<ListBoxModel> listBoxModelSupplier) throws FormFillFailure {
         repoOwner = Util.fixEmptyAndTrim(repoOwner);
         if (repoOwner == null) {
             return new ListBoxModel();
@@ -97,28 +100,48 @@ public class BitbucketApiUtils {
 
         BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
 
-        try {
-            BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverURL, authenticator, repoOwner, null, repository);
+        try (BitbucketApi bitbucket = BitbucketApiFactory.newInstance(serverURL, authenticator, repoOwner, null, repository)) {
             return listBoxModelSupplier.get(bitbucket);
-        } catch (FormFillFailure | OutOfMemoryError e) {
+        } catch (FormFillFailure e) {
             throw e;
-        } catch (IOException e) {
-            if (e instanceof BitbucketRequestException bbe) {
-                if (bbe.getHttpCode() == 401) {
-                    throw FormFillFailure.error(credentials == null
-                        ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
-                        : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
-                }
-            } else if (e.getCause() instanceof BitbucketRequestException cause && cause.getHttpCode() == 401) {
+        } catch (InterruptedException | IOException e) { // NOSONAR
+            BitbucketRequestException bbe = BitbucketApiUtils.unwrap(e);
+            if (bbe != null && bbe.getHttpCode() == 401) {
                 throw FormFillFailure.error(credentials == null
                     ? Messages.BitbucketSCMSource_UnauthorizedAnonymous(repoOwner)
                     : Messages.BitbucketSCMSource_UnauthorizedOwner(repoOwner)).withSelectionCleared();
             }
             logger.log(Level.SEVERE, e.getMessage(), e);
             throw FormFillFailure.error(e.getMessage());
-        } catch (Throwable e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            throw FormFillFailure.error(e.getMessage());
+        }
+    }
+
+    public static BitbucketRequestException unwrap(Exception e) {
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause instanceof BitbucketRequestException bbException) {
+                return bbException;
+            } else if (cause != cause.getCause()) { // avoid stackoverflow when exception contains itself as cause
+                cause = cause.getCause();
+            } else {
+                break;
+            }
+        }
+        return null;
+    }
+
+    public static HttpHost toHttpHost(String url) {
+        try {
+            // it's needed because the serverURL can contains a context root different than '/' and the HttpHost must contains only schema, host and port
+            URL tmp = new URL(url);
+            String schema = tmp.getProtocol() == null ? "http" : tmp.getProtocol();
+            return new HttpHost(schema, tmp.getHost(), tmp.getPort());
+        } catch (MalformedURLException e) {
+        }
+        try {
+            return HttpHost.create(url);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid URL " + url, e);
         }
     }
 

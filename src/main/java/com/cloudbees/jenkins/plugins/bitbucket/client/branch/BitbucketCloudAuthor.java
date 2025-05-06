@@ -23,6 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.branch;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 /**
  * Represents the author information given by Bitbucket Cloud.
  *
@@ -31,6 +35,11 @@ package com.cloudbees.jenkins.plugins.bitbucket.client.branch;
  */
 public class BitbucketCloudAuthor {
     private String raw;
+
+    @JsonCreator
+    public BitbucketCloudAuthor(@NonNull @JsonProperty("raw") String raw) {
+        this.raw = raw;
+    }
 
     /**
      * Returns the raw author string provided by the commit.

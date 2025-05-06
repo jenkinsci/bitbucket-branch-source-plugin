@@ -23,16 +23,19 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource.DescriptorImpl;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.FallbackToOtherRepositoryGitSCMExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.SCMUtils;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
@@ -43,7 +46,11 @@ import hudson.Util;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.BitbucketServer;
 import hudson.plugins.git.browser.BitbucketWeb;
+import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.plugins.git.MergeWithGitSCMExtension;
 import jenkins.scm.api.SCMHead;
@@ -51,7 +58,7 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.TagSCMHead;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A {@link GitSCMBuilder} specialized for bitbucket.
@@ -59,6 +66,7 @@ import org.apache.commons.lang.StringUtils;
  * @since 2.2.0
  */
 public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder> {
+    private static final Logger logger = Logger.getLogger(BitbucketGitSCMBuilder.class.getName());
 
     /**
      * The {@link BitbucketSCMSource} who's {@link BitbucketSCMSource#getOwner()} can be used as the context for
@@ -168,7 +176,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
                 scmSource.getServerUrl(),
                 scmSource.getOwner(),
-                DescriptorImpl.SAME.equals(scmSource.getCheckoutCredentialsId()) ? credentialsId : scmSource.getCheckoutCredentialsId(),
+                credentialsId,
                 StandardCredentials.class
             );
 
@@ -209,7 +217,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         return this;
     }
 
-    private void withPullRequestRemote(PullRequestSCMHead head, String headName) {
+    private void withPullRequestRemote(PullRequestSCMHead head, String headName) { // NOSONAR
         String scmSourceRepoOwner = scmSource.getRepoOwner();
         String scmSourceRepository = scmSource.getRepository();
         String pullRequestRepoOwner = head.getRepoOwner();
@@ -225,21 +233,26 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             && revision instanceof PullRequestSCMRevision;
         String targetBranch = head.getTarget().getName();
         String branchName = head.getBranchName();
+        boolean scmCloud = BitbucketApiUtils.isCloud(scmSource.getServerUrl());
         if (prFromTargetRepository) {
-            withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + branchName);
+            if (head.getBranchType() == PullRequestBranchType.TAG) {
+                withRefSpec("+refs/tags/" + branchName + ":refs/remotes/@{remote}/" + branchName); // NOSONAR
+            } else {
+                withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + branchName); // NOSONAR
+            }
             if (cloneFromMirror) {
-                PullRequestSCMRevision pullRequestSCMRevision = (PullRequestSCMRevision) revision;
+                PullRequestSCMRevision prRevision = (PullRequestSCMRevision) revision;
                 String primaryRemoteName = remoteName().equals("primary") ? "primary-primary" : "primary";
                 String cloneLink = getCloneLink(primaryCloneLinks);
                 List<BranchWithHash> branchWithHashes;
                 if (checkoutStrategy == ChangeRequestCheckoutStrategy.MERGE) {
                     branchWithHashes = List.of(
-                        new BranchWithHash(branchName, pullRequestSCMRevision.getPull().getHash()),
-                        new BranchWithHash(targetBranch, pullRequestSCMRevision.getTargetImpl().getHash())
+                        new BranchWithHash(branchName, SCMUtils.getHash(prRevision.getPull())),
+                        new BranchWithHash(targetBranch, SCMUtils.getHash(prRevision))
                     );
                 } else {
                     branchWithHashes = List.of(
-                        new BranchWithHash(branchName, pullRequestSCMRevision.getPull().getHash())
+                        new BranchWithHash(branchName, SCMUtils.getHash(prRevision.getPull()))
                     );
                 }
                 withExtension(new FallbackToOtherRepositoryGitSCMExtension(cloneLink, primaryRemoteName, branchWithHashes));
@@ -248,7 +261,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
                 withPrimaryRemote();
             }
         } else {
-            if (scmSource.isCloud()) {
+            if (scmCloud) {
                 withRefSpec("+refs/heads/" + branchName + ":refs/remotes/@{remote}/" + headName);
                 String cloneLink = getCloudRepositoryUri(pullRequestRepoOwner, pullRequestRepository);
                 withRemote(cloneLink);
@@ -259,11 +272,9 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             }
         }
         if (head.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-            String hash = revision instanceof PullRequestSCMRevision
-                ? ((PullRequestSCMRevision) revision).getTargetImpl().getHash()
-                : null;
+            String hash = revision instanceof PullRequestSCMRevision prRevision ? SCMUtils.getHash(prRevision) : null;
             String refSpec = "+refs/heads/" + targetBranch + ":refs/remotes/@{remote}/" + targetBranch;
-            if (!prFromTargetRepository && scmSource.isCloud()) {
+            if (!prFromTargetRepository && scmCloud) {
                 String upstreamRemoteName = remoteName().equals("upstream") ? "upstream-upstream" : "upstream";
                 withAdditionalRemote(upstreamRemoteName, getCloneLink(primaryCloneLinks), refSpec);
                 withExtension(new MergeWithGitSCMExtension("remotes/" + upstreamRemoteName + "/" + targetBranch, hash));
@@ -275,7 +286,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     }
 
     @NonNull
-    public String getCloudRepositoryUri(@NonNull String owner, @NonNull String repository) {
+    private String getCloudRepositoryUri(@NonNull String owner, @NonNull String repository) {
         switch (protocol) {
             case HTTP:
                 return "https://bitbucket.org/" + owner + "/" + repository + ".git";
@@ -318,7 +329,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         return cloneLinks.stream()
             .filter(link -> protocol.matches(link.getName()))
             .findAny()
-            .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol))
+            .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol + ". Did you disabled the protocol on Bitbucket Data Center configuration?"))
             .getHref();
     }
 
@@ -335,7 +346,8 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             if (head instanceof PullRequestSCMHead prHead) {
                 withHead(new SCMHead(prHead.getBranchName()));
                 if (rev instanceof PullRequestSCMRevision prRev) {
-                    withRevision(prRev.getPull());
+                    SCMRevision revision = resolvePullRequestRevision(prHead, prRev);
+                    withRevision(revision);
                 }
             }
             return super.build();
@@ -343,5 +355,23 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             withHead(head);
             withRevision(rev);
         }
+    }
+
+    @NonNull
+    private SCMRevision resolvePullRequestRevision(PullRequestSCMHead prHead, PullRequestSCMRevision prRev) {
+        SCMRevision revision = prRev.getPull();
+        String hash = SCMUtils.getHash(revision);
+        if (hash != null && StringUtils.length(hash) != 40) { // JENKINS-75555
+            try (BitbucketApi client = scmSource.buildBitbucketClient(prHead)) {
+                BitbucketCommit commit = client.resolveCommit(hash);
+                if (commit != null) {
+                    revision = new AbstractGitSCMSource.SCMRevisionImpl(prHead, commit.getHash());
+                }
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Can not retrieve commit for hash " + hash, e);
+                throw new RuntimeException(e);
+            }
+        }
+        return revision;
     }
 }
