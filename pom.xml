@@ -29,10 +29,8 @@
     <revision>935.0.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
-    <jenkins.baseline>2.479</jenkins.baseline>
-    <!--jenkins.version>${jenkins.baseline}.1</jenkins.version-->
-    <!-- REMOVE -->
-    <jenkins.version>2.495</jenkins.version>
+    <jenkins.baseline>2.504</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
     <hpi.compatibleSinceVersion>935.0.0</hpi.compatibleSinceVersion>
     <tagNameFormat>@{project.version}</tagNameFormat>
     <!-- because eclipse generate a JUnit5 run configuration with placeholder not replaced in the jvm argument section! -->
@@ -70,7 +68,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>4136.vca_c3202a_7fd1</version>
+        <version>4710.v016f0a_07e34d</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
