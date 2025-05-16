@@ -35,8 +35,6 @@
         <!-- Jenkins.MANAGE is still in Beta -->
         <useBeta>true</useBeta>
         <tagNameFormat>@{project.version}</tagNameFormat>
-        <!-- because eclipse generate a JUnit5 run configuration with placeholder not replaced in the jvm argument section! -->
-        <surefire.forkNumber>1</surefire.forkNumber>
     </properties>
 
     <developers>
@@ -259,4 +257,19 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>eclipse</id>
+            <activation>
+                <property>
+                    <name>m2e.version</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- because eclipse generate a JUnit5 run configuration with placeholder not replaced in the jvm argument section! -->
+                <surefire.forkNumber>1</surefire.forkNumber>
+                <jenkins.javaAgent />
+            </properties>
+        </profile>
+    </profiles>
 </project>

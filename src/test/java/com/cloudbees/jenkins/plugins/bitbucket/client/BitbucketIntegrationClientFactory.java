@@ -32,6 +32,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Stack;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -74,11 +77,51 @@ public class BitbucketIntegrationClientFactory {
     }
 
     public interface IRequestAudit {
-        default void request(HttpRequest request) {
-            // mockito audit
+        void registerRequest(HttpRequest request);
+
+        HttpRequest lastRequest();
+
+        CompletableFuture<HttpRequest> waitRequest(Predicate<HttpRequest> predicate);
+
+        CompletableFuture<HttpRequest> waitRequest();
+    }
+
+    private static class RequestAudit implements IRequestAudit {
+        private CompletableFuture<HttpRequest> waitingRequestTask = null;
+        private Stack<HttpRequest> requests = new Stack<>();
+        private Predicate<HttpRequest> requestPredicate = req -> true;
+
+        @Override
+        public void registerRequest(HttpRequest request) {
+            requests.push(request);
+            if (waitingRequestTask != null && requestPredicate != null && requestPredicate.test(request)) {
+                waitingRequestTask.complete(request);
+            }
         }
 
-        IRequestAudit getAudit();
+        @Override
+        public CompletableFuture<HttpRequest> waitRequest(Predicate<HttpRequest> predicate) {
+            if (waitingRequestTask != null) {
+                throw new IllegalStateException("There is already someone waiting for a request");
+            }
+            this.requestPredicate = predicate;
+            return waitRequest();
+        }
+
+        @Override
+        public CompletableFuture<HttpRequest> waitRequest() {
+            if (waitingRequestTask != null) {
+                throw new IllegalStateException("There is already someone waiting for a request");
+            }
+            waitingRequestTask = new CompletableFuture<HttpRequest>();
+            return waitingRequestTask;
+        }
+
+        @Override
+        public HttpRequest lastRequest() {
+            return requests.pop();
+        }
+
     }
 
     public static BitbucketApi getClient(String payloadRootPath, String serverURL, String owner, String repositoryName) {
@@ -109,13 +152,13 @@ public class BitbucketIntegrationClientFactory {
             } else {
                 this.payloadRootPath = payloadRootPath;
             }
-            this.audit = mock(IRequestAudit.class);
+            this.audit = new RequestAudit();
         }
 
         @Override
         protected ClassicHttpResponse executeMethod(HttpUriRequest httpMethod) throws IOException {
             String requestURI = httpMethod.getRequestUri();
-            audit.request(httpMethod);
+            audit.registerRequest(httpMethod);
 
             String payloadPath = requestURI.substring(requestURI.indexOf("/rest/"))
                     .replace("/rest/api/", "")
@@ -158,7 +201,7 @@ public class BitbucketIntegrationClientFactory {
             } else {
                 this.payloadRootPath = payloadRootPath;
             }
-            this.audit = mock(IRequestAudit.class);
+            this.audit = new RequestAudit();
         }
 
         @Override
@@ -168,9 +211,9 @@ public class BitbucketIntegrationClientFactory {
                 when(client.executeOpen(any(HttpHost.class), any(ClassicHttpRequest.class), any(HttpContext.class))).thenAnswer(new Answer<ClassicHttpResponse>() {
                     @Override
                     public ClassicHttpResponse answer(InvocationOnMock invocation) throws Throwable {
-                        HttpRequest httpMethod = invocation.getArgument(1);
-                        String uri = httpMethod.getRequestUri();
-                        audit.request(httpMethod);
+                        HttpRequest request = invocation.getArgument(1);
+                        String uri = request.getRequestUri();
+                        audit.registerRequest(request);
 
                         String path = uri.replace(API_ENDPOINT, "");
                         if (path.startsWith("/")) {

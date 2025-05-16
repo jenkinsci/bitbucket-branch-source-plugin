@@ -1,0 +1,24 @@
+{
+    "size": 1,
+    "limit": 25,
+    "isLastPage": true,
+    "values": [
+        {
+            "id": 2,
+            "name": "Jenkins hooks",
+            "createdDate": 1747578077061,
+            "updatedDate": 1747578077061,
+            "events": [
+                "repo:refs_changed"
+            ],
+            "configuration": {
+                "createdBy": "bitbucket"
+            },
+            "url": "https://jenkins.example.com/bitbucket-scmsource-hook/notify/?server_url=http%3A%2F%2Flocalhost%3A7990%2Fbitbucket",
+            "active": true,
+            "scopeType": "repository",
+            "sslVerificationRequired": true
+        }
+    ],
+    "start": 0
+}

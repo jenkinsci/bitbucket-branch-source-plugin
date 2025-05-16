@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
@@ -36,9 +37,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * {@link Descriptor} base class for {@link AbstractBitbucketEndpoint} subclasses.
@@ -49,12 +52,14 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
     /**
      * Stapler form completion.
      *
-     * @param serverUrl the server URL.
+     * @param credentialsId selected credentials.
+     * @param serverURL the server URL.
      * @return the available credentials.
      */
     @Restricted(NoExternalUse.class) // stapler
-    @SuppressWarnings("unused")
-    public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl) {
+    @RequirePOST
+    public ListBoxModel doFillCredentialsIdItems(@QueryParameter(fixEmpty = true) String credentialsId,
+                                                 @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
         Jenkins jenkins = Jenkins.get();
         jenkins.checkPermission(Jenkins.MANAGE);
         StandardListBoxModel result = new StandardListBoxModel();
@@ -62,14 +67,41 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
                 ACL.SYSTEM2,
                 jenkins,
                 StandardCredentials.class,
-                URIRequirementBuilder.fromUri(serverUrl).build(),
-                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverUrl))
-        );
+                URIRequirementBuilder.fromUri(serverURL).build(),
+                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL)));
+        if (credentialsId != null) {
+            result.includeCurrentValue(credentialsId);
+        }
+        return result;
+    }
+
+    /**
+     * Stapler form completion.
+     *
+     * @param hookSignatureCredentialsId selected hook signature credentials.
+     * @param serverURL the server URL.
+     * @return the available credentials.
+     */
+    @Restricted(NoExternalUse.class) // stapler
+    @RequirePOST
+    public ListBoxModel doFillHookSignatureCredentialsIdItems(@QueryParameter(fixEmpty = true) String hookSignatureCredentialsId,
+                                                              @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
+        Jenkins jenkins = Jenkins.get();
+        jenkins.checkPermission(Jenkins.MANAGE);
+        StandardListBoxModel result = new StandardListBoxModel();
+        result.includeMatchingAs(ACL.SYSTEM2,
+                jenkins,
+                StringCredentials.class,
+                URIRequirementBuilder.fromUri(serverURL).build(),
+                CredentialsMatchers.always());
+        if (hookSignatureCredentialsId != null) {
+            result.includeCurrentValue(hookSignatureCredentialsId);
+        }
         return result;
     }
 
     @Restricted(NoExternalUse.class)
-    @SuppressWarnings("unused") // stapler
+    @RequirePOST
     public static FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String value) {
         String url = Util.fixEmptyAndTrim(value);
         if (url == null) {

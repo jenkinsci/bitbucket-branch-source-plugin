@@ -28,7 +28,7 @@ IMPORTANT: This plugin officially supports versions of Bitbucket Data Center not
 [id=bitbucket-data_center]
 == Bitbucket Data Center compatibility
 
-_Bitbucket Data Cebter_ is supported but does no longer support lightweight checkout for pull requests when merge strategy is used for build.
+_Bitbucket Data Center_ is supported but does no longer support lightweight checkout for pull requests when merge strategy is used for build.
 
 IMPORTANT: In order to have the pull request process working the "Call Changes api" option must be
 enabled in _Manage Jenkins_ » _Configure System_
@@ -45,20 +45,20 @@ Follow these steps to create a multi-branch project with Bitbucket as a source:
 . Create the multi-branch project. This step depends on which multi-branch plugin is installed.
 For example, "Multibranch Pipeline" should be available as a project type if Pipeline Multibranch plugin is installed.
 +
-image::images/screenshot-1.png[scaledwidth=90%]
+image::images/screenshot-1.png
 
 . Select "Bitbucket" as _Branch Source_
 +
-image::images/screenshot-2.png[scaledwidth=90%]
+image::images/screenshot-2.png
 
 . Set credentials to access Bitbucket API and checkout sources (see "Credentials configuration" section below).
 . Set the repository owner and name that will be monitored for branches and pull requests.
 +
-image::images/screenshot-4.png[scaledwidth=90%]
+image::images/screenshot-4.png
 
 . Finally, save the project. The initial indexing process will run and create projects for branches and pull requests.
 +
-image::images/screenshot-5.png[scaledwidth=90%]
+image::images/screenshot-5.png
 
 [id=bitbucket-scm-navigator]
 == Organization folders
@@ -76,12 +76,12 @@ image::images/screenshot-6.png[scaledwidth=70%]
 .. A Bitbucket Data Center Project ID: all repositories in the project are imported as Multibranch projects. *Note that the project ID needs to be used instead of the project name*.
 .. A regular username: all repositories which the username is owner of are imported.
 +
-image::images/screenshot-8.png[scaledwidth=90%]
+image::images/screenshot-8.png
 
 . Save the configuration. The initial indexing process starts. Once it finishes, a Multibranch
 project is created for each repository.
 +
-image::images/screenshot-9.png[scaledwidth=90%]
+image::images/screenshot-9.png
 
 [id=bitbucket-avatar]
 == Avatar
@@ -89,7 +89,7 @@ image::images/screenshot-9.png[scaledwidth=90%]
 This plugin have customized icon designed for the "Organization Folder" image:/src/main/webapp/images/bitbucket-logo.svg[icon,20,20], for "Multibranch Pipeline", for Single Repository image:/src/main/webapp/images/bitbucket-repository-git.svg[icon,20,20] and Folder image:/src/main/webapp/images/bitbucket-scmnavigator.svg[icon,20,20] project type. This is the default behaviour of the plugin starting from version 935.
 It is possible associate the Bitbucket avatar to the project item selecting the "Show Bitbucket avatar images" behaviour in the project configuration.
 
-image::images/screenshot-19.png[scaledwidth=90%]
+image::images/screenshot-19.png
 
 The supported avatars are:
 
@@ -121,26 +121,38 @@ For Bitbucket Data Center only it is possible chose which webhooks implementatio
 
 - Plugin implementation relies on the configuration available via specific APIs provided by the https://marketplace.atlassian.com/apps/1215474/post-webhooks-for-bitbucket?tab=overview&hosting=datacenter[Post Webhooks for Bitbucket] plugin itself. To get it worked plugin must be already pre-installed on the server instance. This provider allows custom settings managed by the _ignore committers_ trait. _Note: This specific implementation will be moved to an individual repository as soon as https://issues.jenkins.io/browse/JENKINS-74913[JENKINS-74913] is implemented._
 
-image::images/screenshot-14.png[scaledwidth=90%]
+image::images/screenshot-14.png
 
-For both Bitbucket _Multibranch Pipelines_ and _Organization folders_ there is an "Override hook management" behavior
+For both Bitbucket _Multibranch Pipelines_ and _Organization folders_ there is an "Override hook management" behaviour
 to opt out or adjust system-wide settings.
 
-image::images/screenshot-18.png[scaledwidth=90%]
+image::images/screenshot-18.png
 
 IMPORTANT: In order to have the auto-registering process working fine the Jenkins base URL must be
 properly configured in _Manage Jenkins_ » _System_
+
+=== Webhooks signature
+
+Once Jenkins is configured to receive payloads, it will listen for any delivery that's sent to the endpoint you configured. For security reasons, you should only process deliveries from Bitbucket.
+To ensure your self-hosted server only processes deliveries from Bitbucket, you need to:
+* Create a secret token for a webhook
+* Enable hooks signature verification for the chosen Bitbucket Endpoints
+* Select the secret token create at point 1, only _String credentials_ are taken into account.
+
+Any incoming webhook payloads from that given endpoint will be validated against the configured token, to verify they are coming from the configured Bitbucket endpoint URL.
+
+image::images/screenshot-20.png
 
 [id=bitbucket-creds-config]
 == Credentials configuration
 
 The plugin (for both _Bitbucket multibranch pipelines_ and _Bitbucket Workspace/Project organization folders_) requires a credential to be configured to scan branches. It will also be the default credential to use when checking out sources.
 
-image::images/screenshot-3.png[scaledwidth=90%]
+image::images/screenshot-3.png
 
-As the `Checkout Credential` configuration was removed in commit (link:https://github.com/jenkinsci/bitbucket-branch-source-plugin/commit/a4c6bf39b83168ff62fc622bd4084ef90cf810c0[a4c6bf3]), you can alternatively add a `Checkout over SSH` behavior in the configuration of Behaviours, so that to configure a seperate SSH credential for checking out sources.
+As the `Checkout Credential` configuration was removed in commit (link:https://github.com/jenkinsci/bitbucket-branch-source-plugin/commit/a4c6bf39b83168ff62fc622bd4084ef90cf810c0[a4c6bf3]), you can alternatively add a `Checkout over SSH` behavior in the configuration of Behaviours, so that to configure a separate SSH credential for checking out sources.
 
-image::images/screenshot-7.png[scaledwidth=90%]
+image::images/screenshot-7.png
 
 === Access Token
 
@@ -154,13 +166,13 @@ First, create a new _access token_ in Bitbucket as instructed in one of the foll
 
 At least allow _read_ access for repositories. If you want the plugin to install the webhooks, allow _Read and write_ access for Webhooks.
 
-image::images/screenshot-16.png[scaledwidth=90%]
+image::images/screenshot-16.png
 
 Then create a new _Secret text_ credential in Jenkins, enter the Bitbucket token generated in the previous steps in the _Secret_ field.
 
 If you want be able to perform git push operation from CLI than you have to setup _write_ access for repositories. Than configure the _Custom user name/e-mail address_ trait with the Repository Access Token email generated when you created the Repository Access Token (for example, 52c16467c5f19101ff2061cc@bots.bitbucket.org).
 
-image::images/screenshot-17.png[scaledwidth=90%]
+image::images/screenshot-17.png
 
 === Personal Access Token
 
@@ -190,13 +202,13 @@ The plugin can make use of OAuth credentials (Bitbucket Cloud only) instead of t
 First create a new _OAuth consumer_ in Bitbucket as instructed in the https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html[Bitbucket OAuth Documentation].
 Don't forget to check _This is a private consumer_ and at least allow _read_ access for repositories and pull requests. If you want the plugin to install the webhooks, also allow _read_ and _write_ access for webhooks.
 
-image::images/screenshot-10.png[scaledwidth=90%]
+image::images/screenshot-10.png
 
 Then create new _Username with password credentials_ in Jenkins, enter the Bitbucket OAuth consumer key in the _Username_ field and the Bitbucket OAuth consumer secret in the _Password_ field.
 
-image::images/screenshot-11.png[scaledwidth=90%]
+image::images/screenshot-11.png
 
-image::images/screenshot-12.png[scaledwidth=90%]
+image::images/screenshot-12.png
 
 [id=bitbucket-mirror-support]
 == Mirror support
@@ -211,16 +223,16 @@ The mirror is not used in the following cases:
 
 Cloning from the mirror can only be used with native web-hooks since plugin web-hooks don't provide a mirror identifier.
 
-For branches and tags, the mirror sync event is used. Thus, at cloning time, the mirror is already synchronized. However, in the case of a pull request event, there is no such guarantee. The plugin optimistically assumes that the mirror is synced and the required commit hashes exist in the mirrored repository at cloning time. If the plugin can't find the required hashes, it falls back to the primary repository.
+For branches and tags, the mirror sync event is used. Thus, at cloning time, the mirror is already synchronised. However, in the case of a pull request event, there is no such guarantee. The plugin optimistically assumes that the mirror is synced and the required commit hashes exist in the mirrored repository at cloning time. If the plugin can't find the required hashes, it falls back to the primary repository.
 
-image::images/screenshot-13.png[scaledwidth=90%]
+image::images/screenshot-13.png
 
 [id=bitbucket-build-status]
 == Bitbucket build status
 
 When a new job build starts, the plugin send notifications to Bitbucket about the build status. An "In progress" notification is sent after complete the git checkout, another notification is sent at the end of the build, the sent value depends by the build result and the configuration given by the trait.
 
-image::images/screenshot-15.png[scaledwidth=90%]
+image::images/screenshot-15.png
 
 Follow a summary of all possible values:
 
@@ -272,8 +284,8 @@ This plugin contribute to the enviroment the following variables:
 
 These variables were added to allow users to easily integrate calls to Bitbucket's REST APIs into their own pipelines to implement own business logics.
 
-NOTE: Since variables are contributed through a GitSCMExtension they will be avaiable only after performed the checkout scm step.
-For the same reason existing projects must be updated with a "Scan Organization Folder Now" or "Scan Multibranch Project Now" action to persisnt the new git extension in the job configuration.
+NOTE: Since variables are contributed through a GitSCMExtension they will be available only after performed the checkout scm step.
+For the same reason existing projects must be updated with a "Scan Organization Folder Now" or "Scan Multibranch Project Now" action to persist the new git extension in the job configuration.
 
 [id=bitbucket-misc-config]
 == Miscellaneous configuration
@@ -297,7 +309,7 @@ To change this amount of time (default is 300 seconds), add the system property 
 By default, the plugin triggers *a full branch indexing* when a push event contains *empty* changes. This may happen on various scenario, mainly in Bitbucket Data Center, such as:
 
 * When manually merging remote **Open** pull requests. This particular scenario produces 2 events and cause duplicated builds.
-* For a fork, when link:https://confluence.atlassian.com/bitbucketserver/keeping-forks-synchronized-776639961.html[Auto-Sync] is on and a branch cannot be synchronized
+* For a fork, when link:https://confluence.atlassian.com/bitbucketserver/keeping-forks-synchronized-776639961.html[Auto-Sync] is on and a branch cannot be synchronised
 * A link:http://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html#Eventpayload-Mirrorsynchronized[mirror:repo_synchronized] event with too many refs
 
 This behavior can be disabled by adding the system property `bitbucket.hooks.processor.scanOnEmptyChanges=false` on Jenkins startup.

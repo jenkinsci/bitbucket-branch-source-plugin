@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 
 /**
@@ -54,5 +55,16 @@ public interface BitbucketWebHook {
      * @return Bitbucket internal ID for this webhook (not required at creation time)
      */
     String getUuid();
+
+    /**
+     * Returns the secret used as the key to generate a HMAC digest value sent
+     * in the X-Hub-Signature header at delivery time.
+     *
+     * @return a secret
+     */
+    @Nullable
+    default String getSecret() {
+        return null;
+    }
 
 }

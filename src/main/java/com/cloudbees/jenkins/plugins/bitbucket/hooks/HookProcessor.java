@@ -67,9 +67,9 @@ public abstract class HookProcessor {
      * @param payload the hook payload
      * @param instanceType the Bitbucket type that called the hook
      * @param origin the origin of the event.
-     * @param serverUrl special value for native Bitbucket Server hooks which don't expose the server URL in the payload.
+     * @param serverURL special value for native Bitbucket Server hooks which don't expose the server URL in the payload.
      */
-    public void process(HookEventType type, String payload, BitbucketType instanceType, String origin, String serverUrl) {
+    public void process(HookEventType type, String payload, BitbucketType instanceType, String origin, String serverURL) {
         process(type, payload, instanceType, origin);
     }
 

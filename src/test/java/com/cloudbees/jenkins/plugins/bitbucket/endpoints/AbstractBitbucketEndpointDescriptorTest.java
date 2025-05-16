@@ -33,9 +33,11 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import java.util.Collections;
 import java.util.List;
 import org.hamcrest.Matchers;
+import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -63,7 +65,7 @@ public class AbstractBitbucketEndpointDescriptorTest {
                 Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
         ListBoxModel result =
-                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems("http://bitbucket.example.com");
+                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems(null, "http://bitbucket.example.com");
         assertThat(result, Matchers.hasSize(0));
     }
 
@@ -75,7 +77,19 @@ public class AbstractBitbucketEndpointDescriptorTest {
                 Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
         ListBoxModel result =
-                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems("http://bitbucket.org");
+                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems(null, "http://bitbucket.org");
+        assertThat(result, Matchers.hasSize(1));
+    }
+
+    @Test
+    public void given__cloud_HMAC_Credentials__when__listingForCloud__then__credentials() {
+        List<DomainSpecification> domainSpecifications = Collections.<DomainSpecification>singletonList(new HostnameSpecification("bitbucket.org", ""));
+        SystemCredentialsProvider.getInstance()
+            .setDomainCredentialsMap(Collections.singletonMap(new Domain("cloud", "bb cloud", domainSpecifications),
+                Collections.<Credentials>singletonList(new StringCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", Secret.fromString("pass")))));
+        ListBoxModel result = new Dummy(true, "dummy")
+                .getDescriptor()
+                .doFillHookSignatureCredentialsIdItems(null, "https://bitbucket.org");
         assertThat(result, Matchers.hasSize(1));
     }
 

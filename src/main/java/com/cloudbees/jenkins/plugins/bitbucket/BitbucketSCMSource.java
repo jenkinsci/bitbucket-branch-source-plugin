@@ -287,7 +287,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @DataBoundSetter
     public void setServerUrl(@CheckForNull String serverUrl) {
-        String url = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+        String url = BitbucketEndpointConfiguration.normalizeServerURL(serverUrl);
         if (url == null) {
             url = BitbucketEndpointConfiguration.get().getDefaultEndpoint().getServerUrl();
         }

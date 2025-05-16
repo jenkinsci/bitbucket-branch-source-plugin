@@ -34,6 +34,8 @@ public class BitbucketRepositoryHook implements BitbucketWebHook {
 
     private String url;
 
+    private String secret;
+
     private boolean active;
 
     private List<String> events;
@@ -81,6 +83,14 @@ public class BitbucketRepositoryHook implements BitbucketWebHook {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+    }
+
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
     }
 
 }
