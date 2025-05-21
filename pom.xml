@@ -29,11 +29,9 @@
         <revision>936.1.2</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
-        <jenkins.baseline>2.479</jenkins.baseline>
-        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+        <jenkins.baseline>2.504</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.1</jenkins.version>
         <hpi.compatibleSinceVersion>936.0.0</hpi.compatibleSinceVersion>
-        <!-- Jenkins.MANAGE is still in Beta -->
-        <useBeta>true</useBeta>
         <tagNameFormat>@{project.version}</tagNameFormat>
     </properties>
 
@@ -72,7 +70,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>4607.v67a_4791074d7</version>
+                <version>4710.v016f0a_07e34d</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
