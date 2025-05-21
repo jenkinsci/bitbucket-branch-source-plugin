@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
-import com.cloudbees.jenkins.plugins.bitbucket.trait.PublicRepoPullRequestFilterTrait;
 import jenkins.scm.api.SCMHeadObserver;
 import org.junit.ClassRule;
 import org.junit.Test;

@@ -23,13 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketGitSCMBuilder;
 import com.cloudbees.jenkins.plugins.bitbucket.Messages;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -48,20 +44,16 @@ public class ShowBitbucketAvatarTrait extends SCMSourceTrait {
 
     @Symbol("showBitbucketAvatar")
     @Extension
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
-
-        @Override
-        public String getDisplayName() {
-            return Messages.ShowBitbucketAvatarTrait_displayName();
-        }
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableToBuilder(@SuppressWarnings("rawtypes") @NonNull Class<? extends SCMBuilder> builderClass) {
-            return BitbucketGitSCMBuilder.class.isAssignableFrom(builderClass);
+        public String getDisplayName() {
+            return Messages.ShowBitbucketAvatarTrait_displayName();
         }
+
     }
 
 }

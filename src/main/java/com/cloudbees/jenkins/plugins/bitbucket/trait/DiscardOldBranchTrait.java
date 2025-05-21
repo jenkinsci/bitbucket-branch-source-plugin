@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketGitSCMBuilder;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
@@ -35,12 +34,10 @@ import hudson.util.FormValidation;
 import java.io.IOException;
 import java.time.LocalDate;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMHeadFilter;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -109,11 +106,11 @@ public class DiscardOldBranchTrait extends SCMSourceTrait {
      */
     @Symbol("bitbucketDiscardOldBranch")
     @Extension
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         public FormValidation doCheckKeepForDays(@QueryParameter final int keepForDays) {
             if (keepForDays <= 0) {
-                return FormValidation.error("Invalid value. Days must be greater than 0");
+                return FormValidation.error(Messages.DiscardOldBranchTrait_invalidDays());
             }
             return FormValidation.ok();
         }
@@ -123,13 +120,6 @@ public class DiscardOldBranchTrait extends SCMSourceTrait {
             return Messages.DiscardOldBranchTrait_displayName();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isApplicableToBuilder(@SuppressWarnings("rawtypes") @NonNull Class<? extends SCMBuilder> builderClass) {
-            return BitbucketGitSCMBuilder.class.isAssignableFrom(builderClass);
-        }
     }
 
 }

@@ -31,10 +31,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -96,7 +94,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      */
     @Symbol("bitbucketWebhookRegistration")
     @Extension
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         /**
          * {@inheritDoc}
@@ -107,28 +105,11 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
         }
 
         /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSourceContext> getContextClass() {
-            return BitbucketSCMSourceContext.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSource> getSourceClass() {
-            return BitbucketSCMSource.class;
-        }
-
-        /**
          * Form completion.
          *
          * @return the mode options.
          */
         @Restricted(NoExternalUse.class)
-        @SuppressWarnings("unused") // stapler form binding
         public ListBoxModel doFillModeItems() {
             ListBoxModel result = new ListBoxModel();
             result.add(Messages.WebhookRegistrationTrait_disableHook(), WebhookRegistration.DISABLE.toString());

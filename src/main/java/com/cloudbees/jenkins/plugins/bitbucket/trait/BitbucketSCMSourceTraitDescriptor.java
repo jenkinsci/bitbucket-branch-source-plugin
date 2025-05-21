@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2025, Falco Nikolas
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,52 +23,58 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketGitSCMBuilder;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
-import com.cloudbees.jenkins.plugins.bitbucket.Messages;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Extension;
+import hudson.model.Descriptor;
+import hudson.plugins.git.GitSCM;
+import hudson.scm.SCM;
+import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.impl.trait.Discovery;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
+import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 
 /**
- * A {@link SCMSourceTrait} that suppresses all pull requests if the repository is public.
+ * Abstract base class for {@link Descriptor} of {@link SCMSourceTrait}
+ * implementations specific for bitbucket.
  *
- * @since 2.2.0
+ * @since 936.3.0
  */
-public class PublicRepoPullRequestFilterTrait extends SCMSourceTrait {
+abstract class BitbucketSCMSourceTraitDescriptor extends SCMSourceTraitDescriptor {
+
     /**
-     * Constructor.
+     * {@inheritDoc}
      */
-    @DataBoundConstructor
-    public PublicRepoPullRequestFilterTrait() {
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Class<? extends SCMSourceContext> getContextClass() {
+        return BitbucketSCMSourceContext.class;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((BitbucketSCMSourceContext) context).skipPublicPRs(true);
+    public Class<? extends SCMSource> getSourceClass() {
+        return BitbucketSCMSource.class;
     }
 
     /**
-     * Our descriptor.
+     * {@inheritDoc}
      */
-    @Symbol("bitbucketPublicRepoPullRequestFilter")
-    @Extension
-    @Discovery
-    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
-        /**
-         * {@inheritDoc}
-         */
-        @NonNull
-        @Override
-        public String getDisplayName() {
-            return Messages.PublicRepoPullRequestFilterTrait_displayName();
-        }
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Class<? extends SCMBuilder> getBuilderClass() {
+        return BitbucketGitSCMBuilder.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<? extends SCM> getScmClass() {
+        return GitSCM.class;
     }
 
 }

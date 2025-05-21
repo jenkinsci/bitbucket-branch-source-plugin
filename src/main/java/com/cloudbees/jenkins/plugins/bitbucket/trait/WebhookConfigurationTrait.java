@@ -29,10 +29,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookConfiguration;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -90,7 +88,7 @@ public class WebhookConfigurationTrait extends SCMSourceTrait {
      */
     @Symbol("bitbucketWebhookConfiguration")
     @Extension
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         /**
          * {@inheritDoc}
@@ -100,20 +98,5 @@ public class WebhookConfigurationTrait extends SCMSourceTrait {
             return Messages.WebhookConfigurationTrait_displayName();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSourceContext> getContextClass() {
-            return BitbucketSCMSourceContext.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSource> getSourceClass() {
-            return BitbucketSCMSource.class;
-        }
     }
 }
