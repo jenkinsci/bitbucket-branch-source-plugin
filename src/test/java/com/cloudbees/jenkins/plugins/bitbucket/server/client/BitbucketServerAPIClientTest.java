@@ -27,9 +27,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
 import hudson.ProxyConfiguration;
@@ -57,6 +62,7 @@ import org.mockito.MockedStatic;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
@@ -263,7 +269,7 @@ class BitbucketServerAPIClientTest {
         j.jenkins.setProxy(proxyConfiguration);
 
         AtomicReference<HttpClientBuilder> builderReference = new AtomicReference<>();
-        try(BitbucketApi client = new BitbucketServerAPIClient(serverURL, "amuniz", "test-repos", mock(BitbucketAuthenticator.class), false, BitbucketServerWebhookImplementation.NATIVE) {
+        try(BitbucketApi client = new BitbucketServerAPIClient(serverURL, "amuniz", "test-repos", mock(BitbucketUsernamePasswordAuthenticator.class), false, BitbucketServerWebhookImplementation.NATIVE) {
             @Override
             protected void setClientProxyParams(HttpClientBuilder builder) {
                 builderReference.set(spy(builder));
@@ -275,4 +281,13 @@ class BitbucketServerAPIClientTest {
         verify(builderReference.get(), never()).setProxy(any(HttpHost.class));
     }
 
+    @Test
+    void test_supported_auth() throws Exception {
+        try (BitbucketApi client = new BitbucketServerAPIClient("http://localhost:7990/bitbucket", "owner", "test-repos", mock(BitbucketUsernamePasswordAuthenticator.class), false)) {}
+        try (BitbucketApi client = new BitbucketServerAPIClient("http://localhost:7990/bitbucket", "owner", "test-repos", mock(BitbucketClientCertificateAuthenticator.class), false)) {}
+        try (BitbucketApi client = new BitbucketServerAPIClient("http://localhost:7990/bitbucket", "owner", "test-repos", mock(BitbucketAccessTokenAuthenticator.class), false)) {}
+
+        assertThatThrownBy(() -> new BitbucketServerAPIClient("http://localhost:7990/bitbucket", "owner", "test-repos", mock(BitbucketOAuthAuthenticator.class), false))
+            .isInstanceOf(BitbucketException.class);
+    }
 }

@@ -156,6 +156,11 @@ public class BitbucketIntegrationClientFactory {
         }
 
         @Override
+        protected boolean isSupportedAuthenticator(BitbucketAuthenticator authenticator) {
+            return true;
+        }
+
+        @Override
         protected ClassicHttpResponse executeMethod(HttpUriRequest httpMethod) throws IOException {
             String requestURI = httpMethod.getRequestUri();
             audit.registerRequest(httpMethod);
@@ -202,6 +207,11 @@ public class BitbucketIntegrationClientFactory {
                 this.payloadRootPath = payloadRootPath;
             }
             this.audit = new RequestAudit();
+        }
+
+        @Override
+        protected boolean isSupportedAuthenticator(BitbucketAuthenticator authenticator) {
+            return true;
         }
 
         @Override
