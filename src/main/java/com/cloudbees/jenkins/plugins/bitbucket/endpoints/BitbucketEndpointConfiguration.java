@@ -291,6 +291,20 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      *
      * @param serverURL the server URL.
      * @return the normalized server URL.
+     * @deprecated
+     * @see #normalizeServerURL
+     */
+    @CheckForNull
+    @Deprecated
+    public static String normalizeServerUrl(@CheckForNull String serverURL) {
+        return normalizeServerURL(serverURL);
+    }
+
+    /**
+     * Fix a server URL.
+     *
+     * @param serverURL the server URL.
+     * @return the normalized server URL.
      */
     @CheckForNull
     public static String normalizeServerURL(@CheckForNull String serverURL) {
