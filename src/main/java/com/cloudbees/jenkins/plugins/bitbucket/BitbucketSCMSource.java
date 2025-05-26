@@ -1061,7 +1061,7 @@ public class BitbucketSCMSource extends SCMSource {
                 return FormValidation.error(
                     "Unauthorized to validate Server URL"); // not supposed to be seeing this form
             }
-            if (BitbucketEndpointConfiguration.get().findEndpoint(value).isPresent()) {
+            if (!BitbucketEndpointConfiguration.get().findEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
             }
             return FormValidation.ok();

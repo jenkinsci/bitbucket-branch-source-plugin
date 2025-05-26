@@ -116,7 +116,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             public void doRun() {
                 try {
                     removeHooks(owner);
-                } catch (IOException | InterruptedException e) {
+                } catch (IOException e) {
                     LOGGER.log(Level.WARNING, "Could not deregister hooks for " + owner.getFullName(), e);
                 }
             }
@@ -185,7 +185,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
     }
 
-    private void removeHooks(SCMSourceOwner owner) throws IOException, InterruptedException {
+    private void removeHooks(SCMSourceOwner owner) throws IOException {
         List<BitbucketSCMSource> sources = getBitbucketSCMSources(owner);
         for (BitbucketSCMSource source : sources) {
             BitbucketApi bitbucket = bitbucketApiFor(source);
