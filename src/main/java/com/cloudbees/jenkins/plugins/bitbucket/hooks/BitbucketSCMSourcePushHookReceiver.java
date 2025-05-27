@@ -137,10 +137,10 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
                     return HttpResponses.error(HttpServletResponse.SC_FORBIDDEN, "Payload has not be signed, configure the webHook secret in Bitbucket as documented at https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc#webhooks-registering");
                 }
             } else if (req.getHeader("X-Hub-Signature") == null) {
-                LOGGER.log(Level.FINER, "Signature not configured for endpoint {}.", endpoint);
+                LOGGER.log(Level.FINER, "Signature not configured for endpoint {0}.", endpoint);
             }
         } else {
-            LOGGER.log(Level.INFO, "No bitbucket endpoint found for {} to verify the signature of incoming webhook.", serverURL);
+            LOGGER.log(Level.INFO, "No bitbucket endpoint found for {0} to verify the signature of incoming webhook.", serverURL);
         }
 
         HookProcessor hookProcessor = getHookProcessor(type);
@@ -150,7 +150,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
 
     @Nullable
     private HttpResponseException checkSignature(@NonNull StaplerRequest2 req, @NonNull String body, @NonNull AbstractBitbucketEndpoint endpoint) {
-        LOGGER.log(Level.FINE, "Payload endpoint host {}, request endpoint host {}", new Object[] { endpoint, req.getRemoteAddr() });
+        LOGGER.log(Level.FINE, "Payload endpoint host {0}, request endpoint host {1}", new Object[] { endpoint, req.getRemoteAddr() });
 
         StringCredentials signatureCredentials = endpoint.hookSignatureCredentials();
         if (signatureCredentials != null) {
@@ -178,7 +178,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             String hookId = req.getHeader("X-Hook-UUID");
             String requestId = ObjectUtils.firstNonNull(req.getHeader("X-Request-UUID"), req.getHeader("X-Request-Id"));
             String hookSignatureCredentialsId = endpoint.getHookSignatureCredentialsId();
-            LOGGER.log(Level.WARNING, "No credentials {} found to verify the signature of incoming webhook {} request {}", new Object[] { hookSignatureCredentialsId, hookId, requestId });
+            LOGGER.log(Level.WARNING, "No credentials {0} found to verify the signature of incoming webhook {1} request {2}", new Object[] { hookSignatureCredentialsId, hookId, requestId });
             return HttpResponses.error(HttpServletResponse.SC_FORBIDDEN, "No credentials " + hookSignatureCredentialsId + " found to verify the signature");
         }
         return null;
