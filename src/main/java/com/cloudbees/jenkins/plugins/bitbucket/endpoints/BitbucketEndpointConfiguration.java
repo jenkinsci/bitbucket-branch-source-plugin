@@ -97,7 +97,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     @Restricted(NoExternalUse.class) // only for plugin internal use.
     @NonNull
     public String readResolveServerUrl(@CheckForNull String bitbucketServerUrl) {
-        String serverUrl = normalizeServerUrl(bitbucketServerUrl);
+        String serverUrl = normalizeServerURL(bitbucketServerUrl);
         serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
         AbstractBitbucketEndpoint endpoint = findEndpoint(serverUrl).orElse(null);
         if (endpoint == null && ACL.SYSTEM2.equals(Jenkins.getAuthentication2())) {
@@ -194,14 +194,14 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @return {@code true} if the list of endpoints was modified
      */
     public synchronized boolean addEndpoint(@NonNull AbstractBitbucketEndpoint endpoint) {
-        List<AbstractBitbucketEndpoint> endpoints = new ArrayList<>(getEndpoints());
-        for (AbstractBitbucketEndpoint ep : endpoints) {
+        List<AbstractBitbucketEndpoint> newEndpoints = new ArrayList<>(getEndpoints());
+        for (AbstractBitbucketEndpoint ep : newEndpoints) {
             if (ep.getServerUrl().equals(endpoint.getServerUrl())) {
                 return false;
             }
         }
-        endpoints.add(endpoint);
-        setEndpoints(endpoints);
+        newEndpoints.add(endpoint);
+        setEndpoints(newEndpoints);
         return true;
     }
 
@@ -211,20 +211,20 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @param endpoint the endpoint to update.
      */
     public synchronized void updateEndpoint(@NonNull AbstractBitbucketEndpoint endpoint) {
-        List<AbstractBitbucketEndpoint> endpoints = new ArrayList<>(getEndpoints());
+        List<AbstractBitbucketEndpoint> newEndpoints = new ArrayList<>(getEndpoints());
         boolean found = false;
-        for (int i = 0; i < endpoints.size(); i++) {
-            AbstractBitbucketEndpoint ep = endpoints.get(i);
+        for (int i = 0; i < newEndpoints.size(); i++) {
+            AbstractBitbucketEndpoint ep = newEndpoints.get(i);
             if (ep.getServerUrl().equals(endpoint.getServerUrl())) {
-                endpoints.set(i, endpoint);
+                newEndpoints.set(i, endpoint);
                 found = true;
                 break;
             }
         }
         if (!found) {
-            endpoints.add(endpoint);
+            newEndpoints.add(endpoint);
         }
-        setEndpoints(endpoints);
+        setEndpoints(newEndpoints);
     }
 
     /**
@@ -244,7 +244,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @return {@code true} if the list of endpoints was modified
      */
     public synchronized boolean removeEndpoint(@CheckForNull String serverURL) {
-        String fixedServerURL = normalizeServerUrl(serverURL);
+        String fixedServerURL = normalizeServerURL(serverURL);
         List<AbstractBitbucketEndpoint> newEndpoints = new ArrayList<>(getEndpoints());
         boolean modified = newEndpoints.removeIf(endpoint -> Objects.equals(fixedServerURL, endpoint.getServerUrl()));
         setEndpoints(newEndpoints);
@@ -258,7 +258,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
     public synchronized Optional<AbstractBitbucketEndpoint> findEndpoint(@CheckForNull String serverURL) {
-        serverURL = normalizeServerUrl(serverURL);
+        serverURL = normalizeServerURL(serverURL);
         for (AbstractBitbucketEndpoint endpoint : getEndpoints()) {
             if (Objects.equals(serverURL, endpoint.getServerUrl())) {
                 return Optional.of(endpoint);
@@ -291,9 +291,23 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      *
      * @param serverURL the server URL.
      * @return the normalized server URL.
+     * @deprecated
+     * @see #normalizeServerURL
      */
     @CheckForNull
+    @Deprecated
     public static String normalizeServerUrl(@CheckForNull String serverURL) {
+        return normalizeServerURL(serverURL);
+    }
+
+    /**
+     * Fix a server URL.
+     *
+     * @param serverURL the server URL.
+     * @return the normalized server URL.
+     */
+    @CheckForNull
+    public static String normalizeServerURL(@CheckForNull String serverURL) {
         if (StringUtils.isBlank(serverURL)) {
             return null;
         }

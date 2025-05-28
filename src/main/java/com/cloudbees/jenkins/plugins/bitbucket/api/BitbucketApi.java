@@ -214,10 +214,9 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @return the list of webhooks registered in the repository.
      * @throws IOException if there was a network communications error.
-     * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    List<? extends BitbucketWebHook> getWebHooks() throws IOException, InterruptedException;
+    List<? extends BitbucketWebHook> getWebHooks() throws IOException;
 
     /**
      * Returns the team of the current owner or {@code null} if the current owner is not a team.

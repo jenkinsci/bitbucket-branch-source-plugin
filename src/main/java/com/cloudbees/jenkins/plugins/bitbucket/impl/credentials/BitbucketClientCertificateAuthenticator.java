@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import hudson.util.Secret;
 import java.security.KeyManagementException;
@@ -32,7 +33,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
@@ -78,8 +78,7 @@ public class BitbucketClientCertificateAuthenticator implements BitbucketAuthent
                 .build();
             context.setAttribute(SOCKET_FACTORY_REGISTRY, registry); // override SSL registry for this context
         } catch (NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException | KeyManagementException e) {
-            logger.log(Level.WARNING, "Failed to set up SSL context from provided client certificate: " + e.getMessage());
-            // TODO: handle this error in a way that provides feedback to the user
+            throw new BitbucketException("Failed to set up SSL context from provided client certificate", e);
         }
     }
 

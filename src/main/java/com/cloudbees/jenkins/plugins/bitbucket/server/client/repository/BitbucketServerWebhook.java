@@ -29,7 +29,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BitbucketServerWebhook implements BitbucketWebHook {
     @JsonProperty("id")
@@ -40,6 +42,8 @@ public class BitbucketServerWebhook implements BitbucketWebHook {
     private String url;
     @JsonProperty("enabled")
     private boolean active;
+    @JsonProperty("configuration")
+    private Map<String, String> configuration = new HashMap<>();
 
     @JsonInclude(JsonInclude.Include.NON_NULL) // If null, don't marshal to allow for backwards compatibility
     private String committersToIgnore; // Since Bitbucket Webhooks version 1.5.0
@@ -93,4 +97,14 @@ public class BitbucketServerWebhook implements BitbucketWebHook {
         }
         return null;
     }
+
+    @Override
+    public String getSecret() {
+        return configuration.get("secret");
+    }
+
+    public void setSecret(String secret) {
+        configuration.put("secret", secret);
+    }
+
 }

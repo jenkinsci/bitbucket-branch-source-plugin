@@ -287,7 +287,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @DataBoundSetter
     public void setServerUrl(@CheckForNull String serverUrl) {
-        String url = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+        String url = BitbucketEndpointConfiguration.normalizeServerURL(serverUrl);
         if (url == null) {
             url = BitbucketEndpointConfiguration.get().getDefaultEndpoint().getServerUrl();
         }
@@ -1061,7 +1061,7 @@ public class BitbucketSCMSource extends SCMSource {
                 return FormValidation.error(
                     "Unauthorized to validate Server URL"); // not supposed to be seeing this form
             }
-            if (BitbucketEndpointConfiguration.get().findEndpoint(value).isPresent()) {
+            if (!BitbucketEndpointConfiguration.get().findEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
             }
             return FormValidation.ok();

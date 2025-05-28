@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.Messages;
@@ -32,13 +31,11 @@ import hudson.Extension;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMHeadAuthorityDescriptor;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
 import org.jenkinsci.Symbol;
@@ -81,7 +78,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
     @Symbol("bitbucketTagDiscovery")
     @Extension
     @Discovery
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         /**
          * {@inheritDoc}
@@ -91,21 +88,6 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
             return Messages.TagDiscoveryTrait_displayName();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSourceContext> getContextClass() {
-            return BitbucketSCMSourceContext.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSource> getSourceClass() {
-            return BitbucketSCMSource.class;
-        }
     }
 
     /**

@@ -33,7 +33,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
+import java.util.Objects;
 
 @Extension(ordinal = 1000)
 public class BitbucketMockApiFactory extends BitbucketApiFactory {
@@ -45,11 +45,11 @@ public class BitbucketMockApiFactory extends BitbucketApiFactory {
     }
 
     public static void add(String serverUrl, BitbucketApi api) {
-        instance().mocks.put(StringUtils.defaultString(serverUrl, NULL), api);
+        instance().mocks.put(Objects.toString(serverUrl, NULL), api);
     }
 
     public static void remove(String serverUrl) {
-        instance().mocks.remove(StringUtils.defaultString(serverUrl, NULL));
+        instance().mocks.remove(Objects.toString(serverUrl, NULL));
     }
 
     private static BitbucketMockApiFactory instance() {
@@ -59,13 +59,13 @@ public class BitbucketMockApiFactory extends BitbucketApiFactory {
 
     @Override
     protected boolean isMatch(@Nullable String serverUrl) {
-        return mocks.containsKey(StringUtils.defaultString(serverUrl, NULL));
+        return mocks.containsKey(Objects.toString(serverUrl, NULL));
     }
 
     @NonNull
     @Override
     protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
                                   @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
-        return mocks.get(StringUtils.defaultString(serverUrl, NULL));
+        return mocks.get(Objects.toString(serverUrl, NULL));
     }
 }

@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketGitSCMBuilder;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
@@ -41,16 +40,12 @@ import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.plugins.git.GitSCM;
-import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMBuilder;
-import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
@@ -117,7 +112,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
      */
     @Symbol("bitbucketSshCheckout")
     @Extension
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         /**
          * {@inheritDoc}
@@ -129,38 +124,6 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
         }
 
         /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSourceContext> getContextClass() {
-            return BitbucketSCMSourceContext.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSource> getSourceClass() {
-            return BitbucketSCMSource.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isApplicableToBuilder(@NonNull Class<? extends SCMBuilder> builderClass) {
-            return BitbucketGitSCMBuilder.class.isAssignableFrom(builderClass);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isApplicableToSCM(@NonNull SCMDescriptor<?> scm) {
-            return scm instanceof GitSCM.DescriptorImpl;
-        }
-
-        /**
          * Form completion.
          *
          * @param context       the context.
@@ -169,7 +132,6 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
          * @return the form items.
          */
         @Restricted(NoExternalUse.class)
-        @SuppressWarnings("unused") // stapler form binding
         public ListBoxModel doFillCredentialsIdItems(@CheckForNull @AncestorInPath Item context,
                                                      @QueryParameter String serverUrl,
                                                      @QueryParameter String credentialsId) {
@@ -200,7 +162,6 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
          * @return the validation results
          */
         @Restricted(NoExternalUse.class)
-        @SuppressWarnings("unused") // stapler form binding
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath Item context,
                                                    @QueryParameter String serverUrl,
                                                    @QueryParameter String value) {

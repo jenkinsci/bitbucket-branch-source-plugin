@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.Messages;
@@ -39,14 +38,12 @@ import java.util.Set;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead2;
 import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMHeadAuthorityDescriptor;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
 import org.apache.commons.lang3.StringUtils;
@@ -166,7 +163,7 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
     @Symbol("bitbucketForkDiscovery")
     @Extension
     @Discovery
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         /**
          * {@inheritDoc}
@@ -177,29 +174,12 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
         }
 
         /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSourceContext> getContextClass() {
-            return BitbucketSCMSourceContext.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<? extends SCMSource> getSourceClass() {
-            return BitbucketSCMSource.class;
-        }
-
-        /**
          * Populates the strategy options.
          *
          * @return the strategy options.
          */
         @NonNull
         @Restricted(NoExternalUse.class)
-        @SuppressWarnings("unused") // stapler
         public ListBoxModel doFillStrategyIdItems() {
             ListBoxModel result = new ListBoxModel();
             result.add(Messages.ForkPullRequestDiscoveryTrait_mergeOnly(), "1");
@@ -213,8 +193,8 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
          *
          * @return the list of appropriate {@link SCMHeadAuthorityDescriptor} instances.
          */
+        @SuppressWarnings("unchecked")
         @NonNull
-        @SuppressWarnings("unused") // stapler
         public List<SCMHeadAuthorityDescriptor> getTrustDescriptors() {
             return SCMHeadAuthority._for(
                     BitbucketSCMSourceRequest.class,
@@ -230,7 +210,6 @@ public class ForkPullRequestDiscoveryTrait extends SCMSourceTrait {
          * @return the default trust for new instances of {@link ForkPullRequestDiscoveryTrait}.
          */
         @NonNull
-        @SuppressWarnings("unused") // stapler
         public SCMHeadAuthority<?, ?, ?> getDefaultTrust() {
             return new TrustTeamForks();
         }

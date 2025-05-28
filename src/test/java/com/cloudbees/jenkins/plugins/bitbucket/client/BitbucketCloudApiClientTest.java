@@ -27,13 +27,17 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IAuditable;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
 import hudson.ProxyConfiguration;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,13 +52,13 @@ import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
-import org.mockito.ArgumentCaptor;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -90,25 +94,13 @@ class BitbucketCloudApiClientTest {
 
         client.postBuildStatus(status);
 
-        HttpRequest request = extractRequest(client);
+        HttpRequest request = BitbucketTestUtil.extractRequest(client);
         assertThat(request).isNotNull()
             .isInstanceOf(HttpPost.class);
         try (InputStream content = ((HttpPost) request).getEntity().getContent()) {
             String json = IOUtils.toString(content, StandardCharsets.UTF_8);
             assertThatJson(json).node("name").isString().hasSize(255);
         }
-    }
-
-    private HttpRequest extractRequest(BitbucketApi client) {
-        assertThat(client).isInstanceOf(IAuditable.class);
-
-        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
-        verify(((IAuditable) client).getAudit()).request(captor.capture());
-        return captor.getValue();
-    }
-
-    private void resetAudit(@NonNull BitbucketApi client) {
-        reset(((IAuditable) client).getAudit());
     }
 
     @Test
@@ -135,12 +127,20 @@ class BitbucketCloudApiClientTest {
                 .findFirst();
         assertThat(webHook).isPresent();
 
-        resetAudit(client);
         client.updateCommitWebHook(webHook.get());
-        HttpRequest request = extractRequest(client);
+        HttpRequest request = BitbucketTestUtil.extractRequest(client);
         assertThat(request).isNotNull()
             .isInstanceOfSatisfying(HttpPut.class, put ->
                 assertThat(put.getRequestUri()).isEqualTo("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
     }
 
+    @Test
+    void test_supported_auth() throws Exception {
+        try (BitbucketApi client = new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketUsernamePasswordAuthenticator.class))) {}
+        try (BitbucketApi client = new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketOAuthAuthenticator.class))) {}
+        try (BitbucketApi client = new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketAccessTokenAuthenticator.class))) {}
+
+        assertThatThrownBy(() -> new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketClientCertificateAuthenticator.class)))
+            .isInstanceOf(BitbucketException.class);
+    }
 }

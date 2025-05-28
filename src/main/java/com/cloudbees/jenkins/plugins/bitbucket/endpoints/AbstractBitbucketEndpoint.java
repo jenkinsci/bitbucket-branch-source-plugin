@@ -24,21 +24,21 @@
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
-import hudson.security.ACL;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundSetter;
+
+import static hudson.Util.fixEmptyAndTrim;
 
 /**
  * Represents a {@link BitbucketCloudEndpoint} or a {@link BitbucketServerEndpoint}.
@@ -59,6 +59,17 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     private final String credentialsId;
 
     /**
+     * {@code true} if and only if Jenkins have to verify the signature of all incoming hooks.
+     */
+    private boolean enableHookSignature;
+
+    /**
+     * The {@link StringCredentials#getId()} of the credentials to use to verify the signature of hooks.
+     */
+    @CheckForNull
+    private String hookSignatureCredentialsId;
+
+    /**
      * Jenkins Server Root URL to be used by that Bitbucket endpoint.
      * The global setting from Jenkins.get().getRootUrl()
      * will be used if this field is null or equals an empty string.
@@ -76,7 +87,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
-        this.credentialsId = manageHooks ? credentialsId : null;
+        this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
     }
 
     /**
@@ -106,7 +117,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
         return Util.ensureEndsWith(
-            BitbucketEndpointConfiguration.normalizeServerUrl(rootUrl),"/");
+            BitbucketEndpointConfiguration.normalizeServerURL(rootUrl),"/");
     }
 
     /**
@@ -124,13 +135,36 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     @DataBoundSetter
     public void setBitbucketJenkinsRootUrl(String bitbucketJenkinsRootUrl) {
         if (manageHooks) {
-            this.bitbucketJenkinsRootUrl = Util.fixEmptyAndTrim(bitbucketJenkinsRootUrl);
+            this.bitbucketJenkinsRootUrl = fixEmptyAndTrim(bitbucketJenkinsRootUrl);
             if (this.bitbucketJenkinsRootUrl != null) {
                 this.bitbucketJenkinsRootUrl = normalizeJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
             }
         } else {
             this.bitbucketJenkinsRootUrl = null;
         }
+    }
+
+    @CheckForNull
+    public String getHookSignatureCredentialsId() {
+        return hookSignatureCredentialsId;
+    }
+
+    @DataBoundSetter
+    public void setHookSignatureCredentialsId(String hookSignatureCredentialsId) {
+        if (enableHookSignature) {
+            this.hookSignatureCredentialsId = fixEmptyAndTrim(hookSignatureCredentialsId);
+        } else {
+            this.hookSignatureCredentialsId = null;
+        }
+    }
+
+    public boolean isEnableHookSignature() {
+        return enableHookSignature;
+    }
+
+    @DataBoundSetter
+    public void setEnableHookSignature(boolean enableHookSignature) {
+        this.enableHookSignature = enableHookSignature;
     }
 
     /**
@@ -220,18 +254,17 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @CheckForNull
     public StandardCredentials credentials() {
-        return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentialsInItemGroup(
-                        StandardCredentials.class,
-                        Jenkins.get(),
-                        ACL.SYSTEM2 ,
-                        URIRequirementBuilder.fromUri(getServerUrl()).build()
-                ),
-                CredentialsMatchers.allOf(
-                        CredentialsMatchers.withId(credentialsId),
-                        AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(getServerUrl()))
-                )
-        );
+        return BitbucketCredentials.lookupCredentials(getServerUrl(), Jenkins.get(), credentialsId, StandardCredentials.class);
+    }
+
+    /**
+     * Looks up the {@link StringCredentials} to use to verify the signature of hooks.
+     *
+     * @return the credentials or {@code null}.
+     */
+    @CheckForNull
+    public StringCredentials hookSignatureCredentials() {
+        return BitbucketCredentials.lookupCredentials(getServerUrl(), Jenkins.get(), hookSignatureCredentialsId, StringCredentials.class);
     }
 
     /**

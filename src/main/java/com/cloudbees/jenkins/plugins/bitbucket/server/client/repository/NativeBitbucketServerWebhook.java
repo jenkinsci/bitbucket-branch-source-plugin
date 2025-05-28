@@ -25,7 +25,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NativeBitbucketServerWebhook implements BitbucketWebHook {
 
@@ -36,6 +38,8 @@ public class NativeBitbucketServerWebhook implements BitbucketWebHook {
     private String url;
     private List<String> events;
     private boolean active;
+    @JsonProperty("configuration")
+    private Map<String, String> configuration = new HashMap<>();
 
     @Override
     public String getUuid() {
@@ -81,4 +85,14 @@ public class NativeBitbucketServerWebhook implements BitbucketWebHook {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    @Override
+    public String getSecret() {
+        return configuration.get("secret");
+    }
+
+    public void setSecret(String secret) {
+        configuration.put("secret", secret);
+    }
+
 }

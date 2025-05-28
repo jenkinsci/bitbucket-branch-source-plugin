@@ -30,6 +30,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Item;
 import hudson.model.listeners.ItemListener;
@@ -101,7 +103,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             public void doRun() {
                 try {
                     registerHooks(owner);
-                } catch (IOException | InterruptedException e) {
+                } catch (IOException e) {
                     LOGGER.log(Level.WARNING, "Could not register hooks for " + owner.getFullName(), e);
                 }
             }
@@ -114,7 +116,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             public void doRun() {
                 try {
                     removeHooks(owner);
-                } catch (IOException | InterruptedException e) {
+                } catch (IOException e) {
                     LOGGER.log(Level.WARNING, "Could not deregister hooks for " + owner.getFullName(), e);
                 }
             }
@@ -122,7 +124,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
     }
 
     // synchronized just to avoid duplicated webhooks in case SCMSourceOwner is updated repeatedly and quickly
-    private synchronized void registerHooks(SCMSourceOwner owner) throws IOException, InterruptedException {
+    private synchronized void registerHooks(SCMSourceOwner owner) throws IOException {
         List<BitbucketSCMSource> sources = getBitbucketSCMSources(owner);
         if (sources.isEmpty()) {
             // don't spam logs if we are irrelevant
@@ -156,7 +158,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
     }
 
-    private void registerHook(BitbucketSCMSource source) throws IOException, InterruptedException {
+    private void registerHook(BitbucketSCMSource source) throws IOException {
         BitbucketApi bitbucket = bitbucketApiFor(source);
         if (bitbucket == null) {
             return;
@@ -183,7 +185,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
     }
 
-    private void removeHooks(SCMSourceOwner owner) throws IOException, InterruptedException {
+    private void removeHooks(SCMSourceOwner owner) throws IOException {
         List<BitbucketSCMSource> sources = getBitbucketSCMSources(owner);
         for (BitbucketSCMSource source : sources) {
             BitbucketApi bitbucket = bitbucketApiFor(source);
@@ -209,7 +211,8 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
     }
 
-    private BitbucketApi bitbucketApiFor(BitbucketSCMSource source) {
+    @CheckForNull
+    private BitbucketApi bitbucketApiFor(@NonNull BitbucketSCMSource source) {
         switch (new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(source.getTraits())
                 .webhookRegistration()) {

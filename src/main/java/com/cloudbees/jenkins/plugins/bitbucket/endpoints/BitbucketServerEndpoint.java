@@ -44,6 +44,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import static java.util.Objects.requireNonNull;
 
@@ -111,7 +112,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
                                    @CheckForNull String credentialsId) {
         super(manageHooks, credentialsId);
         // use fixNull to silent nullability check
-        this.serverUrl = Util.fixNull(BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl));
+        this.serverUrl = Util.fixNull(BitbucketEndpointConfiguration.normalizeServerURL(serverUrl));
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName.trim();
@@ -233,6 +234,17 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      */
     @Extension
     public static class DescriptorImpl extends AbstractBitbucketEndpointDescriptor {
+
+        @Restricted(NoExternalUse.class) // stapler
+        @RequirePOST
+        public FormValidation doCheckEnableHookSignature(@QueryParameter BitbucketServerWebhookImplementation webhookImplementation,
+                                                         @QueryParameter boolean enableHookSignature) {
+            if (enableHookSignature && webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
+                return FormValidation.error("Signature verification not supported for PLUGIN webhook");
+            }
+            return FormValidation.ok();
+        }
+
         /**
          * {@inheritDoc}
          */

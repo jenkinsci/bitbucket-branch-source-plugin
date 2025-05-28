@@ -221,7 +221,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     @DataBoundSetter
     public void setServerUrl(@CheckForNull String serverUrl) {
-        serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
+        serverUrl = BitbucketEndpointConfiguration.normalizeServerURL(serverUrl);
         if (serverUrl != null && !StringUtils.equals(this.serverUrl, serverUrl)) {
             this.serverUrl = serverUrl;
             resetId();

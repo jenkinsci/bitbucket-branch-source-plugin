@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -85,12 +86,15 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     private HttpClientContext context;
 
     protected AbstractBitbucketApi(BitbucketAuthenticator authenticator) {
+        if (!isSupportedAuthenticator(authenticator)) {
+            throw new BitbucketException("Authentication " + authenticator.getClass().getSimpleName() + " is not supported by this client. Please refer to the user documention at https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc");
+        }
         this.authenticator = authenticator;
     }
 
     protected BitbucketRequestException buildResponseException(ClassicHttpResponse response, String errorMessage) {
         String headers = StringUtils.join(response.getHeaders(), "\n");
-        String message = String.format("HTTP request error.%nStatus: %s%nResponse: %s%n%s", response.getReasonPhrase(), errorMessage, headers);
+        String message = String.format("HTTP request error.%nStatus: %s HTTP %s%nResponse: %s%n%s", response.getReasonPhrase(), response.getCode(), errorMessage, headers);
         return new BitbucketRequestException(response.getCode(), message);
     }
 
@@ -216,6 +220,11 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
             }
         }
     }
+
+    /**
+     * Implementation must validate if the configured authenticator is supported by this client implementation.
+     */
+    protected abstract boolean isSupportedAuthenticator(@CheckForNull BitbucketAuthenticator authenticator);
 
     @CheckForNull
     protected abstract HttpClientConnectionManager getConnectionManager();

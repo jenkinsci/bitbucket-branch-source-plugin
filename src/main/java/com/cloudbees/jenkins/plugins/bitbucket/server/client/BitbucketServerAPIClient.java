@@ -40,6 +40,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
@@ -174,6 +177,14 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         this.baseURL = Util.removeTrailingSlash(baseURL);
         this.webhookImplementation = requireNonNull(webhookImplementation);
         this.client = setupClientBuilder().build();
+    }
+
+    @Override
+    protected boolean isSupportedAuthenticator(@CheckForNull BitbucketAuthenticator authenticator) {
+        return authenticator == null
+                || authenticator instanceof BitbucketClientCertificateAuthenticator // undocumented mutual TLS
+                || authenticator instanceof BitbucketAccessTokenAuthenticator // personal access token
+                || authenticator instanceof BitbucketUsernamePasswordAuthenticator; // username/password credentials
     }
 
     /**

@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketGitSCMBuilder;
 import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -33,11 +32,9 @@ import java.time.LocalDate;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.TagSCMHead;
-import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -96,11 +93,11 @@ public class DiscardOldTagTrait extends SCMSourceTrait {
 
     @Symbol("bitbucketDiscardOldTag")
     @Extension
-    public static class DescriptorImpl extends SCMSourceTraitDescriptor {
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
 
         public FormValidation doCheckKeepForDays(@QueryParameter int keepForDays) {
             if (keepForDays <= 0) {
-                return FormValidation.error("Invalid value. Days must be greater than 0");
+                return FormValidation.error(Messages.DiscardOldTagTrait_invalidDays());
             }
             return FormValidation.ok();
         }
@@ -110,10 +107,6 @@ public class DiscardOldTagTrait extends SCMSourceTrait {
             return Messages.DiscardOldTagTrait_displayName();
         }
 
-        @Override
-        public boolean isApplicableToBuilder(@NonNull Class<? extends SCMBuilder> builderClass) {
-            return BitbucketGitSCMBuilder.class.isAssignableFrom(builderClass);
-        }
     }
 
 }
