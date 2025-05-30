@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
@@ -123,7 +124,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             serverURL = BitbucketCloudEndpoint.SERVER_URL;
         }
 
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+        BitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
                 .findEndpoint(serverURL)
                 .orElse(null);
         if (endpoint != null) {
@@ -137,7 +138,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
                     return HttpResponses.error(HttpServletResponse.SC_FORBIDDEN, "Payload has not be signed, configure the webHook secret in Bitbucket as documented at https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc#webhooks-registering");
                 }
             } else if (req.getHeader("X-Hub-Signature") == null) {
-                LOGGER.log(Level.FINER, "Signature not configured for endpoint {0}.", endpoint);
+                LOGGER.log(Level.FINER, "Signature not configured for bitbucket endpoint {0}.", serverURL);
             }
         } else {
             LOGGER.log(Level.INFO, "No bitbucket endpoint found for {0} to verify the signature of incoming webhook.", serverURL);
@@ -149,7 +150,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
     }
 
     @Nullable
-    private HttpResponseException checkSignature(@NonNull StaplerRequest2 req, @NonNull String body, @NonNull AbstractBitbucketEndpoint endpoint) {
+    private HttpResponseException checkSignature(@NonNull StaplerRequest2 req, @NonNull String body, @NonNull BitbucketEndpoint endpoint) {
         LOGGER.log(Level.FINE, "Payload endpoint host {0}, request endpoint host {1}", new Object[] { endpoint, req.getRemoteAddr() });
 
         StringCredentials signatureCredentials = endpoint.hookSignatureCredentials();

@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -42,6 +44,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -59,10 +62,10 @@ import org.kohsuke.stapler.StaplerRequest2;
 public class BitbucketEndpointConfiguration extends GlobalConfiguration {
 
     /**
-     * The list of {@link AbstractBitbucketEndpoint}, this is subject to the constraint that there can only ever be
-     * one entry for each {@link AbstractBitbucketEndpoint#getServerUrl()}.
+     * The list of {@link BitbucketEndpoint}, this is subject to the constraint that there can only ever be
+     * one entry for each {@link BitbucketEndpoint#getServerURL()}.
      */
-    private List<AbstractBitbucketEndpoint> endpoints;
+    private List<BitbucketEndpoint> endpoints;
 
     /**
      * Constructor.
@@ -91,25 +94,25 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * {@code serverUrl} field. When called from {@link ACL#SYSTEM} this will update the configuration with the
      * missing definitions of resolved URLs.
      *
-     * @param bitbucketServerUrl the value of the old url field.
+     * @param serverURL the value of the old url field.
      * @return the value of the new url field.
      */
     @Restricted(NoExternalUse.class) // only for plugin internal use.
     @NonNull
-    public String readResolveServerUrl(@CheckForNull String bitbucketServerUrl) {
-        String serverUrl = normalizeServerURL(bitbucketServerUrl);
-        serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
-        AbstractBitbucketEndpoint endpoint = findEndpoint(serverUrl).orElse(null);
+    public String readResolveServerUrl(@CheckForNull String serverURL) {
+        String normalizedURL = normalizeServerURL(serverURL);
+        normalizedURL = StringUtils.defaultIfBlank(normalizedURL, BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketEndpoint endpoint = findEndpoint(normalizedURL).orElse(null);
         if (endpoint == null && ACL.SYSTEM2.equals(Jenkins.getAuthentication2())) {
-            if (BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)
-                    || BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverUrl)) {
+            if (BitbucketCloudEndpoint.SERVER_URL.equals(normalizedURL)
+                    || BitbucketCloudEndpoint.BAD_SERVER_URL.equals(normalizedURL)) {
                 // exception case
                 addEndpoint(new BitbucketCloudEndpoint(false, null));
             } else {
-                addEndpoint(new BitbucketServerEndpoint(null, serverUrl, false, null));
+                addEndpoint(new BitbucketServerEndpoint(null, normalizedURL, false, null));
             }
         }
-        return endpoint == null ?  serverUrl : endpoint.getServerUrl();
+        return endpoint == null ?  normalizedURL : endpoint.getServerURL();
     }
 
     /**
@@ -128,8 +131,8 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      */
     public ListBoxModel getEndpointItems() {
         ListBoxModel result = new ListBoxModel();
-        for (AbstractBitbucketEndpoint endpoint : getEndpoints()) {
-            String serverUrl = endpoint.getServerUrl();
+        for (BitbucketEndpoint endpoint : getEndpoints()) {
+            String serverUrl = endpoint.getServerURL();
             String displayName = endpoint.getDisplayName();
             result.add(StringUtils.isBlank(displayName) ? serverUrl : displayName + " (" + serverUrl + ")", serverUrl);
         }
@@ -151,10 +154,10 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @return the list of endpoints
      */
     @NonNull
-    public synchronized List<AbstractBitbucketEndpoint> getEndpoints() {
+    public List<BitbucketEndpoint> getEndpoints() {
         return endpoints == null || endpoints.isEmpty()
-                ? Collections.<AbstractBitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(false, null))
-                : Collections.unmodifiableList(endpoints);
+                ? Collections.<BitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(false, null))
+                : List.copyOf(endpoints);
     }
 
     /**
@@ -162,28 +165,31 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      *
      * @param endpoints the list of endpoints.
      */
-    public synchronized void setEndpoints(@CheckForNull List<? extends AbstractBitbucketEndpoint> endpoints) {
+    public void setEndpoints(@CheckForNull List<? extends BitbucketEndpoint> endpoints) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
-        List<AbstractBitbucketEndpoint> eps = new ArrayList<>(Util.fixNull(endpoints));
+
+        List<BitbucketEndpoint> eps = new ArrayList<>(Util.fixNull(endpoints));
         // remove duplicates and empty urls
-        Set<String> serverUrls = new HashSet<>();
-        for (ListIterator<AbstractBitbucketEndpoint> iterator = eps.listIterator(); iterator.hasNext(); ) {
-            AbstractBitbucketEndpoint endpoint = iterator.next();
-            String serverUrl = endpoint.getServerUrl();
-            if (StringUtils.isBlank(serverUrl) || serverUrls.contains(serverUrl)) {
+        Set<String> serverURLs = new HashSet<>();
+        for (ListIterator<BitbucketEndpoint> iterator = eps.listIterator(); iterator.hasNext(); ) {
+            BitbucketEndpoint endpoint = iterator.next();
+            String serverURL = endpoint.getServerURL();
+            if (StringUtils.isBlank(serverURL) || serverURLs.contains(serverURL)) {
                 iterator.remove();
                 continue;
-            } else if (!(endpoint instanceof BitbucketCloudEndpoint)
-                    && BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
+            } else if (!(endpoint instanceof BitbucketCloudEndpoint) && BitbucketApiUtils.isCloud(serverURL)) {
                 // fix type for the special case
-                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId(), endpoint.getBitbucketJenkinsRootUrl()));
+                BitbucketCloudEndpoint cloudEndpoint = new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId(), endpoint.getEndpointJenkinsRootURL());
+                cloudEndpoint.setEnableHookSignature(endpoint.isEnableHookSignature());
+                cloudEndpoint.setHookSignatureCredentialsId(endpoint.getHookSignatureCredentialsId());
+                iterator.set(endpoint);
             }
-            serverUrls.add(serverUrl);
+            serverURLs.add(serverURL);
         }
         if (eps.isEmpty()) {
             eps.add(new BitbucketCloudEndpoint(false, null));
         }
-        this.endpoints = eps;
+        this.endpoints = new CopyOnWriteArrayList<>(eps);
         save();
     }
 
@@ -193,15 +199,15 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @param endpoint the endpoint to add.
      * @return {@code true} if the list of endpoints was modified
      */
-    public synchronized boolean addEndpoint(@NonNull AbstractBitbucketEndpoint endpoint) {
-        List<AbstractBitbucketEndpoint> newEndpoints = new ArrayList<>(getEndpoints());
-        for (AbstractBitbucketEndpoint ep : newEndpoints) {
-            if (ep.getServerUrl().equals(endpoint.getServerUrl())) {
+    public boolean addEndpoint(@NonNull BitbucketEndpoint endpoint) {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        List<BitbucketEndpoint> newEndpoints = new ArrayList<>(endpoints);
+        for (BitbucketEndpoint ep : newEndpoints) {
+            if (endpoint.isEquals(ep)) {
                 return false;
             }
         }
         newEndpoints.add(endpoint);
-        setEndpoints(newEndpoints);
         return true;
     }
 
@@ -210,12 +216,13 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      *
      * @param endpoint the endpoint to update.
      */
-    public synchronized void updateEndpoint(@NonNull AbstractBitbucketEndpoint endpoint) {
-        List<AbstractBitbucketEndpoint> newEndpoints = new ArrayList<>(getEndpoints());
+    public void updateEndpoint(@NonNull BitbucketEndpoint endpoint) {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        List<BitbucketEndpoint> newEndpoints = endpoints;
         boolean found = false;
         for (int i = 0; i < newEndpoints.size(); i++) {
-            AbstractBitbucketEndpoint ep = newEndpoints.get(i);
-            if (ep.getServerUrl().equals(endpoint.getServerUrl())) {
+            BitbucketEndpoint ep = newEndpoints.get(i);
+            if (endpoint.isEquals(ep)) {
                 newEndpoints.set(i, endpoint);
                 found = true;
                 break;
@@ -224,7 +231,6 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
         if (!found) {
             newEndpoints.add(endpoint);
         }
-        setEndpoints(newEndpoints);
     }
 
     /**
@@ -233,8 +239,8 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @param endpoint the endpoint to remove.
      * @return {@code true} if the list of endpoints was modified
      */
-    public boolean removeEndpoint(@NonNull AbstractBitbucketEndpoint endpoint) {
-        return removeEndpoint(endpoint.getServerUrl());
+    public boolean removeEndpoint(@NonNull BitbucketEndpoint endpoint) {
+        return endpoints.removeIf(e -> e.isEquals(endpoint));
     }
 
     /**
@@ -245,10 +251,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      */
     public synchronized boolean removeEndpoint(@CheckForNull String serverURL) {
         String fixedServerURL = normalizeServerURL(serverURL);
-        List<AbstractBitbucketEndpoint> newEndpoints = new ArrayList<>(getEndpoints());
-        boolean modified = newEndpoints.removeIf(endpoint -> Objects.equals(fixedServerURL, endpoint.getServerUrl()));
-        setEndpoints(newEndpoints);
-        return modified;
+        return endpoints.removeIf(e -> Objects.equals(fixedServerURL, e.getServerURL()));
     }
 
     /**
@@ -257,10 +260,10 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @param serverURL the server url to check.
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
-    public synchronized Optional<AbstractBitbucketEndpoint> findEndpoint(@CheckForNull String serverURL) {
+    public synchronized Optional<BitbucketEndpoint> findEndpoint(@CheckForNull String serverURL) {
         serverURL = normalizeServerURL(serverURL);
-        for (AbstractBitbucketEndpoint endpoint : getEndpoints()) {
-            if (Objects.equals(serverURL, endpoint.getServerUrl())) {
+        for (BitbucketEndpoint endpoint : getEndpoints()) {
+            if (Objects.equals(serverURL, endpoint.getServerURL())) {
                 return Optional.of(endpoint);
             }
         }
@@ -274,7 +277,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @param clazz the class to check.
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
-    public synchronized <T extends AbstractBitbucketEndpoint> Optional<T> findEndpoint(@CheckForNull String serverURL,
+    public synchronized <T extends BitbucketEndpoint> Optional<T> findEndpoint(@CheckForNull String serverURL,
                                                                                        Class<T> clazz) {
         return findEndpoint(serverURL)
             .filter(clazz::isInstance)
@@ -282,7 +285,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     }
 
     @NonNull
-    public synchronized AbstractBitbucketEndpoint getDefaultEndpoint() {
+    public synchronized BitbucketEndpoint getDefaultEndpoint() {
         return getEndpoints().get(0);
     }
 
@@ -295,7 +298,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @see #normalizeServerURL
      */
     @CheckForNull
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static String normalizeServerUrl(@CheckForNull String serverURL) {
         return normalizeServerURL(serverURL);
     }
@@ -306,6 +309,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @param serverURL the server URL.
      * @return the normalized server URL.
      */
+    @Restricted(NoExternalUse.class) // only for plugin internal use.
     @CheckForNull
     public static String normalizeServerURL(@CheckForNull String serverURL) {
         if (StringUtils.isBlank(serverURL)) {

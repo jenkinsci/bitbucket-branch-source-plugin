@@ -90,7 +90,7 @@ public class BitbucketApiUtils {
         serverURL = BitbucketEndpointConfiguration.get()
                 .findEndpoint(serverURL)
                 .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
-                .getServerUrl();
+                .getServerURL();
         StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
             serverURL,
             context,

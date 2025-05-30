@@ -25,8 +25,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -215,7 +215,7 @@ public class WebhookConfiguration {
 
     @Nullable
     private String getSecret(@NonNull String serverURL) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+        BitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
                 .findEndpoint(serverURL)
                 .orElseThrow();
         if (endpoint.isEnableHookSignature()) {

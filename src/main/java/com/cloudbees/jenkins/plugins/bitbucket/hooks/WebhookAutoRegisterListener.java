@@ -27,8 +27,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -45,6 +46,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
@@ -142,7 +144,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     case DISABLE:
                         continue;
                     case SYSTEM:
-                        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                        BitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
                             .findEndpoint(source.getServerUrl())
                             .orElse(null);
                         if (endpoint == null || !endpoint.isManageHooks()) {
@@ -219,14 +221,14 @@ public class WebhookAutoRegisterListener extends ItemListener {
             case DISABLE:
                 return null;
             case SYSTEM:
-                AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+                BitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
                     .findEndpoint(source.getServerUrl())
                     .orElse(null);
                 return endpoint == null || !endpoint.isManageHooks()
                         ? null
                         : BitbucketApiFactory.newInstance(
-                                endpoint.getServerUrl(),
-                                endpoint.authenticator(),
+                                endpoint.getServerURL(),
+                                AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(endpoint.getServerURL()), endpoint.credentials()),
                                 source.getRepoOwner(),
                                 null,
                                 source.getRepository()

@@ -185,9 +185,14 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * {@inheritDoc}
      */
     @NonNull
-    @Override
+    @Deprecated(since = "936.4.0", forRemoval = true)
     public String getServerUrl() {
         return serverUrl;
+    }
+
+    @Override
+    public String getServerURL() {
+        return getServerUrl();
     }
 
     /**
@@ -290,4 +295,5 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         }
 
     }
+
 }

@@ -116,7 +116,7 @@ public class BitbucketCredentials {
         serverURL = BitbucketEndpointConfiguration.get()
                 .findEndpoint(serverURL)
                 .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
-                .getServerUrl();
+                .getServerURL();
 
         result.includeMatchingAs(
                 authentication,
@@ -133,7 +133,7 @@ public class BitbucketCredentials {
             serverURL = BitbucketEndpointConfiguration.get()
                     .findEndpoint(serverURL)
                     .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
-                    .getServerUrl();
+                    .getServerURL();
 
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             contextToCheck.checkPermission(CredentialsProvider.VIEW);

@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -45,7 +45,7 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
     @Override
     protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
                                   @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
+        BitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
                 .findEndpoint(BitbucketCloudEndpoint.SERVER_URL)
                 .orElse(null);
         boolean enableCache = false;

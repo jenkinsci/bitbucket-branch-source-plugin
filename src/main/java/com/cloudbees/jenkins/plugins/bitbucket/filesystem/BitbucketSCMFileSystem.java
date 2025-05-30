@@ -214,7 +214,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
-        protected boolean supportsDescriptor(SCMDescriptor scmDescriptor) {
+        protected boolean supportsDescriptor(@SuppressWarnings("rawtypes") SCMDescriptor scmDescriptor) {
             return false;
         }
 
