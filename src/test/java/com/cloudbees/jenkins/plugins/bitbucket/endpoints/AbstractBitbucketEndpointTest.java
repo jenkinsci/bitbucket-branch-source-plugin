@@ -28,108 +28,78 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import com.damnhandy.uri.template.UriTemplate;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.List;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import java.util.Map;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class AbstractBitbucketEndpointTest {
+@WithJenkins
+class AbstractBitbucketEndpointTest {
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    static JenkinsRule j;
 
-    @Before
-    public void reset() {
+    @BeforeAll
+    static void init(JenkinsRule rule) {
+        j = rule;
+    }
+
+    @BeforeEach
+    void setup() {
         SystemCredentialsProvider.getInstance()
                 .setDomainCredentialsMap(Collections.<Domain, List<Credentials>>emptyMap());
     }
 
     @Test
-    public void given__manage_true__when__noCredentials__then__manage_false() {
-        assertThat(new Dummy(true, null).isManageHooks(), is(false));
+    void given__manage_true__when__noCredentials__then__manage_false() {
+        assertThat(new DummyEndpointConfiguration(true, null).isManageHooks()).isFalse();
     }
 
     @Test
-    public void given__manage_false__when__credentials__then__manage_false() {
-        assertThat(new Dummy(false, "dummy").isManageHooks(), is(false));
+    void given__manage_false__when__credentials__then__manage_false() {
+        assertThat(new DummyEndpointConfiguration(false, "dummy").isManageHooks()).isFalse();
     }
 
     @Test
-    public void given__manage_false__when__credentials__then__credentials_null() {
-        assertThat(new Dummy(false, "dummy").getCredentialsId(), is(nullValue()));
+    void given__manage_false__when__credentials__then__credentials_null() {
+        assertThat(new DummyEndpointConfiguration(false, "dummy").getCredentialsId()).isNull();
     }
 
     @Test
-    public void given__manage_true__when__credentials__then__manage_true() {
-        assertThat(new Dummy(true, "dummy").isManageHooks(), is(true));
+    void given__manage_true__when__credentials__then__manage_true() {
+        assertThat(new DummyEndpointConfiguration(true, "dummy").isManageHooks()).isTrue();
     }
 
     @Test
-    public void given__manage_true__when__credentials__then__credentialsSet() {
-        assertThat(new Dummy(true, "dummy").getCredentialsId(), is("dummy"));
+    void given__manage_true__when__credentials__then__credentialsSet() {
+        assertThat(new DummyEndpointConfiguration(true, "dummy").getCredentialsId()).isEqualTo("dummy");
     }
 
     @Test
-    public void given__mange__when__systemCredentials__then__credentialsFound() throws Exception {
+    void given__mange__when__systemCredentials__then__credentialsFound() throws Exception {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
                 Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
-        assertThat(new Dummy(true, "dummy").credentials(), notNullValue());
+        assertThat(new DummyEndpointConfiguration(true, "dummy").credentials()).isNotNull();
     }
 
     @Test
-    public void given__mange__when__globalCredentials__then__credentialsFound() throws Exception {
-        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
-                Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
-                        CredentialsScope.GLOBAL, "dummy", "dummy", "user", "pass"))));
-        assertThat(new Dummy(true, "dummy").credentials(), notNullValue());
+    void given__mange__when__globalCredentials__then__credentialsFound() throws Exception {
+        SystemCredentialsProvider.getInstance()
+            .setDomainCredentialsMap(Map.of(
+                    Domain.global(),
+                    List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "dummy", "dummy", "user", "pass")))
+            );
+        assertThat(new DummyEndpointConfiguration(true, "dummy").credentials()).isNotNull();
     }
 
     @Test
-    public void given__mange__when__noCredentials__then__credentials_none() {
-        assertThat(new Dummy(true, "dummy").credentials(), nullValue());
-    }
-
-    private static class Dummy extends AbstractBitbucketEndpoint {
-
-        Dummy(boolean manageHooks, String credentialsId) {
-            super(manageHooks, credentialsId);
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "Dummy";
-        }
-
-        @NonNull
-        @Override
-        public String getServerUrl() {
-            return "http://dummy.example.com";
-        }
-
-        @NonNull
-        @Override
-        public String getBitbucketJenkinsRootUrl() {
-            return "http://master.example.com";
-        }
-
-        @NonNull
-        @Override
-        public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
-            return UriTemplate
-                    .fromTemplate("http://dummy.example.com{/owner,repo}")
-                    .set("owner", repoOwner)
-                    .set("repo", repository)
-                    .expand();
-        }
+    void given__mange__when__noCredentials__then__credentials_none() {
+        assertThat(new DummyEndpointConfiguration(true, "dummy").credentials()).isNull();
     }
 }

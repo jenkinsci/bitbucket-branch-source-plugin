@@ -8,6 +8,8 @@ unclassified:
         enableCache: true
         teamCacheDuration: 1
         repositoriesCacheDuration: 2
+        enableHookSignature: true
+        hookSignatureCredentialsId: "secretId"
     - bitbucketServerEndpoint:
         credentialsId: "second"
         displayName: "Example Inc"
@@ -17,6 +19,8 @@ unclassified:
     - bitbucketServerEndpoint:
         displayName: "Example Org"
         serverUrl: "http://example.org:8080/bitbucket"
+        enableHookSignature: true
+        hookSignatureCredentialsId: "secretId"
     - bitbucketServerEndpoint:
         credentialsId: "third"
         displayName: "Example Inc"

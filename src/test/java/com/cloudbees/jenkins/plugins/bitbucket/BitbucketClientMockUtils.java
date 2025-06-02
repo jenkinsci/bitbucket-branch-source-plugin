@@ -110,7 +110,7 @@ public class BitbucketClientMockUtils {
 
         // Auto-registering hooks
         if (includeWebHooks) {
-            when(client.getWebHooks()).thenReturn(Collections.EMPTY_LIST)
+            when(client.getWebHooks()).thenReturn(Collections.emptyList())
                 // Second call
                 .thenReturn(getWebHooks());
         }

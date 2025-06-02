@@ -81,7 +81,7 @@ class WebhooksAutoregisterTest {
 
     @Test
     void registerHookTest2() throws Exception {
-        BitbucketEndpointConfiguration.get().setEndpoints(List.of(new BitbucketCloudEndpoint(true, "dummy")));
+        BitbucketEndpointConfiguration.get().setEndpoints(List.of(new BitbucketCloudEndpoint(false, 0, 0, true, "dummy", false, null)));
         BitbucketApi mock = Mockito.mock(BitbucketApi.class);
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
         RingBufferLogHandler log = createJULTestHandler();

@@ -25,82 +25,71 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitbucketServerEndpointTest {
-
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+class BitbucketServerEndpointTest {
 
     @Test
-    public void smokes() {
-        BitbucketServerEndpoint endpoint1 =
-                new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null);
+    void smokes() {
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, false, null);
 
-        assertThat(endpoint1.getDisplayName(), is("Dummy"));
-        assertThat(endpoint1.getServerUrl(), is( "http://dummy.example.com"));
+        assertThat(endpoint.getDisplayName()).isEqualTo("Dummy");
+        assertThat(endpoint.getServerUrl()).isEqualTo("http://dummy.example.com");
 
         /* The endpoints should set (literally, not normalized) and return
          * the bitbucketJenkinsRootUrl if the management of hooks is enabled */
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                false, null).getBitbucketJenkinsRootUrl(), nullValue());
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
-                nullValue());
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
+
         // No credentials - webhook still not managed, even with a checkbox
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(),
-                nullValue());
+        endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true, null, false, null);
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
         // getEndpointJenkinsRootUrl() is normalized and ends with a slash
-        BitbucketServerEndpoint endpoint2 =
-                new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, "{credid}", "http://jenkins:8080");
-        assertThat(endpoint2.getBitbucketJenkinsRootUrl(), is("http://jenkins:8080/"));
-        assertThat(endpoint2.getEndpointJenkinsRootUrl(),  is("http://jenkins:8080/"));
+        endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true, "{credid}", false, null);
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
+        assertThat(endpoint.getEndpointJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
 
         // Make sure several invokations with same arguments do not conflict:
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, "{credid}", "https://jenkins:443/").getBitbucketJenkinsRootUrl(),
-                is("https://jenkins/"));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, "{credid}", "https://jenkins:443/").getEndpointJenkinsRootUrl(),
-                is("https://jenkins/"));
+        endpoint.setBitbucketJenkinsRootUrl("https://jenkins:443/");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("https://jenkins/");
+        assertThat(endpoint.getEndpointJenkinsRootUrl()).isEqualTo("https://jenkins/");
+    }
+
+    @WithJenkins
+    @Test
+    void getUnmanagedDefaultRootUrl(JenkinsRule rule) {
+        String jenkinsRootURL = Jenkins.get().getRootUrl();
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true, null, false, null).getEndpointJenkinsRootUrl())
+            .isEqualTo(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(jenkinsRootURL));
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, "{cred}", false, null).getEndpointJenkinsRootUrl())
+            .isEqualTo(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(jenkinsRootURL));
     }
 
     @Test
-    public void getUnmanagedDefaultRootUrl() {
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                true, null).getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.get().getRootUrl())));
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com",
-                false, "{cred}").getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.get().getRootUrl())));
+    void getRepositoryUrl() {
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, false, null);
+
+        assertThat(endpoint.getRepositoryUrl("TST", "test-repo")).isEqualTo("http://dummy.example.com/projects/TST/repos/test-repo");
+        assertThat(endpoint.getRepositoryUrl("~tester", "test-repo")).isEqualTo("http://dummy.example.com/users/tester/repos/test-repo");
     }
 
     @Test
-    public void getRepositoryUrl() {
-        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null);
-
-        assertThat(endpoint.getRepositoryUrl("TST", "test-repo"), is("http://dummy.example.com/projects/TST/repos/test-repo"));
-        assertThat(endpoint.getRepositoryUrl("~tester", "test-repo"), is("http://dummy.example.com/users/tester/repos/test-repo"));
+    void given__badUrl__when__check__then__fail() {
+        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("").kind).isEqualTo(FormValidation.Kind.ERROR);
     }
 
     @Test
-    public void given__badUrl__when__check__then__fail() {
-        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("").kind, is(FormValidation.Kind.ERROR));
-    }
-
-    @Test
-    public void given__goodUrl__when__check__then__ok() {
-        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("http://dummy.example.com").kind, is(FormValidation.Kind.OK));
+    void given__goodUrl__when__check__then__ok() {
+        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("http://dummy.example.com").kind).isEqualTo(FormValidation.Kind.OK);
     }
 }

@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Extension;
 import hudson.Util;
 import hudson.model.TaskListener;
 import java.io.IOException;
@@ -58,6 +57,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
 import org.mockito.Mockito;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
@@ -137,7 +137,7 @@ public class SCMTraitCommitTest {
             return verified.size();
         }
 
-        @Extension
+        @TestExtension
         public static class DescriptorImpl extends SCMSourceTraitDescriptor {
         }
     }

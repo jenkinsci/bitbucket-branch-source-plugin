@@ -92,9 +92,8 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void test_signature_is_missing_from_cloud_payload() throws Exception {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, null, BitbucketCloudEndpoint.SERVER_URL);
-        endpoint.setEnableHookSignature(true);
-        endpoint.setHookSignatureCredentialsId(credentialsId);
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, false, null , true, credentialsId);
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins.acme.com:8080/jenkins");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
@@ -112,9 +111,8 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void test_signature_from_cloud() throws Exception {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, null, BitbucketCloudEndpoint.SERVER_URL);
-        endpoint.setEnableHookSignature(true);
-        endpoint.setHookSignatureCredentialsId(credentialsId);
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, false, null , true, credentialsId);
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins.acme.com:8080/jenkins");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
@@ -137,9 +135,8 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void test_bad_signature_from_cloud() throws Exception {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, null, BitbucketCloudEndpoint.SERVER_URL);
-        endpoint.setEnableHookSignature(true);
-        endpoint.setHookSignatureCredentialsId(credentialsId);
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, false, null , true, credentialsId);
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins.acme.com:8080/jenkins");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
@@ -158,9 +155,8 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void test_signature_from_native_server() throws Exception {
-        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("datacenter", "http://localhost:7990/bitbucket", false, null, "https://jenkins.example.com");
-        endpoint.setEnableHookSignature(true);
-        endpoint.setHookSignatureCredentialsId(credentialsId);
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("datacenter", "http://localhost:7990/bitbucket", false, null, true, credentialsId);
+        endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
@@ -194,9 +190,8 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void test_bad_signature_from_native_server() throws Exception {
-        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("datacenter", "http://localhost:7990/bitbucket", false, null, "https://jenkins.example.com");
-        endpoint.setEnableHookSignature(true);
-        endpoint.setHookSignatureCredentialsId(credentialsId);
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("datacenter", "http://localhost:7990/bitbucket", false, null, true, credentialsId);
+        endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {

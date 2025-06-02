@@ -26,11 +26,11 @@ package com.cloudbees.jenkins.plugins.bitbucket.server;
 import hudson.model.ModelObject;
 
 public enum BitbucketServerVersion implements ModelObject {
-    VERSION_7("Bitbucket v7.x (and later)"),
-    VERSION_6_5("Bitbucket v6.5 to v6.10"),
-    VERSION_6("Bitbucket v6.0 to v6.4"),
-    VERSION_5_10("Bitbucket v5.10 to v5.16"),
-    VERSION_5("Bitbucket v5.9 (and earlier)");
+    VERSION_7("Bitbucket Data Center v8.x (and later)"),
+    VERSION_6_5("Bitbucket Server v6.5 to v6.10 - EOL reached, any support DISMISSED"),
+    VERSION_6("Bitbucket Server v6.0 to v6.4 - EOL reached, any support DISMISSED"),
+    VERSION_5_10("Bitbucket Server v5.10 to v5.16 - EOL reached, any support DISMISSED"),
+    VERSION_5("Bitbucket Server v5.9 (and earlier) - EOL reached, any support DISMISSED");
 
     private final String displayName;
 

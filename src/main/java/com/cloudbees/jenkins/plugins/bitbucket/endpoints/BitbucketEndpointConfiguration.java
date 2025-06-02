@@ -97,19 +97,19 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     @Restricted(NoExternalUse.class) // only for plugin internal use.
     @NonNull
     public String readResolveServerUrl(@CheckForNull String bitbucketServerUrl) {
-        String serverUrl = normalizeServerURL(bitbucketServerUrl);
-        serverUrl = StringUtils.defaultIfBlank(serverUrl, BitbucketCloudEndpoint.SERVER_URL);
-        AbstractBitbucketEndpoint endpoint = findEndpoint(serverUrl).orElse(null);
+        String serverURL = normalizeServerURL(bitbucketServerUrl);
+        serverURL = StringUtils.defaultIfBlank(serverURL, BitbucketCloudEndpoint.SERVER_URL);
+        AbstractBitbucketEndpoint endpoint = findEndpoint(serverURL).orElse(null);
         if (endpoint == null && ACL.SYSTEM2.equals(Jenkins.getAuthentication2())) {
-            if (BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)
-                    || BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverUrl)) {
+            if (BitbucketCloudEndpoint.SERVER_URL.equals(serverURL)
+                    || BitbucketCloudEndpoint.BAD_SERVER_URL.equals(serverURL)) {
                 // exception case
-                addEndpoint(new BitbucketCloudEndpoint(false, null));
+                addEndpoint(new BitbucketCloudEndpoint());
             } else {
-                addEndpoint(new BitbucketServerEndpoint(null, serverUrl, false, null));
+                addEndpoint(new BitbucketServerEndpoint(serverURL));
             }
         }
-        return endpoint == null ?  serverUrl : endpoint.getServerUrl();
+        return endpoint == null ?  serverURL : endpoint.getServerUrl();
     }
 
     /**
@@ -153,7 +153,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
     @NonNull
     public synchronized List<AbstractBitbucketEndpoint> getEndpoints() {
         return endpoints == null || endpoints.isEmpty()
-                ? Collections.<AbstractBitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(false, null))
+                ? List.of(new BitbucketCloudEndpoint())
                 : Collections.unmodifiableList(endpoints);
     }
 
@@ -176,12 +176,16 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             } else if (!(endpoint instanceof BitbucketCloudEndpoint)
                     && BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
                 // fix type for the special case
-                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId(), endpoint.getBitbucketJenkinsRootUrl()));
+                BitbucketCloudEndpoint cloudEndpoint = new BitbucketCloudEndpoint(false, 0, 0,
+                        endpoint.isManageHooks(), endpoint.getCredentialsId(),
+                        endpoint.isEnableHookSignature(), endpoint.getHookSignatureCredentialsId());
+                cloudEndpoint.setBitbucketJenkinsRootUrl(endpoint.getBitbucketJenkinsRootUrl());
+                iterator.set(cloudEndpoint);
             }
             serverUrls.add(serverUrl);
         }
         if (eps.isEmpty()) {
-            eps.add(new BitbucketCloudEndpoint(false, null));
+            eps.add(new BitbucketCloudEndpoint());
         }
         this.endpoints = eps;
         save();

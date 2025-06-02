@@ -39,6 +39,7 @@ import java.net.URL;
 import java.util.Objects;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -99,30 +100,43 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     private boolean callChanges = true;
 
     /**
-     * @param displayName   Optional name to use to describe the end-point.
-     * @param serverUrl     The URL of this Bitbucket Server
-     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
-     *                      auto-management of hooks.
+     * Default constructor.
+     * @param serverURL
+     */
+    BitbucketServerEndpoint(@NonNull String serverURL) {
+        this(null, serverURL, false, null, false, null);
+    }
+
+    @Deprecated(since = "936.3.1")
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+                                   boolean manageHooks, @CheckForNull String credentialsId) {
+        this(displayName, serverUrl, manageHooks, credentialsId, false, null);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param displayName Optional name to use to describe the end-point.
+     * @param serverUrl The URL of this Bitbucket Server
+     * @param manageHooks {@code true} if and only if Jenkins is supposed to
+     *        auto-manage hooks for this end-point.
+     * @param credentialsId The {@link StandardCredentials#getId()} of the
+     *        credentials to use for auto-management of hooks.
+     * @param enableHookSignature {@code true} hooks that comes Bitbucket Data
+     *        Center are signed.
+     * @param credentialsId The {@link StringCredentials#getId()} of the
+     *        credentials to use for verify the signature of payload.
      */
     @DataBoundConstructor
-    public BitbucketServerEndpoint(@CheckForNull String displayName,
-                                   @NonNull String serverUrl,
-                                   boolean manageHooks,
-                                   @CheckForNull String credentialsId) {
-        super(manageHooks, credentialsId);
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+                                   boolean manageHooks, @CheckForNull String credentialsId,
+                                   boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
+        super(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
         // use fixNull to silent nullability check
         this.serverUrl = Util.fixNull(BitbucketEndpointConfiguration.normalizeServerURL(serverUrl));
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName.trim();
-    }
-
-    @Restricted(NoExternalUse.class) // Used for testing
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
-        boolean manageHooks, @CheckForNull String credentialsId, String endpointUrl) {
-        this(displayName, serverUrl, manageHooks, credentialsId);
-        setBitbucketJenkinsRootUrl(endpointUrl);
     }
 
     @NonNull

@@ -40,13 +40,14 @@ import jenkins.branch.MultiBranchProject;
 import jenkins.branch.MultiBranchProjectDescriptor;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
-import org.acegisecurity.Authentication;
 
 public class MockMultiBranchProjectImpl extends MultiBranchProject<FreeStyleProject, FreeStyleBuild> {
 
+    @SuppressWarnings("serial")
     public static final SCMSourceCriteria CRITERIA = new SCMSourceCriteria() {
-        @Override public boolean isHead(SCMSourceCriteria.Probe probe, TaskListener listener) throws IOException {
-            return probe.exists("markerfile.txt");
+        @Override
+        public boolean isHead(SCMSourceCriteria.Probe probe, TaskListener listener) throws IOException {
+            return probe.stat("markerfile.txt").exists();
         }
 
         @Override
@@ -60,13 +61,8 @@ public class MockMultiBranchProjectImpl extends MultiBranchProject<FreeStyleProj
         }
     };
 
-    public MockMultiBranchProjectImpl(ItemGroup parent, String name) {
+    public MockMultiBranchProjectImpl(ItemGroup<?> parent, String name) {
         super(parent, name);
-    }
-
-    @Override
-    public Authentication getDefaultAuthentication(hudson.model.Queue.Item item) {
-        return getDefaultAuthentication();
     }
 
     @Override
@@ -130,7 +126,7 @@ public class MockMultiBranchProjectImpl extends MultiBranchProject<FreeStyleProj
         }
 
         @Override
-        public TopLevelItem newInstance(ItemGroup parent, String name) {
+        public TopLevelItem newInstance(@SuppressWarnings("rawtypes") ItemGroup parent, String name) {
             return new MockMultiBranchProjectImpl(parent, name);
         }
 

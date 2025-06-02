@@ -81,9 +81,7 @@ class WebhookAutoRegisterListenerTest {
 
         StringCredentials credentials = BitbucketTestUtil.registerHookCredentials("password", rule);
 
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId");
-        endpoint.setEnableHookSignature(true);
-        endpoint.setHookSignatureCredentialsId(credentials.getId());
+        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId", true, credentials.getId());
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos") {

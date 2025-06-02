@@ -34,7 +34,7 @@ import hudson.model.AbstractDescribableImpl;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -85,9 +85,12 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
      */
-    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
+    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId,
+                              boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
+        this.enableHookSignature = enableHookSignature && StringUtils.isNotBlank(hookSignatureCredentialsId);
+        this.hookSignatureCredentialsId = enableHookSignature ? fixEmptyAndTrim(hookSignatureCredentialsId) : null;
     }
 
     /**
@@ -149,22 +152,8 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         return hookSignatureCredentialsId;
     }
 
-    @DataBoundSetter
-    public void setHookSignatureCredentialsId(String hookSignatureCredentialsId) {
-        if (enableHookSignature) {
-            this.hookSignatureCredentialsId = fixEmptyAndTrim(hookSignatureCredentialsId);
-        } else {
-            this.hookSignatureCredentialsId = null;
-        }
-    }
-
     public boolean isEnableHookSignature() {
         return enableHookSignature;
-    }
-
-    @DataBoundSetter
-    public void setEnableHookSignature(boolean enableHookSignature) {
-        this.enableHookSignature = enableHookSignature;
     }
 
     /**
@@ -179,7 +168,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
     @NonNull
     public String getEndpointJenkinsRootUrl() {
         if (StringUtils.isBlank(bitbucketJenkinsRootUrl)) {
-            return ClassicDisplayURLProvider.get().getRoot();
+            return DisplayURLProvider.get().getRoot();
         } else {
             return bitbucketJenkinsRootUrl;
         }
@@ -213,7 +202,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
         if (endpoint != null) {
             return endpoint.getEndpointJenkinsRootUrl();
         }
-        return ClassicDisplayURLProvider.get().getRoot();
+        return DisplayURLProvider.get().getRoot();
     }
 
     /**

@@ -23,112 +23,79 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
-import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import com.damnhandy.uri.template.UriTemplate;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import java.util.Collections;
 import java.util.List;
-import org.hamcrest.Matchers;
+import java.util.Map;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class AbstractBitbucketEndpointDescriptorTest {
+@WithJenkins
+class AbstractBitbucketEndpointDescriptorTest {
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    static JenkinsRule j;
 
-    @Before
-    public void reset() {
+    @BeforeAll
+    static void init(JenkinsRule rule) {
+        j = rule;
+    }
+
+    @BeforeEach
+    void reset() {
         SystemCredentialsProvider.getInstance()
-                .setDomainCredentialsMap(Collections.<Domain, List<Credentials>>emptyMap());
+                .setDomainCredentialsMap(Collections.emptyMap());
     }
 
     @Test
-    public void given__cloudCredentials__when__listingForServer__then__noCredentials() throws Exception {
-        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(
-                new Domain("cloud", "bb cloud",
-                        Collections.<DomainSpecification>singletonList(new HostnameSpecification("bitbucket.org", ""))),
-                Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
-                        CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
-        ListBoxModel result =
-                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems(null, "http://bitbucket.example.com");
-        assertThat(result, Matchers.hasSize(0));
+    void given__cloudCredentials__when__listingForServer__then__noCredentials() throws Exception {
+        SystemCredentialsProvider.getInstance()
+            .setDomainCredentialsMap(Map.of(
+                    new Domain("cloud", "bb cloud", List.of(new HostnameSpecification("bitbucket.org", ""))),
+                    List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass")))
+            );
+        ListBoxModel result = new DummyEndpointConfiguration(true, "dummy")
+                .getDescriptor()
+                .doFillCredentialsIdItems(null, "http://bitbucket.example.com");
+        assertThat(result).isEmpty();
     }
 
     @Test
-    public void given__cloudCredentials__when__listingForCloud__then__credentials() throws Exception {
-        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(
-                new Domain("cloud", "bb cloud",
-                        Collections.<DomainSpecification>singletonList(new HostnameSpecification("bitbucket.org", ""))),
-                Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
-                        CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
-        ListBoxModel result =
-                new Dummy(true, "dummy").getDescriptor().doFillCredentialsIdItems(null, "http://bitbucket.org");
-        assertThat(result, Matchers.hasSize(1));
+    void given__cloudCredentials__when__listingForCloud__then__credentials() throws Exception {
+        SystemCredentialsProvider.getInstance()
+            .setDomainCredentialsMap(Map.of(
+                    new Domain("cloud", "bb cloud", List.of(new HostnameSpecification("bitbucket.org", ""))),
+                    List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass")))
+            );
+        ListBoxModel result = new DummyEndpointConfiguration(true, "dummy")
+                .getDescriptor()
+                .doFillCredentialsIdItems(null, "http://bitbucket.org");
+        assertThat(result).hasSize(1);
     }
 
     @Test
-    public void given__cloud_HMAC_Credentials__when__listingForCloud__then__credentials() {
+    void given__cloud_HMAC_Credentials__when__listingForCloud__then__credentials() {
         List<DomainSpecification> domainSpecifications = Collections.<DomainSpecification>singletonList(new HostnameSpecification("bitbucket.org", ""));
         SystemCredentialsProvider.getInstance()
-            .setDomainCredentialsMap(Collections.singletonMap(new Domain("cloud", "bb cloud", domainSpecifications),
-                Collections.<Credentials>singletonList(new StringCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", Secret.fromString("pass")))));
-        ListBoxModel result = new Dummy(true, "dummy")
+            .setDomainCredentialsMap(Map.of(
+                    new Domain("cloud", "bb cloud", domainSpecifications),
+                    List.of(new StringCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", Secret.fromString("pass"))))
+            );
+        ListBoxModel result = new DummyEndpointConfiguration(true, "dummy")
                 .getDescriptor()
                 .doFillHookSignatureCredentialsIdItems(null, "https://bitbucket.org");
-        assertThat(result, Matchers.hasSize(1));
-    }
-
-    public static class Dummy extends AbstractBitbucketEndpoint {
-
-        Dummy(boolean manageHooks, String credentialsId) {
-            super(manageHooks, credentialsId);
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "Dummy";
-        }
-
-        @NonNull
-        @Override
-        public String getServerUrl() {
-            return "http://dummy.example.com";
-        }
-
-        @NonNull
-        @Override
-        public String getBitbucketJenkinsRootUrl() {
-            return "http://master.example.com";
-        }
-
-        @NonNull
-        @Override
-        public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
-            return UriTemplate
-                    .fromTemplate("http://dummy.example.com{/owner,repo}")
-                    .set("owner", repoOwner)
-                    .set("repo", repository)
-                    .expand();
-        }
-
-        @TestExtension
-        public static class DescriptorImpl extends AbstractBitbucketEndpointDescriptor {
-
-        }
+        assertThat(result).hasSize(1);
     }
 }

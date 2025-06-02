@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Optional;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+@SuppressWarnings("deprecation")
 @WithJenkins
 class BitbucketEndpointConfigurationTest {
 
@@ -96,8 +98,7 @@ class BitbucketEndpointConfigurationTest {
     void given__newInstance__when__configuredWithCloud__then__cloudPresent() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeFalse("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(true, "dummy")));
+        instance.setEndpoints(List.of(buildEndpoint(true, "dummy")));
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
             assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
@@ -108,10 +109,7 @@ class BitbucketEndpointConfigurationTest {
     void given__newInstance__when__configuredWithMultipleCloud__then__onlyFirstCloudPresent() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeFalse("first".equals(instance.getEndpoints().get(0).getCredentialsId()));
-        instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(
-                new BitbucketCloudEndpoint(true, "first"),
-                new BitbucketCloudEndpoint(true, "second"),
-                new BitbucketCloudEndpoint(true, "third")));
+        instance.setEndpoints(List.of(buildEndpoint(true, "first"), buildEndpoint(true, "second"), buildEndpoint(true, "third")));
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
             assertThat(endpoint.getCredentialsId()).isEqualTo("first");
@@ -122,11 +120,10 @@ class BitbucketEndpointConfigurationTest {
     void given__newInstance__when__configuredAsAnon__then__permissionError() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         r.jenkins.setAuthorizationStrategy(new FullControlOnceLoggedInAuthorizationStrategy());
-        try (ACLContext context = ACL.as(Jenkins.ANONYMOUS)) {
-            assertThatThrownBy(() -> instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(
-                        new BitbucketCloudEndpoint(true, "first"),
-                        new BitbucketCloudEndpoint(true, "second"),
-                        new BitbucketCloudEndpoint(true, "third"))))
+        try (ACLContext context = ACL.as2(Jenkins.ANONYMOUS2)) {
+            assertThatThrownBy(() ->
+                    instance.setEndpoints(List.of(buildEndpoint(true, "first"), buildEndpoint(true, "second"), buildEndpoint(true, "third")))
+                )
                 .hasMessage(hudson.security.Messages.AccessDeniedException2_MissingPermission("anonymous", "Overall/Administer"));
         } finally {
             r.jenkins.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED);
@@ -141,10 +138,7 @@ class BitbucketEndpointConfigurationTest {
         mockStrategy.grant(Jenkins.MANAGE).onRoot().to("admin");
         r.jenkins.setAuthorizationStrategy(mockStrategy);
         try (ACLContext context = ACL.as(User.get("admin"))) {
-            instance.setEndpoints(Arrays.<AbstractBitbucketEndpoint>asList(
-                new BitbucketCloudEndpoint(true, "first"),
-                new BitbucketCloudEndpoint(true, "second"),
-                new BitbucketCloudEndpoint(true, "third")));
+            instance.setEndpoints(List.of(buildEndpoint(true, "first"), buildEndpoint(true, "second"), buildEndpoint(true, "third")));
             assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
             assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
                 assertThat(endpoint.getCredentialsId()).isEqualTo("first");
@@ -158,10 +152,10 @@ class BitbucketEndpointConfigurationTest {
     void given__newInstance__when__configuredWithServerUsingCloudUrl__then__convertedToCloud() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeFalse("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
-        instance.setEndpoints(Arrays.asList(
+        instance.setEndpoints(List.of(
                 new BitbucketServerEndpoint("I am silly", BitbucketCloudEndpoint.SERVER_URL, true, "dummy"),
-                new BitbucketCloudEndpoint(true, "second"),
-                new BitbucketCloudEndpoint(true, "third")));
+                buildEndpoint(true, "second"),
+                buildEndpoint(true, "third")));
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
             assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
@@ -172,9 +166,7 @@ class BitbucketEndpointConfigurationTest {
     void given__newInstance__when__configuredWithServer__then__serverPresent() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeFalse("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
 
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
@@ -189,8 +181,7 @@ class BitbucketEndpointConfigurationTest {
     void given__newInstance__when__configuredWithTwoServers__then__serversPresent() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assumeFalse("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
-        instance.setEndpoints(
-                Arrays.<AbstractBitbucketEndpoint>asList(
+        instance.setEndpoints(List.of(
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", false, null)));
 
@@ -212,11 +203,10 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithCloud__when__addingAnotherCloud__then__onlyFirstCloudRetained() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(true, "dummy")));
+        instance.setEndpoints(List.of(buildEndpoint(true, "dummy")));
         assumeTrue("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
 
-        assertThat(instance.addEndpoint(new BitbucketCloudEndpoint(false, null))).isFalse();
+        assertThat(instance.addEndpoint(new BitbucketCloudEndpoint())).isFalse();
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
             assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
@@ -226,12 +216,10 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithServer__when__addingCloud__then__cloudAdded() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
         assumeTrue("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
 
-        assertThat(instance.addEndpoint(new BitbucketCloudEndpoint(true, "added"))).isTrue();
+        assertThat(instance.addEndpoint(buildEndpoint(true, "added"))).isTrue();
         assertThat(instance.getEndpoints()).hasExactlyElementsOfTypes(BitbucketServerEndpoint.class, BitbucketCloudEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
             assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
@@ -248,9 +236,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithServer__when__addingDifferentServer__then__serverAdded() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
         assumeTrue("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
 
         assertThat(instance.addEndpoint(new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "added"))).isTrue();
@@ -266,9 +252,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithServer__when__addingSameServer__then__onlyFirstServerRetained() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
         assumeTrue("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
 
         assertThat(instance.addEndpoint(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", false, null))).isFalse();
@@ -281,11 +265,10 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithCloud__when__updatingCloud__then__cloudUpdated() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(new BitbucketCloudEndpoint(true, "dummy")));
+        instance.setEndpoints(List.of(buildEndpoint(true, "dummy")));
         assumeTrue("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
 
-        instance.updateEndpoint(new BitbucketCloudEndpoint(false, null));
+        instance.updateEndpoint(new BitbucketCloudEndpoint());
 
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
@@ -296,11 +279,9 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithServer__when__updatingCloud__then__cloudAdded() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
         assumeTrue("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
-        instance.updateEndpoint(new BitbucketCloudEndpoint(true, "added"));
+        instance.updateEndpoint(buildEndpoint(true, "added"));
 
         assertThat(instance.getEndpoints()).hasExactlyElementsOfTypes(BitbucketServerEndpoint.class, BitbucketCloudEndpoint.class);
         assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
@@ -314,9 +295,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithServer__when__updatingDifferentServer__then__serverAdded() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
         assumeTrue("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
 
         instance.updateEndpoint(new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "added"));
@@ -333,9 +312,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithServer__when__updatingSameServer__then__serverUpdated() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy")));
 
         instance.updateEndpoint(new BitbucketServerEndpoint("Example, Inc.", "https://bitbucket.example.com/", false, null));
 
@@ -352,7 +329,7 @@ class BitbucketEndpointConfigurationTest {
     void given__newInstance__when__removingCloud__then__defaultRestored() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         assertThat(instance.getEndpoints().get(0).getCredentialsId()).isNull();
-        assertThat(instance.removeEndpoint(new BitbucketCloudEndpoint(true, "dummy"))).isTrue();
+        assertThat(instance.removeEndpoint(buildEndpoint(true, "dummy"))).isTrue();
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
     }
 
@@ -361,7 +338,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -380,7 +357,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -388,7 +365,7 @@ class BitbucketEndpointConfigurationTest {
         assumeTrue("second".equals(instance.getEndpoints().get(1).getCredentialsId()));
         assumeTrue("third".equals(instance.getEndpoints().get(2).getCredentialsId()));
 
-        assertThat(instance.removeEndpoint(new BitbucketCloudEndpoint(false, null))).isTrue();
+        assertThat(instance.removeEndpoint(new BitbucketCloudEndpoint())).isTrue();
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
         assertThat(instance.getEndpoints().get(0).getCredentialsId()).isEqualTo("second");
         assertThat(instance.getEndpoints().get(1).getCredentialsId()).isEqualTo("third");
@@ -399,7 +376,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -429,7 +406,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -441,7 +418,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -493,7 +470,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -507,7 +484,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -526,7 +503,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
@@ -623,7 +600,7 @@ class BitbucketEndpointConfigurationTest {
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
         instance.setEndpoints(
                 Arrays.asList(
-                        new BitbucketCloudEndpoint(true, "first"),
+                        buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", false, null)
                 ));
@@ -674,6 +651,39 @@ class BitbucketEndpointConfigurationTest {
     }
 
     @Test
+    void load_serverConfig__with_old_signatures() throws Exception {
+        final URL configWithoutWebhookImpl = Resources.getResource(getClass(), "config-old-signatures.xml");
+        final File configFile = new File(Jenkins.get().getRootDir(), BitbucketEndpointConfiguration.class.getName() + ".xml");
+        FileUtils.copyURLToFile(configWithoutWebhookImpl, configFile);
+
+        final BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
+
+        assertThat(instance.getEndpoints()).element(0)
+            .isInstanceOf(BitbucketCloudEndpoint.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(BitbucketCloudEndpoint.class))
+            .satisfies(endpoint -> {
+                assertThat(endpoint.isEnableCache()).isFalse();
+                assertThat(endpoint.isManageHooks()).isFalse();
+                assertThat(endpoint.getCredentialsId()).isNull();
+                assertThat(endpoint.getTeamCacheDuration()).isEqualTo(360);
+                assertThat(endpoint.getRepositoriesCacheDuration()).isEqualTo(180);
+            });
+        assertThat(instance.getEndpoints()).element(1)
+            .isInstanceOf(BitbucketServerEndpoint.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(BitbucketServerEndpoint.class))
+            .satisfies(endpoint -> {
+                assertThat(endpoint.isManageHooks()).isTrue();
+                assertThat(endpoint.getCredentialsId()).isEqualTo("admin.basic.credentials");
+                assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("http://host.docker.internal:8090/jenkins/");
+                assertThat(endpoint.getDisplayName()).isEqualTo("server");
+                assertThat(endpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
+                assertThat(endpoint.isCallCanMerge()).isTrue();
+                assertThat(endpoint.isCallChanges()).isTrue();
+            });
+        assertThat(instance.getEndpoints()).element(1).isInstanceOf(BitbucketServerEndpoint.class);
+    }
+
+    @Test
     void should_support_configuration_as_code() throws Exception {
         ConfigurationAsCode.get().configure(getClass().getResource(getClass().getSimpleName() + "/configuration-as-code.yml").toString());
 
@@ -681,16 +691,22 @@ class BitbucketEndpointConfigurationTest {
 
         assertThat(instance.getEndpoints()).hasSize(12);
 
-        BitbucketCloudEndpoint endpoint1 = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
-        assertThat(endpoint1.getDisplayName()).isEqualTo(Messages.BitbucketCloudEndpoint_displayName());
-        assertThat(endpoint1.getServerUrl()).isEqualTo("https://bitbucket.org");
-        assertThat(endpoint1.isManageHooks()).isTrue();
-        assertThat(endpoint1.getCredentialsId()).isEqualTo("first");
-        assertThat(endpoint1.isEnableCache()).isTrue();
-        assertThat(endpoint1.getTeamCacheDuration()).isEqualTo(1);
-        assertThat(endpoint1.getRepositoriesCacheDuration()).isEqualTo(2);
+        assertThat(instance.getEndpoints()).element(0).isInstanceOf(BitbucketCloudEndpoint.class);
+        BitbucketCloudEndpoint endpoint = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
+        assertThat(endpoint.getDisplayName()).isEqualTo(Messages.BitbucketCloudEndpoint_displayName());
+        assertThat(endpoint.getServerUrl()).isEqualTo("https://bitbucket.org");
+        assertThat(endpoint.isManageHooks()).isTrue();
+        assertThat(endpoint.getCredentialsId()).isEqualTo("first");
+        assertThat(endpoint.isEnableCache()).isTrue();
+        assertThat(endpoint.getTeamCacheDuration()).isEqualTo(1);
+        assertThat(endpoint.getRepositoriesCacheDuration()).isEqualTo(2);
+        assertThat(endpoint.isEnableHookSignature()).isTrue();
+        assertThat(endpoint.getHookSignatureCredentialsId()).isEqualTo("secretId");
 
         BitbucketServerEndpoint serverEndpoint;
+
+        // test that set credentials, before enabling the corresponding management, will result null
+        assertThat(instance.getEndpoints()).element(1).isInstanceOf(BitbucketServerEndpoint.class);
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(1);
         assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
         assertThat(serverEndpoint.getServerUrl()).isEqualTo("https://bitbucket.example.com");
@@ -701,6 +717,7 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.PLUGIN);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7);
 
+        assertThat(instance.getEndpoints()).element(2).isInstanceOf(BitbucketServerEndpoint.class);
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(2);
         assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Org");
         assertThat(serverEndpoint.getServerUrl()).isEqualTo("http://example.org:8080/bitbucket");
@@ -800,6 +817,10 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.isCallChanges()).isTrue();
         assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.PLUGIN);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_5);
+    }
+
+    private BitbucketCloudEndpoint buildEndpoint(boolean manageHook, String credentials) {
+        return new BitbucketCloudEndpoint(false, 0, 0, manageHook, credentials, false, null);
     }
 
 }
