@@ -24,9 +24,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
@@ -104,7 +104,7 @@ class BitbucketSCMSourceTest {
         String path = getClass().getSimpleName() + "/" + BitbucketEndpointConfiguration.class.getSimpleName() + "/" + dataSet + ".xml";
         URL url = getClass().getResource(path);
         BitbucketEndpointConfiguration bec = (BitbucketEndpointConfiguration) Jenkins.XSTREAM2.fromXML(url);
-        for (AbstractBitbucketEndpoint abe : bec.getEndpoints()) {
+        for (BitbucketEndpoint abe : bec.getEndpoints()) {
             if (abe != null) {
                 BitbucketEndpointConfiguration.get().updateEndpoint(abe);
             }

@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
@@ -47,10 +48,6 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * The URL of Bitbucket Cloud.
      */
     public static final String SERVER_URL = "https://bitbucket.org";
-    /**
-     * A bad URL of Bitbucket Cloud.
-     */
-    public static final String BAD_SERVER_URL = "http://bitbucket.org";
 
     /**
      * {@code true} if caching should be used to reduce requests to Bitbucket.
@@ -131,10 +128,16 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
     /**
      * {@inheritDoc}
      */
-    @NonNull
     @Override
+    @NonNull
+    @Deprecated(since = "936.4.0", forRemoval = true)
     public String getServerUrl() {
         return SERVER_URL;
+    }
+
+    @Override
+    public String getServerURL() {
+        return getServerUrl();
     }
 
     /**
@@ -148,6 +151,11 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
                 .set("owner", repoOwner)
                 .set("repo", repository);
         return template.expand();
+    }
+
+    @Override
+    public EndpointType getType() {
+        return EndpointType.CLOUD;
     }
 
     /**
@@ -188,4 +196,5 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
         }
         return this;
     }
+
 }

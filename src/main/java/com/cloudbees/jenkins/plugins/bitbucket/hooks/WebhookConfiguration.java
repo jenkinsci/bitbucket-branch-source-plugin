@@ -25,9 +25,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
@@ -215,8 +215,8 @@ public class WebhookConfiguration {
 
     @Nullable
     private String getSecret(@NonNull String serverURL) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                .findEndpoint(serverURL)
+        BitbucketEndpoint endpoint = BitbucketEndpointProvider
+                .lookupEndpoint(serverURL)
                 .orElseThrow();
         if (endpoint.isEnableHookSignature()) {
             StringCredentials credentials = endpoint.hookSignatureCredentials();
@@ -230,8 +230,8 @@ public class WebhookConfiguration {
     }
 
     private static List<String> getNativeServerEvents(String serverUrl) {
-        BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                .findEndpoint(serverUrl, BitbucketServerEndpoint.class)
+        BitbucketServerEndpoint endpoint = BitbucketEndpointProvider
+                .lookupEndpoint(serverUrl, BitbucketServerEndpoint.class)
                 .orElse(null);
         if (endpoint != null) {
             switch (endpoint.getServerVersion()) {

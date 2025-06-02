@@ -26,9 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -45,16 +44,16 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
     @Override
     protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
                                   @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                .findEndpoint(BitbucketCloudEndpoint.SERVER_URL)
+        BitbucketCloudEndpoint endpoint = BitbucketEndpointProvider
+                .lookupEndpoint(BitbucketCloudEndpoint.SERVER_URL, BitbucketCloudEndpoint.class)
                 .orElse(null);
         boolean enableCache = false;
         int teamCacheDuration = 0;
         int repositoriesCacheDuration = 0;
-        if (endpoint instanceof BitbucketCloudEndpoint cloudEndpoint) {
-            enableCache = cloudEndpoint.isEnableCache();
-            teamCacheDuration = cloudEndpoint.getTeamCacheDuration();
-            repositoriesCacheDuration = cloudEndpoint.getRepositoriesCacheDuration();
+        if (endpoint != null) {
+            enableCache = endpoint.isEnableCache();
+            teamCacheDuration = endpoint.getTeamCacheDuration();
+            repositoriesCacheDuration = endpoint.getRepositoriesCacheDuration();
         }
         return new BitbucketCloudApiClient(
                 enableCache, teamCacheDuration, repositoriesCacheDuration,

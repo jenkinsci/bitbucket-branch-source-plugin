@@ -29,28 +29,35 @@ import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import java.util.Arrays;
 import java.util.Collections;
 import jenkins.model.Jenkins;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitbucketSCMNavigatorTest {
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
-    @Rule
-    public TestName currentTestName = new TestName();
+@WithJenkins
+class BitbucketSCMNavigatorTest {
+
+    static JenkinsRule j;
+
+    @BeforeAll
+    static void init(JenkinsRule rule) {
+        j = rule;
+    }
+
+    private String currentTestName;
+
+    @BeforeEach
+    void setup(TestInfo testInfo) {
+        currentTestName = testInfo.getTestMethod().get().getName();
+    }
 
     private BitbucketSCMNavigator load() {
-        return load(currentTestName.getMethodName());
+        return load(currentTestName);
     }
 
     private BitbucketSCMNavigator load(String dataSet) {
@@ -59,68 +66,72 @@ public class BitbucketSCMNavigatorTest {
     }
 
     @Test
-    public void modern() throws Exception {
+    void modern() throws Exception {
         BitbucketSCMNavigator instance = load();
-        assertThat(instance.id(), is("https://bitbucket.org::cloudbeers"));
-        assertThat(instance.getRepoOwner(), is("cloudbeers"));
-        assertThat(instance.getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
-        assertThat(instance.getCredentialsId(), is("bcaef157-f105-407f-b150-df7722eab6c1"));
-        assertThat(instance.getTraits(), is(Collections.emptyList()));
+        assertThat(instance.id()).isEqualTo("https://bitbucket.org::cloudbeers");
+        assertThat(instance.getRepoOwner()).isEqualTo("cloudbeers");
+        assertThat(instance.getServerUrl()).isEqualTo(BitbucketCloudEndpoint.SERVER_URL);
+        assertThat(instance.getCredentialsId()).isEqualTo("bcaef157-f105-407f-b150-df7722eab6c1");
+        assertThat(instance.getTraits()).isEmpty();
     }
 
     @Test
-    public void given__instance__when__setTraits_empty__then__traitsEmpty() {
+    void given__instance__when__setTraits_empty__then__traitsEmpty() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setTraits(Collections.emptyList());
-        assertThat(instance.getTraits(), is(Collections.emptyList()));
+        assertThat(instance.getTraits()).isEmpty();
     }
 
     @Test
-    public void given__instance__when__setTraits__then__traitsSet() {
+    void given__instance__when__setTraits__then__traitsSet() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setTraits(Arrays.asList(new BranchDiscoveryTrait(1),
                 new WebhookRegistrationTrait(WebhookRegistration.DISABLE)));
-        assertThat(instance.getTraits(),
-                containsInAnyOrder(
-                        allOf(
-                                instanceOf(BranchDiscoveryTrait.class),
-                                hasProperty("buildBranch", is(true)),
-                                hasProperty("buildBranchesWithPR", is(false))
-                        ),
-                        allOf(
-                                instanceOf(WebhookRegistrationTrait.class),
-                                hasProperty("mode", is(WebhookRegistration.DISABLE))
-                        )
-                )
-        );
+
+        assertThat(instance.getTraits())
+            .anySatisfy(el -> {
+                assertThat(el).isInstanceOf(BranchDiscoveryTrait.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(BranchDiscoveryTrait.class))
+                .satisfies(trait -> {
+                    assertThat(trait.isBuildBranch()).isTrue();
+                    assertThat(trait.isBuildBranchesWithPR()).isFalse();
+                });
+            })
+            .anySatisfy(el -> {
+                assertThat(el).isInstanceOf(WebhookRegistrationTrait.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(WebhookRegistrationTrait.class))
+                .satisfies(trait -> {
+                    assertThat(trait.getMode()).isEqualTo(WebhookRegistration.DISABLE);
+                });
+            });
     }
 
     @Test
-    public void given__instance__when__setServerUrl__then__urlNormalized() {
+    void given__instance__when__setServerUrl__then__urlNormalized() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setServerUrl("https://bitbucket.org:443/foo/../bar/../");
-        assertThat(instance.getServerUrl(), is("https://bitbucket.org"));
+        assertThat(instance.getServerUrl()).isEqualTo("https://bitbucket.org");
     }
 
     @Test
-    public void given__instance__when__setCredentials_empty__then__credentials_null() {
+    void given__instance__when__setCredentials_empty__then__credentials_null() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setCredentialsId("");
-        assertThat(instance.getCredentialsId(), is(nullValue()));
+        assertThat(instance.getCredentialsId()).isNull();
     }
 
     @Test
-    public void given__instance__when__setCredentials_null__then__credentials_null() {
+    void given__instance__when__setCredentials_null__then__credentials_null() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setCredentialsId("");
-        assertThat(instance.getCredentialsId(), is(nullValue()));
+        assertThat(instance.getCredentialsId()).isNull();
     }
 
     @Test
-    public void given__instance__when__setCredentials__then__credentials_set() {
+    void given__instance__when__setCredentials__then__credentials_set() {
         BitbucketSCMNavigator instance = new BitbucketSCMNavigator("test");
         instance.setCredentialsId("test");
-        assertThat(instance.getCredentialsId(), is("test"));
+        assertThat(instance.getCredentialsId()).isEqualTo("test");
     }
 
 }
