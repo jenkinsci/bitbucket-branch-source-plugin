@@ -1,0 +1,56 @@
+{
+    "actor": {
+        "username": "admin",
+        "displayName": "Administrator",
+        "emailAddress": "admin@example.com"
+    },
+    "repository": {
+        "scmId": "git",
+        "project": {
+            "key": "PROJECT_1",
+            "name": "Project 1"
+        },
+        "slug": "rep_1",
+        "links": {
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"
+                }
+            ]
+        },
+        "public": false,
+        "ownerName": "PROJECT_1",
+        "fullName": "PROJECT_1/rep_1",
+        "owner": {
+            "username": "PROJECT_1",
+            "displayName": "PROJECT_1",
+            "emailAddress": null
+        }
+    },
+    "push": {
+        "changes": [
+            {
+                "created": false,
+                "closed": false,
+                "new": {
+                    "type": "branch",
+                    "name": "test-webhook",
+                    "target": {
+                        "type": "commit",
+                        "hash": "c0158b3e6c8cecf3bddc39d20957a98660cd23fd",
+                        "commitMessage": "Test webhook 2"
+                    }
+                },
+                "old": {
+                    "type": "branch",
+                    "name": "test-webhook",
+                    "target": {
+                        "type": "commit",
+                        "hash": "417b2f673581ee6000e260a5fa65e62b56c7a3cd",
+                        "commitMessage": "Test webhooks"
+                    }
+                }
+            }
+        ]
+    }
+}

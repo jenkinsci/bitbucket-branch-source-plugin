@@ -95,7 +95,7 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      *        credentials to use for auto-management of hooks.
      * @param enableHookSignature {@code true} hooks that comes Bitbucket Data
      *        Center are signed.
-     * @param credentialsId The {@link StringCredentials#getId()} of the
+     * @param hookSignatureCredentialsId The {@link StringCredentials#getId()} of the
      *        credentials to use for verify the signature of payload.
      */
     @DataBoundConstructor

@@ -119,7 +119,7 @@ For Bitbucket Data Center only it is possible chose which webhooks implementatio
 
 - Native implementation will configure the webhooks provided by default with the Server, so it will always be available.
 
-- Plugin implementation relies on the configuration available via specific APIs provided by the https://marketplace.atlassian.com/apps/1215474/post-webhooks-for-bitbucket?tab=overview&hosting=datacenter[Post Webhooks for Bitbucket] plugin itself. To get it worked plugin must be already pre-installed on the server instance. This provider allows custom settings managed by the _ignore committers_ trait. _Note: This specific implementation will be moved to an individual repository as soon as https://issues.jenkins.io/browse/JENKINS-74913[JENKINS-74913] is implemented._
+- Plugin implementation (*deprecated*) relies on the configuration available via specific APIs provided by the https://marketplace.atlassian.com/apps/1215474/post-webhooks-for-bitbucket?tab=overview&hosting=datacenter[Post Webhooks for Bitbucket] plugin itself. To get it worked plugin must be already pre-installed on the server instance. This provider allows custom settings managed by the _ignore committers_ trait. _Note: This specific implementation will be moved to an individual repository as soon as https://issues.jenkins.io/browse/JENKINS-74913[JENKINS-74913] is implemented._
 
 image::images/screenshot-14.png[]
 
@@ -131,7 +131,7 @@ image::images/screenshot-18.png[]
 IMPORTANT: In order to have the auto-registering process working fine the Jenkins base URL must be
 properly configured in _Manage Jenkins_ » _System_
 
-=== Webhooks signature
+=== Signature verification for incoming webhooks
 
 Once Jenkins is configured to receive payloads, it will listen for any delivery that's sent to the endpoint you configured. For security reasons, you should only process deliveries from Bitbucket.
 To ensure your self-hosted server only processes deliveries from Bitbucket, you need to:

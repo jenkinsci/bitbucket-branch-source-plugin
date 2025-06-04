@@ -107,16 +107,20 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST, "X-Event-Key HTTP header invalid: " + eventKey);
         }
 
-        String bitbucketKey = req.getHeader("X-Bitbucket-Type");
+        String bitbucketKey = req.getHeader("X-Bitbucket-Type"); // specific header from Plugin implementation
         String serverURL = req.getParameter("server_url");
 
         BitbucketType instanceType = null;
         if (bitbucketKey != null) {
             instanceType = BitbucketType.fromString(bitbucketKey);
         }
-        if (instanceType == null && serverURL != null) {
-            LOGGER.log(Level.FINE, "server_url request parameter found. Bitbucket Native Server webhook incoming.");
-            instanceType = BitbucketType.SERVER;
+        if (serverURL != null) {
+            if (instanceType == null) {
+                LOGGER.log(Level.FINE, "server_url request parameter found. Bitbucket Native Server webhook incoming.");
+                instanceType = BitbucketType.SERVER;
+            } else {
+                LOGGER.log(Level.FINE, "X-Bitbucket-Type header / server_url request parameter found. Bitbucket Plugin Server webhook incoming.");
+            }
         } else {
             LOGGER.log(Level.FINE, "X-Bitbucket-Type header / server_url request parameter not found. Bitbucket Cloud webhook incoming.");
             instanceType = BitbucketType.CLOUD;
@@ -179,7 +183,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             String requestId = ObjectUtils.firstNonNull(req.getHeader("X-Request-UUID"), req.getHeader("X-Request-Id"));
             String hookSignatureCredentialsId = endpoint.getHookSignatureCredentialsId();
             LOGGER.log(Level.WARNING, "No credentials {0} found to verify the signature of incoming webhook {1} request {2}", new Object[] { hookSignatureCredentialsId, hookId, requestId });
-            return HttpResponses.error(HttpServletResponse.SC_FORBIDDEN, "No credentials " + hookSignatureCredentialsId + " found to verify the signature");
+            return HttpResponses.error(HttpServletResponse.SC_FORBIDDEN, "No credentials " + hookSignatureCredentialsId + " found in Jenkins to verify the signature");
         }
         return null;
     }
