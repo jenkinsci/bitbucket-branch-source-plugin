@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -162,7 +163,7 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * Our descriptor.
      */
     @Extension
-    public static class DescriptorImpl extends AbstractBitbucketEndpointDescriptor {
+    public static class DescriptorImpl extends BitbucketEndpointDescriptor {
         /**
          * {@inheritDoc}
          */

@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.github.scribejava.core.model.OAuth2AccessTokenErrorResponse;
 import com.github.scribejava.core.model.OAuthResponseException;
 import com.github.scribejava.core.model.Response;

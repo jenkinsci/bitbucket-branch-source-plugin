@@ -28,7 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.NativeBitbucketServerWebhook;
@@ -147,7 +147,7 @@ public class WebhookConfiguration {
             }
         } else if (hook instanceof NativeBitbucketServerWebhook serverHook) {
             String serverURL = owner.getServerUrl();
-            String url = getNativeServerWebhookUrl(serverURL, owner.getEndpointJenkinsRootURL());
+            String url = getNativeServerWebhookUrl(serverURL, BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(owner.getServerUrl()));
 
             if (!url.equals(serverHook.getUrl())) {
                 serverHook.setUrl(url);
@@ -176,7 +176,7 @@ public class WebhookConfiguration {
 
     public BitbucketWebHook getHook(BitbucketSCMSource owner) {
         final String serverUrl = owner.getServerUrl();
-        final String rootUrl = owner.getEndpointJenkinsRootURL();
+        final String rootUrl = BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(owner.getServerUrl());
         final String signatureSecret = getSecret(owner.getServerUrl());
 
         if (BitbucketApiUtils.isCloud(serverUrl)) {

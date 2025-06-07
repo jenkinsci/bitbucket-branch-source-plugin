@@ -40,12 +40,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -295,9 +294,10 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
+    @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
     public String getEndpointJenkinsRootURL() {
-        return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
+        return BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(serverUrl);
     }
 
     @Override

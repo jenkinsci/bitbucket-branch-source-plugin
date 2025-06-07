@@ -27,9 +27,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
@@ -40,6 +41,7 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import com.thoughtworks.xstream.XStream;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -81,6 +83,7 @@ class BitbucketSCMSourceTest {
     @BeforeAll
     static void init(JenkinsRule rule) {
         j = rule;
+        BitbucketPlugin.aliases();
     }
 
     private String testName;
@@ -102,8 +105,9 @@ class BitbucketSCMSourceTest {
     private void loadBEC(String dataSet) {
         // Note to use original BitbucketSCMSourceTest::getClass() here to get proper paths
         String path = getClass().getSimpleName() + "/" + BitbucketEndpointConfiguration.class.getSimpleName() + "/" + dataSet + ".xml";
+        XStream xs = new BitbucketEndpointConfiguration().getConfigFile().getXStream();
         URL url = getClass().getResource(path);
-        BitbucketEndpointConfiguration bec = (BitbucketEndpointConfiguration) Jenkins.XSTREAM2.fromXML(url);
+        BitbucketEndpointConfiguration bec = (BitbucketEndpointConfiguration) xs.fromXML(url);
         for (BitbucketEndpoint abe : bec.getEndpoints()) {
             if (abe != null) {
                 BitbucketEndpointConfiguration.get().updateEndpoint(abe);
@@ -230,7 +234,7 @@ class BitbucketSCMSourceTest {
         // current global root URL (ending with a slash),
         // meaning "current value at the moment when we ask".
         JenkinsLocationConfiguration.get().setUrl("http://localjenkins:80");
-        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("http://localjenkins:80/");
+        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("http://localjenkins/");
 
         JenkinsLocationConfiguration.get().setUrl("https://ourjenkins.master:8443/ci");
         assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://ourjenkins.master:8443/ci/");

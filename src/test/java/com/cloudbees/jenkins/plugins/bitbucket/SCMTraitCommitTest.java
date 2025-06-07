@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;

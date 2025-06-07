@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;

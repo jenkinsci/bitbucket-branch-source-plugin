@@ -31,10 +31,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
@@ -232,7 +231,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
+         return BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(serverUrl);
     }
 
     @NonNull

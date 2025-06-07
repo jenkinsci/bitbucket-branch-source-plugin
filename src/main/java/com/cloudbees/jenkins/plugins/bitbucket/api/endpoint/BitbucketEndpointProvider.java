@@ -23,14 +23,15 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.Util;
 import hudson.util.ListBoxModel;
 import java.util.Collection;
 import java.util.List;
@@ -38,6 +39,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
  * A provider of {@link BitbucketEndpoint}s
@@ -92,6 +94,21 @@ public final class BitbucketEndpointProvider{
                 .filter(endpoint -> Objects.equals(normalizedServerURL, endpoint.getServerURL()))
                 .map(endpoint -> (T) endpoint)
                 .findFirst();
+    }
+
+    /**
+     * Jenkins Server Root URL to be used by the Bitbucket endpoint that matches
+     * the given serverURL. The global setting from Jenkins.get().getRootUrl()
+     * will be used if this field is null or equals an empty string.
+     *
+     * @param serverURL the server url to check.
+     * @return the verbatim setting provided by endpoint configuration
+     */
+    @NonNull
+    public static String lookupEndpointJenkinsRootURL(@CheckForNull String serverURL) {
+        return lookupEndpoint(serverURL)
+                .map(BitbucketEndpoint::getEndpointJenkinsRootURL)
+                .orElse(Util.ensureEndsWith(URLUtils.normalizeURL(Util.fixEmptyAndTrim(DisplayURLProvider.get().getRoot())), "/"));
     }
 
     /**

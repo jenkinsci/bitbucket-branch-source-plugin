@@ -25,6 +25,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -32,9 +34,12 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
+import hudson.XmlFile;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import hudson.util.ListBoxModel;
+import hudson.util.XStream2;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -71,6 +76,17 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      */
     public BitbucketEndpointConfiguration() {
         load();
+    }
+
+    // TODO remove within a year
+    @Restricted(NoExternalUse.class)
+    @Override
+    public XmlFile getConfigFile() {
+        File cfgFile = new File(Jenkins.get().getRootDir(), getId() + ".xml");
+        XStream2 xs = new XStream2(XStream2.getDefaultDriver());
+        xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint", BitbucketCloudEndpoint.class);
+        xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint", BitbucketServerEndpoint.class);
+        return new XmlFile(xs, cfgFile);
     }
 
     /**
@@ -156,9 +172,9 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @return the list of endpoints
      */
     @NonNull
-    public List<AbstractBitbucketEndpoint /*BitbucketEndpoint*/> getEndpoints() {
+    public List<BitbucketEndpoint /*BitbucketEndpoint*/> getEndpoints() {
         // make a local copy so if changes in meanwhile you do not get NPE
-        List/*<BitbucketEndpoint>*/ localEndpoints = this.endpoints;
+        List<BitbucketEndpoint> localEndpoints = this.endpoints;
         return CollectionUtils.isEmpty(localEndpoints)
                 ? List.of(new BitbucketCloudEndpoint())
                 : Collections.unmodifiableList(localEndpoints);

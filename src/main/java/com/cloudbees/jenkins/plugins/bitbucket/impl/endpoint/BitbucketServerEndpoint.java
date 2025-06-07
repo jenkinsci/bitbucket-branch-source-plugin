@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
@@ -121,7 +122,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * Default constructor.
      * @param serverURL
      */
-    BitbucketServerEndpoint(@NonNull String serverURL) {
+    public BitbucketServerEndpoint(@NonNull String serverURL) {
         this(null, serverURL, false, null, false, null);
     }
 
@@ -266,7 +267,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * Our descriptor.
      */
     @Extension
-    public static class DescriptorImpl extends AbstractBitbucketEndpointDescriptor {
+    public static class DescriptorImpl extends BitbucketEndpointDescriptor {
 
         @Restricted(NoExternalUse.class) // stapler
         @RequirePOST

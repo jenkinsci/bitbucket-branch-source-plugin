@@ -24,6 +24,10 @@
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.plugins.credentials.Credentials;
@@ -70,6 +74,7 @@ class BitbucketEndpointConfigurationTest {
     @BeforeAll
     static void init(JenkinsRule rule) {
         r = rule;
+        BitbucketPlugin.aliases();
     }
 
     @AfterEach
@@ -90,7 +95,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__newInstance__when__configuredWithEmpty__then__cloudPresent() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(Collections.<AbstractBitbucketEndpoint>emptyList());
+        instance.setEndpoints(Collections.emptyList());
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
     }
 
@@ -342,7 +347,7 @@ class BitbucketEndpointConfigurationTest {
     void given__instanceWithCloudAndServers__when__removingServer__then__matchingServerRemoved() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -361,7 +366,7 @@ class BitbucketEndpointConfigurationTest {
     void given__instanceWithCloudAndServers__when__removingCloud__then__cloudRemoved() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -380,7 +385,7 @@ class BitbucketEndpointConfigurationTest {
     void given__instanceWithCloudAndServers__when__removingNonExisting__then__noChange() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -399,10 +404,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instance__when__onlyOneEndpoint__then__endpointsNotSelectable() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
-        instance.setEndpoints(
-                Collections.<AbstractBitbucketEndpoint>singletonList(
-                        new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "dummy")
-                ));
+        instance.setEndpoints(List.of(new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "dummy", false, null)));
         assertThat(instance.isEndpointSelectable()).isFalse();
     }
 
@@ -410,7 +412,7 @@ class BitbucketEndpointConfigurationTest {
     void given__instance__when__multipleEndpoints__then__endpointsSelectable() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -421,7 +423,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithCloudAndServers__when__findingExistingEndpoint__then__endpointFound() {
         BitbucketEndpointConfiguration.get().setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -450,7 +452,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithServers__when__findingNonExistingEndpoint__then__endpointNotFound() {
         BitbucketEndpointConfiguration.get().setEndpoints(
-                Arrays.<AbstractBitbucketEndpoint>asList(
+                List.of(
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "dummy"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "dummy")
                 ));
@@ -467,7 +469,7 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithCloudAndServers__when__findingInvalid__then__endpointNotFound() {
         BitbucketEndpointConfiguration.get().setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -481,7 +483,7 @@ class BitbucketEndpointConfigurationTest {
     void given__instanceWithCloudAndServers__when__populatingDropBox__then__endpointsListed() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -500,7 +502,7 @@ class BitbucketEndpointConfigurationTest {
     void given__instanceWithCloudAndServers__when__resolvingExistingEndpoint__then__normalizedReturned() {
         BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
         instance.setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
@@ -596,10 +598,10 @@ class BitbucketEndpointConfigurationTest {
     void given__instanceWithConfig__when__configRoundtrip__then__configRetained() throws Exception {
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
         instance.setEndpoints(
-                Arrays.asList(
+                List.of(
                         buildEndpoint(true, "first"),
-                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second"),
-                        new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", false, null)
+                        new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", true, "second", false, null),
+                        new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", false, null, false, null)
                 ));
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Arrays.<Credentials>asList(

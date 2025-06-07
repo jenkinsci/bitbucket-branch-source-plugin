@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import hudson.plugins.git.GitSCM;

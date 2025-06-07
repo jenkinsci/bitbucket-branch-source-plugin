@@ -24,9 +24,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookAutoRegisterListener;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import hudson.model.listeners.ItemListener;
 import hudson.util.RingBufferLogHandler;

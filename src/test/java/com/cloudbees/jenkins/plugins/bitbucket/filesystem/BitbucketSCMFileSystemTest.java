@@ -27,7 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import java.io.ByteArrayInputStream;

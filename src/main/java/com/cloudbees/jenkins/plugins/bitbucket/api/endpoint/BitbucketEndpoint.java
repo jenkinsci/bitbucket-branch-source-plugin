@@ -103,7 +103,7 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      *
      * @return the verbatim setting provided by endpoint configuration
      */
-    @CheckForNull
+    @NonNull
     String getEndpointJenkinsRootURL();
 
     boolean isEnableHookSignature();

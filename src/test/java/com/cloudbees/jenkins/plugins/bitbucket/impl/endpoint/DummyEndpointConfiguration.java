@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -73,7 +74,7 @@ public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
     }
 
     @Extension // TestExtension could be used only for embedded classes
-    public static class DescriptorImpl extends AbstractBitbucketEndpointDescriptor {
+    public static class DescriptorImpl extends BitbucketEndpointDescriptor {
 
     }
 
