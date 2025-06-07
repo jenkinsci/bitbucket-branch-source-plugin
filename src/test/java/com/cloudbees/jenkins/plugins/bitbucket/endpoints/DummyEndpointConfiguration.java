@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -41,13 +42,24 @@ public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
     @NonNull
     @Override
     public String getServerUrl() {
+        return getServerURL();
+    }
+
+    @NonNull
+    @Override
+    public String getServerURL() {
         return "http://dummy.example.com";
     }
 
     @NonNull
     @Override
-    public String getBitbucketJenkinsRootUrl() {
+    public String getEndpointJenkinsRootURL() {
         return "http://master.example.com";
+    }
+
+    @Override
+    public EndpointType getType() {
+        return EndpointType.SERVER;
     }
 
     @NonNull
@@ -64,4 +76,5 @@ public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
     public static class DescriptorImpl extends AbstractBitbucketEndpointDescriptor {
 
     }
+
 }

@@ -38,6 +38,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
@@ -287,11 +288,11 @@ public class BitbucketSCMSource extends SCMSource {
 
     @DataBoundSetter
     public void setServerUrl(@CheckForNull String serverUrl) {
-        String url = BitbucketEndpointConfiguration.normalizeServerURL(serverUrl);
-        if (url == null) {
-            url = BitbucketEndpointConfiguration.get().getDefaultEndpoint().getServerUrl();
+        if (serverUrl == null) {
+            this.serverUrl = BitbucketEndpointConfiguration.get().getDefaultEndpoint().getServerURL();
+        } else {
+            this.serverUrl = Util.fixNull(URLUtils.normalizeURL(serverUrl));
         }
-        this.serverUrl = url;
     }
 
     @NonNull
@@ -397,6 +398,7 @@ public class BitbucketSCMSource extends SCMSource {
     private void retrievePullRequests(final BitbucketSCMSourceRequest request) throws IOException, InterruptedException {
         final String fullName = repoOwner + "/" + repository;
 
+        @SuppressWarnings("serial")
         class Skip extends IOException {
         }
 
@@ -810,7 +812,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @NonNull
     @Override
-    protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event,
+    protected List<Action> retrieveActions(@SuppressWarnings("rawtypes") @CheckForNull SCMSourceEvent event,
                                            @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
@@ -846,7 +848,7 @@ public class BitbucketSCMSource extends SCMSource {
     @NonNull
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head,
-                                           @CheckForNull SCMHeadEvent event,
+                                           @SuppressWarnings("rawtypes") @CheckForNull SCMHeadEvent event,
                                            @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
@@ -1061,7 +1063,7 @@ public class BitbucketSCMSource extends SCMSource {
                 return FormValidation.error(
                     "Unauthorized to validate Server URL"); // not supposed to be seeing this form
             }
-            if (!BitbucketEndpointConfiguration.get().findEndpoint(value).isPresent()) {
+            if (!BitbucketEndpointProvider.lookupEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
             }
             return FormValidation.ok();
@@ -1081,7 +1083,7 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         public boolean isServerUrlSelectable() {
-            return BitbucketEndpointConfiguration.get().isEndpointSelectable();
+            return !BitbucketEndpointProvider.all().isEmpty();
         }
 
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
@@ -1089,7 +1091,7 @@ public class BitbucketSCMSource extends SCMSource {
             if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
                 return new ListBoxModel();
             }
-            return BitbucketEndpointConfiguration.get().getEndpointItems();
+            return BitbucketEndpointProvider.listEndpoints();
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
@@ -1138,6 +1140,7 @@ public class BitbucketSCMSource extends SCMSource {
             };
         }
 
+        @SuppressWarnings("unchecked")
         public List<NamedArrayList<? extends SCMSourceTraitDescriptor>> getTraitsDescriptorLists() {
             List<SCMSourceTraitDescriptor> all = new ArrayList<>();
             // all that are applicable to our context
@@ -1158,7 +1161,7 @@ public class BitbucketSCMSource extends SCMSource {
             List<NamedArrayList<? extends SCMSourceTraitDescriptor>> result = new ArrayList<>();
             NamedArrayList.select(all, "Within repository", NamedArrayList
                             .anyOf(NamedArrayList.withAnnotation(Discovery.class),
-                                    NamedArrayList.withAnnotation(Selection.class)),
+                                   NamedArrayList.withAnnotation(Selection.class)),
                     true, result);
             int insertionPoint = result.size();
             NamedArrayList.select(all, "Git", it -> GitSCM.class.isAssignableFrom(it.getScmClass()), true, result);

@@ -46,6 +46,7 @@ import java.util.UUID;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -57,6 +58,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithJenkins
 class BitbucketAuthenticatorTest {
     private StandardUsernameCredentials credentials;
+
+    static JenkinsRule j;
+
+    @BeforeAll
+    static void init(JenkinsRule rule) {
+        j = rule;
+    }
 
     @BeforeEach
     void setup() throws Exception {
@@ -87,7 +95,7 @@ class BitbucketAuthenticatorTest {
     }
 
     @Test
-    void given_UsernamePasswordCredentials_returns_BitbucketOAuthAuthenticator(JenkinsRule r) throws Exception {
+    void given_UsernamePasswordCredentials_returns_BitbucketOAuthAuthenticator() throws Exception {
         String clientSecret = insecure().nextAlphabetic(32);
         String clientId = insecure().nextAlphabetic(18);
         credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM,
@@ -105,9 +113,9 @@ class BitbucketAuthenticatorTest {
     }
 
     @Test
-    void given_UsernamePasswordCredentials_returns_BitbucketUsernamePasswordAuthenticator(JenkinsRule r) {
+    void given_UsernamePasswordCredentials_returns_BitbucketUsernamePasswordAuthenticator() {
         // use cases: real username/password or an app password
-        List<Credentials> list = Collections.<Credentials>singletonList(credentials);
+        List<Credentials> list = List.of(credentials);
         AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext(null);
         Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
         assertThat(c).isNotNull();
@@ -117,7 +125,7 @@ class BitbucketAuthenticatorTest {
     }
 
     @Test
-    void given_StringCredentials_returns_BitbucketAccessTokenAuthenticator_cloud(JenkinsRule r) {
+    void given_StringCredentials_returns_BitbucketAccessTokenAuthenticator_cloud() {
         // repository Access Token
         StringCredentialsImpl tokenCredentials = new StringCredentialsImpl(CredentialsScope.SYSTEM,
                 credentials.getId(),
@@ -133,7 +141,7 @@ class BitbucketAuthenticatorTest {
     }
 
     @Test
-    void given_CertificateCredentials_returns_BitbucketUsernamePasswordAuthenticator(JenkinsRule r) throws Exception {
+    void given_CertificateCredentials_returns_BitbucketUsernamePasswordAuthenticator() throws Exception {
         String password = UUID.randomUUID().toString();
         StandardCertificateCredentials certCredentials = new CertificateCredentialsImpl(CredentialsScope.SYSTEM,
                 credentials.getId(),

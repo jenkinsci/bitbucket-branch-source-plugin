@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -113,10 +114,10 @@ public class BitbucketCredentials {
                 ? task.getDefaultAuthentication2()
                 : ACL.SYSTEM2;
 
-        serverURL = BitbucketEndpointConfiguration.get()
-                .findEndpoint(serverURL)
+        serverURL = BitbucketEndpointProvider
+                .lookupEndpoint(serverURL)
                 .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
-                .getServerUrl();
+                .getServerURL();
 
         result.includeMatchingAs(
                 authentication,
@@ -130,10 +131,10 @@ public class BitbucketCredentials {
 
     public static FormValidation checkCredentialsId(@CheckForNull SCMSourceOwner context, String value, String serverURL) {
         if (StringUtils.isNotBlank(value)) {
-            serverURL = BitbucketEndpointConfiguration.get()
-                    .findEndpoint(serverURL)
+            serverURL = BitbucketEndpointProvider
+                    .lookupEndpoint(serverURL)
                     .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
-                    .getServerUrl();
+                    .getServerURL();
 
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             contextToCheck.checkPermission(CredentialsProvider.VIEW);
@@ -159,6 +160,23 @@ public class BitbucketCredentials {
         } else {
             return FormValidation.warning("Credentials are required for build notifications");
         }
+    }
+
+    public static ListBoxModel fillCredentialsIdItems(@CheckForNull String serverURL,
+                                              @NonNull ItemGroup<?> context,
+                                              @NonNull Class<? extends StandardCredentials> type,
+                                              @CheckForNull String credentialsId) {
+        StandardListBoxModel result = new StandardListBoxModel();
+        result.includeMatchingAs(
+                ACL.SYSTEM2,
+                context,
+                type,
+                URIRequirementBuilder.fromUri(serverURL).build(),
+                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL)));
+        if (credentialsId != null) {
+            result.includeCurrentValue(credentialsId);
+        }
+        return result;
     }
 
 }

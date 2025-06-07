@@ -34,7 +34,7 @@ This means that when you have a private repository, or a private fork of a publi
 
 ### Developers and DevOps notes
 
-Classes under the packages `com.cloudbees.jenkins.plugins.bitbucket.api` is intended to be public api and can be used to extend functionality in other plugins. Changes in the method signature will be marked with @deprecated providing an alternative new signature or class to use. After a reasonable time (about a year) the method could be removed at all. If some methods are not intended to be used then are marked with `@Restricted(NoExternalUse.class)`.
+Classes under packages `com.cloudbees.jenkins.plugins.bitbucket.api` is intended to be public API and can be used to extend functionality in other plugins. Changes in the method signature will be marked with @deprecated providing an alternative new signature or class to use. After a reasonable time (about a year) the method could be removed at all. If some methods are not intended to be used then are marked with `@Restricted(NoExternalUse.class)`.
 
 Classes in other packages are not intended to be used outside of this plugin. Signature can be changed in any moment, backward compatibility are no guaranteed.
 

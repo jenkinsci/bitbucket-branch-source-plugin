@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2025, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
-import hudson.model.Descriptor;
-
-/**
- * {@link Descriptor} base class for {@link AbstractBitbucketEndpoint} subclasses.
- *
- * @since 2.2.0
- */
-@Deprecated(since = "936.4.0")
-public abstract class AbstractBitbucketEndpointDescriptor extends BitbucketEndpointDescriptor {
+public enum EndpointType {
+    SERVER, CLOUD
 }

@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
-import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import hudson.util.ListBoxModel;
 import java.util.Collections;
 import jenkins.scm.api.SCMHeadObserver;

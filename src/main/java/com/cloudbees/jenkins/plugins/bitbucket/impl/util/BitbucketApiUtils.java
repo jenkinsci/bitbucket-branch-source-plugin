@@ -28,8 +28,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -47,7 +47,6 @@ import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.core5.http.HttpHost;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -66,7 +65,11 @@ public class BitbucketApiUtils {
     }
 
     public static boolean isCloud(@NonNull String serverURL) {
-        return StringUtils.startsWithAny(serverURL, BitbucketCloudEndpoint.SERVER_URL, BitbucketCloudEndpoint.BAD_SERVER_URL);
+        try {
+            return "bitbucket.org".equalsIgnoreCase(new URL(serverURL).getHost());
+        } catch (MalformedURLException e) {
+            return false;
+        }
     }
 
     public static ListBoxModel getFromBitbucket(SCMSourceOwner context,
@@ -87,10 +90,10 @@ public class BitbucketApiUtils {
             return new ListBoxModel(); // not permitted to try connecting with these credentials
         }
 
-        serverURL = BitbucketEndpointConfiguration.get()
-                .findEndpoint(serverURL)
+        serverURL = BitbucketEndpointProvider
+                .lookupEndpoint(serverURL)
                 .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
-                .getServerUrl();
+                .getServerURL();
         StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
             serverURL,
             context,
