@@ -21,20 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
-import hudson.model.AbstractDescribableImpl;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.plugins.displayurlapi.ClassicDisplayURLProvider;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -45,7 +47,7 @@ import static hudson.Util.fixEmptyAndTrim;
  *
  * @since 2.2.0
  */
-public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<AbstractBitbucketEndpoint> {
+public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -85,24 +87,21 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
      */
-    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
+    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId,
+                              boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
+        this.enableHookSignature = enableHookSignature && StringUtils.isNotBlank(hookSignatureCredentialsId);
+        this.hookSignatureCredentialsId = enableHookSignature ? fixEmptyAndTrim(hookSignatureCredentialsId) : null;
     }
-
-    /**
-     * Optional name to use to describe the end-point.
-     *
-     * @return the name to use for the end-point
-     */
-    @CheckForNull
-    public abstract String getDisplayName();
 
     /**
      * The URL of this endpoint.
      *
      * @return the URL of the endpoint.
+     * @deprecated Use {@link BitbucketEndpoint#getServerURL()} instead of this.
      */
+    @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
     public abstract String getServerUrl();
 
@@ -113,11 +112,10 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @return the normalized URL ending with a slash
      */
     @NonNull
-    static String normalizeJenkinsRootUrl(String rootUrl) {
+    static String normalizeJenkinsRootURL(String rootUrl) {
         // This routine is not really BitbucketEndpointConfiguration
         // specific, it just works on strings with some defaults:
-        return Util.ensureEndsWith(
-            BitbucketEndpointConfiguration.normalizeServerURL(rootUrl),"/");
+        return Util.ensureEndsWith(URLUtils.normalizeURL(fixEmptyAndTrim(rootUrl)), "/");
     }
 
     /**
@@ -127,44 +125,53 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      *
      * @return the verbatim setting provided by endpoint configuration
      */
+    @Deprecated(since = "936.4.0", forRemoval = true)
     @CheckForNull
     public String getBitbucketJenkinsRootUrl() {
         return bitbucketJenkinsRootUrl;
     }
 
+    @NonNull
+    @Override
+    public String getEndpointJenkinsRootURL() {
+        // If this instance of Bitbucket connection has a custom root URL
+        // configured to have this Jenkins server known by (e.g. when a
+        // private network has different names preferable for different
+        // clients), return this custom string. Otherwise use global one.
+        // Note: do not pre-initialize to the global value, so it can be
+        // reconfigured on the fly.
+
+        String endpointURL = getBitbucketJenkinsRootUrl();
+        if (endpointURL == null) {
+            endpointURL = DisplayURLProvider.get().getRoot();
+        }
+        return normalizeJenkinsRootURL(endpointURL);
+    }
+
+    @NonNull
+    @Override
+    public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repoSlug) {
+        return this.getRepositoryUrl(repoOwner, repoSlug);
+    }
+
     @DataBoundSetter
     public void setBitbucketJenkinsRootUrl(String bitbucketJenkinsRootUrl) {
         if (manageHooks) {
-            this.bitbucketJenkinsRootUrl = fixEmptyAndTrim(bitbucketJenkinsRootUrl);
-            if (this.bitbucketJenkinsRootUrl != null) {
-                this.bitbucketJenkinsRootUrl = normalizeJenkinsRootUrl(this.bitbucketJenkinsRootUrl);
-            }
+            this.bitbucketJenkinsRootUrl = normalizeJenkinsRootURL(bitbucketJenkinsRootUrl);
         } else {
             this.bitbucketJenkinsRootUrl = null;
         }
     }
 
+    @Override
     @CheckForNull
     public String getHookSignatureCredentialsId() {
         return hookSignatureCredentialsId;
     }
 
-    @DataBoundSetter
-    public void setHookSignatureCredentialsId(String hookSignatureCredentialsId) {
-        if (enableHookSignature) {
-            this.hookSignatureCredentialsId = fixEmptyAndTrim(hookSignatureCredentialsId);
-        } else {
-            this.hookSignatureCredentialsId = null;
-        }
-    }
-
+    @Override
     public boolean isEnableHookSignature() {
         return enableHookSignature;
-    }
-
-    @DataBoundSetter
-    public void setEnableHookSignature(boolean enableHookSignature) {
-        this.enableHookSignature = enableHookSignature;
     }
 
     /**
@@ -175,45 +182,16 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @return the normalized value from setting provided by endpoint
      *      configuration (if not empty), or the global setting of
      *      the Jenkins Root URL
+     * @deprecated Use {@link BitbucketEndpoint#getEndpointJenkinsRootURL()} instead of this.
      */
+    @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
     public String getEndpointJenkinsRootUrl() {
         if (StringUtils.isBlank(bitbucketJenkinsRootUrl)) {
-            return ClassicDisplayURLProvider.get().getRoot();
+            return DisplayURLProvider.get().getRoot();
         } else {
             return bitbucketJenkinsRootUrl;
         }
-    }
-
-    /**
-     * Look up in the current endpoint configurations if one exists for the
-     * serverUrl, and return its normalized endpointJenkinsRootUrl value,
-     * or the normalized global default Jenkins Root URL if nothing was found
-     * or if the setting is an empty string; empty string if there was an error
-     * finding the global default Jenkins Root URL value (e.g. core not started).
-     * This is the routine intended for external consumption when one needs a
-     * Jenkins Root URL to use for webhook configuration.
-     *
-     * @param serverUrl Bitbucket Server URL for the endpoint config
-     *
-     * @return the normalized custom or default Jenkins Root URL value
-     */
-    @NonNull
-    public static String getEndpointJenkinsRootUrl(String serverUrl) {
-        // If this instance of Bitbucket connection has a custom root URL
-        // configured to have this Jenkins server known by (e.g. when a
-        // private network has different names preferable for different
-        // clients), return this custom string. Otherwise use global one.
-        // Note: do not pre-initialize to the global value, so it can be
-        // reconfigured on the fly.
-
-        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                .findEndpoint(serverUrl)
-                .orElse(null);
-        if (endpoint != null) {
-            return endpoint.getEndpointJenkinsRootUrl();
-        }
-        return ClassicDisplayURLProvider.get().getRoot();
     }
 
     /**
@@ -231,6 +209,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      *
      * @return {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
+    @Override
     public final boolean isManageHooks() {
         return manageHooks;
     }
@@ -242,6 +221,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      * @return the {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management
      * of hooks.
      */
+    @Override
     @CheckForNull
     public final String getCredentialsId() {
         return credentialsId;
@@ -252,6 +232,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      *
      * @return the credentials or {@code null}.
      */
+    @Override
     @CheckForNull
     public StandardCredentials credentials() {
         return BitbucketCredentials.lookupCredentials(getServerUrl(), Jenkins.get(), credentialsId, StandardCredentials.class);
@@ -262,6 +243,7 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      *
      * @return the credentials or {@code null}.
      */
+    @Override
     @CheckForNull
     public StringCredentials hookSignatureCredentials() {
         return BitbucketCredentials.lookupCredentials(getServerUrl(), Jenkins.get(), hookSignatureCredentialsId, StringCredentials.class);
@@ -274,14 +256,14 @@ public abstract class AbstractBitbucketEndpoint extends AbstractDescribableImpl<
      */
     @CheckForNull
     public BitbucketAuthenticator authenticator() {
-        return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerUrl()), credentials());
+        return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerURL()), credentials());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AbstractBitbucketEndpointDescriptor getDescriptor() {
-        return (AbstractBitbucketEndpointDescriptor) super.getDescriptor();
+    public BitbucketEndpointDescriptor getDescriptor() {
+        return (BitbucketEndpointDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
     }
 }

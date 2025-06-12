@@ -29,15 +29,15 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
@@ -221,16 +221,17 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     @DataBoundSetter
     public void setServerUrl(@CheckForNull String serverUrl) {
-        serverUrl = BitbucketEndpointConfiguration.normalizeServerURL(serverUrl);
+        serverUrl = Util.fixEmpty(URLUtils.normalizeURL(serverUrl));
         if (serverUrl != null && !StringUtils.equals(this.serverUrl, serverUrl)) {
             this.serverUrl = serverUrl;
             resetId();
         }
     }
 
+    @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverUrl);
+         return BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(serverUrl);
     }
 
     @NonNull
@@ -388,7 +389,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         }
 
         public boolean isServerUrlSelectable() {
-            return BitbucketEndpointConfiguration.get().isEndpointSelectable();
+            return !BitbucketEndpointProvider.all().isEmpty();
         }
 
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
@@ -396,7 +397,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
                 return new ListBoxModel();
             }
-            return BitbucketEndpointConfiguration.get().getEndpointItems();
+            return BitbucketEndpointProvider.listEndpoints();
         }
 
         @RequirePOST

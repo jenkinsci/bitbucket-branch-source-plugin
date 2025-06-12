@@ -33,9 +33,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.notifier.BitbucketBuildStatusNotifications.JobCheckoutListener;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BitbucketBuildStatusNotificationsTrait;
@@ -314,7 +314,8 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
     @ParameterizedTest(name = "checkURL {0} against Bitbucket Cloud")
     @MethodSource("buildCloudURLsProvider")
     void test_checkURL_for_Bitbucket_cloud(String jenkinsURL, String expectedExceptionMsg, @NonNull JenkinsRule r) {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(true, "second");
+        @SuppressWarnings("deprecation")
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, true, "second");
         BitbucketEndpointConfiguration.get().setEndpoints(List.of(endpoint));
 
         BitbucketApi client = getApiMockClient(endpoint.getServerUrl());

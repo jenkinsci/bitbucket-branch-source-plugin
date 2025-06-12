@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
 @WithJenkins
 class WebhookConfigurationTest {
 
-    private static JenkinsRule r = new JenkinsRule();
+    static JenkinsRule r = new JenkinsRule();
 
     @BeforeAll
     static void init(JenkinsRule rule) {

@@ -1,0 +1,56 @@
+{
+    "actor": {
+        "username": "admin",
+        "displayName": "Administrator",
+        "emailAddress": "admin@example.com"
+    },
+    "repository": {
+        "scmId": "git",
+        "project": {
+            "key": "PROJECT_1",
+            "name": "Project 1"
+        },
+        "slug": "rep_1",
+        "links": {
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"
+                }
+            ]
+        },
+        "public": false,
+        "ownerName": "PROJECT_1",
+        "fullName": "PROJECT_1/rep_1",
+        "owner": {
+            "username": "PROJECT_1",
+            "displayName": "PROJECT_1",
+            "emailAddress": null
+        }
+    },
+    "push": {
+        "changes": [
+            {
+                "created": false,
+                "closed": false,
+                "new": {
+                    "type": "branch",
+                    "name": "master",
+                    "target": {
+                        "type": "commit",
+                        "hash": "500cf91e7b4b7d9f995cdb6e81cb5538216ac02e",
+                        "commitMessage": "Pull request #1: Test webhooks\n\nMerge in PROJECT_1/rep_1 from test-webhook to master\n\n* commit 'c0158b3e6c8cecf3bddc39d20957a98660cd23fd':\n  Test webhook 2\n  Test webhooks"
+                    }
+                },
+                "old": {
+                    "type": "branch",
+                    "name": "master",
+                    "target": {
+                        "type": "commit",
+                        "hash": "0a943a29376f2336b78312d99e65da17048951db",
+                        "commitMessage": "Copy C.zip as D.zip"
+                    }
+                }
+            }
+        ]
+    }
+}

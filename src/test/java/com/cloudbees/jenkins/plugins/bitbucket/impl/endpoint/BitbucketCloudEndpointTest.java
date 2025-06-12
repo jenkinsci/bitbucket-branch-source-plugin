@@ -21,70 +21,75 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.damnhandy.uri.template.UriTemplate;
+import hudson.Util;
 import jenkins.model.Jenkins;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitbucketCloudEndpointTest {
-
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+class BitbucketCloudEndpointTest {
 
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
-    private static final String V2_TEAMS_API_BASE_URL = "https://api.bitbucket.org/2.0/teams/";
 
     @Test
-    public void smokes() {
-        BitbucketCloudEndpoint endpoint1 = new BitbucketCloudEndpoint(false, null);
+    void smokes() {
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint();
 
-        assertThat(endpoint1.getDisplayName(), notNullValue());
-        assertThat(endpoint1.getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+        assertThat(endpoint.getDisplayName()).isNotNull();
+        assertThat(endpoint.getServerUrl()).isEqualTo(BitbucketCloudEndpoint.SERVER_URL);
 
         /* The endpoints should set (literally, not normalized) and return
          * the bitbucketJenkinsRootUrl if the management of hooks is enabled */
-        assertThat(new BitbucketCloudEndpoint(false, null).getBitbucketJenkinsRootUrl(), nullValue());
-        assertThat(new BitbucketCloudEndpoint(false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), nullValue());
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
+
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
+
         // No credentials - webhook still not managed, even with a checkbox
-        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), nullValue());
+        endpoint = new BitbucketCloudEndpoint(false, 0, 0, true, null, false, null);
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
         // getEndpointJenkinsRootUrl() is normalized and ends with a slash
-        BitbucketCloudEndpoint endpoint2 = new BitbucketCloudEndpoint(true,  "{credid}", "http://jenkins:8080");
-        assertThat(endpoint2.getBitbucketJenkinsRootUrl(), is("http://jenkins:8080/"));
-        assertThat(endpoint2.getEndpointJenkinsRootUrl(), is("http://jenkins:8080/"));
+        endpoint = new BitbucketCloudEndpoint(false, 0, 0, true, "{credid}", false, null);
+        endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
+        assertThat(endpoint.getEndpointJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
 
         // Make sure several invokations with same arguments do not conflict:
-        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins/"));
-        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getEndpointJenkinsRootUrl(), is("https://jenkins/"));
+        endpoint = new BitbucketCloudEndpoint(false, 0, 0, true, "{credid}", false, null);
+        endpoint.setBitbucketJenkinsRootUrl("https://jenkins:443/");
+        assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("https://jenkins/");
+        assertThat(endpoint.getEndpointJenkinsRootUrl()).isEqualTo("https://jenkins/");
+    }
+
+    @WithJenkins
+    @Test
+    void getUnmanagedDefaultRootUrl(JenkinsRule rule) {
+        String jenkinsRootURL = Util.ensureEndsWith(URLUtils.normalizeURL(Jenkins.get().getRootUrl()), "/");
+        assertThat(new BitbucketCloudEndpoint().getEndpointJenkinsRootUrl())
+            .isEqualTo(jenkinsRootURL);
+        assertThat(new BitbucketCloudEndpoint(false, 0, 0, false, "{cred}", false, null).getEndpointJenkinsRootURL())
+            .isEqualTo(jenkinsRootURL);
     }
 
     @Test
-    public void getUnmanagedDefaultRootUrl() {
-        assertThat(new BitbucketCloudEndpoint(true,  null).getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.get().getRootUrl())));
-        assertThat(new BitbucketCloudEndpoint(false, "{cred}").getEndpointJenkinsRootUrl(),
-                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.get().getRootUrl())));
+    void getRepositoryUrl() {
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint();
+
+        assertThat(endpoint.getRepositoryUrl("tester", "test-repo")).isEqualTo("https://bitbucket.org/tester/test-repo");
     }
 
     @Test
-    public void getRepositoryUrl() {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, null);
-
-        assertThat(endpoint.getRepositoryUrl("tester", "test-repo"), is("https://bitbucket.org/tester/test-repo"));
-    }
-
-    @Test
-    public void repositoryTemplate() {
+    void repositoryTemplate() {
         String owner = "bob";
         String repositoryName = "yetAnotherRepo";
         UriTemplate template = UriTemplate
@@ -103,6 +108,6 @@ public class BitbucketCloudEndpointTest {
                 .set("page", page)
                 .set("pagelen", 50)
                 .expand();
-        assertThat(url, is(betterUrl));
+        assertThat(url).isEqualTo(betterUrl);
     }
 }

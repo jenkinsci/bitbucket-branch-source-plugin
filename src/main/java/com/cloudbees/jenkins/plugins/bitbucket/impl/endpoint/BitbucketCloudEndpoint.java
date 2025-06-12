@@ -21,8 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
@@ -32,8 +34,7 @@ import hudson.Extension;
 import hudson.util.FormValidation;
 import java.util.List;
 import jenkins.model.Jenkins;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.verb.POST;
 
@@ -48,10 +49,6 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * The URL of Bitbucket Cloud.
      */
     public static final String SERVER_URL = "https://bitbucket.org";
-    /**
-     * A bad URL of Bitbucket Cloud.
-     */
-    public static final String BAD_SERVER_URL = "http://bitbucket.org";
 
     /**
      * {@code true} if caching should be used to reduce requests to Bitbucket.
@@ -68,30 +65,42 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      */
     private final int repositoriesCacheDuration;
 
-    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId) {
-        this(false, 0, 0, manageHooks, credentialsId);
+    /**
+     * Default constructor.
+     */
+    public BitbucketCloudEndpoint() {
+        this(false, 0, 0, false, null, false, null);
     }
 
-    @Restricted(NoExternalUse.class) // Used for testing
-    public BitbucketCloudEndpoint(boolean manageHooks, @CheckForNull String credentialsId, String endPointURL) {
-        this(manageHooks, credentialsId);
-        setBitbucketJenkinsRootUrl(endPointURL);
+    @Deprecated(since = "936.3.1")
+    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
+                                  boolean manageHooks, @CheckForNull String credentialsId) {
+        this(enableCache, teamCacheDuration, repositoriesCacheDuration, manageHooks, credentialsId, false, null);
     }
 
     /**
      * Constructor.
      *
-     * @param enableCache   {@code true} if caching should be used to reduce requests to Bitbucket.
-     * @param teamCacheDuration How long, in minutes, to cache the team response.
-     * @param repositoriesCacheDuration How long, in minutes, to cache the repositories response.
-     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
-     *                      auto-management of hooks.
+     * @param enableCache {@code true} if caching should be used to reduce
+     *        requests to Bitbucket.
+     * @param teamCacheDuration How long, in minutes, to cache the team
+     *        response.
+     * @param repositoriesCacheDuration How long, in minutes, to cache the
+     *        repositories response.
+     * @param manageHooks {@code true} if and only if Jenkins is supposed to
+     *        auto-manage hooks for this end-point.
+     * @param credentialsId The {@link StandardCredentials#getId()} of the
+     *        credentials to use for auto-management of hooks.
+     * @param enableHookSignature {@code true} hooks that comes Bitbucket Data
+     *        Center are signed.
+     * @param hookSignatureCredentialsId The {@link StringCredentials#getId()} of the
+     *        credentials to use for verify the signature of payload.
      */
     @DataBoundConstructor
-    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration,
-        int repositoriesCacheDuration, boolean manageHooks, @CheckForNull String credentialsId) {
-        super(manageHooks, credentialsId);
+    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
+                                  boolean manageHooks, @CheckForNull String credentialsId,
+                                  boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
+        super(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
         this.enableCache = enableCache;
         this.teamCacheDuration = teamCacheDuration;
         this.repositoriesCacheDuration = repositoriesCacheDuration;
@@ -120,10 +129,16 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
     /**
      * {@inheritDoc}
      */
-    @NonNull
     @Override
+    @NonNull
+    @Deprecated(since = "936.4.0", forRemoval = true)
     public String getServerUrl() {
         return SERVER_URL;
+    }
+
+    @Override
+    public String getServerURL() {
+        return getServerUrl();
     }
 
     /**
@@ -139,11 +154,16 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
         return template.expand();
     }
 
+    @Override
+    public EndpointType getType() {
+        return EndpointType.CLOUD;
+    }
+
     /**
      * Our descriptor.
      */
     @Extension
-    public static class DescriptorImpl extends AbstractBitbucketEndpointDescriptor {
+    public static class DescriptorImpl extends BitbucketEndpointDescriptor {
         /**
          * {@inheritDoc}
          */
@@ -177,4 +197,5 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
         }
         return this;
     }
+
 }

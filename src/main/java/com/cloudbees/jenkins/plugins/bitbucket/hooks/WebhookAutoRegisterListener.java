@@ -27,9 +27,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -39,12 +40,12 @@ import hudson.triggers.SafeTimerTask;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.NamingThreadFactory;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
@@ -131,7 +132,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             return;
         }
         for (BitbucketSCMSource source : sources) {
-            String rootUrl = source.getEndpointJenkinsRootURL();
+            String rootUrl = BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(source.getServerUrl());
             if (!rootUrl.startsWith("http://localhost") && !rootUrl.startsWith("http://unconfigured-jenkins-location")) {
                 registerHook(source);
             } else {
@@ -142,8 +143,8 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     case DISABLE:
                         continue;
                     case SYSTEM:
-                        AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                            .findEndpoint(source.getServerUrl())
+                        BitbucketEndpoint endpoint = BitbucketEndpointProvider
+                            .lookupEndpoint(source.getServerUrl())
                             .orElse(null);
                         if (endpoint == null || !endpoint.isManageHooks()) {
                             continue;
@@ -159,13 +160,13 @@ public class WebhookAutoRegisterListener extends ItemListener {
     }
 
     private void registerHook(BitbucketSCMSource source) throws IOException {
-        BitbucketApi bitbucket = bitbucketApiFor(source);
+        BitbucketApi bitbucket = getClientBySource(source);
         if (bitbucket == null) {
             return;
         }
 
         BitbucketWebHook existingHook;
-        String hookReceiverURL = source.getEndpointJenkinsRootURL() + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
+        String hookReceiverURL = getHookReceiverURL(source.getServerUrl());
         // Check for all hooks pointing to us
         existingHook = bitbucket.getWebHooks().stream()
                 .filter(hook -> hook.getUrl() != null)
@@ -185,16 +186,20 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
     }
 
+    private String getHookReceiverURL(String endpointURL) {
+        return BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(endpointURL) + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
+    }
+
     private void removeHooks(SCMSourceOwner owner) throws IOException {
         List<BitbucketSCMSource> sources = getBitbucketSCMSources(owner);
         for (BitbucketSCMSource source : sources) {
-            BitbucketApi bitbucket = bitbucketApiFor(source);
+            BitbucketApi bitbucket = getClientBySource(source);
             if (bitbucket != null) {
                 List<? extends BitbucketWebHook> existent = bitbucket.getWebHooks();
                 BitbucketWebHook hook = null;
                 for (BitbucketWebHook h : existent) {
                     // Check if there is a hook pointing to us
-                    if (h.getUrl().startsWith(source.getEndpointJenkinsRootURL() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
+                    if (h.getUrl().startsWith(getHookReceiverURL(source.getServerUrl()))) {
                         hook = h;
                         break;
                     }
@@ -212,21 +217,21 @@ public class WebhookAutoRegisterListener extends ItemListener {
     }
 
     @CheckForNull
-    private BitbucketApi bitbucketApiFor(@NonNull BitbucketSCMSource source) {
+    private BitbucketApi getClientBySource(@NonNull BitbucketSCMSource source) {
         switch (new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(source.getTraits())
                 .webhookRegistration()) {
             case DISABLE:
                 return null;
             case SYSTEM:
-                AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                    .findEndpoint(source.getServerUrl())
+                BitbucketEndpoint endpoint = BitbucketEndpointProvider
+                    .lookupEndpoint(source.getServerUrl())
                     .orElse(null);
                 return endpoint == null || !endpoint.isManageHooks()
                         ? null
                         : BitbucketApiFactory.newInstance(
-                                endpoint.getServerUrl(),
-                                endpoint.authenticator(),
+                                endpoint.getServerURL(),
+                                AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(endpoint.getServerURL()), endpoint.credentials()),
                                 source.getRepoOwner(),
                                 null,
                                 source.getRepository()
@@ -255,13 +260,10 @@ public class WebhookAutoRegisterListener extends ItemListener {
     }
 
     private List<BitbucketSCMSource> getBitbucketSCMSources(SCMSourceOwner owner) {
-        List<BitbucketSCMSource> sources = new ArrayList<>();
-        for (SCMSource source : owner.getSCMSources()) {
-            if (source instanceof BitbucketSCMSource) {
-                sources.add((BitbucketSCMSource) source);
-            }
-        }
-        return sources;
+        return owner.getSCMSources().stream()
+            .filter(BitbucketSCMSource.class::isInstance)
+            .map(BitbucketSCMSource.class::cast)
+            .toList();
     }
 
     /**

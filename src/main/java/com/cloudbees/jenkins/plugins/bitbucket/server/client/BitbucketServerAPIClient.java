@@ -35,14 +35,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
@@ -261,8 +261,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
         pullRequests.removeIf(this::shouldIgnore);
 
-        BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                .findEndpoint(this.baseURL, BitbucketServerEndpoint.class)
+        BitbucketServerEndpoint endpoint = BitbucketEndpointProvider
+                .lookupEndpoint(this.baseURL, BitbucketServerEndpoint.class)
                 .orElse(null);
 
         for (BitbucketServerPullRequest pullRequest : pullRequests) {
@@ -389,8 +389,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         BitbucketServerPullRequest pr = JsonParser.toJava(response, BitbucketServerPullRequest.class);
         setupClosureForPRBranch(pr);
 
-        BitbucketServerEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                .findEndpoint(this.baseURL, BitbucketServerEndpoint.class)
+        BitbucketServerEndpoint endpoint = BitbucketEndpointProvider
+                .lookupEndpoint(this.baseURL, BitbucketServerEndpoint.class)
                 .orElse(null);
         setupPullRequest(pr, endpoint);
         return pr;

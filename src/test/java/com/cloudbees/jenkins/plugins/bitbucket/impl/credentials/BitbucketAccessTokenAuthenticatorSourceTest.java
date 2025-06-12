@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

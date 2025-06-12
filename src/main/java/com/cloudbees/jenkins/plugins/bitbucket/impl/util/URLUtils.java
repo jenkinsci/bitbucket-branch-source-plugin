@@ -26,7 +26,11 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Locale;
+import org.apache.commons.lang3.StringUtils;
 
 public final class URLUtils {
 
@@ -46,4 +50,47 @@ public final class URLUtils {
         }
         return url;
     }
+
+    /**
+     * Fix a server URL.
+     *
+     * @param serverURL the server URL.
+     * @return the normalized server URL.
+     */
+    @CheckForNull
+    public static String normalizeURL(@CheckForNull String serverURL) {
+        if (StringUtils.isBlank(serverURL)) {
+            return null;
+        }
+        try {
+            URI uri = new URI(serverURL).normalize();
+            String scheme = uri.getScheme();
+            if ("http".equals(scheme) || "https".equals(scheme)) {
+                // we only expect http / https, but also these are the only ones where we know the authority
+                // is server based, i.e. [userinfo@]server[:port]
+                // DNS names must be US-ASCII and are case insensitive, so we force all to lowercase
+
+                String host = uri.getHost() == null ? null : uri.getHost().toLowerCase(Locale.ENGLISH);
+                int port = uri.getPort();
+                if ("http".equals(scheme) && port == 80) {
+                    port = -1;
+                } else if ("https".equals(scheme) && port == 443) {
+                    port = -1;
+                }
+                serverURL = new URI(
+                        scheme,
+                        uri.getUserInfo(),
+                        host,
+                        port,
+                        uri.getPath(),
+                        uri.getQuery(),
+                        uri.getFragment()
+                ).toASCIIString();
+            }
+        } catch (URISyntaxException e) {
+            // ignore, this was a best effort tidy-up
+        }
+        return serverURL.replaceAll("/$", "");
+    }
+
 }

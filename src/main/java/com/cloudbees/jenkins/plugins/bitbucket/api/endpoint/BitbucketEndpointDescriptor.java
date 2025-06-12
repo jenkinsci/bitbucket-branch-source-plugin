@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
+package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
@@ -35,7 +35,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
-import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.accmod.Restricted;
@@ -44,11 +43,11 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
- * {@link Descriptor} base class for {@link AbstractBitbucketEndpoint} subclasses.
+ * {@link Descriptor} for {@link BitbucketEndpoint}s.
  *
- * @since 2.2.0
+ * @since 936.4.0
  */
-public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<AbstractBitbucketEndpoint> {
+public class BitbucketEndpointDescriptor extends Descriptor<BitbucketEndpoint> {
     /**
      * Stapler form completion.
      *
@@ -56,23 +55,17 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
      * @param serverURL the server URL.
      * @return the available credentials.
      */
-    @Restricted(NoExternalUse.class) // stapler
     @RequirePOST
     public ListBoxModel doFillCredentialsIdItems(@QueryParameter(fixEmpty = true) String credentialsId,
                                                  @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
+        Jenkins jenkins = checkPermission();
+        return BitbucketCredentials.fillCredentialsIdItems(serverURL, jenkins, StandardCredentials.class, credentialsId);
+    }
+
+    private static Jenkins checkPermission() {
         Jenkins jenkins = Jenkins.get();
         jenkins.checkPermission(Jenkins.MANAGE);
-        StandardListBoxModel result = new StandardListBoxModel();
-        result.includeMatchingAs(
-                ACL.SYSTEM2,
-                jenkins,
-                StandardCredentials.class,
-                URIRequirementBuilder.fromUri(serverURL).build(),
-                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL)));
-        if (credentialsId != null) {
-            result.includeCurrentValue(credentialsId);
-        }
-        return result;
+        return jenkins;
     }
 
     /**
@@ -82,12 +75,10 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
      * @param serverURL the server URL.
      * @return the available credentials.
      */
-    @Restricted(NoExternalUse.class) // stapler
     @RequirePOST
     public ListBoxModel doFillHookSignatureCredentialsIdItems(@QueryParameter(fixEmpty = true) String hookSignatureCredentialsId,
                                                               @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
-        Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(Jenkins.MANAGE);
+        Jenkins jenkins = checkPermission();
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeMatchingAs(ACL.SYSTEM2,
                 jenkins,
@@ -103,6 +94,7 @@ public abstract class AbstractBitbucketEndpointDescriptor extends Descriptor<Abs
     @Restricted(NoExternalUse.class)
     @RequirePOST
     public static FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String value) {
+        checkPermission();
         String url = Util.fixEmptyAndTrim(value);
         if (url == null) {
             return FormValidation.ok();

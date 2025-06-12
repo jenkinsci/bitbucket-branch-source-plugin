@@ -26,10 +26,10 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.NativeBitbucketServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
@@ -81,17 +81,11 @@ class WebhookAutoRegisterListenerTest {
 
         StringCredentials credentials = BitbucketTestUtil.registerHookCredentials("password", rule);
 
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId");
-        endpoint.setEnableHookSignature(true);
-        endpoint.setHookSignatureCredentialsId(credentials.getId());
+        BitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId", true, credentials.getId());
+        ((BitbucketServerEndpoint) endpoint).setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
-        BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos") {
-            @Override
-            public String getEndpointJenkinsRootURL() {
-                return "https://jenkins.example.com/";
-            }
-        };
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
         scmSource.setServerUrl(serverURL);
         scmSource.setOwner(getSCMSourceOwnerMock(scmSource));
 

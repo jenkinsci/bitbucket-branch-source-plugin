@@ -1,0 +1,22 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration plugin="cloudbees-bitbucket-branch-source@936.3.2-SNAPSHOT">
+  <endpoints>
+    <com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint>
+      <manageHooks>false</manageHooks>
+      <enableCache>false</enableCache>
+      <teamCacheDuration>360</teamCacheDuration>
+      <repositoriesCacheDuration>180</repositoriesCacheDuration>
+    </com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint>
+    <com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+      <manageHooks>true</manageHooks>
+      <credentialsId>admin.basic.credentials</credentialsId>
+      <bitbucketJenkinsRootUrl>http://host.docker.internal:8090/jenkins/</bitbucketJenkinsRootUrl>
+      <displayName>server</displayName>
+      <serverUrl>http://localhost:7990/bitbucket</serverUrl>
+      <webhookImplementation>NATIVE</webhookImplementation>
+      <serverVersion>VERSION_7</serverVersion>
+      <callCanMerge>true</callCanMerge>
+      <callChanges>true</callChanges>
+    </com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+  </endpoints>
+</com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration>
