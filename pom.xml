@@ -24,14 +24,12 @@
     </licenses>
 
     <properties>
-        <revision>936.4.1</revision>
+        <revision>937.0.0</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
-        <jenkins.baseline>2.479</jenkins.baseline>
-        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+        <jenkins.baseline>2.504</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.2</jenkins.version>
         <hpi.compatibleSinceVersion>936.0.0</hpi.compatibleSinceVersion>
-        <!-- Jenkins.MANAGE is still in Beta -->
-        <useBeta>true</useBeta>
         <tagNameFormat>@{project.version}</tagNameFormat>
     </properties>
 
