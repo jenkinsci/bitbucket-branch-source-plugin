@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -32,37 +33,44 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerMirrorR
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerRefsChangedEvent;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import hudson.RestrictedSince;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
+import org.apache.commons.collections4.MultiValuedMap;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Extension
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
-public class NativeServerPushHookProcessor extends HookProcessor {
+public class NativeServerPushHookProcessor extends AbstractHookProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
+    private static final Logger logger = Logger.getLogger(NativeServerPushHookProcessor.class.getName());
+    private static final List<String> supportedEvents = List.of(HookEventType.SERVER_REFS_CHANGED.getKey(),
+            HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey());
 
     @Override
-    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
-        return; // without a server URL, the event wouldn't match anything
+    public boolean canHandle(Map<String, String> headers, MultiValuedMap<String, String> parameters) {
+        return headers.containsKey(EVENT_TYPE_HEADER)
+                && headers.containsKey(REQUEST_ID_SERVER_HEADER)
+                && supportedEvents.contains(headers.get(EVENT_TYPE_HEADER))
+                && parameters.containsKey(SERVER_URL_PARAMETER);
     }
 
     @Override
-    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin, String serverUrl) {
-        if (payload == null) {
-            return;
-        }
-
+    public void process(@NonNull String hookEventType, @NonNull String payload, @NonNull String origin, @NonNull BitbucketEndpoint endpoint) {
         final BitbucketServerRepository repository;
         final BitbucketServerCommit refCommit;
         final List<NativeServerChange> changes;
         final String mirrorId;
         try {
+            HookEventType hookEvent = HookEventType.fromString(hookEventType);
             if (hookEvent == HookEventType.SERVER_REFS_CHANGED) {
                 final NativeServerRefsChangedEvent event = JsonParser.toJava(payload, NativeServerRefsChangedEvent.class);
                 repository = event.getRepository();
@@ -80,31 +88,31 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 if (event.getRefLimitExceeded()) {
                     final String owner = repository.getOwnerName();
                     final String repositoryName = repository.getRepositoryName();
-                    LOGGER.log(Level.INFO, "Received mirror synchronized event with refLimitExceeded from Bitbucket. Processing with indexing on {0}/{1}. " +
+                    logger.log(Level.INFO, "Received mirror synchronized event with refLimitExceeded from Bitbucket. Processing with indexing on {0}/{1}. " +
                             "You may skip this scan by adding the system property -D{2}=false on startup.",
                         new Object[]{owner, repositoryName, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
                     scmSourceReIndex(owner, repositoryName, mirrorId);
                     return;
                 }
             } else {
-                throw new UnsupportedOperationException("Hook event of type " + hookEvent + " is not supported.\n"
+                throw new UnsupportedOperationException("Hook event of type " + hookEventType + " is not supported.\n"
                         + "Please fill an issue at https://issues.jenkins.io to the bitbucket-branch-source-plugin component.");
             }
         } catch (final IOException e) {
-            LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
+            logger.log(Level.SEVERE, "Can not read hook payload", e);
             return;
         }
 
         if (changes.isEmpty()) {
             final String owner = repository.getOwnerName();
             final String repositoryName = repository.getRepositoryName();
-            if (SCAN_ON_EMPTY_CHANGES) {
-                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}. " +
+            if (!reindexOnEmptyChanges()) {
+                logger.log(Level.INFO, "Received push hook with empty changes from Bitbucket. Processing indexing on {0}/{1}. " +
                         "You may skip this scan by adding the system property -D{2}=false on startup.",
                     new Object[]{owner, repositoryName, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
                 scmSourceReIndex(owner, repositoryName, mirrorId);
             } else {
-                LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
+                logger.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
                     new Object[]{owner, repositoryName});
             }
         } else {
@@ -118,15 +126,15 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 } else if ("ADD".equals(type)) {
                     events.put(SCMEvent.Type.CREATED, change);
                 } else {
-                    LOGGER.log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
+                    logger.log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
                 }
             }
 
             for (final SCMEvent.Type type : events.keySet()) {
-                ServerPushEvent headEvent = new ServerPushEvent(serverUrl, type, events.get(type), origin, repository, refCommit, mirrorId);
+                ServerPushEvent headEvent = new ServerPushEvent(endpoint.getServerURL(), type, events.get(type), origin, repository, refCommit, mirrorId);
                 notifyEvent(headEvent, BitbucketSCMSource.getEventDelaySeconds());
             }
         }
-
     }
+
 }

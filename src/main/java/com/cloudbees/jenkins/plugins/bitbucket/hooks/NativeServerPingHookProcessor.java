@@ -23,21 +23,40 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import hudson.Extension;
 import hudson.RestrictedSince;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.collections4.MultiValuedMap;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Extension
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
-public class NativeServerPingHookProcessor extends HookProcessor {
+public class NativeServerPingHookProcessor extends AbstractHookProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(NativeServerPingHookProcessor.class.getName());
+    private static final Logger logger = Logger.getLogger(NativeServerPingHookProcessor.class.getName());
+    private static final List<String> supportedEvents = List.of(HookEventType.SERVER_PING.getKey());
 
     @Override
-    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
-        LOGGER.log(Level.INFO, "Received webhook ping event from {0}", origin);
+    public boolean canHandle(Map<String, String> headers, MultiValuedMap<String, String> parameters) {
+        return headers.containsKey(EVENT_TYPE_HEADER)
+                && supportedEvents.contains(headers.get(EVENT_TYPE_HEADER))
+                && parameters.containsKey(SERVER_URL_PARAMETER);
+    }
+
+    @Override
+    public void verifySignature(Map<String, String> headers, String body, BitbucketEndpoint endpoint) {
+        // ping hook is not signed
+    }
+
+    @Override
+    public void process(String eventType, String body, String origin, BitbucketEndpoint endpoint) {
+        logger.log(Level.INFO, "Received webhook ping event from {0}", origin);
     }
 
 }
