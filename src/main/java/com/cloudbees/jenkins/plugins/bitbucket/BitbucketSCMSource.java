@@ -365,13 +365,13 @@ public class BitbucketSCMSource extends SCMSource {
                 request.setPullRequests(getBitbucketPullRequestsFromEvent(hasPrEvent, listener));
             }
             // now server the request
-            if (request.isFetchBranches() && !request.isComplete()) {
-                // Search branches
-                retrieveBranches(request);
-            }
             if (request.isFetchPRs() && !request.isComplete()) {
                 // Search pull requests
                 retrievePullRequests(request);
+            }
+            if (request.isFetchBranches() && !request.isComplete()) {
+                // Search branches
+                retrieveBranches(request);
             }
             if (request.isFetchTags() && !request.isComplete()) {
                 // Search tags
