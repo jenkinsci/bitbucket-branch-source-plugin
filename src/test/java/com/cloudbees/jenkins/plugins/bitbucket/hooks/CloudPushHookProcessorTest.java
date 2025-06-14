@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025, Allan Burdajewicz
+ * Copyright (c) 2025, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,74 +24,97 @@
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import jenkins.scm.api.SCMEvent;
+import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
+import jenkins.scm.api.SCMEvent.Type;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
-import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-class NativeServerPullRequestHookProcessorTest {
+class CloudPushHookProcessorTest {
 
-    private static final String SERVER_URL = "http://localhost:7990";
-    private NativeServerPullRequestHookProcessor sut;
+    private CloudPushHookProcessor sut;
     private SCMHeadEvent<?> scmEvent;
-    private BitbucketEndpoint endpoint;
 
     @BeforeEach
     void setup() {
-        sut = new NativeServerPullRequestHookProcessor() {
+        sut = new CloudPushHookProcessor() {
             @Override
             public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-                NativeServerPullRequestHookProcessorTest.this.scmEvent = event;
+                CloudPushHookProcessorTest.this.scmEvent = event;
             }
         };
-        endpoint = mock(BitbucketEndpoint.class);
-        when(endpoint.getServerURL()).thenReturn(SERVER_URL);
     }
 
-    @WithJenkins
     @Test
-    @Issue("JENKINS-75523")
-    void test_pr_where_source_is_tag(JenkinsRule rule) throws Exception {
-        sut.process(HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(), loadResource("native/prOpenFromTagPayload.json"), "origin", endpoint);
+    void test_tag_created() throws Exception {
+        sut.process(HookEventType.PUSH.getKey(), loadResource("cloud/tag_created.json"), "origin", mock(BitbucketEndpoint.class));
 
-        ServerHeadEvent event = (ServerHeadEvent) scmEvent;
+        PushEvent event = (PushEvent) scmEvent;
         assertThat(event).isNotNull();
         assertThat(event.getSourceName()).isEqualTo("test-repos");
-        assertThat(event.getType()).isEqualTo(SCMEvent.Type.CREATED);
+        assertThat(event.getType()).isEqualTo(Type.CREATED);
         assertThat(event.isMatch(mock(SCM.class))).isFalse();
 
-        BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
-        scmSource.setTraits(List.of(new OriginPullRequestDiscoveryTrait(Set.of(ChangeRequestCheckoutStrategy.HEAD))));
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("AMUNIZ", "test-repos");
         Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
         assertThat(heads.keySet())
             .first()
             .usingRecursiveComparison()
-            .isEqualTo(new PullRequestSCMHead("PR-1", "AMUNIZ", "test-repos", "v1.0", PullRequestBranchType.TAG,
-                    "1", "pr from tag", new BranchSCMHead("master"), SCMHeadOrigin.DEFAULT, ChangeRequestCheckoutStrategy.HEAD));
+            .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1738608795000L)); // verify is using last commit date
+    }
+
+    @Test
+    void test_annotated_tag_created() throws Exception {
+        sut.process(HookEventType.PUSH.getKey(), loadResource("cloud/annotated_tag_created.json"), "origin", mock(BitbucketEndpoint.class));
+
+        PushEvent event = (PushEvent) scmEvent;
+        assertThat(event).isNotNull();
+        assertThat(event.getSourceName()).isEqualTo("test-repos");
+        assertThat(event.getType()).isEqualTo(Type.CREATED);
+        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("AMUNIz", "test-repos");
+        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        assertThat(heads.keySet())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BitbucketTagSCMHead("test-tag", 1738608816000L));
+    }
+
+    @Test
+    void test_commmit_created() throws Exception {
+        sut.process(HookEventType.PUSH.getKey(), loadResource("cloud/commit_created.json"), "origin", mock(BitbucketEndpoint.class));
+
+        PushEvent event = (PushEvent) scmEvent;
+        assertThat(event).isNotNull();
+        assertThat(event.getSourceName()).isEqualTo("test-repos");
+        assertThat(event.getType()).isEqualTo(Type.UPDATED);
+        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
+        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        assertThat(heads.keySet())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BranchSCMHead("feature/issue-819"));
+        assertThat(heads.values())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new SCMRevisionImpl(new BranchSCMHead("feature/issue-819"), "5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"));
     }
 
     private String loadResource(String resource) throws IOException {

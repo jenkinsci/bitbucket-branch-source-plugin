@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.hook.BitbucketHookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
@@ -32,6 +34,7 @@ import jakarta.servlet.ServletInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,18 +63,18 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     private BitbucketSCMSourcePushHookReceiver sut;
     private StaplerRequest2 req;
-    private HookProcessor hookProcessor;
+    private BitbucketHookProcessor hookProcessor;
     private String credentialsId;
 
     @BeforeEach
     void setup() throws Exception {
         req = mock(StaplerRequest2.class);
 
-        hookProcessor = mock(HookProcessor.class);
+        hookProcessor = mock(BitbucketHookProcessor.class);
         sut = new BitbucketSCMSourcePushHookReceiver() {
             @Override
-            HookProcessor getHookProcessor(HookEventType type) {
-                return hookProcessor;
+            Stream<BitbucketHookProcessor> getHookProcessors() {
+                return Stream.of(hookProcessor);
             }
         };
 
@@ -132,9 +135,9 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
             /*HttpResponse response = */sut.doNotify(req);
             // really hard to verify if response contains a status 400
-            verify(hookProcessor, never()).process(any(), anyString(), any(), anyString(), anyString());
+            verify(hookProcessor, never()).process(anyString(), anyString(), anyString(), any(BitbucketEndpoint.class));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -152,13 +155,12 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
             sut.doNotify(req);
             verify(hookProcessor).process(
-                    eq(HookEventType.PUSH),
+                    eq(HookEventType.PUSH.getKey()),
                     anyString(),
-                    eq(BitbucketType.CLOUD),
                     eq("https://bitbucket.org/185.166.143.48 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                    eq("https://bitbucket.org"));
+                    eq(endpoint));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -175,9 +177,9 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
             /*HttpResponse response = */sut.doNotify(req);
             // really hard to verify if response contains a status 400
-            verify(hookProcessor, never()).process(any(), anyString(), any(), anyString(), anyString());
+            verify(hookProcessor, never()).process(anyString(), anyString(), anyString(), any(BitbucketEndpoint.class));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -188,7 +190,7 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            mockServerRequest(endpoint.getServerUrl());
+            mockServerRequest(endpoint.getServerURL());
             when(req.getHeader("X-Event-Key")).thenReturn("repo:refs_changed");
             when(req.getHeader("X-Hub-Signature")).thenReturn("sha256=4ffba9e7b58ea3d7e1a230446e8c92baea0aeec89b73f598932387254f0de13e");
             when(req.getInputStream()).thenReturn(loadResource("native/signed_payload.json"));
@@ -196,11 +198,10 @@ class BitbucketSCMSourcePushHookReceiverTest {
             sut.doNotify(req);
             // really hard to verify if response contains a status 400
             verify(hookProcessor).process(
-                    eq(HookEventType.SERVER_REFS_CHANGED),
+                    eq(HookEventType.SERVER_REFS_CHANGED.getKey()),
                     anyString(),
-                    eq(BitbucketType.SERVER),
                     eq("http://localhost:7990/127.0.0.1 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                    eq(endpoint.getServerUrl()));
+                    eq(endpoint));
 
             // verify bad signature
             reset(hookProcessor);
@@ -208,9 +209,9 @@ class BitbucketSCMSourcePushHookReceiverTest {
             when(req.getInputStream()).thenReturn(loadResource("native/signed_payload.json"));
             /*HttpResponse response = */ sut.doNotify(req);
             // really hard to verify if response contains a status 400
-            verify(hookProcessor, never()).process(any(), anyString(), any(), anyString(), anyString());
+            verify(hookProcessor, never()).process(anyString(), anyString(), anyString(), any(BitbucketEndpoint.class));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -221,19 +222,18 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            mockServerRequest(endpoint.getServerUrl());
+            mockServerRequest(endpoint.getServerURL());
             when(req.getHeader("X-Event-Key")).thenReturn("diagnostics:ping");
             when(req.getInputStream()).thenReturn(loadResource("native/ping_payload.json"));
 
             sut.doNotify(req);
             verify(hookProcessor).process(
-                    eq(HookEventType.SERVER_PING),
+                    eq(HookEventType.SERVER_PING.getKey()),
                     anyString(),
-                    eq(BitbucketType.SERVER),
                     eq("http://localhost:7990/127.0.0.1 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                    eq(endpoint.getServerUrl()));
+                    eq(endpoint));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -244,19 +244,18 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            mockPluginRequest(endpoint.getServerUrl());
+            mockPluginRequest(endpoint.getServerURL());
             when(req.getHeader("X-Event-Key")).thenReturn("pullrequest:created");
             when(req.getInputStream()).thenReturn(loadResource("plugin/pullrequest_created.json"));
 
             sut.doNotify(req);
             verify(hookProcessor).process(
-                    eq(HookEventType.PULL_REQUEST_CREATED),
+                    eq(HookEventType.PULL_REQUEST_CREATED.getKey()),
                     anyString(),
-                    eq(BitbucketType.SERVER),
                     eq("http://localhost:7990/127.0.0.1 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                    eq(endpoint.getServerUrl()));
+                    eq(endpoint));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -267,19 +266,18 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            mockPluginRequest(endpoint.getServerUrl());
+            mockPluginRequest(endpoint.getServerURL());
             when(req.getHeader("X-Event-Key")).thenReturn("pullrequest:updated");
             when(req.getInputStream()).thenReturn(loadResource("plugin/pullrequest_updated.json"));
 
             sut.doNotify(req);
             verify(hookProcessor).process(
-                    eq(HookEventType.PULL_REQUEST_UPDATED),
+                    eq(HookEventType.PULL_REQUEST_UPDATED.getKey()),
                     anyString(),
-                    eq(BitbucketType.SERVER),
                     eq("http://localhost:7990/127.0.0.1 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                    eq(endpoint.getServerUrl()));
+                    eq(endpoint));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -290,19 +288,18 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            mockPluginRequest(endpoint.getServerUrl());
+            mockPluginRequest(endpoint.getServerURL());
             when(req.getHeader("X-Event-Key")).thenReturn("pullrequest:fulfilled");
             when(req.getInputStream()).thenReturn(loadResource("plugin/pullrequest_merged.json"));
 
             sut.doNotify(req);
             verify(hookProcessor).process(
-                    eq(HookEventType.PULL_REQUEST_MERGED),
+                    eq(HookEventType.PULL_REQUEST_MERGED.getKey()),
                     anyString(),
-                    eq(BitbucketType.SERVER),
                     eq("http://localhost:7990/127.0.0.1 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                    eq(endpoint.getServerUrl()));
+                    eq(endpoint));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -313,7 +310,7 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            mockPluginRequest(endpoint.getServerUrl());
+            mockPluginRequest(endpoint.getServerURL());
             when(req.getHeader("X-Event-Key")).thenReturn("repo:push");
             when(req.getInputStream()).thenReturn(loadResource("plugin/branch_created.json"));
             // when(req.getInputStream()).thenReturn(loadResource("plugin/branch_deleted.json"));
@@ -322,13 +319,12 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
             sut.doNotify(req);
             verify(hookProcessor).process(
-                    eq(HookEventType.PUSH),
+                    eq(HookEventType.PUSH.getKey()),
                     anyString(),
-                    eq(BitbucketType.SERVER),
                     eq("http://localhost:7990/127.0.0.1 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                    eq(endpoint.getServerUrl()));
+                    eq(endpoint));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -339,15 +335,15 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            mockServerRequest(endpoint.getServerUrl());
+            mockServerRequest(endpoint.getServerURL());
             when(req.getHeader("X-Event-Key")).thenReturn("repo:refs_changed");
             when(req.getHeader("X-Hub-Signature")).thenReturn("sha256=4ffba9e7b58ea3d7e1a230446e8c92baea0aeec89b73f598932387254f0de13f");
             when(req.getInputStream()).thenReturn(loadResource("native/signed_payload.json"));
             /*HttpResponse response = */ sut.doNotify(req);
             // really hard to verify if response contains a status 400
-            verify(hookProcessor, never()).process(any(), anyString(), any(), anyString(), anyString());
+            verify(hookProcessor, never()).process(anyString(), anyString(), anyString(), any(BitbucketEndpoint.class));
         } finally {
-            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerUrl());
+            BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
     }
 
@@ -360,11 +356,10 @@ class BitbucketSCMSourcePushHookReceiverTest {
         sut.doNotify(req);
 
         verify(hookProcessor).process(
-                eq(HookEventType.PULL_REQUEST_CREATED),
+                eq(HookEventType.PULL_REQUEST_CREATED.getKey()),
                 anyString(),
-                eq(BitbucketType.CLOUD),
                 eq("https://bitbucket.org/185.166.143.48 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                eq("https://bitbucket.org"));
+                any(BitbucketEndpoint.class));
     }
 
     @Test
@@ -376,11 +371,10 @@ class BitbucketSCMSourcePushHookReceiverTest {
         sut.doNotify(req);
 
         verify(hookProcessor).process(
-                eq(HookEventType.PULL_REQUEST_DECLINED),
+                eq(HookEventType.PULL_REQUEST_DECLINED.getKey()),
                 anyString(),
-                eq(BitbucketType.CLOUD),
                 eq("https://bitbucket.org/185.166.143.48 ⇒ https://jenkins.example.com:80/bitbucket-scmsource-hook/notify"),
-                eq("https://bitbucket.org"));
+                any(BitbucketEndpoint.class));
     }
 
     private ServletInputStream loadResource(String resource) {
