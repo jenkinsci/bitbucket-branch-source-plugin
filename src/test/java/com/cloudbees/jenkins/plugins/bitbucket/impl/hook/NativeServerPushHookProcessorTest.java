@@ -21,23 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.hook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
+import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMRevision;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +55,7 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @WithJenkins
 class NativeServerPushHookProcessorTest {
@@ -56,6 +64,7 @@ class NativeServerPushHookProcessorTest {
     private static final String MIRROR_ID = "ABCD-1234-EFGH-5678";
     private NativeServerPushHookProcessor sut;
     private SCMHeadEvent<?> scmEvent;
+    private BitbucketEndpoint endpoint;
 
     static JenkinsRule rule;
 
@@ -68,16 +77,46 @@ class NativeServerPushHookProcessorTest {
     void setup() {
         sut = new NativeServerPushHookProcessor() {
             @Override
-            protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+            public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
                 NativeServerPushHookProcessorTest.this.scmEvent = event;
             }
         };
+        endpoint = mock(BitbucketEndpoint.class);
+        when(endpoint.getServerURL()).thenReturn(SERVER_URL);
+    }
+
+    @Test
+    void test_reindexOnEmptyChanges_is_disable_by_default() throws Exception {
+        assertThat(sut.reindexOnEmptyChanges()).isFalse();
+    }
+
+    @Test
+    void test_canHandle_only_pass_specific_native_hook() throws Exception {
+        MultiValuedMap<String, String> parameters = new ArrayListValuedHashMap<>();
+        parameters.put("server_url", SERVER_URL);
+
+        assertThat(sut.canHandle(new HashMap<>(), parameters)).isFalse();
+
+        Map<String, String> headers = HookProcessorTestUtil.getNativeHeaders();
+        assertThat(sut.canHandle(headers, parameters)).isFalse();
+
+        headers.put("X-Event-Key", "pr:opened");
+        assertThat(sut.canHandle(headers, parameters)).isFalse();
+
+        headers.put("X-Event-Key", "pr:merged");
+        assertThat(sut.canHandle(headers, parameters)).isFalse();
+
+        headers.put("X-Event-Key", "repo:refs_changed");
+        assertThat(sut.canHandle(headers, parameters)).isTrue();
+
+        headers.put("X-Event-Key", "mirror:repo_synchronized");
+        assertThat(sut.canHandle(headers, parameters)).isTrue();
     }
 
     @Test
     @Issue("JENKINS-55927")
     void test_mirror_sync_changes() throws Exception {
-        sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED, loadResource("native/mirrorSynchronized.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey(), loadResource("mirrorSynchronized.json"), Collections.emptyMap(), endpoint);
 
         ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNotNull();
@@ -97,7 +136,7 @@ class NativeServerPushHookProcessorTest {
     @Test
     @Issue("JENKINS-75604")
     void test_annotated_tag_create_event() throws Exception {
-        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/annotated_tag_created.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("annotated_tag_created.json"), Collections.emptyMap(), endpoint);
         assertThat(scmEvent)
             .isInstanceOf(ServerPushEvent.class)
             .isNotNull();
@@ -118,7 +157,7 @@ class NativeServerPushHookProcessorTest {
     @Test
     @Issue("JENKINS-75604")
     void test_tag_created_event() throws Exception {
-        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/tag_created.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("tag_created.json"), Collections.emptyMap(), endpoint);
         assertThat(scmEvent)
             .isInstanceOf(ServerPushEvent.class)
             .isNotNull();
@@ -139,7 +178,7 @@ class NativeServerPushHookProcessorTest {
     @Test
     @Issue("JENKINS-75604")
     void test_tag_deleted_event() throws Exception {
-        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/tag_deleted.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("tag_deleted.json"), Collections.emptyMap(), endpoint);
         assertThat(scmEvent)
             .isInstanceOf(ServerPushEvent.class)
             .isNotNull();
@@ -160,14 +199,14 @@ class NativeServerPushHookProcessorTest {
     @Test
     @Issue("JENKINS-55927")
     void test_mirror_sync_reflimitexceeed() throws Exception {
-        sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED, loadResource("native/mirrorSynchronized_refLimitExceeded.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        sut.process(HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey(), loadResource("mirrorSynchronized_refLimitExceeded.json"), Collections.emptyMap(), endpoint);
         ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNull();
     }
 
     @Test
     void test_push() throws Exception {
-        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/pushPayload.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("pushPayload.json"), Collections.emptyMap(), endpoint);
 
         ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNotNull();
@@ -190,13 +229,13 @@ class NativeServerPushHookProcessorTest {
     @Test
     @Issue("JENKINS-55927")
     void test_push_empty_changes() throws Exception {
-        sut.process(HookEventType.SERVER_REFS_CHANGED, loadResource("native/emptyPayload.json"), BitbucketType.SERVER, "origin", SERVER_URL);
+        sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("emptyPayload.json"), Collections.emptyMap(), endpoint);
         ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNull();
     }
 
     private String loadResource(String resource) throws IOException {
-        try (InputStream stream = this.getClass().getResourceAsStream(resource)) {
+        try (InputStream stream = this.getClass().getResourceAsStream("native/" + resource)) {
             return IOUtils.toString(stream, StandardCharsets.UTF_8);
         }
     }

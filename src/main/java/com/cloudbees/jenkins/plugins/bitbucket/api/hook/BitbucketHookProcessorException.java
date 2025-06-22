@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2018, Yieldlab AG
+ * Copyright (c) 2025, Falco Nikolas
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,23 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.api.hook;
 
-import hudson.RestrictedSince;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 
-@Restricted(NoExternalUse.class)
-@RestrictedSince("933.3.0")
-public class NativeServerPingHookProcessor extends HookProcessor {
+public class BitbucketHookProcessorException extends BitbucketException {
+    private static final long serialVersionUID = 6682700868741672883L;
+    private final int httpCode;
 
-    private static final Logger LOGGER = Logger.getLogger(NativeServerPingHookProcessor.class.getName());
+    public BitbucketHookProcessorException(int httpCode, String message) {
+        super(message);
+        this.httpCode = httpCode;
+    }
 
-    @Override
-    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
-        LOGGER.log(Level.INFO, "Received webhook ping event from {0}", origin);
+    public int getHttpCode() {
+        return httpCode;
     }
 
 }
