@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2025, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,17 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.api;
+package com.cloudbees.jenkins.plugins.bitbucket.test.util;
 
-public class BitbucketException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import org.apache.tools.ant.filters.StringInputStream;
 
-    public BitbucketException(String message, Throwable cause) {
-        super(message, cause);
+public class MockRequest extends ServletInputStream {
+    InputStream delegate;
+
+    public MockRequest(String payload) {
+        this.delegate = new StringInputStream(payload);
     }
 
-    public BitbucketException(String message) {
-        super(message);
+    @Override
+    public int read() throws IOException {
+        return delegate.read();
     }
 
+    @Override
+    public void setReadListener(ReadListener readListener) {
+    }
+
+    @Override
+    public boolean isReady() {
+        return !isFinished();
+    }
+
+    @Override
+    public boolean isFinished() {
+        try {
+            return delegate.available() == 0;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 }

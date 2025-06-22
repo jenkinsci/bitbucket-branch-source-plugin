@@ -67,20 +67,16 @@ public class WebhookConfiguration {
     ));
 
     /**
-     * The list of events available in Bitbucket Server v7.x.
+     * The list of events available in Bitbucket Data Center for the minimum supported version.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(Arrays.asList(
+    private static final List<String> NATIVE_SERVER_EVENTS = Collections.unmodifiableList(Arrays.asList(
             HookEventType.SERVER_REFS_CHANGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_DECLINED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_DELETED.getKey(),
-            // only on v5.10 and above
             HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey(),
-            HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey(),
-            // only on v6.5 and above
             HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey(),
-            // only on v7.x and above
             HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()
     ));
 
@@ -97,21 +93,6 @@ public class WebhookConfiguration {
             "PULL_REQUEST_UPDATED",
             "REPOSITORY_MIRROR_SYNCHRONIZED", // not supported by the hookprocessor
             "TAG_CREATED"));
-
-    /**
-     * The list of events available in Bitbucket Server v6.5+.
-     */
-    private static final List<String> NATIVE_SERVER_EVENTS_v6_5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 8));
-
-    /**
-     * The list of events available in Bitbucket Server v6.x.  Applies to v5.10+.
-     */
-    private static final List<String> NATIVE_SERVER_EVENTS_v6 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 7));
-
-    /**
-     * The list of events available in Bitbucket Server v5.9-.
-     */
-    private static final List<String> NATIVE_SERVER_EVENTS_v5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 5));
 
     /**
      * The title of the webhook.
@@ -271,47 +252,8 @@ public class WebhookConfiguration {
         return null;
     }
 
-    private static List<String> getPluginServerEvents(String serverURL) {
-        return PLUGIN_SERVER_EVENTS;
-    }
-
-    private static List<String> getNativeServerEvents(String serverURL) {
-        BitbucketServerEndpoint endpoint = BitbucketEndpointProvider
-                .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
-                .orElse(null);
-        if (endpoint != null) {
-            switch (endpoint.getServerVersion()) {
-            case VERSION_5:
-                return NATIVE_SERVER_EVENTS_v5;
-            case VERSION_5_10:
-                return NATIVE_SERVER_EVENTS_v6;
-            case VERSION_6:
-                // plugin version 2.9.1 introduced VERSION_6 setting for Bitbucket but it
-                // actually applies
-                // to Version 5.10+. In order to preserve backwards compatibility, rather than
-                // remove
-                // VERSION_6, it will use the same list as 5.10 until such time a need arises
-                // for it to have its
-                // own list
-                return NATIVE_SERVER_EVENTS_v6;
-            case VERSION_6_5:
-                return NATIVE_SERVER_EVENTS_v6_5;
-            case VERSION_7:
-            default:
-                return NATIVE_SERVER_EVENTS_v7;
-            }
-        }
-
-        // Not specifically v6, use v7.
-        // Better to give an error than quietly not register some events.
-        return NATIVE_SERVER_EVENTS_v7;
-    }
-
-    private static String getCloudWebhookURL(String serverURL, String rootURL) {
-        return UriTemplate.buildFromTemplate(rootURL)
-                .template(BitbucketSCMSourcePushHookReceiver.FULL_PATH)
-                .build()
-                .expand();
+    private static List<String> getNativeServerEvents(BitbucketEndpoint endpoint) {
+        return NATIVE_SERVER_EVENTS;
     }
 
     private static String getServerWebhookURL(String serverURL, String rootURL) {

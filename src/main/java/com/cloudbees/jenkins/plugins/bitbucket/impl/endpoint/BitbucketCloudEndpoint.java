@@ -146,7 +146,7 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      */
     @NonNull
     @Override
-    public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
+    public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repository) {
         UriTemplate template = UriTemplate
                 .fromTemplate(SERVER_URL + "{/owner,repo}")
                 .set("owner", repoOwner)

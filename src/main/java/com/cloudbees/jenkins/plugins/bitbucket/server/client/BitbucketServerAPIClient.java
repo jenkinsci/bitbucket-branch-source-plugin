@@ -46,7 +46,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernam
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
@@ -272,12 +271,10 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             setupPullRequest(pullRequest, endpoint);
         }
 
-        if (endpoint != null) {
-            // Get PRs again as revisions could be changed by other events during setupPullRequest
-            if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
-                pullRequests = getPagedRequest(template, BitbucketServerPullRequest.class);
-                pullRequests.removeIf(this::shouldIgnore);
-            }
+        // Get PRs again as revisions could be changed by other events during setupPullRequest
+        if (endpoint != null && endpoint.isCallChanges()) {
+            pullRequests = getPagedRequest(template, BitbucketServerPullRequest.class);
+            pullRequests.removeIf(this::shouldIgnore);
         }
 
         return pullRequests;
@@ -303,7 +300,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                     }
                 }
             }
-            if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
+            if (endpoint.isCallChanges()) {
                 callPullRequestChangesById(pullRequest.getId());
             }
         }
