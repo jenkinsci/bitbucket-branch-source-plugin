@@ -39,4 +39,12 @@ public enum BitbucketServerVersion implements ModelObject {
         return displayName;
     }
 
+    /**
+     * The minimal supported version.
+     * <p>
+     * If configured less than this it will be changed to the minimal.
+     */
+    public static BitbucketServerVersion getMinSupportedVersion() {
+        return BitbucketServerVersion.VERSION_8;
+    }
 }

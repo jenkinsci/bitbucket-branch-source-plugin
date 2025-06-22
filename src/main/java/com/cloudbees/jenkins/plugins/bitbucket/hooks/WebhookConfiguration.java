@@ -68,9 +68,9 @@ public class WebhookConfiguration {
     ));
 
     /**
-     * The list of events available in Bitbucket Data Center v8.x.
+     * The list of events available in Bitbucket Data Center for the minimum supported version.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(Arrays.asList(
+    private static final List<String> NATIVE_SERVER_EVENTS = Collections.unmodifiableList(Arrays.asList(
             HookEventType.SERVER_REFS_CHANGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
@@ -253,30 +253,8 @@ public class WebhookConfiguration {
         return null;
     }
 
-    private static List<String> getPluginServerEvents(String serverURL) {
-        return PLUGIN_SERVER_EVENTS;
-    }
-
-    private static List<String> getNativeServerEvents(String serverURL) {
-        BitbucketServerEndpoint endpoint = BitbucketEndpointProvider
-                .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
-                .orElse(null);
-        if (endpoint != null) {
-            BitbucketServerVersion serverVersion = BitbucketServerVersion.valueOf(endpoint.getServerVersion());
-            switch (serverVersion) {
-            case VERSION_7:
-            default:
-                return NATIVE_SERVER_EVENTS_v7;
-            }
-        }
-        return NATIVE_SERVER_EVENTS_v7;
-    }
-
-    private static String getCloudWebhookURL(String serverURL, String rootURL) {
-        return UriTemplate.buildFromTemplate(rootURL)
-                .template(BitbucketSCMSourcePushHookReceiver.FULL_PATH)
-                .build()
-                .expand();
+    private static List<String> getNativeServerEvents(BitbucketEndpoint endpoint) {
+        return NATIVE_SERVER_EVENTS;
     }
 
     private static String getServerWebhookURL(String serverURL, String rootURL) {

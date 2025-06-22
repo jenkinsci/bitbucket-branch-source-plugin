@@ -21,33 +21,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.hook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerPullRequestEvent;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import hudson.RestrictedSince;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
+import org.apache.commons.collections4.MultiValuedMap;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Extension
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
-public class NativeServerPullRequestHookProcessor extends HookProcessor {
+public class NativeServerPullRequestHookProcessor extends AbstractHookProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(NativeServerPullRequestHookProcessor.class.getName());
+    private static final List<String> supportedEvents = List.of(
+            HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_DECLINED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_DELETED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey());
 
     @Override
-    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin) {
-        // without a server URL, the event wouldn't match anything
+    public boolean canHandle(@NonNull Map<String, String> headers, @NonNull MultiValuedMap<String, String> parameters) {
+        return headers.containsKey(EVENT_TYPE_HEADER)
+                && headers.containsKey(REQUEST_ID_SERVER_HEADER)
+                && supportedEvents.contains(headers.get(EVENT_TYPE_HEADER))
+                && parameters.containsKey(SERVER_URL_PARAMETER);
     }
 
     @Override
-    public void process(HookEventType hookEvent, String payload, BitbucketType instanceType, String origin, String serverUrl) {
-
+    public void process(@NonNull String hookEventType, @NonNull String payload, @NonNull Map<String, Object> context, @NonNull BitbucketEndpoint endpoint) {
         final NativeServerPullRequestEvent pullRequestEvent;
         try {
             pullRequestEvent = JsonParser.toJava(payload, NativeServerPullRequestEvent.class);
@@ -56,6 +73,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
             return;
         }
 
+        HookEventType hookEvent = HookEventType.fromString(hookEventType);
         final SCMEvent.Type eventType;
         switch (hookEvent) {
             case SERVER_PULL_REQUEST_OPENED:
@@ -75,6 +93,6 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 return;
         }
 
-        notifyEvent(new ServerHeadEvent(serverUrl, eventType, pullRequestEvent, origin), BitbucketSCMSource.getEventDelaySeconds());
+        notifyEvent(new ServerHeadEvent(endpoint.getServerURL(), eventType, pullRequestEvent, getOrigin(context)), BitbucketSCMSource.getEventDelaySeconds());
     }
 }

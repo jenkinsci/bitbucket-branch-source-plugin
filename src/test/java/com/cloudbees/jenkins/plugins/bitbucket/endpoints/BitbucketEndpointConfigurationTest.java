@@ -637,7 +637,7 @@ class BitbucketEndpointConfigurationTest {
     }
 
     @Test
-    void given__serverConfig__without__webhookImplementation__then__usePlugin() throws Exception {
+    void given__serverConfig__without__webhookImplementation__then__useNative() throws Exception {
         final URL configWithoutWebhookImpl = Resources.getResource(getClass(), "config-without-webhook-impl.xml");
         final File configFile = new File(Jenkins.get().getRootDir(), BitbucketEndpointConfiguration.class.getName() + ".xml");
         FileUtils.copyURLToFile(configWithoutWebhookImpl, configFile);
@@ -646,7 +646,7 @@ class BitbucketEndpointConfigurationTest {
 
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
         final BitbucketServerEndpoint endpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(0);
-        assertThat(endpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.PLUGIN);
+        assertThat(endpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
     }
 
     @Test

@@ -21,20 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.hook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import jenkins.scm.api.SCMEvent.Type;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMSource;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,24 +53,63 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-class PullRequestHookProcessorTest {
+class CloudPullRequestHookProcessorTest {
 
-    private PullRequestHookProcessor sut;
-    protected SCMHeadEvent<?> scmEvent;
+    private CloudPullRequestHookProcessor sut;
+    private SCMHeadEvent<?> scmEvent;
 
     @BeforeEach
     void setup() {
-        sut = new PullRequestHookProcessor() {
+        sut = new CloudPullRequestHookProcessor() {
             @Override
-            protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-                PullRequestHookProcessorTest.this.scmEvent = event;
+            public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+                CloudPullRequestHookProcessorTest.this.scmEvent = event;
             }
         };
     }
 
     @Test
+    void test_getServerURL_return_always_cloud_URL() throws Exception {
+        Map<String, String> headers = new HashMap<>();
+        MultiValuedMap<String, String> parameters = new ArrayListValuedHashMap<>();
+        parameters.put("server_url", "https://localhost:8080");
+
+        assertThat(sut.getServerURL(headers, parameters)).isEqualTo(BitbucketCloudEndpoint.SERVER_URL);
+    }
+
+    @Test
+    void test_reindexOnEmptyChanges_is_disable_by_default() throws Exception {
+        assertThat(sut.reindexOnEmptyChanges()).isFalse();
+    }
+
+    @Test
+    void test_canHandle_only_pass_specific_cloud_hook() throws Exception {
+        MultiValuedMap<String, String> parameters = new ArrayListValuedHashMap<>();
+
+        assertThat(sut.canHandle(new HashMap<>(), parameters)).isFalse();
+
+        Map<String, String> headers = HookProcessorTestUtil.getCloudHeaders();
+        assertThat(sut.canHandle(headers, parameters)).isFalse();
+
+        headers.put("X-Event-Key", "pullrequest:created");
+        assertThat(sut.canHandle(headers, parameters)).isTrue();
+
+        headers.put("X-Event-Key", "pullrequest:rejected");
+        assertThat(sut.canHandle(headers, parameters)).isTrue();
+
+        headers.put("X-Event-Key", "pullrequest:fulfilled");
+        assertThat(sut.canHandle(headers, parameters)).isTrue();
+
+        headers.put("X-Event-Key", "pullrequest:updated");
+        assertThat(sut.canHandle(headers, parameters)).isTrue();
+
+        headers.put("X-Event-Key", "repo:push");
+        assertThat(sut.canHandle(headers, parameters)).isFalse();
+    }
+
+    @Test
     void test_pullrequest_created() throws Exception {
-        sut.process(HookEventType.PULL_REQUEST_CREATED, loadResource("pullrequest_created.json"), BitbucketType.CLOUD, "origin");
+        sut.process(HookEventType.PULL_REQUEST_CREATED.getKey(), loadResource("pullrequest_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
         PREvent event = (PREvent) scmEvent;
         assertThat(event).isNotNull();
@@ -72,7 +120,7 @@ class PullRequestHookProcessorTest {
 
     @Test
     void test_pullrequest_rejected() throws Exception {
-        sut.process(HookEventType.PULL_REQUEST_DECLINED, loadResource("pullrequest_rejected.json"), BitbucketType.CLOUD, "origin");
+        sut.process(HookEventType.PULL_REQUEST_DECLINED.getKey(), loadResource("pullrequest_rejected.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
         PREvent event = (PREvent) scmEvent;
         assertThat(event).isNotNull();
@@ -83,7 +131,7 @@ class PullRequestHookProcessorTest {
 
     @Test
     void test_pullrequest_created_when_event_match_SCMNavigator() throws Exception {
-        sut.process(HookEventType.PULL_REQUEST_CREATED, loadResource("pullrequest_created.json"), BitbucketType.CLOUD, "origin");
+        sut.process(HookEventType.PULL_REQUEST_CREATED.getKey(), loadResource("pullrequest_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
         PREvent event = (PREvent) scmEvent;
         // discard any scm navigator than bitbucket
@@ -107,7 +155,7 @@ class PullRequestHookProcessorTest {
     @WithJenkins
     @Test
     void test_pullrequest_created_when_event_match_SCMSource(JenkinsRule r) throws Exception {
-        sut.process(HookEventType.PULL_REQUEST_CREATED, loadResource("pullrequest_created.json"), BitbucketType.CLOUD, "origin");
+        sut.process(HookEventType.PULL_REQUEST_CREATED.getKey(), loadResource("pullrequest_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
         PREvent event = (PREvent) scmEvent;
         // discard any scm navigator than bitbucket
@@ -133,7 +181,7 @@ class PullRequestHookProcessorTest {
     @WithJenkins
     @Test
     void test_pullrequest_rejected_returns_empty_pullrequests_when_event_match_SCMSource(JenkinsRule r) throws Exception {
-        sut.process(HookEventType.PULL_REQUEST_DECLINED, loadResource("pullrequest_rejected.json"), BitbucketType.CLOUD, "origin");
+        sut.process(HookEventType.PULL_REQUEST_DECLINED.getKey(), loadResource("pullrequest_rejected.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
         PREvent event = (PREvent) scmEvent;
 
@@ -148,4 +196,5 @@ class PullRequestHookProcessorTest {
             return IOUtils.toString(stream, StandardCharsets.UTF_8);
         }
     }
+
 }

@@ -86,7 +86,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
                 .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
                 .map(endpoint -> endpoint.getServerVersion())
                 .map(BitbucketServerVersion::valueOf)
-                .orElse(BitbucketServerVersion.VERSION_7);
+                .orElse(BitbucketServerVersion.getMinSupportedVersion());
     }
 
     /**
@@ -107,7 +107,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     /**
      * The server version for this endpoint.
      */
-    private BitbucketServerVersion serverVersion = BitbucketServerVersion.VERSION_7;
+    private BitbucketServerVersion serverVersion = BitbucketServerVersion.getMinSupportedVersion();
 
     /**
      * Default constructor.
@@ -155,8 +155,15 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         return EndpointType.SERVER;
     }
 
-    @Nullable
+    @NonNull
     public String getServerVersion() {
+        this.serverVersion = serverVersion;
+        fixme
+        if (serverVersion == null || BitbucketServerVersion.getMinSupportedVersion().compareTo(this.serverVersion) < 0) {
+            // force value to the minimum supported version
+            this.serverVersion = BitbucketServerVersion.getMinSupportedVersion();
+        }
+
         return this.serverVersion != null ? this.serverVersion.name() : null;
     }
 
@@ -219,13 +226,13 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
     private Object readResolve() {
         if (webhookImplementation == null) {
-            webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+            webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
         }
         if (getBitbucketJenkinsRootUrl() != null) {
             setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
         }
         if (serverVersion == null) {
-            serverVersion = BitbucketServerVersion.VERSION_7;
+            serverVersion = BitbucketServerVersion.getMinSupportedVersion();
         }
 
         return this;
