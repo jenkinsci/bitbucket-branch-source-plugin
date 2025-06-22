@@ -103,7 +103,9 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
      */
     @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
-    public abstract String getServerUrl();
+    public String getServerUrl() {
+        return this.getServerURL();
+    }
 
     /**
      * A Jenkins Server Root URL should end with a slash to use with webhooks.
@@ -148,12 +150,6 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
         return normalizeJenkinsRootURL(endpointURL);
     }
 
-    @NonNull
-    @Override
-    public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repoSlug) {
-        return this.getRepositoryUrl(repoOwner, repoSlug);
-    }
-
     @DataBoundSetter
     public void setBitbucketJenkinsRootUrl(String bitbucketJenkinsRootUrl) {
         if (manageHooks) {
@@ -187,11 +183,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        if (StringUtils.isBlank(bitbucketJenkinsRootUrl)) {
-            return DisplayURLProvider.get().getRoot();
-        } else {
-            return bitbucketJenkinsRootUrl;
-        }
+        return getEndpointJenkinsRootURL();
     }
 
     /**
@@ -201,8 +193,11 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
      * @param repository the repository.
      * @return the user facing URL of the specified repository.
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @NonNull
-    public abstract String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository);
+    public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
+        return this.getRepositoryURL(repoOwner, repository);
+    }
 
     /**
      * Returns {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
