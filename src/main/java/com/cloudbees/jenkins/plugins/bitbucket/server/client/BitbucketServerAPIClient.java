@@ -83,6 +83,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
+import javax.net.ssl.SSLContext;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.impl.avatars.AvatarImage;
@@ -90,7 +91,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
@@ -138,10 +141,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private static final String API_MIRRORS_PATH = "/rest/mirroring/1.0/mirrorServers";
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
 
-    private static final HttpClientConnectionManager connectionManager = connectionManagerBuilder()
-            .setMaxConnPerRoute(20)
-            .setMaxConnTotal(40 /* should be 20 * number of server instances */)
-            .build();
+    private HttpClientConnectionManager connectionManager;
 
     /**
      * Repository owner.
@@ -936,7 +936,15 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     @Override
-    protected HttpClientConnectionManager getConnectionManager() {
+    protected HttpClientConnectionManager getConnectionManager(SSLContext sslContext) {
+        if (connectionManager != null)
+            return connectionManager;
+        PoolingHttpClientConnectionManagerBuilder cmBuilder = connectionManagerBuilder()
+            .setMaxConnPerRoute(20)
+            .setMaxConnTotal(40 /* should be 20 * number of server instances */);
+        if (sslContext != null)
+            cmBuilder.setTlsSocketStrategy(new DefaultClientTlsStrategy(sslContext));
+        connectionManager = cmBuilder.build();
         return connectionManager;
     }
 

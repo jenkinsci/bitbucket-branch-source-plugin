@@ -67,16 +67,19 @@ public class BitbucketClientCertificateAuthenticator implements BitbucketAuthent
     /**
      * Sets the SSLContext for the builder to one that will connect with the selected certificate.
      * @param context The client builder context
-     * @param host the target host name
+     * @param host    the target host name
+     * @return
      */
     @Override
-    public void configureContext(HttpClientContext context, HttpHost host) {
+    public SSLContext configureContext(HttpClientContext context, HttpHost host) {
         try {
+            SSLContext sslContext = buildSSLContext();
             Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register(URIScheme.HTTP.id, PlainConnectionSocketFactory.getSocketFactory())
-                .register(URIScheme.HTTPS.id, new SSLConnectionSocketFactory(buildSSLContext(), HttpsSupport.getDefaultHostnameVerifier()))
+                .register(URIScheme.HTTPS.id, new SSLConnectionSocketFactory(sslContext, HttpsSupport.getDefaultHostnameVerifier()))
                 .build();
             context.setAttribute(SOCKET_FACTORY_REGISTRY, registry); // override SSL registry for this context
+            return sslContext;
         } catch (NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException | KeyManagementException e) {
             throw new BitbucketException("Failed to set up SSL context from provided client certificate", e);
         }

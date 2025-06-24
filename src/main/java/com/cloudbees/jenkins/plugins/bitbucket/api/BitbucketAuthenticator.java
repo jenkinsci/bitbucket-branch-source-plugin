@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import hudson.plugins.git.GitSCM;
+import javax.net.ssl.SSLContext;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
@@ -78,9 +79,11 @@ public interface BitbucketAuthenticator {
     /**
      * Configures an {@link HttpClientContext}. Override
      * @param context The connection context
-     * @param host host being connected to
+     * @param host    host being connected to
+     * @return
      */
-    default void configureContext(HttpClientContext context, HttpHost host) {
+    default SSLContext configureContext(HttpClientContext context, HttpHost host) {
+        return null;
     }
 
     /**
