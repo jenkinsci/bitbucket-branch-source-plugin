@@ -156,9 +156,9 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
      * @return the list of endpoints
      */
     @NonNull
-    public List<AbstractBitbucketEndpoint /*BitbucketEndpoint*/> getEndpoints() {
+    public List<BitbucketEndpoint> getEndpoints() {
         // make a local copy so if changes in meanwhile you do not get NPE
-        List/*<BitbucketEndpoint>*/ localEndpoints = this.endpoints;
+        List<BitbucketEndpoint> localEndpoints = this.endpoints;
         return CollectionUtils.isEmpty(localEndpoints)
                 ? List.of(new BitbucketCloudEndpoint())
                 : Collections.unmodifiableList(localEndpoints);

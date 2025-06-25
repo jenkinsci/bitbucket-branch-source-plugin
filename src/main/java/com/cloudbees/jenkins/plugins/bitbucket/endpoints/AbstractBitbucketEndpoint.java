@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
@@ -286,7 +287,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
      * {@inheritDoc}
      */
     @Override
-    public AbstractBitbucketEndpointDescriptor getDescriptor() {
-        return (AbstractBitbucketEndpointDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
+    public BitbucketEndpointDescriptor getDescriptor() {
+        return (BitbucketEndpointDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
     }
 }

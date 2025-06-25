@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -156,6 +157,11 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
     @Override
     public EndpointType getType() {
         return EndpointType.CLOUD;
+    }
+
+    @Override
+    public BitbucketEndpointDescriptor getDescriptor() {
+        return new DescriptorImpl();
     }
 
     /**

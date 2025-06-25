@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
@@ -260,6 +261,11 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     @DataBoundSetter
     public void setWebhookImplementation(@NonNull BitbucketServerWebhookImplementation webhookImplementation) {
         this.webhookImplementation = requireNonNull(webhookImplementation);
+    }
+
+    @Override
+    public BitbucketEndpointDescriptor getDescriptor() {
+        return new DescriptorImpl();
     }
 
     /**
