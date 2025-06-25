@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.hook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;

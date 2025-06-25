@@ -21,14 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.hook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPullRequestEvent;
+import com.cloudbees.jenkins.plugins.bitbucket.client.events.BitbucketCloudPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPullRequestEvent;
+import com.cloudbees.jenkins.plugins.bitbucket.server.events.BitbucketServerPushEvent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.scm.SCM;
 import java.net.URI;
@@ -77,12 +79,12 @@ abstract class AbstractSCMHeadEvent<P> extends SCMHeadEvent<P> {
     protected boolean isServerURLMatch(String serverURL) {
         if (serverURL == null || BitbucketApiUtils.isCloud(serverURL)) {
             // this is a Bitbucket cloud navigator
-            if (getPayload() instanceof BitbucketServerPullRequestEvent) {
+            if (getPayload() instanceof BitbucketServerPullRequestEvent || getPayload() instanceof BitbucketServerPushEvent) {
                 return false;
             }
         } else {
             // this is a Bitbucket server navigator
-            if (getPayload() instanceof BitbucketCloudPullRequestEvent) {
+            if (getPayload() instanceof BitbucketCloudPullRequestEvent || getPayload() instanceof BitbucketCloudPushEvent) {
                 return false;
             }
             Map<String, List<BitbucketHref>> links = getRepository().getLinks();

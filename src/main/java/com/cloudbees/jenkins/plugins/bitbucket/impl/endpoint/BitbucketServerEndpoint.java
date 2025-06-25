@@ -40,7 +40,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Objects;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -85,7 +84,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         return BitbucketEndpointProvider
                 .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
                 .map(endpoint -> endpoint.getServerVersion())
-                .orElse(BitbucketServerVersion.VERSION_7);
+                .orElse(BitbucketServerVersion.getMinSupportedVersion());
     }
 
     /**
@@ -101,12 +100,12 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     private final String serverUrl;
 
     @NonNull
-    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
 
     /**
      * The server version for this endpoint.
      */
-    private BitbucketServerVersion serverVersion = BitbucketServerVersion.VERSION_7;
+    private BitbucketServerVersion serverVersion = BitbucketServerVersion.getMinSupportedVersion();
 
     /**
      * Whether to always call the can merge api when retrieving pull requests.
@@ -188,8 +187,12 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     }
 
     @DataBoundSetter
-    public void setServerVersion(@NonNull BitbucketServerVersion serverVersion) {
-        this.serverVersion = Objects.requireNonNull(serverVersion);
+    public void setServerVersion(@CheckForNull BitbucketServerVersion serverVersion) {
+        this.serverVersion = serverVersion;
+        if (serverVersion == null || BitbucketServerVersion.getMinSupportedVersion().compareTo(this.serverVersion) < 0) {
+            // force value to the minimum supported version
+            this.serverVersion = BitbucketServerVersion.getMinSupportedVersion();
+        }
     }
 
     /**
@@ -241,13 +244,13 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
     private Object readResolve() {
         if (webhookImplementation == null) {
-            webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+            webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
         }
         if (getBitbucketJenkinsRootUrl() != null) {
             setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
         }
         if (serverVersion == null) {
-            serverVersion = BitbucketServerVersion.VERSION_7;
+            serverVersion = BitbucketServerVersion.getMinSupportedVersion();
         }
 
         return this;

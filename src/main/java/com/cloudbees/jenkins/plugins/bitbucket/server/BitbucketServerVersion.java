@@ -26,11 +26,12 @@ package com.cloudbees.jenkins.plugins.bitbucket.server;
 import hudson.model.ModelObject;
 
 public enum BitbucketServerVersion implements ModelObject {
-    VERSION_7("Bitbucket Data Center v8.x (and later)"),
-    VERSION_6_5("Bitbucket Server v6.5 to v6.10 - EOL reached, any support DISMISSED"),
-    VERSION_6("Bitbucket Server v6.0 to v6.4 - EOL reached, any support DISMISSED"),
-    VERSION_5_10("Bitbucket Server v5.10 to v5.16 - EOL reached, any support DISMISSED"),
-    VERSION_5("Bitbucket Server v5.9 (and earlier) - EOL reached, any support DISMISSED");
+    VERSION_8("Bitbucket Data Center v8.x (and later)"),
+    VERSION_7("Bitbucket Server v7 - EOS reached, any support DISMISSED"),
+    VERSION_6_5("Bitbucket Server v6.5 to v6.10 - EOS reached, any support DISMISSED"),
+    VERSION_6("Bitbucket Server v6.0 to v6.4 - EOS reached, any support DISMISSED"),
+    VERSION_5_10("Bitbucket Server v5.10 to v5.16 - EOS reached, any support DISMISSED"),
+    VERSION_5("Bitbucket Server v5.9 (and earlier) - EOS reached, any support DISMISSED");
 
     private final String displayName;
 
@@ -43,4 +44,12 @@ public enum BitbucketServerVersion implements ModelObject {
         return displayName;
     }
 
+    /**
+     * The minimal supported version.
+     * <p>
+     * If configured less than this it will be changed to the minimal.
+     */
+    public static BitbucketServerVersion getMinSupportedVersion() {
+        return BitbucketServerVersion.VERSION_8;
+    }
 }
