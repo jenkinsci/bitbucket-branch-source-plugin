@@ -41,7 +41,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import javax.net.ssl.SSLContext;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -147,6 +146,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
                 .setConnectTimeout(connectTimeout, TimeUnit.SECONDS)
                 .setSocketTimeout(socketTimeout, TimeUnit.SECONDS)
                 .build();
+
         return PoolingHttpClientConnectionManagerBuilder.create()
                 .setDefaultConnectionConfig(connectionConfig);
     }
@@ -158,15 +158,9 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
                 .setConnectionRequestTimeout(connectionRequestTimeout, TimeUnit.SECONDS)
                 .build();
 
-        context = HttpClientContext.create();
-        //Get the sslContext here in order to set into ConnectionManager
-        SSLContext sslContext = null;
-        if(authenticator != null) {
-            sslContext = authenticator.configureContext(context, getHost());
-        }
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
                 .useSystemProperties()
-                .setConnectionManager(getConnectionManager(sslContext))
+                .setConnectionManager(getConnectionManager())
                 .setConnectionManagerShared(true)
                 .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
                 .setDefaultRequestConfig(requestConfig)
@@ -176,6 +170,9 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
 
         if (authenticator != null) {
             authenticator.configureBuilder(httpClientBuilder);
+
+            context = HttpClientContext.create();
+            authenticator.configureContext(context, getHost());
         }
         setClientProxyParams(httpClientBuilder);
         return httpClientBuilder;
@@ -230,7 +227,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     protected abstract boolean isSupportedAuthenticator(@CheckForNull BitbucketAuthenticator authenticator);
 
     @CheckForNull
-    protected abstract HttpClientConnectionManager getConnectionManager(SSLContext sslContext);
+    protected abstract HttpClientConnectionManager getConnectionManager();
 
     @NonNull
     protected abstract HttpHost getHost();

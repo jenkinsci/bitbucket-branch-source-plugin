@@ -74,7 +74,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
-import javax.net.ssl.SSLContext;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.lang3.StringUtils;
@@ -100,7 +99,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     private static final int MAX_AVATAR_LENGTH = 16384;
     private static final int MAX_PAGE_LENGTH = 100;
 
-    private HttpClientConnectionManager connectionManager = null;
+    private HttpClientConnectionManager connectionManager;
     private final CloseableHttpClient client;
     private final String owner;
     private final String projectKey;
@@ -668,15 +667,15 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     }
 
     @Override
-    protected HttpClientConnectionManager getConnectionManager(SSLContext sslContext) {
+    protected HttpClientConnectionManager getConnectionManager() {
         if (connectionManager != null)
             return connectionManager;
         PoolingHttpClientConnectionManagerBuilder cmBuilder = connectionManagerBuilder()
             .setMaxConnPerRoute(20)
             // for bitbucket cloud there is only one server (route)
             .setMaxConnTotal(20);
-        if (sslContext != null)
-            cmBuilder.setTlsSocketStrategy(new DefaultClientTlsStrategy(sslContext));
+        if (getAuthenticator() != null && getAuthenticator().getSSLContext() != null)
+            cmBuilder.setTlsSocketStrategy(new DefaultClientTlsStrategy(getAuthenticator().getSSLContext()));
         connectionManager = cmBuilder.build();
         return connectionManager;
     }

@@ -70,6 +70,15 @@ public interface BitbucketAuthenticator {
     String getId();
 
     /**
+     * Returns the SSLContext to use for this authenticator, or null if no SSLContext is required.
+     * This is used to configure the HttpClientBuilder.
+     * @return the SSLContext to use, or null if not applicable.
+     */
+    default SSLContext getSSLContext() {
+        return null;
+    }
+
+    /**
      * Configures an {@link HttpClientBuilder}. Override if you need to adjust connection setup.
      * @param builder The client builder.
      */
@@ -79,11 +88,9 @@ public interface BitbucketAuthenticator {
     /**
      * Configures an {@link HttpClientContext}. Override
      * @param context The connection context
-     * @param host    host being connected to
-     * @return
+     * @param host host being connected to
      */
-    default SSLContext configureContext(HttpClientContext context, HttpHost host) {
-        return null;
+    default void configureContext(HttpClientContext context, HttpHost host) {
     }
 
     /**

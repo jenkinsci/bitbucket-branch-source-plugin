@@ -83,7 +83,6 @@ import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
-import javax.net.ssl.SSLContext;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.impl.avatars.AvatarImage;
@@ -936,14 +935,14 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     @Override
-    protected HttpClientConnectionManager getConnectionManager(SSLContext sslContext) {
+    protected HttpClientConnectionManager getConnectionManager() {
         if (connectionManager != null)
             return connectionManager;
         PoolingHttpClientConnectionManagerBuilder cmBuilder = connectionManagerBuilder()
             .setMaxConnPerRoute(20)
             .setMaxConnTotal(40 /* should be 20 * number of server instances */);
-        if (sslContext != null)
-            cmBuilder.setTlsSocketStrategy(new DefaultClientTlsStrategy(sslContext));
+        if (getAuthenticator() != null && getAuthenticator().getSSLContext() != null)
+            cmBuilder.setTlsSocketStrategy(new DefaultClientTlsStrategy(getAuthenticator().getSSLContext()));
         connectionManager = cmBuilder.build();
         return connectionManager;
     }
