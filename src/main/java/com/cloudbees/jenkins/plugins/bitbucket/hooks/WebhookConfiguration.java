@@ -207,7 +207,6 @@ public class WebhookConfiguration {
                 hook.setDescription(description);
                 hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
                 hook.setCommittersToIgnore(committersToIgnore);
-                hook.setSecret(signatureSecret);
                 return hook;
             }
         }
