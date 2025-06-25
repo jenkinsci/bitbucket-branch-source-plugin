@@ -147,7 +147,7 @@ public class WebhookConfiguration {
             }
         } else if (hook instanceof NativeBitbucketServerWebhook serverHook) {
             String serverURL = owner.getServerUrl();
-            String url = getNativeServerWebhookUrl(serverURL, owner.getEndpointJenkinsRootURL());
+            String url = getServerWebhookURL(serverURL, owner.getEndpointJenkinsRootURL());
 
             if (!url.equals(serverHook.getUrl())) {
                 serverHook.setUrl(url);
@@ -195,7 +195,7 @@ public class WebhookConfiguration {
                 hook.setActive(true);
                 hook.setDescription(description);
                 hook.setEvents(getNativeServerEvents(serverUrl));
-                hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
+                hook.setUrl(getServerWebhookURL(serverUrl, rootUrl));
                 hook.setSecret(signatureSecret);
                 return hook;
             }
@@ -205,7 +205,7 @@ public class WebhookConfiguration {
                 BitbucketServerWebhook hook = new BitbucketServerWebhook();
                 hook.setActive(true);
                 hook.setDescription(description);
-                hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+                hook.setUrl(getServerWebhookURL(serverUrl, rootUrl));
                 hook.setCommittersToIgnore(committersToIgnore);
                 return hook;
             }
@@ -260,12 +260,12 @@ public class WebhookConfiguration {
         return NATIVE_SERVER_EVENTS_v7;
     }
 
-    private static String getNativeServerWebhookUrl(String serverUrl, String rootUrl) {
-        return UriTemplate.buildFromTemplate(rootUrl)
+    private static String getServerWebhookURL(String serverURL, String rootURL) {
+        return UriTemplate.buildFromTemplate(rootURL)
             .template(BitbucketSCMSourcePushHookReceiver.FULL_PATH)
             .query("server_url")
             .build()
-            .set("server_url", serverUrl)
+            .set("server_url", serverURL)
             .expand();
     }
 }
