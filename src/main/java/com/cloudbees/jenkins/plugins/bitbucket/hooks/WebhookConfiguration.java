@@ -205,7 +205,7 @@ public class WebhookConfiguration {
                 BitbucketServerWebhook hook = new BitbucketServerWebhook();
                 hook.setActive(true);
                 hook.setDescription(description);
-                hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+                hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
                 hook.setCommittersToIgnore(committersToIgnore);
                 return hook;
             }
