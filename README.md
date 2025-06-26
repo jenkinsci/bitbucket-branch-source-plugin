@@ -100,4 +100,4 @@ Support to run Server under Windows has been dismissed since version 7.14+
 3. Inside the container:
    - install git with `apk add git`
    - install git support for http with `apk add git-daemon`
-   - run `/opt/atlassian-plugin-sdk/bin/atlas-run-standalone --product bitbucket --version 9.5.2`
+   - run `/opt/atlassian-plugin-sdk/bin/atlas-run-standalone --product bitbucket --version 9.5.2 "-Dfeature.public.access=true"`

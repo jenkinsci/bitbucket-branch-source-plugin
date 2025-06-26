@@ -54,10 +54,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketSer
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequestCanMerge;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhooks;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.NativeBitbucketServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.JacksonException;
@@ -76,6 +76,7 @@ import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -492,7 +493,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("repo", repositoryName)
                 .set("hash", newStatus.getHash())
                 .expand();
-        postRequest(url, JsonParser.toJson(newStatus));
+        postRequest(url, JsonParser.toString(newStatus));
     }
 
     /**
@@ -644,13 +645,14 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     public void registerCommitWebHook(BitbucketWebHook hook) throws IOException {
         switch (webhookImplementation) {
             case PLUGIN:
-                putRequest(
+                // API documentation at https://help.moveworkforward.com/BPW/how-to-manage-configurations-using-post-webhooks-f#HowtomanageconfigurationsusingPostWebhooksforBitbucketAPIs?-Createpostwebhook
+                postRequest(
                         UriTemplate
                             .fromTemplate(this.baseURL + WEBHOOK_REPOSITORY_PATH)
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .expand(),
-                        JsonParser.toJson(hook)
+                        JsonParser.toString(hook)
                     );
                 break;
 
@@ -661,7 +663,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .expand(),
-                        JsonParser.toJson(hook)
+                        JsonParser.toString(hook)
                     );
                 break;
 
@@ -675,13 +677,14 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     public void updateCommitWebHook(BitbucketWebHook hook) throws IOException {
         switch (webhookImplementation) {
             case PLUGIN:
-                postRequest(
+                // API documentation at https://help.moveworkforward.com/BPW/how-to-manage-configurations-using-post-webhooks-f#HowtomanageconfigurationsusingPostWebhooksforBitbucketAPIs?-UpdateapostwebhookbyID
+                putRequest(
                         UriTemplate
                             .fromTemplate(this.baseURL + WEBHOOK_REPOSITORY_CONFIG_PATH)
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
-                            .expand(), JsonParser.toJson(hook)
+                            .expand(), JsonParser.toString(hook)
                     );
                 break;
 
@@ -692,7 +695,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
-                            .expand(), JsonParser.toJson(hook)
+                            .expand(), JsonParser.toString(hook)
                     );
                 break;
 
@@ -743,13 +746,13 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                         .set("owner", getUserCentricOwner())
                         .set("repo", repositoryName)
                         .expand();
-                return getRequestAs(url, BitbucketServerWebhooks.class);
+                return Arrays.asList(getRequestAs(url, BitbucketPluginWebhook[].class));
             case NATIVE:
                 UriTemplate uriTemplate = UriTemplate
                         .fromTemplate(this.baseURL + API_WEBHOOKS_PATH)
                         .set("owner", getUserCentricOwner())
                         .set("repo", repositoryName);
-                return getPagedRequest(uriTemplate, NativeBitbucketServerWebhook.class);
+                return getPagedRequest(uriTemplate, BitbucketServerWebhook.class);
         }
 
         return Collections.emptyList();
@@ -969,7 +972,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("limit", 500);
         String url = template.expand();
         String response = getRequest(url);
-        Map<String,Object> content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
+        Map<String, Object> content = JsonParser.toJava(response, new TypeReference<Map<String, Object>>() {});
         Map page = (Map) content.get("children");
         List<Map> values = (List<Map>) page.get("values");
         collectFileAndDirectories(directory, values, files);
@@ -979,7 +982,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                     .set("start", start)
                     .expand();
             response = getRequest(url);
-            content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
+            content = JsonParser.toJava(response, new TypeReference<Map<String, Object>>() {});
             page = (Map) content.get("children");
         }
         return files;
@@ -1059,7 +1062,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         Type type = Type.OTHER;
         try {
             String response = getRequest(url);
-            JsonNode typeNode = JsonParser.mapper.readTree(response).path("type");
+            JsonNode typeNode = JsonParser.toJson(response).path("type");
             if (!typeNode.isMissingNode() && !typeNode.isNull()) {
                 String responseType = typeNode.asText();
                 if ("FILE".equals(responseType)) {

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2018, Yieldlab AG
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,34 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
+package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class NativeBitbucketServerWebhook implements BitbucketWebHook {
+public class BitbucketCloudHook implements BitbucketWebHook {
 
-    @JsonProperty("id")
     private String uuid;
-    @JsonProperty("name")
+
     private String description;
+
     private String url;
-    private List<String> events;
+
+    private String secret;
+
     private boolean active;
-    @JsonProperty("configuration")
-    private Map<String, String> configuration = new HashMap<>();
 
-    @Override
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
+    private List<String> events;
 
     @Override
     public String getDescription() {
@@ -69,15 +59,6 @@ public class NativeBitbucketServerWebhook implements BitbucketWebHook {
     }
 
     @Override
-    public List<String> getEvents() {
-        return events;
-    }
-
-    public void setEvents(List<String> events) {
-        this.events = events;
-    }
-
-    @Override
     public boolean isActive() {
         return active;
     }
@@ -87,12 +68,29 @@ public class NativeBitbucketServerWebhook implements BitbucketWebHook {
     }
 
     @Override
+    public List<String> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<String> events) {
+        this.events = events;
+    }
+
+    @Override
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
     public String getSecret() {
-        return configuration.get("secret");
+        return secret;
     }
 
     public void setSecret(String secret) {
-        configuration.put("secret", secret);
+        this.secret = secret;
     }
 
 }

@@ -38,8 +38,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranc
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositorySource;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
@@ -471,7 +471,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("owner", owner)
                 .set("repo", repositoryName)
                 .expand();
-        postRequest(url, JsonParser.toJson(hook));
+        postRequest(url, JsonParser.toString(hook));
     }
 
     /**
@@ -485,7 +485,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("repo", repositoryName)
                 .set("hook", hook.getUuid())
                 .expand();
-        putRequest(url, JsonParser.toJson(hook));
+        putRequest(url, JsonParser.toString(hook));
     }
 
     /**
@@ -509,13 +509,13 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketRepositoryHook> getWebHooks() throws IOException {
+    public List<BitbucketCloudHook> getWebHooks() throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/hooks{?page,pagelen}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
                 .set("pagelen", MAX_PAGE_LENGTH)
                 .expand();
-        return getPagedRequest(url, BitbucketRepositoryHook.class);
+        return getPagedRequest(url, BitbucketCloudHook.class);
     }
 
     /**
@@ -531,7 +531,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("repo", repositoryName)
                 .set("hash", newStatus.getHash())
                 .expand();
-        postRequest(url, JsonParser.toJson(newStatus));
+        postRequest(url, JsonParser.toString(newStatus));
     }
 
     /**

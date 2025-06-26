@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2018, Yieldlab AG
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,30 +23,32 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 
-
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class BitbucketServerWebhook implements BitbucketWebHook {
+
     @JsonProperty("id")
-    private Integer uid;
-    @JsonProperty("title")
+    private String uuid;
+    @JsonProperty("name")
     private String description;
-    @JsonProperty("url")
     private String url;
-    @JsonProperty("enabled")
+    private List<String> events;
     private boolean active;
     @JsonProperty("configuration")
     private Map<String, String> configuration = new HashMap<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL) // If null, don't marshal to allow for backwards compatibility
-    private String committersToIgnore; // Since Bitbucket Webhooks version 1.5.0
+    @Override
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
     @Override
     public String getDescription() {
@@ -66,12 +68,13 @@ public class BitbucketServerWebhook implements BitbucketWebHook {
         this.url = url;
     }
 
-    public String getCommittersToIgnore() {
-        return committersToIgnore;
+    @Override
+    public List<String> getEvents() {
+        return events;
     }
 
-    public void setCommittersToIgnore(String committersToIgnore) {
-        this.committersToIgnore = committersToIgnore;
+    public void setEvents(List<String> events) {
+        this.events = events;
     }
 
     @Override
@@ -81,21 +84,6 @@ public class BitbucketServerWebhook implements BitbucketWebHook {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    @Override
-    @JsonIgnore
-    public List<String> getEvents() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    @JsonIgnore
-    public String getUuid() {
-        if (uid != null) {
-            return String.valueOf(uid);
-        }
-        return null;
     }
 
     @Override
