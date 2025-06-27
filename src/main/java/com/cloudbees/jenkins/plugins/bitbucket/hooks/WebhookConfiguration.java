@@ -141,10 +141,6 @@ public class WebhookConfiguration {
                 serverHook.setCommittersToIgnore(thisCommittersToIgnore);
                 updated = true;
             }
-            if (!Objects.equal(serverHook.getSecret(), signatureSecret)) {
-                serverHook.setSecret(signatureSecret);
-                updated = true;
-            }
         } else if (hook instanceof NativeBitbucketServerWebhook serverHook) {
             String serverURL = owner.getServerUrl();
             String url = getServerWebhookURL(serverURL, owner.getEndpointJenkinsRootURL());

@@ -490,7 +490,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("repo", repositoryName)
                 .set("hash", newStatus.getHash())
                 .expand();
-        postRequest(url, JsonParser.toJson(newStatus));
+        postRequest(url, JsonParser.toString(newStatus));
     }
 
     /**
@@ -648,7 +648,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .expand(),
-                        JsonParser.toJson(hook)
+                        JsonParser.toString(hook)
                     );
                 break;
 
@@ -659,7 +659,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .expand(),
-                        JsonParser.toJson(hook)
+                        JsonParser.toString(hook)
                     );
                 break;
 
@@ -679,7 +679,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
-                            .expand(), JsonParser.toJson(hook)
+                            .expand(), JsonParser.toString(hook)
                     );
                 break;
 
@@ -690,7 +690,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
-                            .expand(), JsonParser.toJson(hook)
+                            .expand(), JsonParser.toString(hook)
                     );
                 break;
 
@@ -967,7 +967,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 .set("limit", 500);
         String url = template.expand();
         String response = getRequest(url);
-        Map<String,Object> content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
+        Map<String, Object> content = JsonParser.toJava(response, new TypeReference<Map<String, Object>>() {});
         Map page = (Map) content.get("children");
         List<Map> values = (List<Map>) page.get("values");
         collectFileAndDirectories(directory, values, files);
@@ -977,7 +977,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                     .set("start", start)
                     .expand();
             response = getRequest(url);
-            content = JsonParser.mapper.readValue(response, new TypeReference<Map<String,Object>>(){});
+            content = JsonParser.toJava(response, new TypeReference<Map<String, Object>>() {});
             page = (Map) content.get("children");
         }
         return files;
@@ -1057,7 +1057,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         Type type = Type.OTHER;
         try {
             String response = getRequest(url);
-            JsonNode typeNode = JsonParser.mapper.readTree(response).path("type");
+            JsonNode typeNode = JsonParser.toJson(response).path("type");
             if (!typeNode.isMissingNode() && !typeNode.isNull()) {
                 String responseType = typeNode.asText();
                 if ("FILE".equals(responseType)) {

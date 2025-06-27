@@ -23,9 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +44,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Restricted(NoExternalUse.class)
 public final class JsonParser {
 
-    public static final ObjectMapper mapper = createObjectMapper();
+    private static final JsonMapper mapper = createMapper();
 
     public static <T> T toJava(String data, Class<T> type) throws IOException {
         return toJava(new StringReader(data), type);
@@ -60,14 +62,19 @@ public final class JsonParser {
         return mapper.readValue(data, type);
     }
 
-    public static String toJson(Object value) throws IOException {
+    public static String toString(Object value) throws IOException {
         return mapper.writeValueAsString(value);
     }
 
-    private static ObjectMapper createObjectMapper(){
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setDateFormat(new StdDateFormat());
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return mapper;
+    public static JsonNode toJson(String value) throws IOException {
+        return mapper.readTree(value);
+    }
+
+    private static JsonMapper createMapper(){
+        return JsonMapper.builder()
+                .defaultDateFormat(new StdDateFormat())
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .serializationInclusion(Include.NON_NULL)
+                .build();
     }
 }

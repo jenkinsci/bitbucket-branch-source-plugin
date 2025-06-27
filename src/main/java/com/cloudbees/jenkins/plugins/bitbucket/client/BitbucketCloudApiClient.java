@@ -471,7 +471,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("owner", owner)
                 .set("repo", repositoryName)
                 .expand();
-        postRequest(url, JsonParser.toJson(hook));
+        postRequest(url, JsonParser.toString(hook));
     }
 
     /**
@@ -485,7 +485,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("repo", repositoryName)
                 .set("hook", hook.getUuid())
                 .expand();
-        putRequest(url, JsonParser.toJson(hook));
+        putRequest(url, JsonParser.toString(hook));
     }
 
     /**
@@ -531,7 +531,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .set("repo", repositoryName)
                 .set("hash", newStatus.getHash())
                 .expand();
-        postRequest(url, JsonParser.toJson(newStatus));
+        postRequest(url, JsonParser.toString(newStatus));
     }
 
     /**
