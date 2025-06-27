@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -60,6 +61,6 @@ public class BitbucketUsernamePasswordAuthenticatorSource extends Authentication
      */
     @Override
     public CredentialsMatcher matcher() {
-        return new BitbucketUsernamePasswordCredentialMatcher();
+        return CredentialsMatchers.allOf(super.matcher(), new BitbucketUsernamePasswordCredentialMatcher());
     }
 }

@@ -36,7 +36,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
@@ -249,9 +249,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             listener.getLogger().format("Must specify a repository owner%n");
             return;
         }
-        StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
-                serverUrl,
+        StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(
                 observer.getContext(),
+                serverUrl,
                 credentialsId,
                 StandardCredentials.class
         );
@@ -302,9 +302,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         // TODO when we have support for trusted events, use the details from event if event was from trusted source
         listener.getLogger().printf("Looking up team details of %s...%n", getRepoOwner());
         List<Action> result = new ArrayList<>();
-        StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
-                serverUrl,
+        StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(
                 owner,
+                serverUrl,
                 credentialsId,
                 StandardCredentials.class
         );
@@ -393,6 +393,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return !BitbucketEndpointProvider.all().isEmpty();
         }
 
+        @RequirePOST
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
             AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
             if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
@@ -403,9 +404,9 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         @RequirePOST
         public static FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
-                                                          @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
+                                                          @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverURL,
                                                           @QueryParameter String value) {
-            return BitbucketCredentials.checkCredentialsId(context, value, serverURL);
+            return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
         }
 
         @RequirePOST
@@ -421,16 +422,17 @@ public class BitbucketSCMNavigator extends SCMNavigator {
             return FormValidation.ok();
         }
 
+        @RequirePOST
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
-                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            return BitbucketCredentials.fillCredentialsIdItems(context, serverURL);
+                                                     @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverURL) {
+            return BitbucketCredentialsUtils.listCredentials(context, serverURL, null);
         }
 
+        @RequirePOST
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
-                                                @QueryParameter(fixEmpty = true, value = "serverUrl") String serverUrl,
+                                                @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverUrl,
                                                 @QueryParameter String credentialsId,
-                                                @QueryParameter String repoOwner)
-            throws FormFillFailure {
+                                                @QueryParameter String repoOwner) throws FormFillFailure {
             return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, null, MirrorListSupplier.INSTANCE);
         }
 

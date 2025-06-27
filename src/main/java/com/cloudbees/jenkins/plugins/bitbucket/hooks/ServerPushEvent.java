@@ -34,7 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
@@ -197,9 +197,9 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
     protected BitbucketApi getClient(BitbucketSCMSource src) {
         String serverURL = src.getServerUrl();
 
-        StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
-            serverURL,
+        StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(
             src.getOwner(),
+            serverURL,
             src.getCredentialsId(),
             StandardCredentials.class
         );

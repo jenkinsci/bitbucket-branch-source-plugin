@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -61,8 +62,7 @@ public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource
     }
 
     /**
-     * Whether this source works in the given context. For client certs, only HTTPS
-     * BitbucketServer instances make sense
+     * Whether this source works in the given context.
      *
      * @param ctx the context
      * @return whether this can authenticate given the context
@@ -78,7 +78,7 @@ public class BitbucketOAuthAuthenticatorSource extends AuthenticationTokenSource
      */
     @Override
     public CredentialsMatcher matcher() {
-        return new BitbucketOAuthCredentialMatcher();
+        return CredentialsMatchers.allOf(super.matcher(), new BitbucketOAuthCredentialMatcher());
     }
 
 }

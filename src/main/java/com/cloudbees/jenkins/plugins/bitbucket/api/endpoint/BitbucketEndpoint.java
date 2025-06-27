@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -128,7 +128,7 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
         if (credentialsId == null) {
             return null;
         } else {
-            return BitbucketCredentials.lookupCredentials(getServerURL(), Jenkins.get(), credentialsId, StandardCredentials.class);
+            return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), credentialsId, StandardCredentials.class);
         }
     }
 
@@ -143,7 +143,7 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
         if (credentialsId == null) {
             return null;
         } else {
-            return BitbucketCredentials.lookupCredentials(getServerURL(), Jenkins.get(), credentialsId, StringCredentials.class);
+            return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), credentialsId, StringCredentials.class);
         }
     }
 
