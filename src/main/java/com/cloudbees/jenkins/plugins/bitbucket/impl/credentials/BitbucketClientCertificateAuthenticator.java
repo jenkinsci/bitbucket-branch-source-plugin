@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.BitbucketTlsSocketStrategy;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import hudson.util.Secret;
 import java.security.KeyManagementException;
@@ -33,17 +34,9 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
-import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
-import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.HttpsSupport;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.URIScheme;
-import org.apache.hc.core5.http.config.Registry;
-import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.apache.hc.core5.ssl.SSLContexts;
 
@@ -51,9 +44,6 @@ import org.apache.hc.core5.ssl.SSLContexts;
  * Authenticates against Bitbucket using a TLS client certificate
  */
 public class BitbucketClientCertificateAuthenticator implements BitbucketAuthenticator {
-    private static final Logger logger = Logger.getLogger(BitbucketClientCertificateAuthenticator.class.getName());
-    private static final String SOCKET_FACTORY_REGISTRY = "http.socket-factory-registry";
-
     private final String credentialsId;
     private final KeyStore keyStore;
     private final Secret password;
@@ -72,11 +62,7 @@ public class BitbucketClientCertificateAuthenticator implements BitbucketAuthent
     @Override
     public void configureContext(HttpClientContext context, HttpHost host) {
         try {
-            Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register(URIScheme.HTTP.id, PlainConnectionSocketFactory.getSocketFactory())
-                .register(URIScheme.HTTPS.id, new SSLConnectionSocketFactory(buildSSLContext(), HttpsSupport.getDefaultHostnameVerifier()))
-                .build();
-            context.setAttribute(SOCKET_FACTORY_REGISTRY, registry); // override SSL registry for this context
+            context.setAttribute(BitbucketTlsSocketStrategy.SOCKET_FACTORY_REGISTRY, buildSSLContext()); // override SSL registry for this context
         } catch (NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException | KeyManagementException e) {
             throw new BitbucketException("Failed to set up SSL context from provided client certificate", e);
         }

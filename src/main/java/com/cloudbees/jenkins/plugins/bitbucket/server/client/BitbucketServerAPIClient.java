@@ -40,6 +40,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.BitbucketTlsSocketStrategy;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
@@ -141,6 +142,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private static final HttpClientConnectionManager connectionManager = connectionManagerBuilder()
             .setMaxConnPerRoute(20)
             .setMaxConnTotal(40 /* should be 20 * number of server instances */)
+            .setTlsSocketStrategy(new BitbucketTlsSocketStrategy())
             .build();
 
     /**
