@@ -25,7 +25,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import hudson.util.Secret;
 import org.apache.commons.lang3.StringUtils;
 
 // Although the CredentialsMatcher documentation says that the best practice
@@ -44,19 +45,13 @@ public class BitbucketUsernamePasswordCredentialMatcher implements CredentialsMa
      */
     @Override
     public boolean matches(Credentials item) {
-        if (!(item instanceof UsernamePasswordCredentials)) {
+        if (!(item instanceof StandardUsernamePasswordCredentials)) { // safety check
             return false;
         }
 
-        UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
-        String username = usernamePasswordCredential.getUsername();
-        String password;
-        try {
-            password = BitbucketAuthenticatorUtils.getPassword(usernamePasswordCredential);
-        } catch (Exception e) {
-            // JENKINS-75184
-            return false;
-        }
+        StandardUsernamePasswordCredentials credential = ((StandardUsernamePasswordCredentials) item);
+        String username = credential.getUsername();
+        String password = Secret.toString(credential.getPassword());
         return StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
     }
 }

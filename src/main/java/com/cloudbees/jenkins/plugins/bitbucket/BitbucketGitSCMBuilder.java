@@ -34,7 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.FallbackToOtherRepositoryGitSCMExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.SCMUtils;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
@@ -173,9 +173,9 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     @NonNull
     public BitbucketGitSCMBuilder withCredentials(String credentialsId, BitbucketRepositoryProtocol protocol) {
         if (StringUtils.isNotBlank(credentialsId)) {
-            StandardCredentials credentials = BitbucketCredentials.lookupCredentials(
-                scmSource.getServerUrl(),
+            StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(
                 scmSource.getOwner(),
+                scmSource.getServerUrl(),
                 credentialsId,
                 StandardCredentials.class
             );

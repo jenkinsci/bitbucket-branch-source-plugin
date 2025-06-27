@@ -79,7 +79,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
      * Creates a {@link BitbucketApi} for the specified URL with the supplied credentials, owner and (optional)
      * repository.
      *
-     * @param serverUrl   the server URL.
+     * @param serverURL   the server URL.
      * @param authenticator the (optional) authenticator.
      * @param owner       the owner name.
      * @param projectKey  the (optional) project key.
@@ -88,17 +88,17 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
      * @throws IllegalArgumentException if the supplied URL is not supported.
      */
     @NonNull
-    public static BitbucketApi newInstance(@Nullable String serverUrl,
+    public static BitbucketApi newInstance(@Nullable String serverURL,
                                            @Nullable BitbucketAuthenticator authenticator,
                                            @NonNull String owner,
                                            @CheckForNull String projectKey,
                                            @CheckForNull String repository) {
         for (BitbucketApiFactory factory : ExtensionList.lookup(BitbucketApiFactory.class)) {
-            if (factory.isMatch(serverUrl)) {
-                return factory.create(serverUrl, authenticator, owner, projectKey, repository);
+            if (factory.isMatch(serverURL)) {
+                return factory.create(serverURL, authenticator, owner, projectKey, repository);
             }
         }
-        throw new IllegalArgumentException("Unsupported Bitbucket server URL: " + serverUrl);
+        throw new IllegalArgumentException("Unsupported Bitbucket server URL: " + serverURL);
     }
 
     @NonNull

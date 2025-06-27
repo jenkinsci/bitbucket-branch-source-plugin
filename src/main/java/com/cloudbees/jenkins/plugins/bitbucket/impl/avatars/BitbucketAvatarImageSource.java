@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.avatars;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -68,7 +68,7 @@ public class BitbucketAvatarImageSource implements AvatarImageSource {
                     owner = Jenkins.get().getItemByFullName(scmOwner, SCMNavigatorOwner.class);
                 }
                 if (owner != null) {
-                    StandardCredentials credentials = BitbucketCredentials.lookupCredentials(serverURL, owner, credentialsId, StandardCredentials.class);
+                    StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(owner, serverURL, credentialsId, StandardCredentials.class);
                     BitbucketAuthenticator authenticator = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
                     // projectKey and repository are not used to fetch the project avatar
                     // owner can not be null but is not used from the client to retrieve avatar image, we just need authentication

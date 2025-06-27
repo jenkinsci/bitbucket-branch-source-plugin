@@ -27,7 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -259,7 +259,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     @CheckForNull
     public StandardCredentials credentials() {
-        return BitbucketCredentials.lookupCredentials(getServerUrl(), Jenkins.get(), credentialsId, StandardCredentials.class);
+        return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerUrl(), credentialsId, StandardCredentials.class);
     }
 
     /**
@@ -270,7 +270,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     @CheckForNull
     public StringCredentials hookSignatureCredentials() {
-        return BitbucketCredentials.lookupCredentials(getServerUrl(), Jenkins.get(), hookSignatureCredentialsId, StringCredentials.class);
+        return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerUrl(), hookSignatureCredentialsId, StringCredentials.class);
     }
 
     /**
