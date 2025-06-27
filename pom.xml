@@ -80,6 +80,17 @@
             <artifactId>apache-httpcomponents-client-5-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.hakky54</groupId>
+            <artifactId>sslcontext-kickstart-for-apache5</artifactId>
+            <version>9.1.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>commons-lang3-api</artifactId>
         </dependency>

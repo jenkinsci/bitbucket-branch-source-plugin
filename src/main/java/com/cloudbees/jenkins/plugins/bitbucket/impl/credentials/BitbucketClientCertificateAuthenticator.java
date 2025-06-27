@@ -25,25 +25,23 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.client.BitbucketTlsSocketStrategy;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import hudson.util.Secret;
-import java.security.KeyManagementException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import javax.net.ssl.SSLContext;
-import org.apache.hc.client5.http.protocol.HttpClientContext;
+import java.util.logging.Logger;
+import nl.altindag.ssl.SSLFactory;
+import nl.altindag.ssl.util.KeyManagerUtils;
+import nl.altindag.ssl.util.KeyStoreUtils;
 import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.ssl.SSLContextBuilder;
-import org.apache.hc.core5.ssl.SSLContexts;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Authenticates against Bitbucket using a TLS client certificate
  */
 public class BitbucketClientCertificateAuthenticator implements BitbucketAuthenticator {
+    private static final Logger logger = Logger.getLogger(BitbucketClientCertificateAuthenticator.class.getName());
+
     private final String credentialsId;
     private final KeyStore keyStore;
     private final Secret password;
@@ -55,23 +53,22 @@ public class BitbucketClientCertificateAuthenticator implements BitbucketAuthent
     }
 
     /**
-     * Sets the SSLContext for the builder to one that will connect with the selected certificate.
-     * @param context The client builder context
+     * Sets the SSLContext for the builder to one that will connect with the
+     * selected certificate.
+     *
+     * @param sslFactory The client SSL context configured in the connection
+     *        pool
      * @param host the target host name
      */
-    @Override
-    public void configureContext(HttpClientContext context, HttpHost host) {
-        try {
-            context.setAttribute(BitbucketTlsSocketStrategy.SOCKET_FACTORY_REGISTRY, buildSSLContext()); // override SSL registry for this context
-        } catch (NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException | KeyManagementException e) {
-            throw new BitbucketException("Failed to set up SSL context from provided client certificate", e);
-        }
-    }
-
-    private SSLContext buildSSLContext() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException, KeyManagementException {
-        SSLContextBuilder contextBuilder = SSLContexts.custom();
-        contextBuilder.loadKeyMaterial(keyStore, Secret.toString(password).toCharArray());
-        return contextBuilder.build();
+    @Restricted(NoExternalUse.class)
+    public void configureContext(SSLFactory sslFactory, HttpHost host) {
+        sslFactory.getKeyManager().ifPresent(baseKeyManager -> {
+            for (String alias : KeyStoreUtils.getAliases(keyStore)) {
+                KeyManagerUtils.addIdentityMaterial(baseKeyManager, keyStore, Secret.toString(password).toCharArray());
+                KeyManagerUtils.addIdentityRoute(baseKeyManager, alias, host.toString());
+                logger.info(() -> "Add new identity material (keyStore) " + alias + " to the SSLContext.");
+            }
+        });
     }
 
     @Override
