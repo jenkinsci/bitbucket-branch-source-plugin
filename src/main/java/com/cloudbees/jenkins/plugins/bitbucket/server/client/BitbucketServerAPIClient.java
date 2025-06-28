@@ -86,11 +86,15 @@ import javax.imageio.ImageIO;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.impl.avatars.AvatarImage;
+import nl.altindag.ssl.SSLFactory;
+import nl.altindag.ssl.SSLFactory.Builder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
@@ -138,9 +142,23 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private static final String API_MIRRORS_PATH = "/rest/mirroring/1.0/mirrorServers";
     private static final Integer DEFAULT_PAGE_LIMIT = 200;
 
+    private static Builder sslFactoryBuilder() {
+        Builder builder = SSLFactory.builder()
+                .withSystemTrustMaterial()
+                .withDefaultTrustMaterial()
+                .withDummyIdentityMaterial()
+                .withSwappableIdentityMaterial();
+        if (System.getProperty("javax.net.ssl.trustStore") != null) {
+            builder.withSystemPropertyDerivedTrustMaterial();
+        }
+        return builder;
+    }
+
+    private static final SSLFactory sslFactory = sslFactoryBuilder().build();
     private static final HttpClientConnectionManager connectionManager = connectionManagerBuilder()
             .setMaxConnPerRoute(20)
             .setMaxConnTotal(40 /* should be 20 * number of server instances */)
+            .setTlsSocketStrategy(new DefaultClientTlsStrategy(sslFactory.getSslContext()))
             .build();
 
     /**
@@ -158,6 +176,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private final String baseURL;
     private final BitbucketServerWebhookImplementation webhookImplementation;
     private final CloseableHttpClient client;
+
 
     public BitbucketServerAPIClient(@NonNull String baseURL, @NonNull String owner, @CheckForNull String repositoryName,
                                     @CheckForNull BitbucketAuthenticator authenticator, boolean userCentric) {
@@ -177,6 +196,14 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         this.baseURL = Util.removeTrailingSlash(baseURL);
         this.webhookImplementation = requireNonNull(webhookImplementation);
         this.client = setupClientBuilder().build();
+    }
+
+    @Override
+    protected HttpClientBuilder setupClientBuilder() {
+        if (getAuthenticator() instanceof BitbucketClientCertificateAuthenticator certificateAuthenticator) {
+            certificateAuthenticator.configureContext(sslFactory, getHost());
+        }
+        return super.setupClientBuilder();
     }
 
     @Override

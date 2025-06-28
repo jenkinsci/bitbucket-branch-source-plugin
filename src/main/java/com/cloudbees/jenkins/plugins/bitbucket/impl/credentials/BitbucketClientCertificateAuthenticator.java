@@ -25,34 +25,32 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import hudson.util.Secret;
-import java.security.KeyManagementException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
-import javax.net.ssl.SSLContext;
-import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
-import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.HttpsSupport;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import javax.net.ssl.X509ExtendedKeyManager;
+import nl.altindag.ssl.SSLFactory;
+import nl.altindag.ssl.keymanager.AggregatedX509ExtendedKeyManager;
+import nl.altindag.ssl.keymanager.DummyX509ExtendedKeyManager;
+import nl.altindag.ssl.keymanager.HotSwappableX509ExtendedKeyManager;
+import nl.altindag.ssl.keymanager.LoggingX509ExtendedKeyManager;
+import nl.altindag.ssl.keymanager.X509KeyManagerWrapper;
+import nl.altindag.ssl.util.KeyManagerUtils;
 import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.URIScheme;
-import org.apache.hc.core5.http.config.Registry;
-import org.apache.hc.core5.http.config.RegistryBuilder;
-import org.apache.hc.core5.ssl.SSLContextBuilder;
-import org.apache.hc.core5.ssl.SSLContexts;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Authenticates against Bitbucket using a TLS client certificate
  */
 public class BitbucketClientCertificateAuthenticator implements BitbucketAuthenticator {
     private static final Logger logger = Logger.getLogger(BitbucketClientCertificateAuthenticator.class.getName());
-    private static final String SOCKET_FACTORY_REGISTRY = "http.socket-factory-registry";
 
     private final String credentialsId;
     private final KeyStore keyStore;
@@ -65,27 +63,56 @@ public class BitbucketClientCertificateAuthenticator implements BitbucketAuthent
     }
 
     /**
-     * Sets the SSLContext for the builder to one that will connect with the selected certificate.
-     * @param context The client builder context
+     * Sets the SSLContext for the builder to one that will connect with the
+     * selected certificate.
+     *
+     * @param sslFactory The client SSL context configured in the connection
+     *        pool
      * @param host the target host name
      */
-    @Override
-    public void configureContext(HttpClientContext context, HttpHost host) {
-        try {
-            Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register(URIScheme.HTTP.id, PlainConnectionSocketFactory.getSocketFactory())
-                .register(URIScheme.HTTPS.id, new SSLConnectionSocketFactory(buildSSLContext(), HttpsSupport.getDefaultHostnameVerifier()))
-                .build();
-            context.setAttribute(SOCKET_FACTORY_REGISTRY, registry); // override SSL registry for this context
-        } catch (NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException | KeyManagementException e) {
-            throw new BitbucketException("Failed to set up SSL context from provided client certificate", e);
-        }
+    @Restricted(NoExternalUse.class)
+    public synchronized /*required to avoid combine the same identity material twice */ void configureContext(SSLFactory sslFactory, HttpHost host) {
+        sslFactory.getKeyManager().ifPresent(baseKeyManager -> {
+            AggregatedX509ExtendedKeyManager aggregate = unwrap(baseKeyManager);
+            String routeAlias = host.getHostName();
+
+            // check if given route has been already added to the SSL context
+            Map<String, List<URI>> routes = aggregate.getIdentityRoute();
+            if (!routes.containsKey(routeAlias)) {
+                try {
+                    URI hostURI = new URI(host.toURI());
+                    routes.put(routeAlias, new ArrayList<>(List.of(hostURI)));
+                } catch (URISyntaxException e) {
+                    logger.severe("Invalid host " + host);
+                }
+                // create an aggregate keyManager with new identity material plus existing contributed
+                // from other configured client certificate client
+                X509ExtendedKeyManager combined = KeyManagerUtils.keyManagerBuilder()
+                        .withKeyManagers(aggregate.getInnerKeyManagers())
+                        .withKeyManager(KeyManagerUtils.createKeyManager(keyStore, Secret.toString(password).toCharArray()))
+                        .withIdentityRoute(routes)
+                        .build();
+                // swap identity materials and reuse existing http client
+                KeyManagerUtils.swapKeyManager(baseKeyManager, combined);
+            }
+        });
     }
 
-    private SSLContext buildSSLContext() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException, KeyManagementException {
-        SSLContextBuilder contextBuilder = SSLContexts.custom();
-        contextBuilder.loadKeyMaterial(keyStore, Secret.toString(password).toCharArray());
-        return contextBuilder.build();
+
+    private AggregatedX509ExtendedKeyManager unwrap(X509ExtendedKeyManager keyManager) {
+        if (keyManager instanceof AggregatedX509ExtendedKeyManager aggregate) {
+            return aggregate;
+        } else if (keyManager instanceof HotSwappableX509ExtendedKeyManager swappable) {
+            return unwrap(swappable.getInnerKeyManager());
+        } else if (keyManager instanceof LoggingX509ExtendedKeyManager logger) {
+            return unwrap(logger.getInnerKeyManager());
+        } else if (keyManager instanceof X509KeyManagerWrapper wrapper) {
+            return unwrap((X509ExtendedKeyManager) wrapper.getInnerKeyManager());
+        } else if (keyManager instanceof DummyX509ExtendedKeyManager) {
+            return new AggregatedX509ExtendedKeyManager(new ArrayList<>());
+        } else {
+            return new AggregatedX509ExtendedKeyManager(List.of(keyManager));
+        }
     }
 
     @Override
