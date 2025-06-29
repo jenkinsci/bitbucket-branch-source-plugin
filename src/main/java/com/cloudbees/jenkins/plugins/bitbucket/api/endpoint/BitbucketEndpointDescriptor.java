@@ -23,9 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Util;
@@ -59,7 +58,7 @@ public class BitbucketEndpointDescriptor extends Descriptor<BitbucketEndpoint> {
     public ListBoxModel doFillCredentialsIdItems(@QueryParameter(fixEmpty = true) String credentialsId,
                                                  @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
         Jenkins jenkins = checkPermission();
-        return BitbucketCredentials.fillCredentialsIdItems(serverURL, jenkins, StandardCredentials.class, credentialsId);
+        return BitbucketCredentialsUtils.listCredentials(jenkins, serverURL, credentialsId);
     }
 
     private static Jenkins checkPermission() {

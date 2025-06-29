@@ -50,7 +50,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExt
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.BitbucketSupplier;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
@@ -797,9 +797,9 @@ public class BitbucketSCMSource extends SCMSource {
 
     @CheckForNull
     /* package */ StandardCredentials credentials() {
-        return BitbucketCredentials.lookupCredentials(
-                getServerUrl(),
+        return BitbucketCredentialsUtils.lookupCredentials(
                 getOwner(),
+                getServerUrl(),
                 getCredentialsId(),
                 StandardCredentials.class
         );
@@ -1054,7 +1054,7 @@ public class BitbucketSCMSource extends SCMSource {
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
                                                    @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            return BitbucketCredentials.checkCredentialsId(context, value, serverURL);
+            return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
         }
 
         public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
@@ -1095,7 +1095,7 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
-            return BitbucketCredentials.fillCredentialsIdItems(context, serverUrl);
+            return BitbucketCredentialsUtils.listCredentials(context, serverUrl, null);
         }
 
         @RequirePOST

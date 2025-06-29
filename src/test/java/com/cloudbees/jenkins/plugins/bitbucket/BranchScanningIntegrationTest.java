@@ -25,7 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
@@ -104,9 +104,9 @@ public class BranchScanningIntegrationTest {
         CredentialsProvider.lookupStores(j.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
 
-        StandardCredentials creds = BitbucketCredentials.lookupCredentials(
-                null ,
+        StandardCredentials creds = BitbucketCredentialsUtils.lookupCredentials(
                 source.getOwner(),
+                null ,
                 c.getId(),
                 UsernamePasswordCredentialsImpl.class
         );
@@ -116,9 +116,9 @@ public class BranchScanningIntegrationTest {
         CredentialsProvider.lookupStores(j.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
 
-        creds = BitbucketCredentials.lookupCredentials(
-                null,
+        creds = BitbucketCredentialsUtils.lookupCredentials(
                 source.getOwner(),
+                null,
                 c.getId(),
                 BasicSSHUserPrivateKey.class
         );

@@ -26,9 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import hudson.util.Secret;
 
 /*
  * Although the CredentialsMatcher documentation says that the best practice
@@ -42,7 +41,6 @@ import java.util.logging.Logger;
  */
 public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
     private static final long serialVersionUID = 6458784517693211197L;
-    private static final Logger logger = Logger.getLogger(BitbucketOAuthCredentialMatcher.class.getName());
 
     private static final int CLIENT_KEY_LENGTH = 18;
     private static final int CLIENT_SECRET_LENGTH = 32;
@@ -52,29 +50,18 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
      */
     @Override
     public boolean matches(Credentials item) {
-        if (!(item instanceof UsernamePasswordCredentials)) {
+        if (!(item instanceof StandardUsernamePasswordCredentials)) { // safety check
             return false;
         }
 
-        try {
-            UsernamePasswordCredentials usernamePasswordCredential = ((UsernamePasswordCredentials) item);
-            String username = usernamePasswordCredential.getUsername();
-            String password;
-            try {
-                password = BitbucketAuthenticatorUtils.getPassword(usernamePasswordCredential);
-            } catch (Exception e) {
-                // JENKINS-75184
-                return false;
-            }
+        StandardUsernamePasswordCredentials credentials = ((StandardUsernamePasswordCredentials) item);
+        String username = credentials.getUsername();
+        String password = Secret.toString(credentials.getPassword());
 
-            boolean isEMail = username.contains(".") && username.contains("@");
-            boolean validSecretLength = password.length() == CLIENT_SECRET_LENGTH;
-            boolean validKeyLength = username.length() == CLIENT_KEY_LENGTH;
+        boolean isEMail = username.contains(".") && username.contains("@");
+        boolean validSecretLength = password.length() == CLIENT_SECRET_LENGTH;
+        boolean validKeyLength = username.length() == CLIENT_KEY_LENGTH;
 
-            return !isEMail && validKeyLength && validSecretLength;
-        } catch (RuntimeException e) {
-            logger.log(Level.FINE, "Caught exception validating credential", e);
-            return false;
-        }
+        return !isEMail && validKeyLength && validSecretLength;
     }
 }

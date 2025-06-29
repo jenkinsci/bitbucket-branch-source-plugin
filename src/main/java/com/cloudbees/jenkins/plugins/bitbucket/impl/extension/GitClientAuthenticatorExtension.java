@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.extension;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -106,9 +106,9 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
             if (owner == null) {
                 throw new IllegalStateException("Item " + scmOwner + " seems to be relocated, perform a 'Scan project Now' action to refresh old data");
             }
-            credentials = BitbucketCredentials.lookupCredentials(serverURL, owner, credentialsId, StandardCredentials.class);
+            credentials = BitbucketCredentialsUtils.lookupCredentials(owner, serverURL, credentialsId, StandardCredentials.class);
         } else {
-            credentials = BitbucketCredentials.lookupCredentials(serverURL, Jenkins.get(), credentialsId, StandardCredentials.class);
+            credentials = BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), serverURL, credentialsId, StandardCredentials.class);
         }
         return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(serverURL), credentials);
     }
