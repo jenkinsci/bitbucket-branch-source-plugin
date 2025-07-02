@@ -42,12 +42,6 @@ public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
 
     @NonNull
     @Override
-    public String getServerUrl() {
-        return getServerURL();
-    }
-
-    @NonNull
-    @Override
     public String getServerURL() {
         return "http://dummy.example.com";
     }
@@ -65,7 +59,7 @@ public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
 
     @NonNull
     @Override
-    public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
+    public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repository) {
         return UriTemplate
                 .fromTemplate("http://dummy.example.com{/owner,repo}")
                 .set("owner", repoOwner)
