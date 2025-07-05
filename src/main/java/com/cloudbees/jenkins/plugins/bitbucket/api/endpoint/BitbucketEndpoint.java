@@ -34,6 +34,8 @@ import hudson.model.Describable;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * The implementation represents an endpoint configuration to be used in
@@ -87,6 +89,15 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     boolean isManageHooks();
 
     /**
+     * Sets if Jenkins is supposed to auto-manage hooks for this end-point.
+     *
+     * @param manageHooks   if Jenkins must auto-manage hooks registration.
+     * @param credentialsId credentialsId to use with rights to create or update web
+     *                      hook for Bitbucket repositories.
+     */
+    void setManageHooks(boolean manageHooks, @CheckForNull String credentialsId);
+
+    /**
      * Returns the {@link StandardUsernamePasswordCredentials#getId()} of the
      * credentials to use for auto-management of hooks.
      *
@@ -106,14 +117,30 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     @CheckForNull
     String getEndpointJenkinsRootURL();
 
+    /**
+     * Returns if the should or not verify incoming web hook payload from this
+     * endpoint.
+     *
+     * @apiNote This method is under development so could be moved to an interface
+     *          dedicated to webhooks implementation
+     *
+     * @return the {@code true} if the web hook implementation configured for this
+     *         endpoint should or not verify web hook payload that could be signed
+     *         or crypted.
+     */
+    @Restricted(Beta.class)
     boolean isEnableHookSignature();
 
     /**
-     * The {@link StringCredentials#getId()} of the credentials to use to verify
-     * the signature of hooks.
+     * The {@link StringCredentials#getId()} of the credentials to use to verify the
+     * signature of hooks.
+     *
+     * @apiNote This method is under development so could be moved to an interface
+     *          dedicated to webhooks implementation
      *
      * @return the configured credentials identifier to use
      */
+    @Restricted(Beta.class)
     @CheckForNull
     String getHookSignatureCredentialsId();
 
@@ -133,10 +160,15 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     }
 
     /**
-     * Looks up the {@link StringCredentials} to use to verify the signature of hooks.
+     * Looks up the {@link StringCredentials} to use to verify the signature of
+     * hooks.
+     *
+     * @apiNote This method is under development so could be moved to an interface
+     *          dedicated to webhook provider
      *
      * @return the credentials or {@code null}.
      */
+    @Restricted(Beta.class)
     @CheckForNull
     default StringCredentials hookSignatureCredentials() {
         String credentialsId = Util.fixEmptyAndTrim(getHookSignatureCredentialsId());

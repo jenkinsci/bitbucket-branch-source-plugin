@@ -53,13 +53,13 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
-    private final boolean manageHooks;
+    private boolean manageHooks;
 
     /**
      * The {@link StandardCredentials#getId()} of the credentials to use for auto-management of hooks.
      */
     @CheckForNull
-    private final String credentialsId;
+    private String credentialsId;
 
     /**
      * {@code true} if and only if Jenkins have to verify the signature of all incoming hooks.
@@ -94,6 +94,12 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
         this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
         this.enableHookSignature = enableHookSignature && StringUtils.isNotBlank(hookSignatureCredentialsId);
         this.hookSignatureCredentialsId = enableHookSignature ? fixEmptyAndTrim(hookSignatureCredentialsId) : null;
+    }
+
+    @Override
+    public void setManageHooks(boolean manageHooks, String credentialsId) {
+        this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
+        this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
     }
 
     /**
@@ -259,7 +265,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     @CheckForNull
     public StandardCredentials credentials() {
-        return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerUrl(), credentialsId, StandardCredentials.class);
+        return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), credentialsId, StandardCredentials.class);
     }
 
     /**
@@ -270,7 +276,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     @CheckForNull
     public StringCredentials hookSignatureCredentials() {
-        return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerUrl(), hookSignatureCredentialsId, StringCredentials.class);
+        return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), hookSignatureCredentialsId, StringCredentials.class);
     }
 
     /**
