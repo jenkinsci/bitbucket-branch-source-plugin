@@ -191,11 +191,4 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
         }
     }
 
-    private Object readResolve() {
-        if (getBitbucketJenkinsRootUrl() != null) {
-            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
-        }
-        return this;
-    }
-
 }

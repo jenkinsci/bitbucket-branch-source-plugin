@@ -243,9 +243,6 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         if (webhookImplementation == null) {
             webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
         }
-        if (getBitbucketJenkinsRootUrl() != null) {
-            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
-        }
         if (serverVersion == null) {
             serverVersion = BitbucketServerVersion.VERSION_7;
         }
