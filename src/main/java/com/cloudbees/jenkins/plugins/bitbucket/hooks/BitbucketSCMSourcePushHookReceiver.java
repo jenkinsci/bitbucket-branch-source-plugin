@@ -25,8 +25,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
-import com.cloudbees.jenkins.plugins.bitbucket.api.hook.BitbucketHookProcessor;
-import com.cloudbees.jenkins.plugins.bitbucket.api.hook.BitbucketHookProcessorException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessor;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessorException;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.UnprotectedRootAction;
@@ -93,7 +93,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
         try {
             Map<String, String> reqHeaders = getHeaders(req);
             MultiValuedMap<String, String> reqParameters = getParameters(req);
-            BitbucketHookProcessor hookProcessor = getHookProcessor(reqHeaders, reqParameters);
+            BitbucketWebhookProcessor hookProcessor = getHookProcessor(reqHeaders, reqParameters);
 
             String body = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
             if (StringUtils.isEmpty(body)) {
@@ -120,28 +120,28 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             String eventType = hookProcessor.getEventType(Collections.unmodifiableMap(reqHeaders), MultiMapUtils.unmodifiableMultiValuedMap(reqParameters));
 
             hookProcessor.process(eventType, body, context, endpoint);
-        } catch(BitbucketHookProcessorException e) {
+        } catch(BitbucketWebhookProcessorException e) {
             return HttpResponses.error(e.getHttpCode(), e.getMessage());
         }
         return HttpResponses.ok();
     }
 
-    private BitbucketHookProcessor getHookProcessor(Map<String, String> reqHeaders,
+    private BitbucketWebhookProcessor getHookProcessor(Map<String, String> reqHeaders,
                                                     MultiValuedMap<String, String> reqParameters) {
-        BitbucketHookProcessor hookProcessor;
+        BitbucketWebhookProcessor hookProcessor;
 
-        List<BitbucketHookProcessor> matchingProcessors = getHookProcessors()
+        List<BitbucketWebhookProcessor> matchingProcessors = getHookProcessors()
             .filter(processor -> processor.canHandle(Collections.unmodifiableMap(reqHeaders), MultiMapUtils.unmodifiableMultiValuedMap(reqParameters)))
             .toList();
         if (matchingProcessors.isEmpty()) {
             logger.warning(() -> "No processor found for the incoming Bitbucket hook. Skipping.");
-            throw new BitbucketHookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "No processor found that supports this event. Refer to the user documentation on how configure the webHook in Bitbucket at https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc#webhooks-registering");
+            throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "No processor found that supports this event. Refer to the user documentation on how configure the webHook in Bitbucket at https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc#webhooks-registering");
         } else if (matchingProcessors.size() > 1) {
             String processors = StringUtils.joinWith("\n- ", matchingProcessors.stream()
                 .map(p -> p.getClass().getName())
                 .toList());
             logger.severe(() -> "More processors found that handle the incoming Bitbucket hook:\n" + processors);
-            throw new BitbucketHookProcessorException(HttpServletResponse.SC_CONFLICT, "More processors found that handle the incoming Bitbucket hook.");
+            throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_CONFLICT, "More processors found that handle the incoming Bitbucket hook.");
         } else {
             hookProcessor = matchingProcessors.get(0);
             logger.fine(() -> "Hook processor " + hookProcessor.getClass().getName() + " found.");
@@ -149,8 +149,8 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
         return hookProcessor;
     }
 
-    /*test*/ Stream<BitbucketHookProcessor> getHookProcessors() {
-        return ExtensionList.lookup(BitbucketHookProcessor.class).stream();
+    /*test*/ Stream<BitbucketWebhookProcessor> getHookProcessors() {
+        return ExtensionList.lookup(BitbucketWebhookProcessor.class).stream();
     }
 
     private MultiValuedMap<String, String> getParameters(StaplerRequest2 req) {

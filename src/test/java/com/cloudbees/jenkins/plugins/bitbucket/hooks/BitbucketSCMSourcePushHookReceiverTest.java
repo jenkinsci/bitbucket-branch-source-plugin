@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.hook.BitbucketHookProcessor;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
@@ -103,10 +103,10 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            BitbucketHookProcessor hookProcessor = mock(BitbucketHookProcessor.class);
+            BitbucketWebhookProcessor hookProcessor = mock(BitbucketWebhookProcessor.class);
             sut = new BitbucketSCMSourcePushHookReceiver() {
                 @Override
-                Stream<BitbucketHookProcessor> getHookProcessors() {
+                Stream<BitbucketWebhookProcessor> getHookProcessors() {
                     return Stream.of(hookProcessor);
                 }
             };
@@ -150,12 +150,12 @@ class BitbucketSCMSourcePushHookReceiverTest {
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
-            BitbucketHookProcessor hookProcessor = mock(BitbucketHookProcessor.class);
+            BitbucketWebhookProcessor hookProcessor = mock(BitbucketWebhookProcessor.class);
             when(hookProcessor.canHandle(any(), any())).thenReturn(true);
             sut = new BitbucketSCMSourcePushHookReceiver() {
                 @Override
-                Stream<BitbucketHookProcessor> getHookProcessors() {
-                    BitbucketHookProcessor otherHookProcessor = mock(BitbucketHookProcessor.class);
+                Stream<BitbucketWebhookProcessor> getHookProcessors() {
+                    BitbucketWebhookProcessor otherHookProcessor = mock(BitbucketWebhookProcessor.class);
                     when(otherHookProcessor.canHandle(any(), any())).thenReturn(true);
                     return Stream.of(hookProcessor, otherHookProcessor);
                 }

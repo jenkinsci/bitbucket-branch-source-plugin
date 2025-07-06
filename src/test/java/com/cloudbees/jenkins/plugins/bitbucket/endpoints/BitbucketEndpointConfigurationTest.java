@@ -29,7 +29,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
@@ -646,7 +645,6 @@ class BitbucketEndpointConfigurationTest {
 
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
         final BitbucketServerEndpoint endpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(0);
-        assertThat(endpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
     }
 
     @Test
@@ -675,7 +673,6 @@ class BitbucketEndpointConfigurationTest {
                 assertThat(endpoint.getCredentialsId()).isEqualTo("admin.basic.credentials");
                 assertThat(endpoint.getEndpointJenkinsRootURL()).isEqualTo("http://host.docker.internal:8090/jenkins/");
                 assertThat(endpoint.getDisplayName()).isEqualTo("server");
-                assertThat(endpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
                 assertThat(endpoint.isCallCanMerge()).isTrue();
                 assertThat(endpoint.isCallChanges()).isTrue();
             });
@@ -713,7 +710,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("second");
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         assertThat(instance.getEndpoints()).element(2).isInstanceOf(BitbucketServerEndpoint.class);
@@ -724,7 +720,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isNull();
         assertThat(serverEndpoint.isCallCanMerge()).isTrue();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(3);
@@ -734,7 +729,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("third");
         assertThat(serverEndpoint.isCallCanMerge()).isTrue();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(4);
@@ -744,7 +738,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("fourth");
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isFalse();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.PLUGIN);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(5);
@@ -754,7 +747,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("fifth");
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.PLUGIN);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(6);
@@ -764,7 +756,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isNull();
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isFalse();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(7);
@@ -774,7 +765,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isNull();
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isFalse();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(8);
@@ -784,7 +774,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isNull();
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(9);
@@ -794,7 +783,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isNull();
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(10);
@@ -804,7 +792,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isNull();
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(11);
@@ -814,7 +801,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getCredentialsId()).isNull();
         assertThat(serverEndpoint.isCallCanMerge()).isFalse();
         assertThat(serverEndpoint.isCallChanges()).isTrue();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
         assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion());
     }
 

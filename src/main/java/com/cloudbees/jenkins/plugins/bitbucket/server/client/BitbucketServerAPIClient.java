@@ -96,7 +96,6 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 
-import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.substring;
 
@@ -177,7 +176,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         }
         this.repositoryName = repositoryName;
         this.baseURL = Util.removeTrailingSlash(baseURL);
-        this.webhookImplementation = requireNonNull(webhookImplementation);
+        this.webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
         this.client = setupClientBuilder().build();
     }
 
