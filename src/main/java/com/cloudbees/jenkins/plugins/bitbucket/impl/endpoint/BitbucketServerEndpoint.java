@@ -51,8 +51,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Represents a Bitbucket Server instance.
  *
@@ -75,9 +73,9 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
     @NonNull
     public static BitbucketServerWebhookImplementation findWebhookImplementation(String serverURL) {
-        return BitbucketEndpointProvider.lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
+        return /*BitbucketEndpointProvider.lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
                 .map(BitbucketServerEndpoint::getWebhookImplementation)
-                .orElse(BitbucketServerWebhookImplementation.NATIVE);
+                .orElse(BitbucketServerWebhookImplementation.NATIVE);*/ null;
     }
 
     @NonNull
@@ -101,8 +99,8 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     @NonNull
     private final String serverUrl;
 
-    @NonNull
-    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
+//    @NonNull
+//    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
 
     /**
      * The server version for this endpoint.
@@ -225,9 +223,9 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
     private Object readResolve() {
-        if (webhookImplementation == null) {
-            webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
-        }
+//        if (webhookImplementation == null) {
+//            webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
+//        }
         if (getBitbucketJenkinsRootUrl() != null) {
             setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
         }
@@ -238,15 +236,15 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         return this;
     }
 
-    @NonNull
-    public BitbucketServerWebhookImplementation getWebhookImplementation() {
-        return webhookImplementation;
-    }
+//    @NonNull
+//    public BitbucketServerWebhookImplementation getWebhookImplementation() {
+//        return webhookImplementation;
+//    }
 
-    @DataBoundSetter
-    public void setWebhookImplementation(@NonNull BitbucketServerWebhookImplementation webhookImplementation) {
-        this.webhookImplementation = requireNonNull(webhookImplementation);
-    }
+//    @DataBoundSetter
+//    public void setWebhookImplementation(@NonNull BitbucketServerWebhookImplementation webhookImplementation) {
+//        this.webhookImplementation = requireNonNull(webhookImplementation);
+//    }
 
     /**
      * Our descriptor.
