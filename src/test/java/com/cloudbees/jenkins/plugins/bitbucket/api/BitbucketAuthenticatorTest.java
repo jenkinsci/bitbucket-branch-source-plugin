@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket;
+package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUserAPITokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.plugins.credentials.Credentials;
@@ -49,6 +49,7 @@ import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
@@ -138,6 +139,24 @@ class BitbucketAuthenticatorTest {
         BitbucketAuthenticator a = (BitbucketAuthenticator) AuthenticationTokens.convert(ctx, c);
         assertThat(a).isNotNull()
             .isInstanceOf(BitbucketAccessTokenAuthenticator.class);
+    }
+
+    @Issue("JENKINS-75772")
+    @Test
+    void given_UsernamePasswordCredentials_returns_BitbucketAccessTokenAuthenticator_cloud() throws Exception {
+        // repository Access Token
+        StandardUsernameCredentials tokenCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM,
+                credentials.getId(),
+                credentials.getDescription(),
+                "john@example.com",
+                "ATAFT8xFfGF0s08_-rJbnKoYbZrzN7grw-XBOfQ1MDawDijWCQViqWHqaN0XJJ0nm2hycPEkMv3hWD27LbL-ftI1WRlwyo2ROtVfwvAHtneEQogEni_3U9Uj3BJdniDZGQ566sk5ldd_2Gl3AS8Ag2dTR2TsjEP8LWGeNFTL5jfVsPdiMZ14x_w=A75716D7");
+        List<Credentials> list = Collections.<Credentials>singletonList(tokenCredentials);
+        AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext(null);
+        Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
+        assertThat(c).isNotNull();
+        BitbucketAuthenticator a = (BitbucketAuthenticator) AuthenticationTokens.convert(ctx, c);
+        assertThat(a).isNotNull()
+            .isInstanceOf(BitbucketUserAPITokenAuthenticator.class);
     }
 
     @Test

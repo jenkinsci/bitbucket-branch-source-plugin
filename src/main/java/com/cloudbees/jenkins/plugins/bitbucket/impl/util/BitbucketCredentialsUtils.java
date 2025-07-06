@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticatorSource;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUserAPITokenAuthenticatorSource;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticatorSource;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
@@ -229,7 +230,8 @@ public class BitbucketCredentialsUtils {
             if (source.fits(context)) {
                 CredentialsMatcher matcher = source.matcher();
                 if (source instanceof BitbucketUsernamePasswordAuthenticatorSource
-                        || source instanceof BitbucketOAuthAuthenticatorSource) {
+                        || source instanceof BitbucketOAuthAuthenticatorSource
+                        || source instanceof BitbucketUserAPITokenAuthenticatorSource) {
                     matcher = new TimeBoxedCredentialsMatcher(matcher);
                 }
                 matchers.add(matcher);

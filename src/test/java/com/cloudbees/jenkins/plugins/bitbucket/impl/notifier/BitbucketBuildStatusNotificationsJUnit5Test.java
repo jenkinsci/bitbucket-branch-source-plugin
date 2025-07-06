@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.notifier;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
@@ -31,6 +30,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
@@ -59,7 +59,7 @@ import jenkins.branch.BranchSource;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource.SCMRevisionImpl;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.SCMHeadOrigin.Fork;
+import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
@@ -184,7 +184,7 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
         ForkPullRequestDiscoveryTrait trait = new ForkPullRequestDiscoveryTrait(2, new TrustEveryone());
         BranchSCMHead targetHead = new BranchSCMHead("master");
         PullRequestSCMHead scmHead = new PullRequestSCMHead("name", "repoOwner", "repository1", "feature1",
-                PullRequestBranchType.BRANCH, "1", "title", targetHead, new Fork("repository1"), ChangeRequestCheckoutStrategy.HEAD);
+                PullRequestBranchType.BRANCH, "1", "title", targetHead, new SCMHeadOrigin.Fork("repository1"), ChangeRequestCheckoutStrategy.HEAD);
         SCMRevisionImpl prRevision = new SCMRevisionImpl(scmHead, "cff417db");
         SCMRevisionImpl targetRevision = new SCMRevisionImpl(targetHead, "c341232342311");
         SCMRevision scmRevision = new PullRequestSCMRevision(scmHead, targetRevision, prRevision);

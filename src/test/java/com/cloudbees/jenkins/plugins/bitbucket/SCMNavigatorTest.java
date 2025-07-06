@@ -23,6 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketClientMockUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import java.io.IOException;

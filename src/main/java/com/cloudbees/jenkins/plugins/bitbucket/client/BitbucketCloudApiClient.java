@@ -47,6 +47,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUserAPITokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
@@ -147,6 +148,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         return authenticator == null
                 || authenticator instanceof BitbucketAccessTokenAuthenticator
                 || authenticator instanceof BitbucketOAuthAuthenticator
+                || authenticator instanceof BitbucketUserAPITokenAuthenticator // API access token
                 || authenticator instanceof BitbucketUsernamePasswordAuthenticator; // app password
     }
 
