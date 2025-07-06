@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -33,6 +34,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
+import java.util.Objects;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +61,9 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
      */
     @CheckForNull
     private String credentialsId;
+
+    @NonNull
+    private BitbucketWebhook webhook;
 
     /**
      * {@code true} if and only if Jenkins have to verify the signature of all incoming hooks.
@@ -266,5 +271,14 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     public BitbucketEndpointDescriptor getDescriptor() {
         return (BitbucketEndpointDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
+    }
+
+    public @NonNull BitbucketWebhook getWebhook() {
+        return webhook;
+    }
+
+    @DataBoundSetter
+    public void setWebhook(@NonNull BitbucketWebhook webhook) {
+        this.webhook = Objects.requireNonNull(webhook);
     }
 }

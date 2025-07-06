@@ -24,18 +24,6 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <st:include class="${descriptor.clazz}" page="config-detail.jelly" optional="true" />
-    <f:optionalBlock title="${%Manage hooks}" field="manageHooks" inline="true">
-        <f:entry title="${%Credentials}" field="credentialsId">
-            <c:select context="${app}" />
-        </f:entry>
-        <f:entry title="${%Custom Jenkins Root URL}" field="bitbucketJenkinsRootUrl">
-            <f:textbox />
-        </f:entry>
-        <st:include class="${descriptor.clazz}" page="manage-hooks-detail.jelly" optional="true" />
-    </f:optionalBlock>
-    <f:optionalBlock title="${%Enable hooks signature verification}" field="enableHookSignature" inline="true">
-        <f:entry title="${%HMAC Credentials}" field="hookSignatureCredentialsId">
-            <c:select />
-        </f:entry>
-    </f:optionalBlock>
+
+    <f:dropdownDescriptorSelector field="webhook" title="${%Webhook implementation}" />
 </j:jelly>
