@@ -25,18 +25,12 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Util;
 import hudson.model.Descriptor;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
 import jenkins.model.Jenkins;
@@ -51,7 +45,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import static hudson.Util.fixEmptyAndTrim;
 
 @Restricted(NoExternalUse.class)
-public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
+public abstract class AbstractWebhook implements BitbucketWebhook {
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -84,7 +78,7 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
      */
     private String endpointJenkinsRootURL;
 
-    protected AbstractBitbucketWebhook(boolean manageHooks, @CheckForNull String credentialsId,
+    protected AbstractWebhook(boolean manageHooks, @CheckForNull String credentialsId,
                                        boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
@@ -150,44 +144,6 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
 
     public abstract static class AbstractBitbucketWebhookDescriptorImpl extends BitbucketWebhookDescriptor {
 
-        /**
-         * Stapler form completion.
-         *
-         * @param credentialsId selected credentials.
-         * @param serverURL the server URL.
-         * @return the available credentials.
-         */
-        @RequirePOST
-        public ListBoxModel doFillCredentialsIdItems(@QueryParameter(fixEmpty = true) String credentialsId,
-                                                     @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
-            Jenkins jenkins = checkPermission();
-            return BitbucketCredentialsUtils.listCredentials(jenkins, serverURL, credentialsId);
-        }
-
-        /**
-         * Stapler form completion.
-         *
-         * @param hookSignatureCredentialsId selected hook signature credentials.
-         * @param serverURL the server URL.
-         * @return the available credentials.
-         */
-        @RequirePOST
-        public ListBoxModel doFillHookSignatureCredentialsIdItems(@QueryParameter(fixEmpty = true) String hookSignatureCredentialsId,
-                                                                  @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
-            Jenkins jenkins = checkPermission();
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.includeMatchingAs(ACL.SYSTEM2,
-                    jenkins,
-                    StringCredentials.class,
-                    URIRequirementBuilder.fromUri(serverURL).build(),
-                    CredentialsMatchers.always());
-            if (hookSignatureCredentialsId != null) {
-                result.includeCurrentValue(hookSignatureCredentialsId);
-            }
-            return result;
-        }
-
-        @Restricted(NoExternalUse.class)
         @RequirePOST
         public static FormValidation doCheckEndpointJenkinsRootURL(@QueryParameter String value) {
             checkPermission();
@@ -203,7 +159,7 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
             return FormValidation.ok();
         }
 
-        private static Jenkins checkPermission() {
+        protected static Jenkins checkPermission() {
             Jenkins jenkins = Jenkins.get();
             jenkins.checkPermission(Jenkins.MANAGE);
             return jenkins;

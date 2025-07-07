@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudHook;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
@@ -213,7 +212,8 @@ public class WebhookConfiguration {
             hook.setSecret(signatureSecret);
             return hook;
         }
-
+        return null;
+/*
         switch (BitbucketServerEndpoint.findWebhookImplementation(serverURL)) {
             case NATIVE: {
                 BitbucketServerWebhook hook = new BitbucketServerWebhook();
@@ -235,6 +235,7 @@ public class WebhookConfiguration {
                 return hook;
             }
         }
+*/
     }
 
     @Nullable

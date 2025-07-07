@@ -21,15 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.PushEvent;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginPushWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,14 +60,14 @@ class PluginPushWebhookProcessorTest {
 
     private static final String SERVER_URL = "http://localhost:7990";
     private PluginPushWebhookProcessor sut;
-    private SCMHeadEvent<?> scmEvent;
+    private PluginPushEvent scmEvent;
 
     @BeforeEach
     void setup() {
         sut = new PluginPushWebhookProcessor() {
             @Override
             public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-                PluginPushWebhookProcessorTest.this.scmEvent = event;
+                PluginPushWebhookProcessorTest.this.scmEvent = (PluginPushEvent) event;
             }
         };
     }
@@ -115,14 +113,13 @@ class PluginPushWebhookProcessorTest {
     void test_push_server_UPDATE_2() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("commit_update2.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("rep_1");
-        assertThat(event.getType()).isEqualTo(SCMEvent.Type.UPDATED);
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("rep_1");
+        assertThat(scmEvent.getType()).isEqualTo(SCMEvent.Type.UPDATED);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("PROJECT_1", "rep_1");
         scmSource.setServerUrl(SERVER_URL);
-        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
         assertThat(heads)
             .containsKey(new BranchSCMHead("master"))
             .containsValue(new SCMRevisionImpl(new BranchSCMHead("master"), "500cf91e7b4b7d9f995cdb6e81cb5538216ac02e"));
@@ -132,14 +129,13 @@ class PluginPushWebhookProcessorTest {
     void test_push_server_UPDATE() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("commit_update.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("rep_1");
-        assertThat(event.getType()).isEqualTo(SCMEvent.Type.UPDATED);
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("rep_1");
+        assertThat(scmEvent.getType()).isEqualTo(SCMEvent.Type.UPDATED);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("PROJEct_1", "rep_1");
         scmSource.setServerUrl(SERVER_URL);
-        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
         assertThat(heads)
             .containsKey(new BranchSCMHead("test-webhook"))
             .containsValue(new SCMRevisionImpl(new BranchSCMHead("test-webhook"), "c0158b3e6c8cecf3bddc39d20957a98660cd23fd"));
@@ -149,14 +145,13 @@ class PluginPushWebhookProcessorTest {
     void test_push_server_CREATED() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("branch_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("rep_1");
-        assertThat(event.getType()).isEqualTo(SCMEvent.Type.CREATED);
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("rep_1");
+        assertThat(scmEvent.getType()).isEqualTo(SCMEvent.Type.CREATED);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("pROJECT_1", "rep_1");
         scmSource.setServerUrl(SERVER_URL);
-        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
         assertThat(heads)
             .containsKey(new BranchSCMHead("test-webhook"))
             .containsValue(new SCMRevisionImpl(new BranchSCMHead("test-webhook"), "417b2f673581ee6000e260a5fa65e62b56c7a3cd"));
@@ -166,14 +161,13 @@ class PluginPushWebhookProcessorTest {
     void test_push_server_REMOVED() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("branch_deleted.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("rep_1");
-        assertThat(event.getType()).isEqualTo(SCMEvent.Type.REMOVED);
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("rep_1");
+        assertThat(scmEvent.getType()).isEqualTo(SCMEvent.Type.REMOVED);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("pROJECT_1", "rep_1");
         scmSource.setServerUrl(SERVER_URL);
-        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
         assertThat(heads).containsKey(new BranchSCMHead("test-webhook"));
         assertThat(heads.values()).containsNull();
     }
@@ -182,27 +176,26 @@ class PluginPushWebhookProcessorTest {
     void test_PushEvent_match_SCMNavigator() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("branch_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event.getType()).isEqualTo(Type.CREATED);
+        assertThat(scmEvent.getType()).isEqualTo(Type.CREATED);
         // discard any scm navigator than bitbucket
-        assertThat(event.isMatch(mock(SCMNavigator.class))).isFalse();
+        assertThat(scmEvent.isMatch(mock(SCMNavigator.class))).isFalse();
 
         BitbucketSCMNavigator scmNavigator = new BitbucketSCMNavigator("PROJECT_1");
-        assertThat(event.isMatch(scmNavigator)).isFalse();
+        assertThat(scmEvent.isMatch(scmNavigator)).isFalse();
         // match only if projectKey and serverURL matches
         scmNavigator.setServerUrl(SERVER_URL);
-        assertThat(event.isMatch(scmNavigator)).isTrue();
+        assertThat(scmEvent.isMatch(scmNavigator)).isTrue();
         // if set must match the project of repository from which the hook is generated
         scmNavigator.setProjectKey("PROJECT_1");
-        assertThat(event.isMatch(scmNavigator)).isTrue();
+        assertThat(scmEvent.isMatch(scmNavigator)).isTrue();
         // project key is case sensitive
         scmNavigator.setProjectKey("project_1");
-        assertThat(event.isMatch(scmNavigator)).isFalse();
+        assertThat(scmEvent.isMatch(scmNavigator)).isFalse();
 
         // workspace/owner is case insensitive
         scmNavigator = new BitbucketSCMNavigator("project_1");
         scmNavigator.setServerUrl(SERVER_URL);
-        assertThat(event.isMatch(scmNavigator)).isTrue();
+        assertThat(scmEvent.isMatch(scmNavigator)).isTrue();
     }
 
     @WithJenkins
@@ -210,18 +203,17 @@ class PluginPushWebhookProcessorTest {
     void test_PushEvent_match_SCMSource(JenkinsRule r) throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("branch_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
         // discard any scm navigator than bitbucket
-        assertThat(event.isMatch(mock(SCMSource.class))).isFalse();
+        assertThat(scmEvent.isMatch(mock(SCMSource.class))).isFalse();
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("PROJECT_1", "rep_1");
         scmSource.setServerUrl(SERVER_URL);
-        assertThat(event.isMatch(scmSource)).isTrue();
+        assertThat(scmEvent.isMatch(scmSource)).isTrue();
 
         // workspace/owner is case insensitive
         scmSource = new BitbucketSCMSource("project_1", "rep_1");
         scmSource.setServerUrl(SERVER_URL);
-        assertThat(event.isMatch(scmSource)).isTrue();
+        assertThat(scmEvent.isMatch(scmSource)).isTrue();
     }
 
     @Test

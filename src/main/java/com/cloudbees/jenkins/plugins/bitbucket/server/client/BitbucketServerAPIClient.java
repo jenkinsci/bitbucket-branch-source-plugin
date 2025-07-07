@@ -46,17 +46,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernam
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequestCanMerge;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
 import com.fasterxml.jackson.core.JacksonException;
@@ -75,7 +72,6 @@ import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -157,17 +153,10 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     private final boolean userCentric;
     private final String baseURL;
-    private final BitbucketServerWebhookImplementation webhookImplementation;
     private final CloseableHttpClient client;
 
     public BitbucketServerAPIClient(@NonNull String baseURL, @NonNull String owner, @CheckForNull String repositoryName,
                                     @CheckForNull BitbucketAuthenticator authenticator, boolean userCentric) {
-        this(baseURL, owner, repositoryName, authenticator, userCentric, BitbucketServerEndpoint.findWebhookImplementation(baseURL));
-    }
-
-    public BitbucketServerAPIClient(@NonNull String baseURL, @NonNull String owner, @CheckForNull String repositoryName,
-                                    @CheckForNull BitbucketAuthenticator authenticator, boolean userCentric,
-                                    @NonNull BitbucketServerWebhookImplementation webhookImplementation) {
         super(authenticator);
         this.userCentric = userCentric;
         this.owner = Util.fixEmptyAndTrim(owner);
@@ -176,7 +165,6 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         }
         this.repositoryName = repositoryName;
         this.baseURL = Util.removeTrailingSlash(baseURL);
-        this.webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
         this.client = setupClientBuilder().build();
     }
 
@@ -633,6 +621,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     @Override
     public void registerCommitWebHook(BitbucketWebHook hook) throws IOException {
+        /*
         switch (webhookImplementation) {
             case PLUGIN:
                 // API documentation at https://help.moveworkforward.com/BPW/how-to-manage-configurations-using-post-webhooks-f#HowtomanageconfigurationsusingPostWebhooksforBitbucketAPIs?-Createpostwebhook
@@ -661,10 +650,12 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 logger.log(Level.WARNING, "Cannot register {0} webhook.", webhookImplementation);
                 break;
         }
+        */
     }
 
     @Override
     public void updateCommitWebHook(BitbucketWebHook hook) throws IOException {
+        /*
         String payload = JsonParser.toString(hook);
         switch (webhookImplementation) {
             case PLUGIN:
@@ -694,10 +685,12 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 logger.log(Level.WARNING, "Cannot update {0} webhook.", webhookImplementation);
                 break;
         }
+        */
     }
 
     @Override
     public void removeCommitWebHook(BitbucketWebHook hook) throws IOException {
+        /*
         switch (webhookImplementation) {
             case PLUGIN:
                 deleteRequest(
@@ -725,11 +718,13 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                 logger.log(Level.WARNING, "Cannot remove {0} webhook.", webhookImplementation);
                 break;
         }
+        */
     }
 
     @NonNull
     @Override
     public List<? extends BitbucketWebHook> getWebHooks() throws IOException {
+        /*
         switch (webhookImplementation) {
             case PLUGIN:
                 String url = UriTemplate
@@ -745,7 +740,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                         .set("repo", repositoryName);
                 return getPagedRequest(uriTemplate, BitbucketServerWebhook.class);
         }
-
+*/
         return Collections.emptyList();
     }
 

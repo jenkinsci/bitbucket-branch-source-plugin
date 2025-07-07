@@ -50,10 +50,10 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_DECLINED;
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_MERGED;
 
-final class PREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests {
+final class CloudPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests {
     private final HookEventType hookEvent;
 
-    PREvent(Type type, BitbucketPullRequestEvent payload,
+    CloudPREvent(Type type, BitbucketPullRequestEvent payload,
                  String origin,
                  HookEventType hookEvent) {
         super(type, payload, origin);

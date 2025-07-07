@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -126,7 +127,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
                 // exception case
                 endpoint = new BitbucketCloudEndpoint();
             } else {
-                endpoint = new BitbucketServerEndpoint(normalizedURL);
+                endpoint = new BitbucketServerEndpoint(null, normalizedURL);
             }
             addEndpoint(endpoint);
         }
@@ -201,10 +202,10 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
                 continue;
             } else if (!(endpoint instanceof BitbucketCloudEndpoint) && BitbucketApiUtils.isCloud(serverURL)) {
                 // fix type for the special case
-                BitbucketCloudEndpoint cloudEndpoint = new BitbucketCloudEndpoint(false, 0, 0,
-                        endpoint.isManageHooks(), endpoint.getCredentialsId(),
+                CloudWebhook webhook = new CloudWebhook(endpoint.isManageHooks(), endpoint.getCredentialsId(),
                         endpoint.isEnableHookSignature(), endpoint.getHookSignatureCredentialsId());
-                cloudEndpoint.setBitbucketJenkinsRootUrl(endpoint.getEndpointJenkinsRootURL());
+                webhook.setEndpointJenkinsRootURL(endpoint.getEndpointJenkinsRootURL());
+                BitbucketCloudEndpoint cloudEndpoint = new BitbucketCloudEndpoint(false, 0, 0, webhook);
                 iterator.set(cloudEndpoint);
             }
             serverURLs.add(serverURL);

@@ -26,15 +26,13 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.util.FormValidation;
@@ -43,13 +41,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Represents a Bitbucket Server instance.
@@ -72,10 +68,8 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     };
 
     @NonNull
-    public static BitbucketServerWebhookImplementation findWebhookImplementation(String serverURL) {
-        return /*BitbucketEndpointProvider.lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
-                .map(BitbucketServerEndpoint::getWebhookImplementation)
-                .orElse(BitbucketServerWebhookImplementation.NATIVE);*/ null;
+    public static boolean supportsMirror(String serverURL) {
+        return false; // depends on webhook type
     }
 
     @NonNull
@@ -97,10 +91,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * The URL of this Bitbucket Server.
      */
     @NonNull
-    private final String serverUrl;
-
-//    @NonNull
-//    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
+    private final String serverURL;
 
     /**
      * The server version for this endpoint.
@@ -111,40 +102,25 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * Default constructor.
      * @param serverURL
      */
-    public BitbucketServerEndpoint(@NonNull String serverURL) {
-        this(null, serverURL, false, null, false, null);
-    }
-
-    @Deprecated(since = "936.3.1")
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
-                                   boolean manageHooks, @CheckForNull String credentialsId) {
-        this(displayName, serverUrl, manageHooks, credentialsId, false, null);
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverURL) {
+        this(displayName, serverURL, new ServerWebhook(false, null, false, null));
     }
 
     /**
      * Constructor.
      *
      * @param displayName Optional name to use to describe the end-point.
-     * @param serverUrl The URL of this Bitbucket Server
-     * @param manageHooks {@code true} if and only if Jenkins is supposed to
-     *        auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardCredentials#getId()} of the
-     *        credentials to use for auto-management of hooks.
-     * @param enableHookSignature {@code true} hooks that comes Bitbucket Data
-     *        Center are signed.
-     * @param hookSignatureCredentialsId The {@link StringCredentials#getId()} of the
-     *        credentials to use for verify the signature of payload.
+     * @param serverURL The URL of this Bitbucket Server
+     * @param webhook implementation to work for this end-point.
      */
     @DataBoundConstructor
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
-                                   boolean manageHooks, @CheckForNull String credentialsId,
-                                   boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
-        super(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverURL, @NonNull BitbucketWebhook webhook) {
+        super(webhook);
         // use fixNull to silent nullability check
-        this.serverUrl = Util.fixNull(URLUtils.normalizeURL(serverUrl));
+        this.serverURL = Util.fixNull(URLUtils.normalizeURL(serverURL));
         this.displayName = StringUtils.isBlank(displayName)
-                ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
-                : displayName.trim();
+                ? SCMName.fromUrl(this.serverURL, COMMON_PREFIX_HOSTNAMES)
+                        : displayName.trim();
     }
 
     @NonNull
@@ -183,28 +159,9 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         return displayName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @NonNull
-    @Deprecated(since = "936.4.0", forRemoval = true)
-    public String getServerUrl() {
-        return serverUrl;
-    }
-
     @Override
     public String getServerURL() {
-        return getServerUrl();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
-        return getRepositoryURL(repoOwner, repository);
+        return serverURL;
     }
 
     /**
@@ -214,53 +171,27 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     @Override
     public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repository) {
         UriTemplate template = UriTemplate
-                .fromTemplate(serverUrl + "/{userOrProject}/{owner}/repos/{repo}")
+                .fromTemplate(serverURL + "/{userOrProject}/{owner}/repos/{repo}")
                 .set("repo", repository);
         return repoOwner.startsWith("~")
                 ? template.set("userOrProject", "users").set("owner", repoOwner.substring(1)).expand()
                         : template.set("userOrProject", "projects").set("owner", repoOwner).expand();
     }
 
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
-    private Object readResolve() {
-//        if (webhookImplementation == null) {
-//            webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
-//        }
-        if (getBitbucketJenkinsRootUrl() != null) {
-            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
-        }
+    @Override
+//    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
+    protected Object readResolve() {
         if (serverVersion == null) {
             serverVersion = BitbucketServerVersion.getMinSupportedVersion();
         }
-
-        return this;
+        return super.readResolve();
     }
-
-//    @NonNull
-//    public BitbucketServerWebhookImplementation getWebhookImplementation() {
-//        return webhookImplementation;
-//    }
-
-//    @DataBoundSetter
-//    public void setWebhookImplementation(@NonNull BitbucketServerWebhookImplementation webhookImplementation) {
-//        this.webhookImplementation = requireNonNull(webhookImplementation);
-//    }
 
     /**
      * Our descriptor.
      */
     @Extension
     public static class DescriptorImpl extends BitbucketEndpointDescriptor {
-
-        @Restricted(NoExternalUse.class) // stapler
-        @RequirePOST
-        public FormValidation doCheckEnableHookSignature(@QueryParameter BitbucketServerWebhookImplementation webhookImplementation,
-                                                         @QueryParameter boolean enableHookSignature) {
-            if (enableHookSignature && webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
-                return FormValidation.error("Signature verification not supported for PLUGIN webhook");
-            }
-            return FormValidation.ok();
-        }
 
         /**
          * {@inheritDoc}
@@ -269,16 +200,6 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         @Override
         public String getDisplayName() {
             return Messages.BitbucketServerEndpoint_displayName();
-        }
-
-        @Restricted(NoExternalUse.class)
-        public ListBoxModel doFillWebhookImplementationItems() {
-            ListBoxModel items = new ListBoxModel();
-            for (BitbucketServerWebhookImplementation webhookImplementation : BitbucketServerWebhookImplementation.values()) {
-                items.add(webhookImplementation, webhookImplementation.name());
-            }
-
-            return items;
         }
 
         @Restricted(NoExternalUse.class)
@@ -297,7 +218,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
          * @param value the URL to check.
          * @return the validation results.
          */
-        public static FormValidation doCheckServerUrl(@QueryParameter String value) {
+        public static FormValidation doCheckServerURL(@QueryParameter String value) {
             try {
                 new URL(value);
             } catch (MalformedURLException e) {

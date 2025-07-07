@@ -23,13 +23,29 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractBitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
+import hudson.security.ACL;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
-public class CloudWebhook extends AbstractBitbucketWebhook {
+public class CloudWebhook extends AbstractWebhook {
+
+    public CloudWebhook(boolean manageHooks, String credentialsId) {
+        this(manageHooks, credentialsId, false, null);
+    }
 
     @DataBoundConstructor
     public CloudWebhook(boolean manageHooks, String credentialsId, boolean enableHookSignature, String hookSignatureCredentialsId) {
@@ -55,5 +71,44 @@ public class CloudWebhook extends AbstractBitbucketWebhook {
             return "Native Cloud";
         }
 
+        @Override
+        public boolean isApplicable(String serverURL) {
+            return BitbucketApiUtils.isCloud(serverURL);
+        }
+
+        /**
+         * Stapler form completion.
+         *
+         * @param credentialsId selected credentials.
+         * @param serverURL the server URL.
+         * @return the available credentials.
+         */
+        @RequirePOST
+        public ListBoxModel doFillCredentialsIdItems(@QueryParameter(fixEmpty = true) String credentialsId) {
+            Jenkins jenkins = checkPermission();
+            return BitbucketCredentialsUtils.listCredentials(jenkins, BitbucketCloudEndpoint.SERVER_URL, credentialsId);
+        }
+
+        /**
+         * Stapler form completion.
+         *
+         * @param hookSignatureCredentialsId selected hook signature credentials.
+         * @param serverURL the server URL.
+         * @return the available credentials.
+         */
+        @RequirePOST
+        public ListBoxModel doFillHookSignatureCredentialsIdItems(@QueryParameter(fixEmpty = true) String hookSignatureCredentialsId) {
+            Jenkins jenkins = checkPermission();
+            StandardListBoxModel result = new StandardListBoxModel();
+            result.includeMatchingAs(ACL.SYSTEM2,
+                    jenkins,
+                    StringCredentials.class,
+                    URIRequirementBuilder.fromUri(BitbucketCloudEndpoint.SERVER_URL).build(),
+                    CredentialsMatchers.always());
+            if (hookSignatureCredentialsId != null) {
+                result.includeCurrentValue(hookSignatureCredentialsId);
+            }
+            return result;
+        }
     }
 }
