@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClient
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
 import hudson.model.TaskListener;
@@ -81,7 +82,7 @@ class WebhookAutoRegisterListenerTest {
 
         StringCredentials credentials = BitbucketTestUtil.registerHookCredentials("password", rule);
 
-        BitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId", true, credentials.getId());
+        BitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, new ServerWebhook(true, "dummyId", true, credentials.getId()));
         ((BitbucketServerEndpoint) endpoint).setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 

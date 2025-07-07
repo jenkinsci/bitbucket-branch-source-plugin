@@ -21,15 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudPullRequestWebhookProcessor;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.PREvent;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import hudson.scm.SCM;
@@ -58,14 +56,14 @@ import static org.mockito.Mockito.mock;
 class CloudPullRequestWebhookProcessorTest {
 
     private CloudPullRequestWebhookProcessor sut;
-    private SCMHeadEvent<?> scmEvent;
+    private CloudPREvent scmEvent;
 
     @BeforeEach
     void setup() {
         sut = new CloudPullRequestWebhookProcessor() {
             @Override
             public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-                CloudPullRequestWebhookProcessorTest.this.scmEvent = event;
+                CloudPullRequestWebhookProcessorTest.this.scmEvent = (CloudPREvent) event;
             }
         };
     }
@@ -113,45 +111,42 @@ class CloudPullRequestWebhookProcessorTest {
     void test_pullrequest_created() throws Exception {
         sut.process(HookEventType.PULL_REQUEST_CREATED.getKey(), loadResource("pullrequest_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPREvent event = (PluginPREvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("test-repos");
-        assertThat(event.getType()).isEqualTo(Type.CREATED);
-        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.CREATED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
     }
 
     @Test
     void test_pullrequest_rejected() throws Exception {
         sut.process(HookEventType.PULL_REQUEST_DECLINED.getKey(), loadResource("pullrequest_rejected.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPREvent event = (PluginPREvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("test-repos");
-        assertThat(event.getType()).isEqualTo(Type.REMOVED);
-        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.REMOVED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
     }
 
     @Test
     void test_pullrequest_created_when_event_match_SCMNavigator() throws Exception {
         sut.process(HookEventType.PULL_REQUEST_CREATED.getKey(), loadResource("pullrequest_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPREvent event = (PluginPREvent) scmEvent;
         // discard any scm navigator than bitbucket
-        assertThat(event.isMatch(mock(SCMNavigator.class))).isFalse();
+        assertThat(scmEvent.isMatch(mock(SCMNavigator.class))).isFalse();
 
         BitbucketSCMNavigator scmNavigator = new BitbucketSCMNavigator("amuniz");
         // cloud could not filter by ProjectKey
-        assertThat(event.isMatch(scmNavigator)).isTrue();
+        assertThat(scmEvent.isMatch(scmNavigator)).isTrue();
         // if set must match the project of repository from which the hook is generated
         scmNavigator.setProjectKey("PRJKEY");
-        assertThat(event.isMatch(scmNavigator)).isTrue();
+        assertThat(scmEvent.isMatch(scmNavigator)).isTrue();
         // project key is case sensitive
         scmNavigator.setProjectKey("prjkey");
-        assertThat(event.isMatch(scmNavigator)).isFalse();
+        assertThat(scmEvent.isMatch(scmNavigator)).isFalse();
 
         // workspace/owner is case insensitive
         scmNavigator = new BitbucketSCMNavigator("AMUNIZ");
-        assertThat(event.isMatch(scmNavigator)).isTrue();
+        assertThat(scmEvent.isMatch(scmNavigator)).isTrue();
     }
 
     @WithJenkins
@@ -159,23 +154,22 @@ class CloudPullRequestWebhookProcessorTest {
     void test_pullrequest_created_when_event_match_SCMSource(JenkinsRule r) throws Exception {
         sut.process(HookEventType.PULL_REQUEST_CREATED.getKey(), loadResource("pullrequest_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPREvent event = (PluginPREvent) scmEvent;
         // discard any scm navigator than bitbucket
-        assertThat(event.isMatch(mock(SCMSource.class))).isFalse();
+        assertThat(scmEvent.isMatch(mock(SCMSource.class))).isFalse();
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
         // skip scm source that has not been configured to discover PRs
-        assertThat(event.isMatch(scmSource)).isFalse();
+        assertThat(scmEvent.isMatch(scmSource)).isFalse();
 
         scmSource.setTraits(List.of(new OriginPullRequestDiscoveryTrait(2)));
-        assertThat(event.isMatch(scmSource)).isTrue();
+        assertThat(scmEvent.isMatch(scmSource)).isTrue();
 
         // workspace/owner is case insensitive
         scmSource = new BitbucketSCMSource("AMUNIZ", "TEST-REPOS");
         scmSource.setTraits(List.of(new OriginPullRequestDiscoveryTrait(1)));
-        assertThat(event.isMatch(scmSource)).isTrue();
+        assertThat(scmEvent.isMatch(scmSource)).isTrue();
 
-        assertThat(event.getPullRequests(scmSource))
+        assertThat(scmEvent.getPullRequests(scmSource))
             .isNotEmpty()
             .hasSize(1);
     }
@@ -185,12 +179,10 @@ class CloudPullRequestWebhookProcessorTest {
     void test_pullrequest_rejected_returns_empty_pullrequests_when_event_match_SCMSource(JenkinsRule r) throws Exception {
         sut.process(HookEventType.PULL_REQUEST_DECLINED.getKey(), loadResource("pullrequest_rejected.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPREvent event = (PluginPREvent) scmEvent;
-
         BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
         scmSource.setTraits(List.of(new OriginPullRequestDiscoveryTrait(2)));
-        assertThat(event.isMatch(scmSource)).isTrue();
-        assertThat(event.getPullRequests(scmSource)).isEmpty();
+        assertThat(scmEvent.isMatch(scmSource)).isTrue();
+        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     private String loadResource(String resource) throws IOException {

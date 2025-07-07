@@ -81,7 +81,7 @@ public class CloudPushWebhookProcessor extends AbstractWebhookProcessor {
                         type = SCMEvent.Type.UPDATED;
                     }
                 }
-                notifyEvent(new PushEvent(type, push, getOrigin(context)), BitbucketSCMSource.getEventDelaySeconds());
+                notifyEvent(new CloudPushEvent(type, push, getOrigin(context)), BitbucketSCMSource.getEventDelaySeconds());
             }
         }
     }

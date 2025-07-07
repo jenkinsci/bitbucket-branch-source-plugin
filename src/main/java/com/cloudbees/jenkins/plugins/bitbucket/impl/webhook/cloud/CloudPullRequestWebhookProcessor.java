@@ -84,7 +84,7 @@ public class CloudPullRequestWebhookProcessor extends AbstractWebhookProcessor {
                     break;
             }
             // assume updated as a catch-all type
-            notifyEvent(new PREvent(eventType, pull, getOrigin(context), hookEvent), BitbucketSCMSource.getEventDelaySeconds());
+            notifyEvent(new CloudPREvent(eventType, pull, getOrigin(context), hookEvent), BitbucketSCMSource.getEventDelaySeconds());
         }
     }
 }

@@ -41,9 +41,9 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import org.apache.commons.lang3.StringUtils;
 
-final class PushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> {
+final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> {
 
-    PushEvent(Type type, BitbucketPushEvent payload, String origin) {
+    CloudPushEvent(Type type, BitbucketPushEvent payload, String origin) {
         super(type, payload, origin);
     }
 

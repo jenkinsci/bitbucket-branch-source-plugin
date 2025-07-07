@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -137,6 +138,11 @@ public class PluginWebhook implements BitbucketWebhook {
             return "Post Webhooks for Bitbucket";
         }
 
+        @Override
+        public boolean isApplicable(String serverURL) {
+            return !BitbucketApiUtils.isCloud(serverURL);
+        }
+
         /**
          * Stapler form completion.
          *
@@ -146,7 +152,7 @@ public class PluginWebhook implements BitbucketWebhook {
          */
         @RequirePOST
         public ListBoxModel doFillCredentialsIdItems(@QueryParameter(fixEmpty = true) String credentialsId,
-                                                     @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
+                                                     @QueryParameter(value = "serverURL", fixEmpty = true) String serverURL) {
             Jenkins jenkins = checkPermission();
             return BitbucketCredentialsUtils.listCredentials(jenkins, serverURL, credentialsId);
         }

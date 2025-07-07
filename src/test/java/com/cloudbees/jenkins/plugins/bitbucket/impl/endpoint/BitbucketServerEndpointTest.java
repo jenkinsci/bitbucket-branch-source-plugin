@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import hudson.Util;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
@@ -74,15 +75,15 @@ class BitbucketServerEndpointTest {
     @Test
     void getUnmanagedDefaultRootUrl(JenkinsRule rule) {
         String jenkinsRootURL = Util.ensureEndsWith(URLUtils.normalizeURL(Jenkins.get().getRootUrl()), "/");
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true, null, false, null).getEndpointJenkinsRootUrl())
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", new ServerWebhook(true, null, false, null)).getEndpointJenkinsRootUrl())
             .isEqualTo(jenkinsRootURL);
-        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, "{cred}", false, null).getEndpointJenkinsRootURL())
+        assertThat(new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", new ServerWebhook(false, "{cred}", false, null)).getEndpointJenkinsRootURL())
             .isEqualTo(jenkinsRootURL);
     }
 
     @Test
     void getRepositoryUrl() {
-        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, false, null);
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com");
 
         assertThat(endpoint.getRepositoryUrl("TST", "test-repo")).isEqualTo("http://dummy.example.com/projects/TST/repos/test-repo");
         assertThat(endpoint.getRepositoryUrl("~tester", "test-repo")).isEqualTo("http://dummy.example.com/users/tester/repos/test-repo");

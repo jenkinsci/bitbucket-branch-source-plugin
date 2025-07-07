@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
@@ -29,8 +29,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudPushWebhookProcessor;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.PushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import hudson.scm.SCM;
 import java.io.IOException;
@@ -56,14 +54,14 @@ import static org.mockito.Mockito.mock;
 class CloudPushWebhookProcessorTest {
 
     private CloudPushWebhookProcessor sut;
-    private SCMHeadEvent<?> scmEvent;
+    private CloudPushEvent scmEvent;
 
     @BeforeEach
     void setup() {
         sut = new CloudPushWebhookProcessor() {
             @Override
             public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-                CloudPushWebhookProcessorTest.this.scmEvent = event;
+                CloudPushWebhookProcessorTest.this.scmEvent = (CloudPushEvent) event;
             }
         };
     }
@@ -111,14 +109,13 @@ class CloudPushWebhookProcessorTest {
     void test_tag_created() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("tag_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("test-repos");
-        assertThat(event.getType()).isEqualTo(Type.CREATED);
-        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.CREATED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("AMUNIZ", "test-repos");
-        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
         assertThat(heads.keySet())
             .first()
             .usingRecursiveComparison()
@@ -129,14 +126,13 @@ class CloudPushWebhookProcessorTest {
     void test_annotated_tag_created() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("annotated_tag_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("test-repos");
-        assertThat(event.getType()).isEqualTo(Type.CREATED);
-        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.CREATED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("AMUNIz", "test-repos");
-        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
         assertThat(heads.keySet())
             .first()
             .usingRecursiveComparison()
@@ -147,14 +143,13 @@ class CloudPushWebhookProcessorTest {
     void test_commmit_created() throws Exception {
         sut.process(HookEventType.PUSH.getKey(), loadResource("commit_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
 
-        PluginPushEvent event = (PluginPushEvent) scmEvent;
-        assertThat(event).isNotNull();
-        assertThat(event.getSourceName()).isEqualTo("test-repos");
-        assertThat(event.getType()).isEqualTo(Type.UPDATED);
-        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.UPDATED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
-        Map<SCMHead, SCMRevision> heads = event.heads(scmSource);
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
         assertThat(heads.keySet())
             .first()
             .usingRecursiveComparison()
