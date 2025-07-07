@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -32,7 +33,7 @@ import hudson.Extension;
 public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
 
     DummyEndpointConfiguration(boolean manageHooks, String credentialsId) {
-        super(manageHooks, credentialsId, false, null);
+        super(new ServerWebhook(manageHooks, credentialsId, false, null));
     }
 
     @Override

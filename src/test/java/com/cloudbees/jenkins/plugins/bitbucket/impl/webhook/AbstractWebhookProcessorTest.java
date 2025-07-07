@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessorException;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhookProcessor;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.util.Secret;
 import java.io.IOException;
@@ -49,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class AbstractWebhookProcessorTest {
+public class AbstractWebhookProcessorTest {
 
     private AbstractWebhookProcessor sut;
     protected SCMHeadEvent<?> scmEvent;

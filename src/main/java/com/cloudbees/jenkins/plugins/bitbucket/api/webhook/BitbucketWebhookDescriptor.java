@@ -30,5 +30,6 @@ import hudson.model.Descriptor;
  *
  * @since 936.4.0
  */
-public class BitbucketWebhookDescriptor extends Descriptor<BitbucketWebhook> {
+public abstract class BitbucketWebhookDescriptor extends Descriptor<BitbucketWebhook> {
+    public abstract boolean isApplicable(String serverURL);
 }
