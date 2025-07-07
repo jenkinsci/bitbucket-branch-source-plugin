@@ -53,7 +53,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUti
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
@@ -1073,9 +1072,7 @@ public class BitbucketSCMSource extends SCMSource {
         public static FormValidation doCheckMirrorId(@QueryParameter String value,
                                                      @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             if (!value.isEmpty()) {
-                BitbucketServerWebhookImplementation webhookImplementation =
-                    BitbucketServerEndpoint.findWebhookImplementation(serverURL);
-                if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
+                if (BitbucketServerEndpoint.supportsMirror(serverURL)) {
                     return FormValidation.error("Mirror can only be used with native webhooks");
                 }
             }

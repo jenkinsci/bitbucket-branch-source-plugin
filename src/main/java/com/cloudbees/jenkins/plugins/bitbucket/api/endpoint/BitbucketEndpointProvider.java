@@ -159,7 +159,7 @@ public final class BitbucketEndpointProvider{
         if (BitbucketApiUtils.isCloud(serverURL)) {
             endpoint = new BitbucketCloudEndpoint();
         } else {
-            endpoint = new BitbucketServerEndpoint(name, serverURL, false, null, false, null);
+            endpoint = new BitbucketServerEndpoint(name, serverURL);
         }
         if (endpointCustomiser != null) {
             endpoint = endpointCustomiser.apply(endpoint);

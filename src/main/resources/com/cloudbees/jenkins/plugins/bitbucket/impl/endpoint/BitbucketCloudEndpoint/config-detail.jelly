@@ -22,19 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core"
-         xmlns:f="/lib/form">
-  <f:optionalBlock title="${%Enable cache}" field="enableCache" inline="true">
-    <f:entry title="${%How long to cache team, in minutes}" field="teamCacheDuration">
-      <f:number default="360" />
-    </f:entry>
-    <f:entry title="${%How long to cache repositories, in minutes}" field="repositoriesCacheDuration">
-      <f:number default="180" />
-    </f:entry>
-    <f:validateButton title="${%Clear caches}" method="clear" />
-    <f:validateButton title="${%Show statistics}" method="showStats" />
-  </f:optionalBlock>
-  <f:invisibleEntry>
-    <f:textbox field="serverUrl"/>
-  </f:invisibleEntry>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:optionalBlock title="${%Enable cache}" field="enableCache" inline="true">
+        <f:entry title="${%How long to cache team, in minutes}" field="teamCacheDuration">
+            <f:number default="360" />
+        </f:entry>
+        <f:entry title="${%How long to cache repositories, in minutes}" field="repositoriesCacheDuration">
+            <f:number default="180" />
+        </f:entry>
+        <f:validateButton title="${%Clear caches}" method="clear" />
+        <f:validateButton title="${%Show statistics}" method="showStats" />
+    </f:optionalBlock>
+    <f:invisibleEntry>
+        <f:textbox field="serverUrl"/>
+    </f:invisibleEntry>
 </j:jelly>

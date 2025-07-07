@@ -23,23 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import hudson.Util;
 import hudson.model.Descriptor;
-import hudson.security.ACL;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-import java.net.MalformedURLException;
-import java.net.URL;
-import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.plaincredentials.StringCredentials;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * {@link Descriptor} for {@link BitbucketEndpoint}s.
@@ -47,62 +31,4 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
  * @since 936.4.0
  */
 public class BitbucketEndpointDescriptor extends Descriptor<BitbucketEndpoint> {
-    /**
-     * Stapler form completion.
-     *
-     * @param credentialsId selected credentials.
-     * @param serverURL the server URL.
-     * @return the available credentials.
-     */
-    @RequirePOST
-    public ListBoxModel doFillCredentialsIdItems(@QueryParameter(fixEmpty = true) String credentialsId,
-                                                 @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
-        Jenkins jenkins = checkPermission();
-        return BitbucketCredentialsUtils.listCredentials(jenkins, serverURL, credentialsId);
-    }
-
-    private static Jenkins checkPermission() {
-        Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(Jenkins.MANAGE);
-        return jenkins;
-    }
-
-    /**
-     * Stapler form completion.
-     *
-     * @param hookSignatureCredentialsId selected hook signature credentials.
-     * @param serverURL the server URL.
-     * @return the available credentials.
-     */
-    @RequirePOST
-    public ListBoxModel doFillHookSignatureCredentialsIdItems(@QueryParameter(fixEmpty = true) String hookSignatureCredentialsId,
-                                                              @QueryParameter(value = "serverUrl", fixEmpty = true) String serverURL) {
-        Jenkins jenkins = checkPermission();
-        StandardListBoxModel result = new StandardListBoxModel();
-        result.includeMatchingAs(ACL.SYSTEM2,
-                jenkins,
-                StringCredentials.class,
-                URIRequirementBuilder.fromUri(serverURL).build(),
-                CredentialsMatchers.always());
-        if (hookSignatureCredentialsId != null) {
-            result.includeCurrentValue(hookSignatureCredentialsId);
-        }
-        return result;
-    }
-
-    @Restricted(NoExternalUse.class)
-    @RequirePOST
-    public static FormValidation doCheckBitbucketJenkinsRootUrl(@QueryParameter String value) {
-        checkPermission();
-        String url = Util.fixEmptyAndTrim(value);
-        if (url == null) {
-            return FormValidation.ok();
-        }
-        try {
-            new URL(url);
-        } catch (MalformedURLException e) {
-            return FormValidation.error("Invalid URL: " +  e.getMessage());
-        }
-        return FormValidation.ok();
-    }
 }

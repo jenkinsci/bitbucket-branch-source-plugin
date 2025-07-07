@@ -25,16 +25,15 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import com.damnhandy.uri.template.UriTemplate;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import java.util.List;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.verb.POST;
 
@@ -69,38 +68,12 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * Default constructor.
      */
     public BitbucketCloudEndpoint() {
-        this(false, 0, 0, false, null, false, null);
+        this(false, 0, 0, new CloudWebhook(false, null, false, null));
     }
 
-    @Deprecated(since = "936.3.1")
-    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
-                                  boolean manageHooks, @CheckForNull String credentialsId) {
-        this(enableCache, teamCacheDuration, repositoriesCacheDuration, manageHooks, credentialsId, false, null);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param enableCache {@code true} if caching should be used to reduce
-     *        requests to Bitbucket.
-     * @param teamCacheDuration How long, in minutes, to cache the team
-     *        response.
-     * @param repositoriesCacheDuration How long, in minutes, to cache the
-     *        repositories response.
-     * @param manageHooks {@code true} if and only if Jenkins is supposed to
-     *        auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardCredentials#getId()} of the
-     *        credentials to use for auto-management of hooks.
-     * @param enableHookSignature {@code true} hooks that comes Bitbucket Data
-     *        Center are signed.
-     * @param hookSignatureCredentialsId The {@link StringCredentials#getId()} of the
-     *        credentials to use for verify the signature of payload.
-     */
     @DataBoundConstructor
-    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
-                                  boolean manageHooks, @CheckForNull String credentialsId,
-                                  boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
-        super(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, @NonNull BitbucketWebhook webhook) {
+        super(webhook);
         this.enableCache = enableCache;
         this.teamCacheDuration = teamCacheDuration;
         this.repositoriesCacheDuration = repositoriesCacheDuration;
@@ -126,27 +99,17 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
         return Messages.BitbucketCloudEndpoint_displayName();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    @NonNull
-    @Deprecated(since = "936.4.0", forRemoval = true)
-    public String getServerUrl() {
+    public String getServerURL() {
         return SERVER_URL;
     }
 
-    @Override
-    public String getServerURL() {
-        return getServerUrl();
-    }
-
     /**
      * {@inheritDoc}
      */
     @NonNull
     @Override
-    public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
+    public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repository) {
         UriTemplate template = UriTemplate
                 .fromTemplate(SERVER_URL + "{/owner,repo}")
                 .set("owner", repoOwner)
@@ -189,13 +152,6 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
             BitbucketCloudApiClient.clearCaches();
             return FormValidation.ok("Caches cleared");
         }
-    }
-
-    private Object readResolve() {
-        if (getBitbucketJenkinsRootUrl() != null) {
-            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
-        }
-        return this;
     }
 
 }
