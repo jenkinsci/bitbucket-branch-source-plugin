@@ -675,6 +675,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     @Override
     public void updateCommitWebHook(BitbucketWebHook hook) throws IOException {
+        String payload = JsonParser.toString(hook);
         switch (webhookImplementation) {
             case PLUGIN:
                 // API documentation at https://help.moveworkforward.com/BPW/how-to-manage-configurations-using-post-webhooks-f#HowtomanageconfigurationsusingPostWebhooksforBitbucketAPIs?-UpdateapostwebhookbyID
@@ -684,7 +685,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
-                            .expand(), JsonParser.toString(hook)
+                            .expand(), payload
                     );
                 break;
 
@@ -695,7 +696,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
-                            .expand(), JsonParser.toString(hook)
+                            .expand(), payload
                     );
                 break;
 

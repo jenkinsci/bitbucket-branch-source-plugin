@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudHook;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
@@ -45,12 +46,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Logger;
+import org.apache.commons.collections.CollectionUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 /**
  * Contains the webhook configuration
  */
 public class WebhookConfiguration {
+    private static final Logger logger = Logger.getLogger(WebhookConfiguration.class.getName());
 
     /**
      * The list of events available in Bitbucket Cloud.
@@ -81,6 +85,20 @@ public class WebhookConfiguration {
             HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()
     ));
 
+    // See https://help.moveworkforward.com/BPW/how-to-manage-configurations-using-post-webhooks-f#HowtomanageconfigurationsusingPostWebhooksforBitbucketAPIs?-Possibleeventtypes
+    private static final List<String> PLUGIN_SERVER_EVENTS = Collections.unmodifiableList(Arrays.asList(
+            "ABSTRACT_REPOSITORY_REFS_CHANGED", // push event
+            "BRANCH_CREATED",
+            "BRANCH_DELETED",
+            "PULL_REQUEST_DECLINED",
+            "PULL_REQUEST_DELETED",
+            "PULL_REQUEST_MERGED",
+            "PULL_REQUEST_OPENED",
+            "PULL_REQUEST_REOPENED",
+            "PULL_REQUEST_UPDATED",
+            "REPOSITORY_MIRROR_SYNCHRONIZED", // not supported by the hookprocessor
+            "TAG_CREATED"));
+
     /**
      * The list of events available in Bitbucket Server v6.5+.
      */
@@ -99,7 +117,7 @@ public class WebhookConfiguration {
     /**
      * The title of the webhook.
      */
-    private static final String description = "Jenkins hook";
+    private static final String DESCRIPTION = "Jenkins hook";
 
     /**
      * The comma separated list of committers to ignore.
@@ -121,43 +139,72 @@ public class WebhookConfiguration {
     boolean updateHook(BitbucketWebHook hook, BitbucketSCMSource owner) {
         boolean updated = false;
 
+        final String serverURL = owner.getServerUrl();
+        final String rootURL = getEndpointJenkinsRootURL(serverURL);
         final String signatureSecret = getSecret(owner.getServerUrl());
 
         if (hook instanceof BitbucketCloudHook cloudHook) {
-            if (!hook.getEvents().containsAll(CLOUD_EVENTS)) {
-                Set<String> events = new TreeSet<>(hook.getEvents());
-                events.addAll(CLOUD_EVENTS);
-                cloudHook.setEvents(new ArrayList<>(events));
+            String url = getCloudWebhookURL(serverURL, rootURL);
+            if (!Objects.equal(hook.getUrl(), url)) {
+                cloudHook.setUrl(url);
                 updated = true;
             }
+
+            List<String> events = hook.getEvents();
+            if (!events.containsAll(CLOUD_EVENTS)) {
+                Set<String> newEvents = new TreeSet<>(events);
+                newEvents.addAll(CLOUD_EVENTS);
+                cloudHook.setEvents(new ArrayList<>(newEvents));
+                logger.info(() -> "Update cloud webhook because the following events was missing: " + CollectionUtils.subtract(CLOUD_EVENTS, events));
+                updated = true;
+            }
+
             if (!Objects.equal(hook.getSecret(), signatureSecret)) {
                 cloudHook.setSecret(signatureSecret);
                 updated = true;
             }
-        } else if (hook instanceof BitbucketPluginWebhook serverHook) {
-            String hookCommittersToIgnore = Util.fixEmptyAndTrim(serverHook.getCommittersToIgnore());
+        } else if (hook instanceof BitbucketPluginWebhook pluginHook) {
+            String hookCommittersToIgnore = Util.fixEmptyAndTrim(pluginHook.getCommittersToIgnore());
             String thisCommittersToIgnore = Util.fixEmptyAndTrim(committersToIgnore);
             if (!Objects.equal(thisCommittersToIgnore, hookCommittersToIgnore)) {
-                serverHook.setCommittersToIgnore(thisCommittersToIgnore);
+                pluginHook.setCommittersToIgnore(thisCommittersToIgnore);
+                updated = true;
+            }
+
+            String url = getServerWebhookURL(serverURL, rootURL);
+            if (!url.equals(pluginHook.getUrl())) {
+                pluginHook.setUrl(url);
+                updated = true;
+            }
+
+            if (!pluginHook.isActive()) {
+                pluginHook.setActive(true);
+                updated = true;
+            }
+
+            List<String> supportedPluginEvents = getPluginServerEvents(serverURL);
+            List<String> events = pluginHook.getEvents();
+            if (!events.containsAll(supportedPluginEvents)) {
+                Set<String> newEvents = new TreeSet<>(events);
+                newEvents.addAll(supportedPluginEvents);
+                pluginHook.setEvents(new ArrayList<>(newEvents));
+                logger.info(() -> "Update plugin webhook because the following events was missing: " + CollectionUtils.subtract(supportedPluginEvents, events));
                 updated = true;
             }
         } else if (hook instanceof BitbucketServerWebhook serverHook) {
-            String serverURL = owner.getServerUrl();
-            String url = getServerWebhookURL(serverURL, owner.getEndpointJenkinsRootURL());
-
+            String url = getServerWebhookURL(serverURL, rootURL);
             if (!url.equals(serverHook.getUrl())) {
                 serverHook.setUrl(url);
                 updated = true;
             }
 
+            List<String> supportedNativeEvents = getNativeServerEvents(serverURL);
             List<String> events = serverHook.getEvents();
-            if (events == null) {
-                serverHook.setEvents(getNativeServerEvents(serverURL));
-                updated = true;
-            } else if (!events.containsAll(getNativeServerEvents(serverURL))) {
+            if (!events.containsAll(supportedNativeEvents)) {
                 Set<String> newEvents = new TreeSet<>(events);
-                newEvents.addAll(getNativeServerEvents(serverURL));
+                newEvents.addAll(supportedNativeEvents);
                 serverHook.setEvents(new ArrayList<>(newEvents));
+                logger.info(() -> "Update native webhook because the following events was missing: " + CollectionUtils.subtract(supportedNativeEvents, events));
                 updated = true;
             }
 
@@ -170,28 +217,34 @@ public class WebhookConfiguration {
         return updated;
     }
 
+    @NonNull
+    private String getEndpointJenkinsRootURL(@NonNull String serverURL) {
+        return AbstractBitbucketEndpoint.getEndpointJenkinsRootUrl(serverURL);
+    }
+
+    @NonNull
     public BitbucketWebHook getHook(BitbucketSCMSource owner) {
-        final String serverUrl = owner.getServerUrl();
-        final String rootUrl = owner.getEndpointJenkinsRootURL();
+        final String serverURL = owner.getServerUrl();
+        final String rootURL = getEndpointJenkinsRootURL(serverURL);
         final String signatureSecret = getSecret(owner.getServerUrl());
 
-        if (BitbucketApiUtils.isCloud(serverUrl)) {
+        if (BitbucketApiUtils.isCloud(serverURL)) {
             BitbucketCloudHook hook = new BitbucketCloudHook();
             hook.setEvents(CLOUD_EVENTS);
             hook.setActive(true);
-            hook.setDescription(description);
-            hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+            hook.setDescription(DESCRIPTION);
+            hook.setUrl(getCloudWebhookURL(serverURL, rootURL));
             hook.setSecret(signatureSecret);
             return hook;
         }
 
-        switch (BitbucketServerEndpoint.findWebhookImplementation(serverUrl)) {
+        switch (BitbucketServerEndpoint.findWebhookImplementation(serverURL)) {
             case NATIVE: {
                 BitbucketServerWebhook hook = new BitbucketServerWebhook();
                 hook.setActive(true);
-                hook.setDescription(description);
-                hook.setEvents(getNativeServerEvents(serverUrl));
-                hook.setUrl(getServerWebhookURL(serverUrl, rootUrl));
+                hook.setDescription(DESCRIPTION);
+                hook.setEvents(getNativeServerEvents(serverURL));
+                hook.setUrl(getServerWebhookURL(serverURL, rootURL));
                 hook.setSecret(signatureSecret);
                 return hook;
             }
@@ -200,8 +253,8 @@ public class WebhookConfiguration {
             default: {
                 BitbucketPluginWebhook hook = new BitbucketPluginWebhook();
                 hook.setActive(true);
-                hook.setDescription(description);
-                hook.setUrl(getServerWebhookURL(serverUrl, rootUrl));
+                hook.setDescription(DESCRIPTION);
+                hook.setUrl(getServerWebhookURL(serverURL, rootURL));
                 hook.setCommittersToIgnore(committersToIgnore);
                 return hook;
             }
@@ -224,9 +277,13 @@ public class WebhookConfiguration {
         return null;
     }
 
-    private static List<String> getNativeServerEvents(String serverUrl) {
+    private static List<String> getPluginServerEvents(String serverURL) {
+        return PLUGIN_SERVER_EVENTS;
+    }
+
+    private static List<String> getNativeServerEvents(String serverURL) {
         BitbucketServerEndpoint endpoint = BitbucketEndpointProvider
-                .lookupEndpoint(serverUrl, BitbucketServerEndpoint.class)
+                .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
                 .orElse(null);
         if (endpoint != null) {
             switch (endpoint.getServerVersion()) {
@@ -254,6 +311,13 @@ public class WebhookConfiguration {
         // Not specifically v6, use v7.
         // Better to give an error than quietly not register some events.
         return NATIVE_SERVER_EVENTS_v7;
+    }
+
+    private static String getCloudWebhookURL(String serverURL, String rootURL) {
+        return UriTemplate.buildFromTemplate(rootURL)
+                .template(BitbucketSCMSourcePushHookReceiver.FULL_PATH)
+                .build()
+                .expand();
     }
 
     private static String getServerWebhookURL(String serverURL, String rootURL) {
