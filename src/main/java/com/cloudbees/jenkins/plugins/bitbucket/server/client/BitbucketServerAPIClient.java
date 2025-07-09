@@ -91,10 +91,15 @@ import jenkins.scm.impl.avatars.AvatarImage;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import static java.util.Objects.requireNonNull;
@@ -675,17 +680,41 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     @Override
     public void updateCommitWebHook(BitbucketWebHook hook) throws IOException {
+        String payload = JsonParser.toString(hook);
         switch (webhookImplementation) {
             case PLUGIN:
                 // API documentation at https://help.moveworkforward.com/BPW/how-to-manage-configurations-using-post-webhooks-f#HowtomanageconfigurationsusingPostWebhooksforBitbucketAPIs?-UpdateapostwebhookbyID
-                putRequest(
-                        UriTemplate
-                            .fromTemplate(this.baseURL + WEBHOOK_REPOSITORY_CONFIG_PATH)
-                            .set("owner", getUserCentricOwner())
-                            .set("repo", repositoryName)
-                            .set("id", hook.getUuid())
-                            .expand(), JsonParser.toString(hook)
-                    );
+                String path = UriTemplate
+                    .fromTemplate(this.baseURL + WEBHOOK_REPOSITORY_CONFIG_PATH)
+                    .set("owner", getUserCentricOwner())
+                    .set("repo", repositoryName)
+                    .set("id", hook.getUuid())
+                    .expand();
+                logger.warning("Updating PLUGIN web hook sending " + payload);
+                HttpPut request = new HttpPut(path);
+                request.setAbsoluteRequestUri(true);
+                request.setEntity(new StringEntity(payload, ContentType.create("application/json", "UTF-8")));
+                try (ClassicHttpResponse response =  executeMethod(request)) {
+                    int statusCode = response.getCode();
+                    if (statusCode == HttpStatus.SC_NOT_FOUND) {
+                        String errorMessage = getResponseContent(response);
+                        logger.warning("Error updating PLUGIN web hook");
+                        throw new FileNotFoundException("Resource " + request.getRequestUri() + " not found: " + errorMessage);
+                    }
+                    if (statusCode == HttpStatus.SC_NO_CONTENT) {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                        logger.warning("No response returned from PLUGIN rest call -> 204");
+                    }
+                    String content = getResponseContent(response);
+                    if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+                        throw buildResponseException(response, content);
+                    }
+                    logger.warning("Response from PLUGIN rest call " + content);
+                } catch (FileNotFoundException | BitbucketRequestException e) {
+                    throw e;
+                } catch (IOException e) {
+                    throw new IOException("Communication error, requested URL: " + request, e);
+                }
                 break;
 
             case NATIVE:
@@ -695,7 +724,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                             .set("owner", getUserCentricOwner())
                             .set("repo", repositoryName)
                             .set("id", hook.getUuid())
-                            .expand(), JsonParser.toString(hook)
+                            .expand(), payload
                     );
                 break;
 

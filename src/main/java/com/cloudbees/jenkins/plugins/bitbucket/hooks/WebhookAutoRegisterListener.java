@@ -179,10 +179,10 @@ public class WebhookAutoRegisterListener extends ItemListener {
             .withTraits(source.getTraits())
             .webhookConfiguration();
         if (existingHook == null) {
-            LOGGER.log(Level.INFO, "Registering hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
+            LOGGER.log(Level.WARNING, "Registering hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
             bitbucket.registerCommitWebHook(hookConfig.getHook(source));
         } else if (hookConfig.updateHook(existingHook, source)) {
-            LOGGER.log(Level.INFO, "Updating hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
+            LOGGER.log(Level.WARNING, "Updating hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
             bitbucket.updateCommitWebHook(existingHook);
         }
     }
