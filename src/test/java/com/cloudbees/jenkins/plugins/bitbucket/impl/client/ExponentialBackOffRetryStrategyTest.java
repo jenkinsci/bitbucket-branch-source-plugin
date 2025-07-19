@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import java.io.IOException;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -42,7 +41,6 @@ import org.mockserver.model.HttpRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIOException;
-import static org.mockito.Mockito.mock;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -65,8 +63,7 @@ class ExponentialBackOffRetryStrategyTest {
                 "test",
                 "testRepos",
                 (BitbucketAuthenticator) null,
-                false,
-                mock(BitbucketServerWebhookImplementation.class)) {
+                false) {
             @Override
             protected HttpClientBuilder setupClientBuilder() {
                 return super.setupClientBuilder()

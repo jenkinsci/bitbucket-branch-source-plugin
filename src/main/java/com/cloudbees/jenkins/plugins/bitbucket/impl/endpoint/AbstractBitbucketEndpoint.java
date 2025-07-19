@@ -26,13 +26,19 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
+import java.util.Objects;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
@@ -49,50 +55,33 @@ import static hudson.Util.fixEmptyAndTrim;
  */
 public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
 
-    /**
-     * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     */
+    // keept for backward XStream compatibility
+    @Deprecated
     private boolean manageHooks;
-
-    /**
-     * The {@link StandardCredentials#getId()} of the credentials to use for auto-management of hooks.
-     */
-    @CheckForNull
+    @Deprecated
     private String credentialsId;
-
-    /**
-     * {@code true} if and only if Jenkins have to verify the signature of all incoming hooks.
-     */
+    @Deprecated
     private boolean enableHookSignature;
-
-    /**
-     * The {@link StringCredentials#getId()} of the credentials to use to verify the signature of hooks.
-     */
-    @CheckForNull
+    @Deprecated
     private String hookSignatureCredentialsId;
-
-    /**
-     * Jenkins Server Root URL to be used by that Bitbucket endpoint.
-     * The global setting from Jenkins.get().getRootUrl()
-     * will be used if this field is null or equals an empty string.
-     * This variable is bound to the UI, so an empty value is saved
-     * and returned by getter as such.
-     */
+    @Deprecated
     private String bitbucketJenkinsRootUrl;
+    @Deprecated
+    private String webhookImplementation;
 
-    /**
-     * Constructor.
-     *
-     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
-     *                      auto-management of hooks.
-     */
-    AbstractBitbucketEndpoint(boolean manageHooks, @CheckForNull String credentialsId,
-                              boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
-        this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
-        this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
-        this.enableHookSignature = enableHookSignature && StringUtils.isNotBlank(hookSignatureCredentialsId);
-        this.hookSignatureCredentialsId = enableHookSignature ? fixEmptyAndTrim(hookSignatureCredentialsId) : null;
+    @NonNull
+    private BitbucketWebhook webhook;
+
+    AbstractBitbucketEndpoint(@NonNull BitbucketWebhook webhook) {
+        this.webhook = Objects.requireNonNull(webhook);
+    }
+
+    public @NonNull BitbucketWebhook getWebhook() {
+        return webhook;
+    }
+
+    protected void setWebhook(@NonNull BitbucketWebhook webhook) {
+        this.webhook = webhook;
     }
 
     @Override
@@ -109,7 +98,9 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
      */
     @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
-    public abstract String getServerUrl();
+    public String getServerUrl() {
+        return this.getServerURL();
+    }
 
     /**
      * A Jenkins Server Root URL should end with a slash to use with webhooks.
@@ -154,12 +145,6 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
         return normalizeJenkinsRootURL(endpointURL);
     }
 
-    @NonNull
-    @Override
-    public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repoSlug) {
-        return this.getRepositoryUrl(repoOwner, repoSlug);
-    }
-
     @DataBoundSetter
     public void setBitbucketJenkinsRootUrl(String bitbucketJenkinsRootUrl) {
         if (manageHooks) {
@@ -193,11 +178,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Deprecated(since = "936.4.0", forRemoval = true)
     @NonNull
     public String getEndpointJenkinsRootUrl() {
-        if (StringUtils.isBlank(bitbucketJenkinsRootUrl)) {
-            return DisplayURLProvider.get().getRoot();
-        } else {
-            return bitbucketJenkinsRootUrl;
-        }
+        return getEndpointJenkinsRootURL();
     }
 
     /**
@@ -207,8 +188,11 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
      * @param repository the repository.
      * @return the user facing URL of the specified repository.
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @NonNull
-    public abstract String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository);
+    public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
+        return this.getRepositoryURL(repoOwner, repository);
+    }
 
     /**
      * Returns {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -263,6 +247,23 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @CheckForNull
     public BitbucketAuthenticator authenticator() {
         return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerURL()), credentials());
+    }
+
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
+    protected Object readResolve() {
+        if (webhook == null) {
+            if ("NATIVE".equals(webhookImplementation)) {
+                webhook = new ServerWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+                ((ServerWebhook) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
+            } else if ("PLUGIN".equals(webhookImplementation)) {
+                webhook = new PluginWebhook(manageHooks, credentialsId);
+                ((PluginWebhook) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
+            } else {
+                webhook = new CloudWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+                ((CloudWebhook) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
+            }
+        }
+        return this;
     }
 
     /**
