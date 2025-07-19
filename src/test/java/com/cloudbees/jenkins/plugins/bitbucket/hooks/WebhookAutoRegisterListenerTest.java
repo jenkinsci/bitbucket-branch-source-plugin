@@ -31,7 +31,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
 import hudson.model.TaskListener;
@@ -84,7 +86,7 @@ class WebhookAutoRegisterListenerTest {
 
         StringCredentials credentials = BitbucketTestUtil.registerHookCredentials("password", rule);
 
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId", true, credentials.getId());
+        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, new ServerWebhook(true, "dummyId", true, credentials.getId()));
         endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
@@ -108,13 +110,10 @@ class WebhookAutoRegisterListenerTest {
     @Test
     void test_do_not_update_plugin_hook_if_no_changes() throws Exception {
         String serverURL = "http://localhost:7990/bitbucket";
-        @SuppressWarnings("deprecation")
-        BitbucketApi client = BitbucketIntegrationClientFactory.getServerClient(serverURL , "amuniz", "test-repos", BitbucketServerWebhookImplementation.PLUGIN);
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL , "amuniz", "test-repos");
         BitbucketMockApiFactory.add(serverURL, client);
 
-        StringCredentials credentials = BitbucketTestUtil.registerHookCredentials("password", rule);
-
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId", true, credentials.getId());
+        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, new PluginWebhook(true, "dummyId"));
         endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
@@ -130,13 +129,10 @@ class WebhookAutoRegisterListenerTest {
     @Test
     void test_do_not_update_plugin_hook_when_serverURL_is_changed() throws Exception {
         String serverURL = "http://myserver:7990";
-        @SuppressWarnings("deprecation")
-        BitbucketApi client = BitbucketIntegrationClientFactory.getServerClient(serverURL , "amuniz", "test-repos", BitbucketServerWebhookImplementation.PLUGIN);
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL , "amuniz", "test-repos");
         BitbucketMockApiFactory.add(serverURL, client);
 
-        StringCredentials credentials = BitbucketTestUtil.registerHookCredentials("password", rule);
-
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, true, "dummyId", true, credentials.getId());
+        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, new PluginWebhook(true, "dummyId"));
         endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 

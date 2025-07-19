@@ -45,7 +45,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import static hudson.Util.fixEmptyAndTrim;
 
 @Restricted(NoExternalUse.class)
-public abstract class AbstractWebhook implements BitbucketWebhook {
+public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -78,7 +78,7 @@ public abstract class AbstractWebhook implements BitbucketWebhook {
      */
     private String endpointJenkinsRootURL;
 
-    protected AbstractWebhook(boolean manageHooks, @CheckForNull String credentialsId,
+    protected AbstractBitbucketWebhook(boolean manageHooks, @CheckForNull String credentialsId,
                                        boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
