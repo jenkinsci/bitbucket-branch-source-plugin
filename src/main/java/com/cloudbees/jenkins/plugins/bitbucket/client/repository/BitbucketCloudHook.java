@@ -24,7 +24,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class BitbucketCloudHook implements BitbucketWebHook {
 
@@ -38,7 +40,7 @@ public class BitbucketCloudHook implements BitbucketWebHook {
 
     private boolean active;
 
-    private List<String> events;
+    private List<String> events = new ArrayList<>();
 
     @Override
     public String getDescription() {
@@ -73,7 +75,7 @@ public class BitbucketCloudHook implements BitbucketWebHook {
     }
 
     public void setEvents(List<String> events) {
-        this.events = events;
+        this.events = ObjectUtils.firstNonNull(events, new ArrayList<>());
     }
 
     @Override
@@ -85,6 +87,7 @@ public class BitbucketCloudHook implements BitbucketWebHook {
         this.uuid = uuid;
     }
 
+    @Override
     public String getSecret() {
         return secret;
     }

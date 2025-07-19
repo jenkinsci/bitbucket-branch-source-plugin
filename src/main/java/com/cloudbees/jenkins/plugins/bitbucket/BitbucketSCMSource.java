@@ -294,7 +294,9 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
+    @Restricted(NoExternalUse.class)
     @Deprecated(since = "936.4.0", forRemoval = true)
+    // expose if needed in BitbucketEndpointProvider, normally could be get from endpoint if not customized
     @NonNull
     public String getEndpointJenkinsRootURL() {
         return BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(serverUrl);

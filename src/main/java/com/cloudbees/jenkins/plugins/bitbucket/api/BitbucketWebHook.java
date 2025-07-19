@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 
@@ -49,6 +50,7 @@ public interface BitbucketWebHook {
     /**
      * @return the list of events this webhook is notifying
      */
+    @NonNull
     List<String> getEvents();
 
     /**

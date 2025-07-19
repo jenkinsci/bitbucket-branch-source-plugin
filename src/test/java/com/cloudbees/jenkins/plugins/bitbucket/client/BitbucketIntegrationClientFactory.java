@@ -124,34 +124,31 @@ public class BitbucketIntegrationClientFactory {
 
     }
 
-    public static BitbucketApi getClient(String payloadRootPath, String serverURL, String owner, String repositoryName) {
+    public static BitbucketApi getClient(String serverURL, String owner, String repositoryName) {
         if (BitbucketApiUtils.isCloud(serverURL)) {
-            return new BitbucketClouldIntegrationClient(payloadRootPath, owner, repositoryName);
+            return new BitbucketClouldIntegrationClient(owner, repositoryName);
         } else {
-            return new BitbucketServerIntegrationClient(payloadRootPath, serverURL, owner, repositoryName);
+            return new BitbucketServerIntegrationClient(serverURL, owner, repositoryName);
         }
     }
 
-    public static BitbucketApi getClient(String serverURL, String owner, String repositoryName) {
-        return getClient(null, serverURL, owner, repositoryName);
+    @Deprecated
+    public static BitbucketApi getServerClient(String serverURL, String owner, String repositoryName, BitbucketServerWebhookImplementation webhoook) {
+        return new BitbucketServerIntegrationClient(serverURL, owner, repositoryName, webhoook);
     }
 
     private static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient implements IAuditable {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/server/payload/";
 
-        private final String payloadRootPath;
         private final IRequestAudit audit;
 
-        private BitbucketServerIntegrationClient(String payloadRootPath, String baseURL, String owner, String repositoryName) {
-            super(baseURL, owner, repositoryName, mock(BitbucketAuthenticator.class), false, BitbucketServerWebhookImplementation.NATIVE);
+        private BitbucketServerIntegrationClient(String baseURL, String owner, String repositoryName) {
+            this(baseURL, owner, repositoryName, BitbucketServerWebhookImplementation.NATIVE);
+        }
 
-            if (payloadRootPath == null) {
-                this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;
-            } else if (!payloadRootPath.startsWith("/")) {
-                this.payloadRootPath = '/' + payloadRootPath;
-            } else {
-                this.payloadRootPath = payloadRootPath;
-            }
+        private BitbucketServerIntegrationClient(String baseURL, String owner, String repositoryName, BitbucketServerWebhookImplementation webhook) {
+            super(baseURL, owner, repositoryName, mock(BitbucketAuthenticator.class), false, webhook);
+
             this.audit = new RequestAudit();
         }
 
@@ -169,7 +166,7 @@ public class BitbucketIntegrationClientFactory {
                     .replace("/rest/api/", "")
                     .replace("/rest/", "")
                     .replace('/', '-').replaceAll("[=%&?]", "_");
-            payloadPath = payloadRootPath + payloadPath + ".json";
+            payloadPath = PAYLOAD_RESOURCE_ROOTPATH + payloadPath + ".json";
 
             return loadResponseFromResources(getClass(), requestURI, payloadPath);
         }
@@ -183,29 +180,18 @@ public class BitbucketIntegrationClientFactory {
         public IRequestAudit getAudit() {
             return audit;
         }
+
     }
 
     private static class BitbucketClouldIntegrationClient extends BitbucketCloudApiClient implements IAuditable {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/client/payload/";
         private static final String API_ENDPOINT = "https://api.bitbucket.org/";
 
-        private final String payloadRootPath;
         private final IRequestAudit audit;
 
-        private BitbucketClouldIntegrationClient(String payloadRootPath, String owner, String repositoryName) {
+        private BitbucketClouldIntegrationClient(String owner, String repositoryName) {
             super(false, 0, 0, owner, null, repositoryName, mock(BitbucketAuthenticator.class));
 
-            if (payloadRootPath == null) {
-                this.payloadRootPath = PAYLOAD_RESOURCE_ROOTPATH;
-            } else if (!payloadRootPath.startsWith("/")) {
-                if (!payloadRootPath.endsWith("/")) {
-                    this.payloadRootPath = '/' + payloadRootPath + '/';
-                } else {
-                    this.payloadRootPath = '/' + payloadRootPath;
-                }
-            } else {
-                this.payloadRootPath = payloadRootPath;
-            }
             this.audit = new RequestAudit();
         }
 
@@ -230,7 +216,7 @@ public class BitbucketIntegrationClientFactory {
                             path = path.replaceFirst("/", "");
                         }
                         String payloadPath = path.replace('/', '-').replaceAll("[=%&?]", "_");
-                        payloadPath = payloadRootPath + payloadPath + ".json";
+                        payloadPath = PAYLOAD_RESOURCE_ROOTPATH + payloadPath + ".json";
 
                         return loadResponseFromResources(getClass(), uri, payloadPath);
                     }
@@ -253,7 +239,7 @@ public class BitbucketIntegrationClientFactory {
     }
 
     public static BitbucketApi getApiMockClient(String serverURL) {
-        return BitbucketIntegrationClientFactory.getClient(null, serverURL, "amuniz", "test-repos");
+        return BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
     }
 
     public static BitbucketAuthenticator extractAuthenticator(BitbucketApi client) {

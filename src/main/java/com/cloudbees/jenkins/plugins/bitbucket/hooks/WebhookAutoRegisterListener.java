@@ -59,7 +59,7 @@ import org.apache.commons.lang3.StringUtils;
 @Extension
 public class WebhookAutoRegisterListener extends ItemListener {
 
-    private static final Logger LOGGER = Logger.getLogger(WebhookAutoRegisterListener.class.getName());
+    private static final Logger logger = Logger.getLogger(WebhookAutoRegisterListener.class.getName());
     private static ExecutorService executorService;
 
     @Override
@@ -105,7 +105,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 try {
                     registerHooks(owner);
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Could not register hooks for " + owner.getFullName(), e);
+                    logger.log(Level.WARNING, e, () -> "Could not register hooks for " + owner.getFullName());
                 }
             }
         });
@@ -118,7 +118,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 try {
                     removeHooks(owner);
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Could not deregister hooks for " + owner.getFullName(), e);
+                    logger.log(Level.WARNING, e, () -> "Could not deregister hooks for " + owner.getFullName());
                 }
             }
         });
@@ -153,13 +153,13 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     case ITEM:
                         break;
                 }
-                LOGGER.log(Level.WARNING, "Can not register hook. Jenkins root URL is not valid: {0}", rootUrl);
+                logger.log(Level.WARNING, "Can not register hook. Jenkins root URL is not valid: {0}", rootUrl);
                 // go on to try next source and its rootUrl
             }
         }
     }
 
-    private void registerHook(BitbucketSCMSource source) throws IOException {
+    /* for test purpose */ void registerHook(BitbucketSCMSource source) throws IOException {
         BitbucketApi bitbucket = getClientBySource(source);
         if (bitbucket == null) {
             return;
@@ -178,10 +178,10 @@ public class WebhookAutoRegisterListener extends ItemListener {
             .withTraits(source.getTraits())
             .webhookConfiguration();
         if (existingHook == null) {
-            LOGGER.log(Level.INFO, "Registering hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
+            logger.log(Level.INFO, "Registering hook for {0}/{1}", new Object[] { source.getRepoOwner(), source.getRepository() });
             bitbucket.registerCommitWebHook(hookConfig.getHook(source));
         } else if (hookConfig.updateHook(existingHook, source)) {
-            LOGGER.log(Level.INFO, "Updating hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
+            logger.log(Level.INFO, "Updating hook for {0}/{1}", new Object[] { source.getRepoOwner(), source.getRepository() });
             bitbucket.updateCommitWebHook(existingHook);
         }
     }
@@ -205,12 +205,12 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     }
                 }
                 if (hook != null && !isUsedSomewhereElse(owner, source.getRepoOwner(), source.getRepository())) {
-                    LOGGER.log(Level.INFO, "Removing hook for {0}/{1}",
-                            new Object[]{source.getRepoOwner(), source.getRepository()});
+                    logger.log(Level.INFO, "Removing hook for {0}/{1}",
+                            new Object[] { source.getRepoOwner(), source.getRepository() });
                     bitbucket.removeCommitWebHook(hook);
                 } else {
-                    LOGGER.log(Level.FINE, "NOT removing hook for {0}/{1} because does not exists or its used in other project",
-                            new Object[]{source.getRepoOwner(), source.getRepository()});
+                    logger.log(Level.FINE, "NOT removing hook for {0}/{1} because does not exists or its used in other project",
+                            new Object[] { source.getRepoOwner(), source.getRepository() });
                 }
             }
         }
