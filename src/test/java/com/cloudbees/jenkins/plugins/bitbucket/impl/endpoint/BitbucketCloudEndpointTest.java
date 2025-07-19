@@ -53,20 +53,20 @@ class BitbucketCloudEndpointTest {
         assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
 
         // No credentials - webhook still not managed, even with a checkbox
-        endpoint = new BitbucketCloudEndpoint(false, 0, 0, true, null, false, null);
+        endpoint = new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhook(true, null, false, null));
         endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
         assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
         // getEndpointJenkinsRootUrl() is normalized and ends with a slash
-        endpoint = new BitbucketCloudEndpoint(false, 0, 0, true, "{credid}", false, null);
+        endpoint = new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhook(true, "{credid}", false, null));
         endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
         assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
         assertThat(endpoint.getEndpointJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
 
         // Make sure several invokations with same arguments do not conflict:
-        endpoint = new BitbucketCloudEndpoint(false, 0, 0, true, "{credid}", false, null);
+        endpoint = new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhook(true, "{credid}", false, null));
         endpoint.setBitbucketJenkinsRootUrl("https://jenkins:443/");
         assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("https://jenkins/");
         assertThat(endpoint.getEndpointJenkinsRootUrl()).isEqualTo("https://jenkins/");

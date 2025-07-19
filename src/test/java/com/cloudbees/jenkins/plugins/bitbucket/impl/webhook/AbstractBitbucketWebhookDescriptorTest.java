@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -44,7 +45,7 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @WithJenkins
-class AbstractBitbucketEndpointDescriptorTest {
+class AbstractBitbucketWebhookDescriptorTest {
 
     static JenkinsRule j;
 
@@ -66,9 +67,8 @@ class AbstractBitbucketEndpointDescriptorTest {
                     new Domain("cloud", "bb cloud", List.of(new HostnameSpecification("bitbucket.org", ""))),
                     List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass")))
             );
-        ListBoxModel result = new DummyEndpointConfiguration(true, "dummy")
-                .getDescriptor()
-                .doFillCredentialsIdItems(null, "http://bitbucket.example.com");
+        ListBoxModel result = new CloudWebhook.DescriptorImpl()
+                .doFillCredentialsIdItems(null/*, "http://bitbucket.example.com"*/);
         assertThat(result).isEmpty();
     }
 
@@ -79,9 +79,8 @@ class AbstractBitbucketEndpointDescriptorTest {
                     new Domain("cloud", "bb cloud", List.of(new HostnameSpecification("bitbucket.org", ""))),
                     List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass")))
             );
-        ListBoxModel result = new DummyEndpointConfiguration(true, "dummy")
-                .getDescriptor()
-                .doFillCredentialsIdItems(null, "http://bitbucket.org");
+        ListBoxModel result = new CloudWebhook.DescriptorImpl()
+                .doFillCredentialsIdItems(null /*, "https://bitbucket.org"*/);
         assertThat(result).hasSize(1);
     }
 
@@ -93,9 +92,8 @@ class AbstractBitbucketEndpointDescriptorTest {
                     new Domain("cloud", "bb cloud", domainSpecifications),
                     List.of(new StringCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", Secret.fromString("pass"))))
             );
-        ListBoxModel result = new DummyEndpointConfiguration(true, "dummy")
-                .getDescriptor()
-                .doFillHookSignatureCredentialsIdItems(null, "https://bitbucket.org");
+        ListBoxModel result = new CloudWebhook.DescriptorImpl()
+                .doFillHookSignatureCredentialsIdItems(null /*, "https://bitbucket.org"*/);
         assertThat(result).hasSize(1);
     }
 }

@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractBitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
@@ -41,7 +41,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-public class CloudWebhook extends AbstractWebhook {
+public class CloudWebhook extends AbstractBitbucketWebhook {
 
     public CloudWebhook(boolean manageHooks, String credentialsId) {
         this(manageHooks, credentialsId, false, null);

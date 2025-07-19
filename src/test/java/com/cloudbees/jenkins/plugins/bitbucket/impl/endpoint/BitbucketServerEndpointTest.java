@@ -38,7 +38,7 @@ class BitbucketServerEndpointTest {
 
     @Test
     void smokes() {
-        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", false, null, false, null);
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", new ServerWebhook(false, null, false, null));
 
         assertThat(endpoint.getDisplayName()).isEqualTo("Dummy");
         assertThat(endpoint.getServerUrl()).isEqualTo("http://dummy.example.com");
@@ -51,14 +51,14 @@ class BitbucketServerEndpointTest {
         assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
 
         // No credentials - webhook still not managed, even with a checkbox
-        endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true, null, false, null);
+        endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", new ServerWebhook(true, null, false, null));
         endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
         assertThat(endpoint.getBitbucketJenkinsRootUrl()).isNull();
 
         // With flag and with credentials, the hook is managed.
         // getBitbucketJenkinsRootUrl() is verbatim what we set
         // getEndpointJenkinsRootUrl() is normalized and ends with a slash
-        endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", true, "{credid}", false, null);
+        endpoint = new BitbucketServerEndpoint("Dummy", "http://dummy.example.com", new ServerWebhook(true, "{credid}", false, null));
         endpoint.setBitbucketJenkinsRootUrl("http://jenkins:8080");
         assertThat(endpoint.getBitbucketJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
         assertThat(endpoint.getEndpointJenkinsRootUrl()).isEqualTo("http://jenkins:8080/");
@@ -91,11 +91,11 @@ class BitbucketServerEndpointTest {
 
     @Test
     void given__badUrl__when__check__then__fail() {
-        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("").kind).isEqualTo(FormValidation.Kind.ERROR);
+        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerURL("").kind).isEqualTo(FormValidation.Kind.ERROR);
     }
 
     @Test
     void given__goodUrl__when__check__then__ok() {
-        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerUrl("http://dummy.example.com").kind).isEqualTo(FormValidation.Kind.OK);
+        assertThat(BitbucketServerEndpoint.DescriptorImpl.doCheckServerURL("http://dummy.example.com").kind).isEqualTo(FormValidation.Kind.OK);
     }
 }

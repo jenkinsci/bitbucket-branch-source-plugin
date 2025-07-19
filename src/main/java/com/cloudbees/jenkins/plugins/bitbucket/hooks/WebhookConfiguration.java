@@ -254,8 +254,19 @@ public class WebhookConfiguration {
         return null;
     }
 
-    private static List<String> getNativeServerEvents(BitbucketEndpoint endpoint) {
+    private static List<String> getPluginServerEvents(String serverURL) {
+        return PLUGIN_SERVER_EVENTS;
+    }
+
+    private static List<String> getNativeServerEvents(String serverURL) {
         return NATIVE_SERVER_EVENTS;
+    }
+
+    private static String getCloudWebhookURL(String serverURL, String rootURL) {
+        return UriTemplate.buildFromTemplate(rootURL)
+                .template(BitbucketSCMSourcePushHookReceiver.FULL_PATH)
+                .build()
+                .expand();
     }
 
     private static String getServerWebhookURL(String serverURL, String rootURL) {
