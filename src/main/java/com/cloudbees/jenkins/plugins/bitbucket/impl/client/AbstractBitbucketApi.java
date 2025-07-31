@@ -39,6 +39,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
@@ -90,7 +91,8 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
 
     protected BitbucketRequestException buildResponseException(ClassicHttpResponse response, String errorMessage) {
         String headers = StringUtils.join(response.getHeaders(), "\n");
-        String message = String.format("HTTP request error.%nStatus: %s%nResponse: %s%n%s", response.getReasonPhrase(), errorMessage, headers);
+        String message = String.format(
+                "HTTP request error.%nStatus: %s%nResponse: %s%n%s", response.getReasonPhrase(), errorMessage, headers);
         return new BitbucketRequestException(response.getCode(), message);
     }
 
@@ -143,8 +145,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
                 .setSocketTimeout(socketTimeout, TimeUnit.SECONDS)
                 .build();
 
-        return PoolingHttpClientConnectionManagerBuilder.create()
-                .setDefaultConnectionConfig(connectionConfig);
+        return PoolingHttpClientConnectionManagerBuilder.create().setDefaultConnectionConfig(connectionConfig);
     }
 
     protected HttpClientBuilder setupClientBuilder() {
@@ -158,7 +159,8 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
                 .useSystemProperties()
                 .setConnectionManager(getConnectionManager())
                 .setConnectionManagerShared(true)
-                .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
+                .setRetryStrategy(new ExponentialBackoffRetryStrategy(
+                        2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofSeconds(2))
@@ -195,17 +197,21 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
             if (StringUtils.isNotBlank(username)) {
                 logger.fine("Using proxy authentication (user=" + username + ")");
                 if (context == null) {
-                    // may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
+                    // may have been already set in
+                    // com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
                     context = HttpClientContext.create();
                 }
                 CredentialsProvider credentialsProvider = context.getCredentialsProvider();
                 if (credentialsProvider == null) {
                     credentialsProvider = new BasicCredentialsProvider();
-                    // may have been already set in com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
+                    // may have been already set in
+                    // com.cloudbees.jenkins.plugins.bitbucket.api.credentials.BitbucketUsernamePasswordAuthenticator.configureContext(HttpClientContext, HttpHost)
                     context.setCredentialsProvider(credentialsProvider);
                 }
                 if (credentialsProvider instanceof CredentialsStore credentialsStore) {
-                    credentialsStore.setCredentials(new AuthScope(proxyHttpHost), new UsernamePasswordCredentials(username, password.toCharArray()));
+                    credentialsStore.setCredentials(
+                            new AuthScope(proxyHttpHost),
+                            new UsernamePasswordCredentials(username, password.toCharArray()));
                 }
                 AuthCache authCache = context.getAuthCache();
                 if (authCache == null) {
@@ -244,8 +250,17 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     }
 
     private String doRequest(HttpUriRequest request) throws IOException {
-        try (ClassicHttpResponse response =  executeMethod(request)) {
+        try (ClassicHttpResponse response = executeMethod(request)) {
             int statusCode = response.getCode();
+
+            logger.log(
+                    Level.INFO,
+                    () -> "[ZD267879] request of " + request.getRequestUri() + " returned status code " + statusCode);
+            logger.log(
+                    Level.INFO,
+                    () -> "[ZD267879] request of " + request.getRequestUri() + " returned response of\n\n "
+                            + response.toString());
+
             if (statusCode == HttpStatus.SC_NOT_FOUND) {
                 String errorMessage = getResponseContent(response);
                 throw new FileNotFoundException("Resource " + request.getRequestUri() + " not found: " + errorMessage);
@@ -259,10 +274,19 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
                 throw buildResponseException(response, content);
             }
+
             return content;
         } catch (FileNotFoundException | BitbucketRequestException e) {
+            logger.log(
+                    Level.INFO,
+                    () -> "[ZD267879] exception " + e.getMessage() + " caught while trying to perform request of "
+                            + request.getRequestUri());
             throw e;
         } catch (IOException e) {
+            logger.log(
+                    Level.INFO,
+                    () -> "[ZD267879] IOException " + e.getMessage() + "  caught while trying to perform request of "
+                            + request.getRequestUri());
             throw new IOException("Communication error, requested URL: " + request, e);
         }
     }
@@ -272,7 +296,7 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
      */
     protected InputStream getRequestAsInputStream(String path) throws IOException {
         HttpGet httpget = new HttpGet(path);
-        ClassicHttpResponse response =  executeMethod(httpget);
+        ClassicHttpResponse response = executeMethod(httpget);
         int statusCode = response.getCode();
         if (statusCode == HttpStatus.SC_NOT_FOUND) {
             String errorMessage = getResponseContent(response);
@@ -308,17 +332,25 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
     }
 
     protected String postRequest(String path, String content) throws IOException {
+        logger.log(Level.INFO,  () -> "[ZD267879]** making api POST request to " + path);
+        logger.log(Level.INFO,  () -> "[ZD267879]** api POST request content:\n" + content);
         HttpPost request = new HttpPost(path);
         request.setAbsoluteRequestUri(true);
         request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
-        return doRequest(request);
+        String result = doRequest(request);
+        logger.log(Level.INFO,  () -> "[ZD267879]** Response tp  api POST request:\n" + result);
+        return result;
     }
 
     protected String putRequest(String path, String content) throws IOException {
+        logger.log(Level.INFO,  () -> "[ZD267879]** making api PUT request to " + path);
+        logger.log(Level.INFO,  () -> "[ZD267879]** api PUT request content:\n" + content);
         HttpPut request = new HttpPut(path);
         request.setAbsoluteRequestUri(true);
         request.setEntity(new StringEntity(content, ContentType.create("application/json", "UTF-8")));
-        return doRequest(request);
+        String result = doRequest(request);
+        logger.log(Level.INFO,  () -> "[ZD267879]** Response tp  api PUT request:\n" + result);
+        return result;
     }
 
     protected String deleteRequest(String path) throws IOException {

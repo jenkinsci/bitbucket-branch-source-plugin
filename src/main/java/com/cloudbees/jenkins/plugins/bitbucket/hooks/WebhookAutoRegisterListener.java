@@ -48,6 +48,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link SCMSourceOwner} item listener that traverse the list of {@link SCMSource} and register
@@ -57,6 +58,7 @@ import org.apache.commons.lang3.StringUtils;
 public class WebhookAutoRegisterListener extends ItemListener {
 
     private static final Logger LOGGER = Logger.getLogger(WebhookAutoRegisterListener.class.getName());
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(WebhookAutoRegisterListener.class);
     private static ExecutorService executorService;
 
     @Override
@@ -126,39 +128,58 @@ public class WebhookAutoRegisterListener extends ItemListener {
         List<BitbucketSCMSource> sources = getBitbucketSCMSources(owner);
         if (sources.isEmpty()) {
             // don't spam logs if we are irrelevant
+            LOGGER.log(Level.INFO, () -> "[ZD267879]** No BitbucketSCMSources found for scm source owner " + owner.getFullName()  + " url[" + owner.getUrl());
             return;
         }
         for (BitbucketSCMSource source : sources) {
             String rootUrl = source.getEndpointJenkinsRootURL();
-            if (!rootUrl.startsWith("http://localhost") && !rootUrl.startsWith("http://unconfigured-jenkins-location")) {
+            LOGGER.log(Level.INFO, () -> "[ZD267879]** Begin registerhooks process for source [" + source.getRepository() + "] with jenkins endpoint url [" + source.getEndpointJenkinsRootURL()+"]");
+            if (!rootUrl.startsWith("http://localhost")
+                    && !rootUrl.startsWith("http://unconfigured-jenkins-location")) {
                 registerHook(source);
             } else {
                 // only complain about being unable to register the hook if someone wants the hook registered.
+                LOGGER.log(Level.INFO, () -> "[ZD267879]** unable to register hook for " + source.getRepository());
                 switch (new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
                         .withTraits(source.getTraits())
                         .webhookRegistration()) {
                     case DISABLE:
+                        LOGGER.log(Level.INFO, () -> "[ZD267879]** not registering source repo [" + source.getRepository() + "] for controller endpoint [" + source.getEndpointJenkinsRootURL() + "] because it is disabled");
                         continue;
                     case SYSTEM:
                         AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                            .findEndpoint(source.getServerUrl())
-                            .orElse(null);
+                                .findEndpoint(source.getServerUrl())
+                                .orElse(null);
+                        if (endpoint == null) {
+                            LOGGER.log(Level.INFO, () -> "[ZD267879]** not registering source repo [" + source.getRepository() + "] for controller endpoint [" + source.getEndpointJenkinsRootURL() + "] because endpoint is null");
+                        }
+                        // make spotbugs happy
+                        if (endpoint != null && !endpoint.isManageHooks()) {
+                            LOGGER.log(Level.INFO, () -> "[ZD267879]** not registering source repo [" + source.getRepository() + "] for controller endpoint [" + source.getEndpointJenkinsRootURL() + "] because it is !isManagedWebhooks()");
+                        }
                         if (endpoint == null || !endpoint.isManageHooks()) {
                             continue;
                         }
+                        LOGGER.log(Level.INFO, () -> "[ZD267879]** BREAK1 [SYSTEM]");
                         break;
                     case ITEM:
+                        LOGGER.log(Level.INFO, () -> "[ZD267879]** BREAK1 [ITEM]");
                         break;
                 }
-                LOGGER.log(Level.WARNING, "Can not register hook. Jenkins root URL is not valid: {0}", rootUrl);
+                LOGGER.log(Level.INFO, "[ZD267879]** Can not register hook. Jenkins root URL is not valid: {0}", rootUrl);
                 // go on to try next source and its rootUrl
             }
+            LOGGER.log(Level.INFO, () -> "[ZD267879]** finished processing source " + source.getRepository());
+
         }
+        LOGGER.log(Level.INFO, () -> "[ZD267879]** finished registering hooks for owner " + owner.getFullName() + " url[" + owner.getUrl());
     }
 
     private void registerHook(BitbucketSCMSource source) throws IOException, InterruptedException {
+        LOGGER.log(Level.INFO, () -> "[ZD267879]** Begin hook registration for source [" + source.getRepository() + "] with controller endpoint [" + source.getEndpointJenkinsRootURL() + "]");
         BitbucketApi bitbucket = bitbucketApiFor(source);
         if (bitbucket == null) {
+            LOGGER.log(Level.INFO, () -> "[ZD267879]** Aborting hook registration for source [" + source.getRepository() + "] with controller endpoint [" + source.getEndpointJenkinsRootURL() + "] because unable to obtain bitbucket api client");
             return;
         }
 
@@ -171,16 +192,28 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 .findFirst()
                 .orElse(null);
 
+        LOGGER.log(
+                Level.INFO,
+                () -> "[ZD267879] Beging resgisterHook for hookRecieverUrl: " + hookReceiverURL + "   existingHook: " + existingHook);
+
         WebhookConfiguration hookConfig = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
-            .withTraits(source.getTraits())
-            .webhookConfiguration();
+                .withTraits(source.getTraits())
+                .webhookConfiguration();
+
+        LOGGER.log(Level.INFO, () -> "[ZD267879] created WebhookConfiguration " + hookConfig.getHook(source).getUrl());
+
         if (existingHook == null) {
-            LOGGER.log(Level.INFO, "Registering hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
+            LOGGER.log(Level.INFO, "Registering hook for {0}/{1}", new Object[] {
+                source.getRepoOwner(), source.getRepository()
+            });
             bitbucket.registerCommitWebHook(hookConfig.getHook(source));
         } else if (hookConfig.updateHook(existingHook, source)) {
-            LOGGER.log(Level.INFO, "Updating hook for {0}/{1}", new Object[]{source.getRepoOwner(), source.getRepository()});
+            LOGGER.log(
+                    Level.INFO, "Updating hook for {0}/{1}", new Object[] {source.getRepoOwner(), source.getRepository()
+                    });
             bitbucket.updateCommitWebHook(existingHook);
         }
+        LOGGER.log(Level.INFO, () -> "[ZD267879] completecd webhook registration for " + source.getRepository());
     }
 
     private void removeHooks(SCMSourceOwner owner) throws IOException, InterruptedException {
@@ -192,18 +225,23 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 BitbucketWebHook hook = null;
                 for (BitbucketWebHook h : existent) {
                     // Check if there is a hook pointing to us
-                    if (h.getUrl().startsWith(source.getEndpointJenkinsRootURL() + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
+                    if (h.getUrl()
+                            .startsWith(source.getEndpointJenkinsRootURL()
+                                    + BitbucketSCMSourcePushHookReceiver.FULL_PATH)) {
                         hook = h;
                         break;
                     }
                 }
                 if (hook != null && !isUsedSomewhereElse(owner, source.getRepoOwner(), source.getRepository())) {
-                    LOGGER.log(Level.INFO, "Removing hook for {0}/{1}",
-                            new Object[]{source.getRepoOwner(), source.getRepository()});
+                    LOGGER.log(Level.INFO, "Removing hook for {0}/{1}", new Object[] {
+                        source.getRepoOwner(), source.getRepository()
+                    });
                     bitbucket.removeCommitWebHook(hook);
                 } else {
-                    LOGGER.log(Level.FINE, "NOT removing hook for {0}/{1} because does not exists or its used in other project",
-                            new Object[]{source.getRepoOwner(), source.getRepository()});
+                    LOGGER.log(
+                            Level.FINE,
+                            "NOT removing hook for {0}/{1} because does not exists or its used in other project",
+                            new Object[] {source.getRepoOwner(), source.getRepository()});
                 }
             }
         }
@@ -214,11 +252,16 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 .withTraits(source.getTraits())
                 .webhookRegistration()) {
             case DISABLE:
+                LOGGER.log(Level.INFO, () -> "[ZD267879]** Aborting hook registration for source [" + source.getRepository() + "] with controller endpoint [" + source.getEndpointJenkinsRootURL() + "]");
                 return null;
             case SYSTEM:
                 AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get()
-                    .findEndpoint(source.getServerUrl())
-                    .orElse(null);
+                        .findEndpoint(source.getServerUrl())
+                        .orElse(null);
+                // what would circumstances cause this block to execute?
+                if (endpoint == null || !endpoint.isManageHooks()) {
+                    LOGGER.log(Level.INFO, () -> "[ZD267879]** api endpoint will be  null [" + source.getRepository() + "] with controller endpoint [" + source.getEndpointJenkinsRootURL() + "]");
+                }
                 return endpoint == null || !endpoint.isManageHooks()
                         ? null
                         : BitbucketApiFactory.newInstance(
@@ -226,11 +269,12 @@ public class WebhookAutoRegisterListener extends ItemListener {
                                 endpoint.authenticator(),
                                 source.getRepoOwner(),
                                 null,
-                                source.getRepository()
-                        );
+                                source.getRepository());
             case ITEM:
+                LOGGER.log(Level.INFO, () -> "[ZD267879]** ITEM switch case - building bitckucket client for  source [" + source.getRepository() + "] with controller endpoint [" + source.getEndpointJenkinsRootURL() + "]");
                 return source.buildBitbucketClient();
             default:
+                LOGGER.log(Level.INFO, () -> "[ZD267879]** endpoint will be null, DEFAULT switch case - for source [" + source.getRepository() + "] with controller endpoint [" + source.getEndpointJenkinsRootURL() + "]");
                 return null;
         }
     }
@@ -239,7 +283,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
         Iterable<SCMSourceOwner> all = SCMSourceOwners.all();
         for (SCMSourceOwner other : all) {
             if (owner != other) {
-                for(SCMSource otherSource : other.getSCMSources()) {
+                for (SCMSource otherSource : other.getSCMSources()) {
                     if (otherSource instanceof BitbucketSCMSource bbSCMSource
                             && StringUtils.equalsIgnoreCase(bbSCMSource.getRepoOwner(), repoOwner)
                             && bbSCMSource.getRepository().equals(repoName)) {
@@ -267,9 +311,9 @@ public class WebhookAutoRegisterListener extends ItemListener {
      */
     private static synchronized ExecutorService getExecutorService() {
         if (executorService == null) {
-            executorService = Executors.newSingleThreadExecutor(new NamingThreadFactory(new DaemonThreadFactory(), WebhookAutoRegisterListener.class.getName()));
+            executorService = Executors.newSingleThreadExecutor(
+                    new NamingThreadFactory(new DaemonThreadFactory(), WebhookAutoRegisterListener.class.getName()));
         }
         return executorService;
     }
-
 }

@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>cloudbees-bitbucket-branch-source</artifactId>
-    <version>936.1.1</version>
+    <version>936.1.1-ZD267879</version>
     <packaging>hpi</packaging>
 
     <name>Bitbucket Branch Source Plugin</name>
