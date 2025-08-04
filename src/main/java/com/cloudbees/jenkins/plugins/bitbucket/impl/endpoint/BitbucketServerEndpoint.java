@@ -33,6 +33,7 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
@@ -40,7 +41,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Objects;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -85,6 +85,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         return BitbucketEndpointProvider
                 .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
                 .map(endpoint -> endpoint.getServerVersion())
+                .map(BitbucketServerVersion::valueOf)
                 .orElse(BitbucketServerVersion.VERSION_7);
     }
 
@@ -101,22 +102,12 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     private final String serverUrl;
 
     @NonNull
-    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.NATIVE;
 
     /**
      * The server version for this endpoint.
      */
     private BitbucketServerVersion serverVersion = BitbucketServerVersion.VERSION_7;
-
-    /**
-     * Whether to always call the can merge api when retrieving pull requests.
-     */
-    private boolean callCanMerge = true;
-
-    /**
-     * Whether to always call the can diff api when retrieving pull requests.
-     */
-    private boolean callChanges = true;
 
     /**
      * Default constructor.
@@ -158,38 +149,25 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
                 : displayName.trim();
     }
 
-    public boolean isCallCanMerge() {
-        return callCanMerge;
-    }
-
     @NonNull
     @Override
     public EndpointType getType() {
         return EndpointType.SERVER;
     }
 
-    @DataBoundSetter
-    public void setCallCanMerge(boolean callCanMerge) {
-        this.callCanMerge = callCanMerge;
-    }
-
-    public boolean isCallChanges() {
-        return callChanges;
+    @Nullable
+    public String getServerVersion() {
+        return this.serverVersion != null ? this.serverVersion.name() : null;
     }
 
     @DataBoundSetter
-    public void setCallChanges(boolean callChanges) {
-        this.callChanges = callChanges;
-    }
-
-    @NonNull
-    public BitbucketServerVersion getServerVersion() {
-        return this.serverVersion;
-    }
-
-    @DataBoundSetter
-    public void setServerVersion(@NonNull BitbucketServerVersion serverVersion) {
-        this.serverVersion = Objects.requireNonNull(serverVersion);
+    public void setServerVersion(@NonNull String serverVersion) {
+        try {
+            this.serverVersion = BitbucketServerVersion.valueOf(serverVersion);
+        } catch (IllegalArgumentException e) {
+            // use default
+            this.serverVersion = BitbucketServerVersion.VERSION_7;
+        }
     }
 
     /**

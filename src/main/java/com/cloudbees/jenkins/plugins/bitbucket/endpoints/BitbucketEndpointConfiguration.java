@@ -86,6 +86,8 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
         XStream2 xs = new XStream2(XStream2.getDefaultDriver());
         xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint", BitbucketCloudEndpoint.class);
         xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint", BitbucketServerEndpoint.class);
+        xs.omitField(BitbucketServerEndpoint.class, "callCanMerge");
+        xs.omitField(BitbucketServerEndpoint.class, "callChanges");
         return new XmlFile(xs, cfgFile);
     }
 

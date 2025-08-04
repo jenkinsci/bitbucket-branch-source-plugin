@@ -1,37 +1,13 @@
 = Bitbucket Branch Source Plugin
 
-[IMPORTANT]
-=====================================================================
-On March 5th, 2020, link:https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-0-release-notes-990546638.html[Atlassian releases Bitbucket Server 7]
-which removed some undocumented features related to pull requests.
-
-. With Bitbucket Server 7.x, Jenkins Pipeline jobs can no longer perform a lightweight checkout of the `Jenkinsfile` if you are using the merge strategy for builds.
-.. This is due to Bitbucket Server 7.x no longer storing the merge commit for PRs to `refs/pull-requests/*/merge` which was a prerequisite for lightweight checkout.
-.. Bitbucket Server Pipeline jobs will automatically fall back to heavyweight checkout.
-.. link:https://jira.atlassian.com/browse/BSERV-12284?focusedCommentId=2389584&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-2389584[Atlassian
-has explained their reasons for making this change] and has made it clear they will not be re-adding this behavior.
-. For Jenkins Pipeline jobs to function for pull requests on Bitbucket Data Center 8.x and above, you need to enable "Call Changes api" option in the plugin configuration.
-.. Since Bitbucket Server 7.x no longer automatically creates the required refs for pull requests. Calls to this new API are required to trigger ref creation.
-
-=====================================================================
-
 [id=bitbucket-sect-intro]
 
-_Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Data Center
-as a multi-branch project source in two different ways:
+_Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Data Center as a multi-branch project source in two different ways:
 
  * *Single repository source*: automatic creation of jobs for branches and pull requests in a specific repository.
  * *Organization folders*: automatic creation of multi-branch projects for each visible repository in a specific Bitbucket Team or Project.
 
-IMPORTANT: This plugin officially supports versions of Bitbucket Data Center not declared in link:https://confluence.atlassian.com/support/atlassian-end-of-support-policy-201851003.html[End Of Support (EOS)].
-
-[id=bitbucket-data_center]
-== Bitbucket Data Center compatibility
-
-_Bitbucket Data Center_ is supported but does no longer support lightweight checkout for pull requests when merge strategy is used for build.
-
-IMPORTANT: In order to have the pull request process working the "Call Changes api" option must be
-enabled in _Manage Jenkins_ » _Configure System_
+IMPORTANT: Since version 937.0.0 this plugin officially supports *only* versions of Bitbucket Data Center *not* declared as in link:https://confluence.atlassian.com/support/atlassian-end-of-support-policy-201851003.html[End Of Support (EOS)].
 
 [id=bitbucket-scm-source]
 == Branches and pull requests auto-discovering
@@ -105,7 +81,7 @@ The default Bitbucket avatar is a generated SVG image, since this plugin does no
 [id=bitbucket-webhooks]
 == Webhooks registering
 
-The use of https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html[Bitbucket webhooks]
+The use of link:https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html[Bitbucket webhooks]
 allows to trigger builds on branches and pull requests just when a new commit is done. Bitbucket plugin exposes a special
 service to listen to these webhook requests and acts accordingly by triggering a new reindex and finally
 triggering builds on matching branches or pull requests.
@@ -115,11 +91,11 @@ check "Manage hooks" and select a "Credential" with enough access to add webhook
 it can be a System scoped credential, which will restrict its usage from Pipelines.
 You can setup a custom Jenkins URL to be used as callback URL by the webhooks.
 
-For Bitbucket Data Center only it is possible chose which webhooks implementation server side to use:
+For Bitbucket Data Center only, it is possible chose which webhooks implementation server side to use:
 
 - Native implementation will configure the webhooks provided by default with the Server, so it will always be available.
 
-- Plugin implementation (*deprecated*) relies on the configuration available via specific APIs provided by the https://marketplace.atlassian.com/apps/1215474/post-webhooks-for-bitbucket?tab=overview&hosting=datacenter[Post Webhooks for Bitbucket] plugin itself. To get it worked plugin must be already pre-installed on the server instance. This provider allows custom settings managed by the _ignore committers_ trait. _Note: This specific implementation will be moved to an individual repository as soon as https://issues.jenkins.io/browse/JENKINS-74913[JENKINS-74913] is implemented._
+- Plugin implementation (*deprecated*) relies on the configuration available via specific APIs provided by the link:https://marketplace.atlassian.com/apps/1215474/post-webhooks-for-bitbucket?tab=overview&hosting=datacenter[Post Webhooks for Bitbucket] plugin itself. To get it worked plugin must be already pre-installed on the server instance. This provider allows custom settings managed by the _ignore committers_ trait. _Note: This specific implementation will be moved to an individual repository as soon as link:https://issues.jenkins.io/browse/JENKINS-74913[JENKINS-74913] is implemented._
 
 image::images/screenshot-14.png[]
 
@@ -129,7 +105,7 @@ to opt out or adjust system-wide settings.
 image::images/screenshot-18.png[]
 
 IMPORTANT: In order to have the auto-registering process working fine the Jenkins base URL must be
-properly configured in _Manage Jenkins_ » _System_
+properly configured in _Manage Jenkins_ » _System_, in alternative the URL must be provided in the endpoint configuration.
 
 === Signature verification for incoming webhooks
 
@@ -237,7 +213,7 @@ image::images/screenshot-12.png[]
 [id=bitbucket-mirror-support]
 == Mirror support
 
-A mirrored Git repository can be configured for fetching references.
+A mirrored Git repository can be configured for fetching references. This feature is available only on Bitbucke Data Center.
 
 The mirror is not used in the following cases:
 

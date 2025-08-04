@@ -30,6 +30,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudHook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.damnhandy.uri.template.UriTemplate;
@@ -67,7 +68,7 @@ public class WebhookConfiguration {
     ));
 
     /**
-     * The list of events available in Bitbucket Server v7.x.
+     * The list of events available in Bitbucket Data Center v8.x.
      */
     private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(Arrays.asList(
             HookEventType.SERVER_REFS_CHANGED.getKey(),
@@ -75,12 +76,8 @@ public class WebhookConfiguration {
             HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_DECLINED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_DELETED.getKey(),
-            // only on v5.10 and above
             HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey(),
-            HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey(),
-            // only on v6.5 and above
             HookEventType.SERVER_MIRROR_REPO_SYNCHRONIZED.getKey(),
-            // only on v7.x and above
             HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()
     ));
 
@@ -97,21 +94,6 @@ public class WebhookConfiguration {
             "PULL_REQUEST_UPDATED",
             "REPOSITORY_MIRROR_SYNCHRONIZED", // not supported by the hookprocessor
             "TAG_CREATED"));
-
-    /**
-     * The list of events available in Bitbucket Server v6.5+.
-     */
-    private static final List<String> NATIVE_SERVER_EVENTS_v6_5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 8));
-
-    /**
-     * The list of events available in Bitbucket Server v6.x.  Applies to v5.10+.
-     */
-    private static final List<String> NATIVE_SERVER_EVENTS_v6 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 7));
-
-    /**
-     * The list of events available in Bitbucket Server v5.9-.
-     */
-    private static final List<String> NATIVE_SERVER_EVENTS_v5 = Collections.unmodifiableList(NATIVE_SERVER_EVENTS_v7.subList(0, 5));
 
     /**
      * The title of the webhook.
@@ -280,30 +262,13 @@ public class WebhookConfiguration {
                 .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
                 .orElse(null);
         if (endpoint != null) {
-            switch (endpoint.getServerVersion()) {
-            case VERSION_5:
-                return NATIVE_SERVER_EVENTS_v5;
-            case VERSION_5_10:
-                return NATIVE_SERVER_EVENTS_v6;
-            case VERSION_6:
-                // plugin version 2.9.1 introduced VERSION_6 setting for Bitbucket but it
-                // actually applies
-                // to Version 5.10+. In order to preserve backwards compatibility, rather than
-                // remove
-                // VERSION_6, it will use the same list as 5.10 until such time a need arises
-                // for it to have its
-                // own list
-                return NATIVE_SERVER_EVENTS_v6;
-            case VERSION_6_5:
-                return NATIVE_SERVER_EVENTS_v6_5;
+            BitbucketServerVersion serverVersion = BitbucketServerVersion.valueOf(endpoint.getServerVersion());
+            switch (serverVersion) {
             case VERSION_7:
             default:
                 return NATIVE_SERVER_EVENTS_v7;
             }
         }
-
-        // Not specifically v6, use v7.
-        // Better to give an error than quietly not register some events.
         return NATIVE_SERVER_EVENTS_v7;
     }
 

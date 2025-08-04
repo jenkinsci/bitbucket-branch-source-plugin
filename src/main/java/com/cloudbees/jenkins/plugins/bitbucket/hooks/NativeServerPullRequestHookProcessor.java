@@ -67,7 +67,6 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 eventType = SCMEvent.Type.REMOVED;
                 break;
             case SERVER_PULL_REQUEST_MODIFIED,
-                 SERVER_PULL_REQUEST_REVIEWER_UPDATED,
                  SERVER_PULL_REQUEST_FROM_REF_UPDATED:
                 eventType = SCMEvent.Type.UPDATED;
                 break;

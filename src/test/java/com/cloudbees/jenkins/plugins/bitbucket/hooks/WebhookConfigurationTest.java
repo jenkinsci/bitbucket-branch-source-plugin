@@ -49,23 +49,11 @@ class WebhookConfigurationTest {
     }
 
     @Test
-    void given_instanceWithServerVersion6_when_getHooks_SERVER_PR_RVWR_UPDATE_EVENT_exists() {
-        WebhookConfiguration whc = new WebhookConfiguration();
-        BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
-        final String server = "http://bitbucket.example.com:8088";
-        when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
-        BitbucketWebHook hook = whc.getHook(owner);
-        assertThat(hook.getEvents()).contains(HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey());
-    }
-
-    @Test
-    void given_instanceWithServerVersion6_5_when_getHooks_SERVER_MIRROR_REPO_SYNC_EVENT_exists() {
+    void given_instanceWithServer_when_getHooks_SERVER_MIRROR_REPO_SYNC_EVENT_exists() {
         WebhookConfiguration whc = new WebhookConfiguration();
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8091";
         when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
         when(owner.getMirrorId()).thenReturn("dummy-mirror-id");
         BitbucketWebHook hook = whc.getHook(owner);
@@ -73,40 +61,7 @@ class WebhookConfigurationTest {
     }
 
     @Test
-    void given_instanceWithServerVersion510_when_getHooks_SERVER_PR_RVWR_UPDATE_EVENT_exists() {
-        WebhookConfiguration whc = new WebhookConfiguration();
-        BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
-        final String server = "http://bitbucket.example.com:8089";
-        when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
-        BitbucketWebHook hook = whc.getHook(owner);
-        assertThat(hook.getEvents()).contains(HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey());
-    }
-
-    @Test
-    void given_instanceWithServerVersion59_when_getHooks_SERVER_PR_RVWR_UPDATE_EVENT_not_exists() {
-        WebhookConfiguration whc = new WebhookConfiguration();
-        BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
-        final String server = "http://bitbucket.example.com:8090";
-        when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
-        BitbucketWebHook hook = whc.getHook(owner);
-        assertThat(hook.getEvents()).doesNotContain(HookEventType.SERVER_PULL_REQUEST_REVIEWER_UPDATED.getKey());
-    }
-
-    @Test
-    void given_instanceWithServerVersion59_when_getHooks_SERVER_PR_MOD_EVENT_not_exists() {
-        WebhookConfiguration whc = new WebhookConfiguration();
-        BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
-        final String server = "http://bitbucket.example.com:8090";
-        when(owner.getServerUrl()).thenReturn(server);
-        when(owner.getEndpointJenkinsRootURL()).thenReturn(server);
-        BitbucketWebHook hook = whc.getHook(owner);
-        assertThat(hook.getEvents()).doesNotContain(HookEventType.SERVER_PULL_REQUEST_MODIFIED.getKey());
-    }
-
-    @Test
-    void given_instanceWithServerVersion7_when_getHooks_SERVER_PR_FROM_REF_UPDATED_EVENT_exists() {
+    void given_instanceWithServer_when_getHooks_SERVER_PR_FROM_REF_UPDATED_EVENT_exists() {
         WebhookConfiguration whc = new WebhookConfiguration();
         BitbucketSCMSource owner = mock(BitbucketSCMSource.class);
         final String server = "http://bitbucket.example.com:8087";

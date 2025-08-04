@@ -46,7 +46,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernam
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
@@ -274,10 +273,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
         if (endpoint != null) {
             // Get PRs again as revisions could be changed by other events during setupPullRequest
-            if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
-                pullRequests = getPagedRequest(template, BitbucketServerPullRequest.class);
-                pullRequests.removeIf(this::shouldIgnore);
-            }
+            pullRequests = getPagedRequest(template, BitbucketServerPullRequest.class);
+            pullRequests.removeIf(this::shouldIgnore);
         }
 
         return pullRequests;
@@ -288,24 +285,18 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         setupClosureForPRBranch(pullRequest);
 
         if (endpoint != null) {
-            // This is required for Bitbucket Server to update the refs/pull-requests/* references
-            // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
-            if (endpoint.isCallCanMerge()) {
-                try {
-                    pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
-                } catch (BitbucketRequestException e) {
-                    // see JENKINS-65718 https://docs.atlassian.com/bitbucket-server/rest/7.2.1/bitbucket-rest.html#errors-and-validation
-                    // in this case we just say cannot merge this one
-                    if(e.getHttpCode()==409){
-                        pullRequest.setCanMerge(false);
-                    } else {
-                        throw e;
-                    }
+            try {
+                pullRequest.setCanMerge(getPullRequestCanMergeById(pullRequest.getId()));
+            } catch (BitbucketRequestException e) {
+                // see JENKINS-65718 https://docs.atlassian.com/bitbucket-server/rest/7.2.1/bitbucket-rest.html#errors-and-validation
+                // in this case we just say cannot merge this one
+                if(e.getHttpCode()==409){
+                    pullRequest.setCanMerge(false);
+                } else {
+                    throw e;
                 }
             }
-            if (endpoint.isCallChanges() && BitbucketServerVersion.VERSION_7.equals(endpoint.getServerVersion())) {
-                callPullRequestChangesById(pullRequest.getId());
-            }
+            callPullRequestChangesById(pullRequest.getId());
         }
     }
 
