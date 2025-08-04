@@ -34,11 +34,14 @@ import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.Util;
+import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
@@ -46,6 +49,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Represents a Bitbucket Server instance.
@@ -225,6 +229,14 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
                 return FormValidation.error("Invalid URL: " + e.getMessage());
             }
             return FormValidation.ok();
+        }
+
+        @RequirePOST
+        public Collection<? extends Descriptor<?>> getWebhookDescriptors() {
+            return ExtensionList.lookup(BitbucketWebhook.class).stream()
+                .filter(webhook -> webhook.isApplicable(EndpointType.SERVER))
+                .map(webhook -> webhook.getDescriptor())
+                .toList();
         }
 
     }

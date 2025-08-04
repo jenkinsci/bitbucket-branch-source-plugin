@@ -130,11 +130,6 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
         return Messages.ServerWebhookImplementation_displayName();
     }
 
-    @Override
-    public String getId() {
-        return "SERVER";
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public Descriptor<BitbucketWebhook> getDescriptor() {

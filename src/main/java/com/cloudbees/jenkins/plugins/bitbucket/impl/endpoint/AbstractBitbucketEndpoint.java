@@ -36,7 +36,6 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import java.util.Objects;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -249,7 +248,6 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
         return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerURL()), credentials());
     }
 
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
     protected Object readResolve() {
         if (webhook == null) {
             if ("NATIVE".equals(webhookImplementation)) {

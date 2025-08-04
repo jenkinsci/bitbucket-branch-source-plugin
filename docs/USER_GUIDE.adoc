@@ -1,5 +1,7 @@
 = Bitbucket Branch Source Plugin
 
+=====================================================================
+
 [id=bitbucket-sect-intro]
 
 _Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Data Center as a multi-branch project source in two different ways:

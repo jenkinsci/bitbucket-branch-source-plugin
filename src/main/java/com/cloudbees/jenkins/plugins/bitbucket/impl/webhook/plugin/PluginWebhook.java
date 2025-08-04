@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -31,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -118,9 +120,15 @@ public class PluginWebhook implements BitbucketWebhook {
         return Messages.ServerWebhookImplementation_displayName();
     }
 
+    @NonNull
     @Override
     public String getId() {
         return "PLUGIN";
+    }
+
+    @Override
+    public boolean isApplicable(@NonNull EndpointType type) {
+        return type == EndpointType.SERVER;
     }
 
     @SuppressWarnings("unchecked")

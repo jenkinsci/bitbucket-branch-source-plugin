@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Describable;
@@ -47,5 +48,15 @@ public interface BitbucketWebhook extends Describable<BitbucketWebhook> {
      */
     @NonNull
     String getId();
+
+    /**
+     * Returns if this implementation can supports and can be installed by the
+     * given endpoint type.
+     *
+     * @param type of the endpoint
+     * @return {@code true} if this implementation can manage payload from this
+     *         endpoint, {@code false} otherwise.
+     */
+    boolean isApplicable(@NonNull EndpointType type);
 
 }

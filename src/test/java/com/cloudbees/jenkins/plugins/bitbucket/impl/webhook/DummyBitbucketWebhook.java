@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 
@@ -35,6 +36,17 @@ public class DummyBitbucketWebhook extends AbstractBitbucketWebhook {
     @Override
     public String getDisplayName() {
         return "Dummy";
+    }
+
+    @NonNull
+    @Override
+    public String getId() {
+        return "DUMMY";
+    }
+
+    @Override
+    public boolean isApplicable(@NonNull EndpointType type) {
+        return true;
     }
 
     @NonNull

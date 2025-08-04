@@ -34,6 +34,8 @@ THE SOFTWARE.
         <f:validateButton title="${%Show statistics}" method="showStats" />
     </f:optionalBlock>
     <f:invisibleEntry>
-        <f:textbox field="serverUrl"/>
+        <f:textbox field="serverURL"/>
     </f:invisibleEntry>
+
+    <f:dropdownDescriptorSelector field="webhook" title="${%Webhook implementation}" descriptors="${descriptor.webhookDescriptors}" />
 </j:jelly>

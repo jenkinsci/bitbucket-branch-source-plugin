@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
@@ -31,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
@@ -57,9 +59,15 @@ public class CloudWebhook extends AbstractBitbucketWebhook {
         return Messages.CloudWebhookImplementation_displayName();
     }
 
+    @NonNull
     @Override
     public String getId() {
         return "CLOUD";
+    }
+
+    @Override
+    public boolean isApplicable(EndpointType type) {
+        return type == EndpointType.CLOUD;
     }
 
     @Symbol("cloudWebhook")
@@ -111,4 +119,5 @@ public class CloudWebhook extends AbstractBitbucketWebhook {
             return result;
         }
     }
+
 }

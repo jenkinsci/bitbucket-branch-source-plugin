@@ -31,10 +31,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import java.util.Collection;
 import java.util.List;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.verb.POST;
 
 /**
@@ -152,6 +156,15 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
             BitbucketCloudApiClient.clearCaches();
             return FormValidation.ok("Caches cleared");
         }
+
+        @RequirePOST
+        public Collection<? extends Descriptor<?>> getWebhookDescriptors() {
+            return ExtensionList.lookup(BitbucketWebhook.class).stream()
+                .filter(webhook -> webhook.isApplicable(EndpointType.CLOUD))
+                .map(webhook -> webhook.getDescriptor())
+                .toList();
+        }
+
     }
 
 }

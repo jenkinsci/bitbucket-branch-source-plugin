@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -80,12 +81,22 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     String getServerURL();
 
     /**
+     * Returns the webhook implementation that this endpoint is using to manage the incoming payload.
+     *
+     * @return the {@link BitbucketWebhook} implementation selected for this endpoint.
+     */
+    @NonNull
+    BitbucketWebhook getWebhook();
+
+    /**
      * Returns {@code true} if and only if Jenkins is supposed to auto-manage
      * hooks for this end-point.
      *
      * @return {@code true} if and only if Jenkins is supposed to auto-manage
      *         hooks for this end-point.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     boolean isManageHooks();
 
     /**
@@ -94,7 +105,9 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      * @param manageHooks   if Jenkins must auto-manage hooks registration.
      * @param credentialsId credentialsId to use with rights to create or update web
      *                      hook for Bitbucket repositories.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     void setManageHooks(boolean manageHooks, @CheckForNull String credentialsId);
 
     /**
@@ -103,8 +116,10 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      *
      * @return the {@link StandardUsernamePasswordCredentials#getId()} of the
      *         credentials to use for auto-management of hooks.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
     @CheckForNull
+    @Deprecated(since = "937.0.0", forRemoval = true)
     String getCredentialsId();
 
     /**
@@ -113,7 +128,9 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      * null or equals an empty string.
      *
      * @return the verbatim setting provided by endpoint configuration
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @NonNull
     String getEndpointJenkinsRootURL();
 
@@ -148,7 +165,9 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      * Looks up the {@link StandardCredentials} to use for auto-management of hooks.
      *
      * @return the credentials or {@code null}.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @CheckForNull
     default StandardCredentials credentials() {
         String credentialsId = Util.fixEmptyAndTrim(getCredentialsId());
