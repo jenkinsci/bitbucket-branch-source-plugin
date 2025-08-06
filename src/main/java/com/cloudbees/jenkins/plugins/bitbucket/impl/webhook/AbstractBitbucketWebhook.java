@@ -25,9 +25,11 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
@@ -91,6 +93,7 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
      *
      * @return {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
+    @Override
     public final boolean isManageHooks() {
         return manageHooks;
     }
@@ -102,6 +105,7 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
      * @return the {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management
      * of hooks.
      */
+    @Override
     @CheckForNull
     public final String getCredentialsId() {
         return credentialsId;
@@ -120,9 +124,22 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
         return endpointJenkinsRootURL;
     }
 
+    /**
+     * A Jenkins Server Root URL should end with a slash to use with webhooks.
+     *
+     * @param rootURL the original value of a URL which would be normalized
+     * @return the normalized URL ending with a slash
+     */
+    @NonNull
+    static String normalizeJenkinsRootURL(String rootURL) {
+        // This routine is not really BitbucketEndpointConfiguration
+        // specific, it just works on strings with some defaults:
+        return Util.ensureEndsWith(URLUtils.normalizeURL(fixEmptyAndTrim(rootURL)), "/");
+    }
+
     @DataBoundSetter
     public void setEndpointJenkinsRootURL(@CheckForNull String endpointJenkinsRootURL) {
-        this.endpointJenkinsRootURL = fixEmptyAndTrim(endpointJenkinsRootURL);
+        this.endpointJenkinsRootURL = normalizeJenkinsRootURL(fixEmptyAndTrim(endpointJenkinsRootURL));
     }
 
     @Override

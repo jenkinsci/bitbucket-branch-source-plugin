@@ -23,13 +23,25 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Descriptor;
 
 /**
  * {@link Descriptor} for {@link BitbucketWebhook}s.
  *
- * @since 936.4.0
+ * @since 937.0.0
  */
 public abstract class BitbucketWebhookDescriptor extends Descriptor<BitbucketWebhook> {
-    public abstract boolean isApplicable(String serverURL);
+
+    /**
+     * Returns if this implementation can supports and can be installed by the
+     * given endpoint type.
+     *
+     * @param type of the endpoint
+     * @return {@code true} if this implementation can manage payload from this
+     *         endpoint, {@code false} otherwise.
+     */
+    public abstract boolean isApplicable(@NonNull EndpointType type);
+
 }

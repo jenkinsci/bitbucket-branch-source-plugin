@@ -81,4 +81,9 @@ public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor 
             notifyEvent(new PluginPREvent(eventType, pull, getOrigin(context), hookEvent), BitbucketSCMSource.getEventDelaySeconds());
         }
     }
+
+    @Override
+    public void verifyPayload(Map<String, String> headers, String body, BitbucketEndpoint endpoint) {
+        // not supported
+    }
 }

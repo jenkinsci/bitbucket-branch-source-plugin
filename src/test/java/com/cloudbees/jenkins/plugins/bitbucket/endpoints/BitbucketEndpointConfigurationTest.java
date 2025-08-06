@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.plugins.credentials.Credentials;
@@ -675,7 +676,15 @@ class BitbucketEndpointConfigurationTest {
                 assertThat(endpoint.getCredentialsId()).isEqualTo("admin.basic.credentials");
                 assertThat(endpoint.getEndpointJenkinsRootURL()).isEqualTo("http://host.docker.internal:8090/jenkins/");
                 assertThat(endpoint.getDisplayName()).isEqualTo("server");
-                assertThat(endpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
+                assertThat(endpoint.getWebhook())
+                    .isInstanceOfSatisfying(ServerWebhook.class, webhook -> {
+                        assertThat(webhook.getDisplayName()).isEqualTo("server");
+                        assertThat(webhook.getEndpointJenkinsRootURL()).isEqualTo("server");
+                        assertThat(webhook.isManageHooks()).isTrue();
+                        assertThat(webhook.getCredentialsId()).isEqualTo("server");
+                        assertThat(webhook.isEnableHookSignature()).isTrue();
+                        assertThat(webhook.getHookSignatureCredentialsId()).isEqualTo("server");
+                    });
             });
         assertThat(instance.getEndpoints()).element(1).isInstanceOf(BitbucketServerEndpoint.class);
     }
@@ -686,7 +695,7 @@ class BitbucketEndpointConfigurationTest {
 
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
 
-        assertThat(instance.getEndpoints()).hasSize(12);
+        assertThat(instance.getEndpoints()).hasSize(7);
 
         assertThat(instance.getEndpoints()).element(0).isInstanceOf(BitbucketCloudEndpoint.class);
         BitbucketCloudEndpoint endpoint = (BitbucketCloudEndpoint) instance.getEndpoints().get(0);
@@ -697,8 +706,6 @@ class BitbucketEndpointConfigurationTest {
         assertThat(endpoint.isEnableCache()).isTrue();
         assertThat(endpoint.getTeamCacheDuration()).isEqualTo(1);
         assertThat(endpoint.getRepositoriesCacheDuration()).isEqualTo(2);
-        assertThat(endpoint.isEnableHookSignature()).isTrue();
-        assertThat(endpoint.getHookSignatureCredentialsId()).isEqualTo("secretId");
 
         BitbucketServerEndpoint serverEndpoint;
 
@@ -709,8 +716,13 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getServerURL()).isEqualTo("https://bitbucket.example.com");
         assertThat(serverEndpoint.isManageHooks()).isTrue();
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("second");
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
+        assertThat(serverEndpoint.getWebhook())
+            .isInstanceOfSatisfying(PluginWebhook.class, webhook -> {
+                assertThat(webhook.getEndpointJenkinsRootURL()).isNull();
+                assertThat(webhook.isManageHooks()).isTrue();
+                assertThat(webhook.getCredentialsId()).isEqualTo("second");
+            });
+        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion().name());
 
         assertThat(instance.getEndpoints()).element(2).isInstanceOf(BitbucketServerEndpoint.class);
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(2);
@@ -718,80 +730,69 @@ class BitbucketEndpointConfigurationTest {
         assertThat(serverEndpoint.getServerURL()).isEqualTo("http://example.org:8080/bitbucket");
         assertThat(serverEndpoint.isManageHooks()).isFalse();
         assertThat(serverEndpoint.getCredentialsId()).isNull();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
+        assertThat(serverEndpoint.getWebhook())
+            .isInstanceOfSatisfying(ServerWebhook.class, webhook -> {
+                assertThat(webhook.getEndpointJenkinsRootURL()).isNull();
+                assertThat(webhook.isManageHooks()).isFalse();
+                assertThat(webhook.getCredentialsId()).isNull();
+                assertThat(webhook.isEnableHookSignature()).isTrue();
+                assertThat(webhook.getHookSignatureCredentialsId()).isEqualTo("secretId");
+            });
+        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion().name());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(3);
         assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
         assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8083");
         assertThat(serverEndpoint.isManageHooks()).isTrue();
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("third");
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
+        assertThat(serverEndpoint.getWebhook())
+            .isInstanceOfSatisfying(ServerWebhook.class, webhook -> {
+                assertThat(webhook.getEndpointJenkinsRootURL()).isNull();
+                assertThat(webhook.isManageHooks()).isTrue();
+                assertThat(webhook.getCredentialsId()).isEqualTo("third");
+                assertThat(webhook.isEnableHookSignature()).isFalse();
+                assertThat(webhook.getHookSignatureCredentialsId()).isNull();
+            });
+        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion().name());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(4);
         assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
         assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8084");
         assertThat(serverEndpoint.isManageHooks()).isTrue();
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("fourth");
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.PLUGIN);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
+        assertThat(serverEndpoint.getWebhook())
+            .isInstanceOfSatisfying(PluginWebhook.class, webhook -> {
+                assertThat(webhook.getEndpointJenkinsRootURL()).isNull();
+                assertThat(webhook.isManageHooks()).isTrue();
+                assertThat(webhook.getCredentialsId()).isEqualTo("fourth");
+            });
+        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion().name());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(5);
         assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
         assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8085");
         assertThat(serverEndpoint.isManageHooks()).isTrue();
         assertThat(serverEndpoint.getCredentialsId()).isEqualTo("fifth");
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.PLUGIN);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
+        assertThat(serverEndpoint.getWebhook())
+            .isInstanceOfSatisfying(PluginWebhook.class, webhook -> {
+                assertThat(webhook.getEndpointJenkinsRootURL()).isNull();
+                assertThat(webhook.isManageHooks()).isTrue();
+                assertThat(webhook.getCredentialsId()).isEqualTo("fifth");
+            });
+        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion().name());
 
         serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(6);
         assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
         assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8086");
         assertThat(serverEndpoint.isManageHooks()).isFalse();
         assertThat(serverEndpoint.getCredentialsId()).isNull();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
-
-        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(7);
-        assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
-        assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8087");
-        assertThat(serverEndpoint.isManageHooks()).isFalse();
-        assertThat(serverEndpoint.getCredentialsId()).isNull();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
-
-        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(8);
-        assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
-        assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8088");
-        assertThat(serverEndpoint.isManageHooks()).isFalse();
-        assertThat(serverEndpoint.getCredentialsId()).isNull();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
-
-        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(9);
-        assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
-        assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8089");
-        assertThat(serverEndpoint.isManageHooks()).isFalse();
-        assertThat(serverEndpoint.getCredentialsId()).isNull();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
-
-        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(10);
-        assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
-        assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8090");
-        assertThat(serverEndpoint.isManageHooks()).isFalse();
-        assertThat(serverEndpoint.getCredentialsId()).isNull();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
-
-        serverEndpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(11);
-        assertThat(serverEndpoint.getDisplayName()).isEqualTo("Example Inc");
-        assertThat(serverEndpoint.getServerURL()).isEqualTo("http://bitbucket.example.com:8091");
-        assertThat(serverEndpoint.isManageHooks()).isFalse();
-        assertThat(serverEndpoint.getCredentialsId()).isNull();
-        assertThat(serverEndpoint.getWebhookImplementation()).isEqualTo(BitbucketServerWebhookImplementation.NATIVE);
-        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.VERSION_7.name());
+        assertThat(serverEndpoint.getWebhook())
+            .isInstanceOfSatisfying(PluginWebhook.class, webhook -> {
+                assertThat(webhook.getEndpointJenkinsRootURL()).isNull();
+                assertThat(webhook.isManageHooks()).isFalse();
+                assertThat(webhook.getCredentialsId()).isNull();
+            });
+        assertThat(serverEndpoint.getServerVersion()).isEqualTo(BitbucketServerVersion.getMinSupportedVersion().name());
     }
 
     private BitbucketCloudEndpoint buildCloudEndpoint(boolean manageHook, String credentials) {

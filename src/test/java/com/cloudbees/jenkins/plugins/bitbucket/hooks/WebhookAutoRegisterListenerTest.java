@@ -86,8 +86,9 @@ class WebhookAutoRegisterListenerTest {
 
         StringCredentials credentials = BitbucketTestUtil.registerHookCredentials("password", rule);
 
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, new ServerWebhook(true, "dummyId", true, credentials.getId()));
-        endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
+        ServerWebhook webhook = new ServerWebhook(true, "dummyId", true, credentials.getId());
+        webhook.setEndpointJenkinsRootURL("https://jenkins.example.com/");
+        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, webhook);
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
@@ -113,8 +114,9 @@ class WebhookAutoRegisterListenerTest {
         BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL , "amuniz", "test-repos");
         BitbucketMockApiFactory.add(serverURL, client);
 
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, new PluginWebhook(true, "dummyId"));
-        endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
+        PluginWebhook webhook = new PluginWebhook(true, "dummyId");
+        webhook.setEndpointJenkinsRootURL("https://jenkins.example.com/");
+        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, webhook);
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");
@@ -132,8 +134,9 @@ class WebhookAutoRegisterListenerTest {
         BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL , "amuniz", "test-repos");
         BitbucketMockApiFactory.add(serverURL, client);
 
-        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, new PluginWebhook(true, "dummyId"));
-        endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com/");
+        PluginWebhook webhook = new PluginWebhook(true, "dummyId");
+        webhook.setEndpointJenkinsRootURL("https://jenkins.example.com/");
+        AbstractBitbucketEndpoint endpoint = new BitbucketServerEndpoint("datacenter", serverURL, webhook);
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         BitbucketSCMSource scmSource = new BitbucketSCMSource("amuniz", "test-repos");

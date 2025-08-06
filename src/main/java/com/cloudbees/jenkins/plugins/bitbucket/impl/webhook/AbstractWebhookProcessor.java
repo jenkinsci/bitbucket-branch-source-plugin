@@ -25,12 +25,17 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessorException;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketType;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.Secret;
@@ -41,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
@@ -65,6 +71,7 @@ import static org.apache.commons.lang.StringUtils.trimToNull;
  */
 @Restricted(NoExternalUse.class)
 public abstract class AbstractWebhookProcessor implements BitbucketWebhookProcessor {
+    protected final Logger logger = Logger.getLogger(getClass().getName());
 
     protected static final String REQUEST_ID_CLOUD_HEADER = "X-Request-UUID";
     protected static final String REQUEST_ID_SERVER_HEADER = "X-Request-Id";
@@ -72,7 +79,6 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
     protected static final String EVENT_TYPE_HEADER = "X-Event-Key";
     protected static final String SERVER_URL_PARAMETER = "server_url";
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractWebhookProcessor.class.getName());
 
     /**
      * To be called by implementations once the owner and the repository have been extracted from the payload.
@@ -92,7 +98,7 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
                             && StringUtils.equalsIgnoreCase(scmSource.getRepoOwner(), owner)
                             && scmSource.getRepository().equals(repository)
                             && (mirrorId == null || StringUtils.equalsIgnoreCase(mirrorId, scmSource.getMirrorId()))) {
-                        LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
+                        logger.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
                         // TODO: SCMSourceOwner.onSCMSourceUpdated is deprecated. We may explore options with an
                         //  SCMEventListener extension and firing SCMSourceEvents.
                         scmOwner.onSCMSourceUpdated(source);
@@ -101,7 +107,7 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
                 }
             }
             if (!reindexed) {
-                LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
+                logger.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
             }
         }
     }
@@ -129,39 +135,63 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
     }
 
     @Override
-    public void verifyPayload(@NonNull Map<String, String> headers, @NonNull String body, BitbucketEndpoint endpoint) {
-        if (headers.containsKey(SIGNATURE_HEADER)) {
-            StringCredentials signatureCredentials = endpoint.hookSignatureCredentials();
-            if (signatureCredentials != null) {
-                String signatureHeader = headers.get(SIGNATURE_HEADER);
-                String bitbucketAlgorithm = trimToNull(StringUtils.substringBefore(signatureHeader, "="));
-                String bitbucketSignature = trimToNull(StringUtils.substringAfter(signatureHeader, "="));
-                HmacAlgorithms algorithm = getAlgorithm(bitbucketAlgorithm);
-                if (algorithm == null) {
-                    throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "Signature " + bitbucketAlgorithm + " not supported");
-                }
-                HmacUtils util;
-                try {
-                    String key = Secret.toString(signatureCredentials.getSecret());
-                    util = new HmacUtils(algorithm, key.getBytes(StandardCharsets.UTF_8));
-                    byte[] digest = util.hmac(body);
-                    if (!MessageDigest.isEqual(Hex.decodeHex(bitbucketSignature), digest)) {
-                        throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "Signature verification failed");
-                    }
-                } catch (IllegalArgumentException e) {
-                    throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "Signature method not supported: " + algorithm);
-                } catch (DecoderException e) {
-                    throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "Hex signature can not be decoded: " + bitbucketSignature);
-                }
-            } else {
+    public void verifyPayload(@NonNull Map<String, String> headers, @NonNull String body, @NonNull BitbucketEndpoint endpoint) throws BitbucketWebhookProcessorException {
+        BitbucketWebhook webhook = endpoint.getWebhook();
+        boolean signatureEnabled = false;
+        String signatureCredentialsId = null;
+        if (webhook instanceof CloudWebhook cloud) {
+            signatureEnabled = cloud.isEnableHookSignature();
+            signatureCredentialsId = cloud.getHookSignatureCredentialsId();
+        } else if (webhook instanceof ServerWebhook server) {
+            signatureEnabled = server.isEnableHookSignature();
+            signatureCredentialsId = server.getHookSignatureCredentialsId();
+        } else {
+            logger.warning(() -> "Webhook implementation " + webhook.getId() + " not supported for payload verification, it should implements also an own WebookProcessor");
+        }
+
+        if (signatureEnabled && !headers.containsKey(SIGNATURE_HEADER)) {
+            throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "Payload has not be signed, configure the webHook secret in Bitbucket as documented at https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc#webhooks-registering");
+        }
+        if (signatureEnabled) {
+            StringCredentials signatureCredentials = lookupCredentials(signatureCredentialsId, endpoint.getServerURL());
+            if (signatureCredentials == null) {
                 String hookId = headers.get("X-Hook-UUID");
                 String requestId = ObjectUtils.firstNonNull(headers.get("X-Request-UUID"), headers.get("X-Request-Id"));
-                String hookSignatureCredentialsId = endpoint.getHookSignatureCredentialsId();
-                LOGGER.log(Level.WARNING, "No credentials {0} found to verify the signature of incoming webhook {1} request {2}", new Object[] { hookSignatureCredentialsId, hookId, requestId });
-                throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "No credentials " + hookSignatureCredentialsId + " found in Jenkins to verify the signature");
+                logger.log(Level.WARNING, "No credentials {0} found to verify the signature of incoming webhook {1} request {2}", new Object[] { signatureCredentialsId, hookId, requestId });
+                throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "No credentials " + signatureCredentialsId + " found in Jenkins to verify the signature");
+            } else {
+                verifyPayload(headers, body, signatureCredentials);
             }
-        } else {
-            throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "Payload has not be signed, configure the webHook secret in Bitbucket as documented at https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc#webhooks-registering");
+        }
+    }
+
+    /*
+     * For test purpose.
+     */
+    StringCredentials lookupCredentials(@NonNull String signatureCredentialsId, @Nullable String serverURL) {
+        return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), serverURL, signatureCredentialsId, StringCredentials.class);
+    }
+
+    private void verifyPayload(@NonNull Map<String, String> headers, @NonNull String body, @NonNull StringCredentials signatureCredentials) {
+        String signatureHeader = headers.get(SIGNATURE_HEADER);
+        String bitbucketAlgorithm = trimToNull(StringUtils.substringBefore(signatureHeader, "="));
+        String bitbucketSignature = trimToNull(StringUtils.substringAfter(signatureHeader, "="));
+        HmacAlgorithms algorithm = getAlgorithm(bitbucketAlgorithm);
+        if (algorithm == null) {
+            throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "Signature " + bitbucketAlgorithm + " not supported");
+        }
+        HmacUtils util;
+        try {
+            String key = Secret.toString(signatureCredentials.getSecret());
+            util = new HmacUtils(algorithm, key.getBytes(StandardCharsets.UTF_8));
+            byte[] digest = util.hmac(body);
+            if (!MessageDigest.isEqual(Hex.decodeHex(bitbucketSignature), digest)) {
+                throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_FORBIDDEN, "Signature verification failed");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "Signature method not supported: " + algorithm);
+        } catch (DecoderException e) {
+            throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "Hex signature can not be decoded: " + bitbucketSignature);
         }
     }
 

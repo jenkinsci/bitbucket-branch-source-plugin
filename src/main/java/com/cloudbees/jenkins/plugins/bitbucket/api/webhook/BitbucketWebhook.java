@@ -23,15 +23,20 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.ExtensionPoint;
 import hudson.model.Describable;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
-@Restricted(Beta.class)
-public interface BitbucketWebhook extends Describable<BitbucketWebhook> {
+/**
+ * The implementation represents an a webhook configuration that can be used in
+ * a {@link BitbucketEndpoint}.
+ *
+ * @since 937.0.0
+ */
+public interface BitbucketWebhook extends Describable<BitbucketWebhook>, ExtensionPoint {
 
     /**
      * Name to use to describe the hook implementation.
@@ -50,13 +55,22 @@ public interface BitbucketWebhook extends Describable<BitbucketWebhook> {
     String getId();
 
     /**
-     * Returns if this implementation can supports and can be installed by the
-     * given endpoint type.
+     * Returns {@code true} if and only if Jenkins is supposed to auto-manage
+     * hooks for this end-point.
      *
-     * @param type of the endpoint
-     * @return {@code true} if this implementation can manage payload from this
-     *         endpoint, {@code false} otherwise.
+     * @return {@code true} if and only if Jenkins is supposed to auto-manage
+     *         hooks for this end-point.
      */
-    boolean isApplicable(@NonNull EndpointType type);
+    boolean isManageHooks();
+
+    /**
+     * Returns the {@link StandardUsernamePasswordCredentials#getId()} of the
+     * credentials to use for auto-management of hooks.
+     *
+     * @return the {@link StandardUsernamePasswordCredentials#getId()} of the
+     *         credentials to use for auto-management of hooks.
+     */
+    @CheckForNull
+    String getCredentialsId();
 
 }

@@ -109,12 +109,8 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
                 return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST, "No bitbucket endpoint found for " + serverURL);
             }
 
-            if (endpoint.isEnableHookSignature()) {
-                logger.log(Level.FINE, "Payload endpoint host {0}, request endpoint host {1}", new Object[] { endpoint, req.getRemoteAddr() });
-                hookProcessor.verifyPayload(reqHeaders, body, endpoint);
-            } else {
-                logger.log(Level.FINER, "Signature not configured for bitbucket endpoint {0}.", serverURL);
-            }
+            logger.log(Level.FINE, "Payload endpoint host {0}, request endpoint host {1}", new Object[] { endpoint, req.getRemoteAddr() });
+            hookProcessor.verifyPayload(reqHeaders, body, endpoint);
 
             Map<String, Object> context = hookProcessor.buildHookContext(req);
             String eventType = hookProcessor.getEventType(Collections.unmodifiableMap(reqHeaders), MultiMapUtils.unmodifiableMultiValuedMap(reqParameters));

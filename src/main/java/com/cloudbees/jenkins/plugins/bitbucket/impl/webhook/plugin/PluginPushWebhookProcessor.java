@@ -91,4 +91,8 @@ public class PluginPushWebhookProcessor extends AbstractWebhookProcessor {
         }
     }
 
+    @Override
+    public void verifyPayload(Map<String, String> headers, String body, BitbucketEndpoint endpoint) {
+        // not supported
+    }
 }

@@ -29,7 +29,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -87,6 +86,8 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
         XStream2 xs = new XStream2(XStream2.getDefaultDriver());
         xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint", BitbucketCloudEndpoint.class);
         xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint", BitbucketServerEndpoint.class);
+        xs.aliasField("serverUrl", BitbucketCloudEndpoint.class, "serverURL");
+        xs.aliasField("serverUrl", BitbucketServerEndpoint.class, "serverURL");
         xs.omitField(BitbucketServerEndpoint.class, "callCanMerge");
         xs.omitField(BitbucketServerEndpoint.class, "callChanges");
         return new XmlFile(xs, cfgFile);
@@ -200,13 +201,6 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             if (StringUtils.isBlank(serverURL) || serverURLs.contains(serverURL)) {
                 iterator.remove();
                 continue;
-            } else if (!(endpoint instanceof BitbucketCloudEndpoint) && BitbucketApiUtils.isCloud(serverURL)) {
-                // fix type for the special case
-                CloudWebhook webhook = new CloudWebhook(endpoint.isManageHooks(), endpoint.getCredentialsId(),
-                        endpoint.isEnableHookSignature(), endpoint.getHookSignatureCredentialsId());
-                webhook.setEndpointJenkinsRootURL(endpoint.getEndpointJenkinsRootURL());
-                BitbucketCloudEndpoint cloudEndpoint = new BitbucketCloudEndpoint(false, 0, 0, webhook);
-                iterator.set(cloudEndpoint);
             }
             serverURLs.add(serverURL);
         }

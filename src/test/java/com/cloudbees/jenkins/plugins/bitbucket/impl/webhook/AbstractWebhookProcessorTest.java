@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessorException;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.util.Secret;
 import java.io.IOException;
@@ -38,6 +39,7 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AbstractWebhookProcessorTest {
+class AbstractWebhookProcessorTest {
 
     private AbstractWebhookProcessor sut;
     protected SCMHeadEvent<?> scmEvent;
@@ -65,6 +67,11 @@ public class AbstractWebhookProcessorTest {
             @Override
             public void process(String eventType, String payload, Map<String, Object> origin, BitbucketEndpoint endpoint) {
                 throw new UnsupportedOperationException();
+            }
+
+            @Override
+            StringCredentials lookupCredentials(String credentialsId, String serverURL) {
+                return new StringCredentialsImpl(CredentialsScope.GLOBAL, credentialsId, null, Secret.fromString("Gkvl$k$wyNpQAF42"));
             }
         };
     }
@@ -128,7 +135,7 @@ public class AbstractWebhookProcessorTest {
     private BitbucketEndpoint getEndpoint() {
         String credentialsId = "hmac";
         BitbucketEndpoint endpoint = mock(BitbucketEndpoint.class);
-        when(endpoint.hookSignatureCredentials()).thenReturn(new StringCredentialsImpl(CredentialsScope.GLOBAL, credentialsId, null, Secret.fromString("Gkvl$k$wyNpQAF42")));
+        when(endpoint.getWebhook()).thenReturn(new CloudWebhook(false, null, true, credentialsId));
         return endpoint;
     }
 

@@ -31,7 +31,4 @@ import hudson.model.Descriptor;
  * @since 936.4.0
  */
 public class BitbucketEndpointDescriptor extends Descriptor<BitbucketEndpoint> {
-//    public Collection<? extends Descriptor<?>> getWebhookDescriptors(BitbucketEndpoint value) {
-//        return Jenkins.get().getDescriptorList(BitbucketWebhook.class);
-//    }
 }

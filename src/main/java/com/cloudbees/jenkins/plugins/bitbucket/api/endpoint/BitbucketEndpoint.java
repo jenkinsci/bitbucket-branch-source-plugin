@@ -34,9 +34,6 @@ import hudson.Util;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.plugins.plaincredentials.StringCredentials;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * The implementation represents an endpoint configuration to be used in
@@ -84,6 +81,7 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      * Returns the webhook implementation that this endpoint is using to manage the incoming payload.
      *
      * @return the {@link BitbucketWebhook} implementation selected for this endpoint.
+     * @since 937.0.0
      */
     @NonNull
     BitbucketWebhook getWebhook();
@@ -135,33 +133,6 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     String getEndpointJenkinsRootURL();
 
     /**
-     * Returns if the should or not verify incoming web hook payload from this
-     * endpoint.
-     *
-     * @apiNote This method is under development so could be moved to an interface
-     *          dedicated to webhooks implementation
-     *
-     * @return the {@code true} if the web hook implementation configured for this
-     *         endpoint should or not verify web hook payload that could be signed
-     *         or crypted.
-     */
-    @Restricted(Beta.class)
-    boolean isEnableHookSignature();
-
-    /**
-     * The {@link StringCredentials#getId()} of the credentials to use to verify the
-     * signature of hooks.
-     *
-     * @apiNote This method is under development so could be moved to an interface
-     *          dedicated to webhooks implementation
-     *
-     * @return the configured credentials identifier to use
-     */
-    @Restricted(Beta.class)
-    @CheckForNull
-    String getHookSignatureCredentialsId();
-
-    /**
      * Looks up the {@link StandardCredentials} to use for auto-management of hooks.
      *
      * @return the credentials or {@code null}.
@@ -170,31 +141,11 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     @Deprecated(since = "937.0.0", forRemoval = true)
     @CheckForNull
     default StandardCredentials credentials() {
-        String credentialsId = Util.fixEmptyAndTrim(getCredentialsId());
+        String credentialsId = Util.fixEmptyAndTrim(getWebhook().getCredentialsId());
         if (credentialsId == null) {
             return null;
         } else {
             return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), credentialsId, StandardCredentials.class);
-        }
-    }
-
-    /**
-     * Looks up the {@link StringCredentials} to use to verify the signature of
-     * hooks.
-     *
-     * @apiNote This method is under development so could be moved to an interface
-     *          dedicated to webhook provider
-     *
-     * @return the credentials or {@code null}.
-     */
-    @Restricted(Beta.class)
-    @CheckForNull
-    default StringCredentials hookSignatureCredentials() {
-        String credentialsId = Util.fixEmptyAndTrim(getHookSignatureCredentialsId());
-        if (credentialsId == null) {
-            return null;
-        } else {
-            return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), credentialsId, StringCredentials.class);
         }
     }
 

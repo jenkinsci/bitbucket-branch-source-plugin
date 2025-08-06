@@ -29,7 +29,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudHook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.damnhandy.uri.template.UriTemplate;
@@ -38,7 +37,6 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Util;
-import hudson.util.Secret;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +45,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import org.apache.commons.collections.CollectionUtils;
-import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 /**
  * Contains the webhook configuration
@@ -243,14 +240,15 @@ public class WebhookConfiguration {
         BitbucketEndpoint endpoint = BitbucketEndpointProvider
                 .lookupEndpoint(serverURL)
                 .orElseThrow();
-        if (endpoint.isEnableHookSignature()) {
-            StringCredentials credentials = endpoint.hookSignatureCredentials();
-            if (credentials != null) {
-                return Secret.toString(credentials.getSecret());
-            } else {
-                throw new IllegalStateException("Credentials " + endpoint.getHookSignatureCredentialsId() + " not found on hook registration");
-            }
-        }
+        // FIXME
+//        if (endpoint.isEnableHookSignature()) {
+//            StringCredentials credentials = endpoint.hookSignatureCredentials();
+//            if (credentials != null) {
+//                return Secret.toString(credentials.getSecret());
+//            } else {
+//                throw new IllegalStateException("Credentials " + endpoint.getHookSignatureCredentialsId() + " not found on hook registration");
+//            }
+//        }
         return null;
     }
 

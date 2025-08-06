@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.server;
 import hudson.model.ModelObject;
 
 public enum BitbucketServerVersion implements ModelObject {
-    VERSION_7("Bitbucket Data Center v8.x (and later)");
+    VERSION_8("Bitbucket Data Center v8.x (and later)");
 
     private final String displayName;
 

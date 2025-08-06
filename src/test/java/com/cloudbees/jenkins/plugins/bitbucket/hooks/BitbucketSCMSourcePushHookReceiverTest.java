@@ -99,8 +99,9 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void test_roundtrip() throws Exception {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhook(false, null, true, "hmac"));
-        endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com");
+        CloudWebhook webhook = new CloudWebhook(false, null, true, "hmac");
+        webhook.setEndpointJenkinsRootURL("https://jenkins.example.com");
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, webhook);
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {
@@ -146,8 +147,9 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void stop_process_when_multiple_processors_canHandle_incoming_webhook() throws Exception {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhook(false, null, true, "hmac"));
-        endpoint.setBitbucketJenkinsRootUrl("https://jenkins.example.com");
+        CloudWebhook webhook = new CloudWebhook(false, null, true, "hmac");
+        webhook.setEndpointJenkinsRootURL("https://jenkins.example.com");
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, webhook);
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
 
         try {

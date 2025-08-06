@@ -44,11 +44,6 @@ public class DummyBitbucketWebhook extends AbstractBitbucketWebhook {
         return "DUMMY";
     }
 
-    @Override
-    public boolean isApplicable(@NonNull EndpointType type) {
-        return true;
-    }
-
     @NonNull
     @Override
     public String getEndpointJenkinsRootURL() {
@@ -57,12 +52,10 @@ public class DummyBitbucketWebhook extends AbstractBitbucketWebhook {
 
     @Extension // TestExtension could be used only for embedded classes
     public static class DescriptorImpl extends AbstractBitbucketWebhookDescriptorImpl {
-
         @Override
-        public boolean isApplicable(String serverURL) {
+        public boolean isApplicable(@NonNull EndpointType type) {
             return true;
         }
-
     }
 
 }

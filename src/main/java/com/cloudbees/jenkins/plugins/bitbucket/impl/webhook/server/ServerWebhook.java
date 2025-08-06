@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractBitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
@@ -66,11 +65,6 @@ public class ServerWebhook extends AbstractBitbucketWebhook {
         return "NATIVE";
     }
 
-    @Override
-    public boolean isApplicable(@NonNull EndpointType type) {
-        return type == EndpointType.SERVER;
-    }
-
     @Symbol("serverWebhook")
     @Extension
     public static class DescriptorImpl extends AbstractBitbucketWebhookDescriptorImpl {
@@ -81,8 +75,8 @@ public class ServerWebhook extends AbstractBitbucketWebhook {
         }
 
         @Override
-        public boolean isApplicable(String serverURL) {
-            return !BitbucketApiUtils.isCloud(serverURL);
+        public boolean isApplicable(@NonNull EndpointType type) {
+            return type == EndpointType.SERVER;
         }
 
         /**

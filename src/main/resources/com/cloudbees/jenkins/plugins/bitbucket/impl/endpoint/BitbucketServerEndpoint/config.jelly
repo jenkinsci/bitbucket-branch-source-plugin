@@ -24,14 +24,14 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core"
          xmlns:f="/lib/form">
-  <f:entry title="${%Name}" field="displayName">
-    <f:textbox/>
-  </f:entry>
-  <f:entry title="${%Server URL}" field="serverUrl">
-    <f:textbox/>
-  </f:entry>
-  <f:entry title="${%Server Version}" field="serverVersion">
-    <f:select />
-  </f:entry>
-  <f:dropdownDescriptorSelector field="webhook" title="${%Webhook implementation}" descriptors="${descriptor.webhookDescriptors}" />
+    <f:entry title="${%Name}" field="displayName">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Server URL}" field="serverURL">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Server Version}" field="serverVersion">
+        <f:select />
+    </f:entry>
+    <f:dropdownDescriptorSelector field="webhook" title="${%Webhook implementation}" descriptors="${descriptor.webhookDescriptors}" />
 </j:jelly>

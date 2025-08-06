@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -90,6 +89,7 @@ public class PluginWebhook implements BitbucketWebhook {
      *
      * @return {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
+    @Override
     public final boolean isManageHooks() {
         return manageHooks;
     }
@@ -101,6 +101,7 @@ public class PluginWebhook implements BitbucketWebhook {
      * @return the {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management
      * of hooks.
      */
+    @Override
     @CheckForNull
     public final String getCredentialsId() {
         return credentialsId;
@@ -126,11 +127,6 @@ public class PluginWebhook implements BitbucketWebhook {
         return "PLUGIN";
     }
 
-    @Override
-    public boolean isApplicable(@NonNull EndpointType type) {
-        return type == EndpointType.SERVER;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public Descriptor<BitbucketWebhook> getDescriptor() {
@@ -147,8 +143,8 @@ public class PluginWebhook implements BitbucketWebhook {
         }
 
         @Override
-        public boolean isApplicable(String serverURL) {
-            return !BitbucketApiUtils.isCloud(serverURL);
+        public boolean isApplicable(@NonNull EndpointType type) {
+            return type == EndpointType.SERVER;
         }
 
         /**

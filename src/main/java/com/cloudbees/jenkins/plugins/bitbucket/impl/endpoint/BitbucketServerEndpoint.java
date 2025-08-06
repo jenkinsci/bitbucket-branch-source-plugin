@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDes
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
@@ -34,7 +35,6 @@ import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
@@ -42,6 +42,7 @@ import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
@@ -135,14 +136,11 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
     @NonNull
     public String getServerVersion() {
-        this.serverVersion = serverVersion;
-        fixme
-        if (serverVersion == null || BitbucketServerVersion.getMinSupportedVersion().compareTo(this.serverVersion) < 0) {
+        if (serverVersion == null) {
             // force value to the minimum supported version
             this.serverVersion = BitbucketServerVersion.getMinSupportedVersion();
         }
-
-        return this.serverVersion != null ? this.serverVersion.name() : null;
+        return this.serverVersion.name();
     }
 
     @DataBoundSetter
@@ -151,7 +149,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
             this.serverVersion = BitbucketServerVersion.valueOf(serverVersion);
         } catch (IllegalArgumentException e) {
             // use default
-            this.serverVersion = BitbucketServerVersion.VERSION_7;
+            this.serverVersion = BitbucketServerVersion.getMinSupportedVersion();
         }
     }
 
@@ -183,7 +181,6 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     }
 
     @Override
-//    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
     protected Object readResolve() {
         if (serverVersion == null) {
             serverVersion = BitbucketServerVersion.getMinSupportedVersion();
@@ -233,10 +230,10 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
         @RequirePOST
         public Collection<? extends Descriptor<?>> getWebhookDescriptors() {
-            return ExtensionList.lookup(BitbucketWebhook.class).stream()
-                .filter(webhook -> webhook.isApplicable(EndpointType.SERVER))
-                .map(webhook -> webhook.getDescriptor())
-                .toList();
+            return Jenkins.get().getDescriptorList(BitbucketWebhook.class).stream()
+                    .map(BitbucketWebhookDescriptor.class::cast)
+                    .filter(webhook -> webhook.isApplicable(EndpointType.SERVER))
+                    .toList();
         }
 
     }

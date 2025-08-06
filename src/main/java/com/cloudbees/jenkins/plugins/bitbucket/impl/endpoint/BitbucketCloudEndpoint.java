@@ -26,12 +26,12 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import java.util.Collection;
@@ -159,10 +159,10 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
 
         @RequirePOST
         public Collection<? extends Descriptor<?>> getWebhookDescriptors() {
-            return ExtensionList.lookup(BitbucketWebhook.class).stream()
-                .filter(webhook -> webhook.isApplicable(EndpointType.CLOUD))
-                .map(webhook -> webhook.getDescriptor())
-                .toList();
+            return Jenkins.get().getDescriptorList(BitbucketWebhook.class).stream()
+                    .map(BitbucketWebhookDescriptor.class::cast)
+                    .filter(webhook -> webhook.isApplicable(EndpointType.CLOUD))
+                    .toList();
         }
 
     }
