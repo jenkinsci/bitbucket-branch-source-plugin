@@ -5,4 +5,7 @@
   <f:entry title="${%Strategy}" field="strategyId">
     <f:select default="1"/>
   </f:entry>
+   <f:entry title="${%Branches to always include}" field="branchesAlwaysIncludedRegex">
+      <f:textbox/>
+    </f:entry>
 </j:jelly>
