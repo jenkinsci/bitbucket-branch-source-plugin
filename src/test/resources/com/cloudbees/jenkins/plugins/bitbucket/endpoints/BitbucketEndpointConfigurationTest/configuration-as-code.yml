@@ -56,3 +56,29 @@ unclassified:
         displayName: "Example Inc"
         serverUrl: "http://bitbucket.example.com:8086"
         webhook:
+    - bitbucketCloudEndpoint:
+        enableCache: false
+        repositoriesCacheDuration: 180
+        teamCacheDuration: 360
+        webhook:
+          cloudWebhook:
+            enableHookSignature: false
+            manageHooks: false
+    - bitbucketServerEndpoint:
+        displayName: "server"
+        serverURL: "http://localhost:7990/bitbucket"
+        webhook:
+          serverWebhook:
+            credentialsId: "admin.basic.credentials"
+            enableHookSignature: true
+            endpointJenkinsRootURL: "http://host.docker.internal:8090/jenkins/"
+            hookSignatureCredentialsId: "datacenter.hook.signature"
+            manageHooks: true
+    - bitbucketServerEndpoint:
+        displayName: "server ngix"
+        serverURL: "https://localhost:1443/bitbucket"
+        webhook:
+          pluginWebhook:
+            credentialsId: "datacenter.certificate.credentials"
+            endpointJenkinsRootURL: "http://host.docker.internal:8090/jenkins/"
+            manageHooks: true

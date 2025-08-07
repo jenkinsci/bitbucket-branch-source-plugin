@@ -33,10 +33,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
+import java.util.logging.Logger;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents a {@link BitbucketCloudEndpoint} or a {@link BitbucketServerEndpoint}.
@@ -44,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.2.0
  */
 public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
-    protected final transient Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = Logger.getLogger(AbstractBitbucketEndpoint.class.getName());
 
     // Kept for backward XStream compatibility
     @Deprecated
@@ -80,7 +79,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Deprecated(since = "937.0.0", forRemoval = true)
     @Override
     public void setManageHooks(boolean manageHooks, String credentialsId) {
-        logger.warn("You are calling the deprecated method setManageHooks(), this method will be remove in future releases.");
+        logger.warning("You are calling the deprecated method setManageHooks(), this method will be remove in future releases.");
         if (webhook instanceof CloudWebhook) {
             webhook = new CloudWebhook(manageHooks, credentialsId);
         } else if (webhook instanceof ServerWebhook) {
@@ -99,7 +98,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @NonNull
     @Override
     public String getEndpointJenkinsRootURL() {
-        logger.warn("You are calling the deprecated method getEndpointJenkinsRootURL(), this method will be remove in future releases.");
+        logger.warning("You are calling the deprecated method getEndpointJenkinsRootURL(), this method will be remove in future releases.");
         if (webhook instanceof CloudWebhook cloud) {
             return cloud.getEndpointJenkinsRootURL();
         } else if (webhook instanceof ServerWebhook server) {
@@ -117,7 +116,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Deprecated(since = "937.0.0", forRemoval = true)
     @Override
     public final boolean isManageHooks() {
-        logger.warn("You are calling the deprecated method isManageHooks(), this method will be remove in future releases.");
+        logger.warning("You are calling the deprecated method isManageHooks(), this method will be remove in future releases.");
         if (webhook instanceof CloudWebhook cloud) {
             return cloud.isManageHooks();
         } else if (webhook instanceof ServerWebhook server) {
@@ -136,7 +135,7 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     @CheckForNull
     public final String getCredentialsId() {
-        logger.warn("You are calling the deprecated method getCredentialsId(), this method will be remove in future releases.");
+        logger.warning("You are calling the deprecated method getCredentialsId(), this method will be remove in future releases.");
         if (webhook instanceof CloudWebhook cloud) {
             return cloud.getCredentialsId();
         } else if (webhook instanceof ServerWebhook server) {

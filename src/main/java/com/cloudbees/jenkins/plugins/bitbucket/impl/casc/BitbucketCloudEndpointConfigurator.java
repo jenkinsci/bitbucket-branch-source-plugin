@@ -27,15 +27,17 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import hudson.Extension;
-import io.jenkins.plugins.casc.BaseConfigurator;
+import io.jenkins.plugins.casc.Attribute;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorException;
+import io.jenkins.plugins.casc.impl.configurators.DataBoundConfigurator;
+import io.jenkins.plugins.casc.model.CNode;
 import io.jenkins.plugins.casc.model.Mapping;
+import java.util.Set;
+import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
@@ -47,12 +49,11 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
  */
 @Extension
 @Restricted(NoExternalUse.class)
-public class BitbucketCloudEndpointConfigurator extends BaseConfigurator<BitbucketCloudEndpoint> {
-    private final static Logger logger = LoggerFactory.getLogger(BitbucketCloudEndpointConfigurator.class);
+public class BitbucketCloudEndpointConfigurator extends DataBoundConfigurator<BitbucketCloudEndpoint> {
+    private static final Logger logger = Logger.getLogger(BitbucketCloudEndpointConfigurator.class.getName());
 
-    @Override
-    public Class<BitbucketCloudEndpoint> getTarget() {
-        return BitbucketCloudEndpoint.class;
+    public BitbucketCloudEndpointConfigurator() {
+        super(BitbucketCloudEndpoint.class);
     }
 
     @Override
@@ -76,25 +77,38 @@ public class BitbucketCloudEndpointConfigurator extends BaseConfigurator<Bitbuck
     private BitbucketWebhook getWebhook(Mapping mapping) {
         boolean manageHooks = false;
         if (mapping.containsKey("manageHooks")) {
-            logger.warn("manageHooks is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            logger.warning("manageHooks is deprecated, replace from your CasC definition with the appropriate webhook definition.");
             manageHooks = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("manageHooks")));
         }
         String credentialsId = null;
         if (mapping.containsKey("credentialsId")) {
-            logger.warn("credentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            logger.warning("credentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
             credentialsId = mapping.getScalarValue("credentialsId");
         }
         boolean enableHookSignature = false;
         if (mapping.containsKey("enableHookSignature")) {
-            logger.warn("enableHookSignature is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            logger.warning("enableHookSignature is deprecated, replace from your CasC definition with the appropriate webhook definition.");
             enableHookSignature = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("enableHookSignature")));
         }
         String hookSignatureCredentialsId = null;
         if (mapping.containsKey("hookSignatureCredentialsId")) {
-            logger.warn("hookSignatureCredentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            logger.warning("hookSignatureCredentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
             hookSignatureCredentialsId = mapping.getScalarValue("hookSignatureCredentialsId");
         }
         return new CloudWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
     }
 
+    @Override
+    public CNode describe(BitbucketCloudEndpoint instance, ConfigurationContext context) throws Exception {
+        return super.describe(instance, context);
+    }
+
+    @Override
+    public Set<Attribute<BitbucketCloudEndpoint, ?>> describe() {
+        return super.describe();
+    }
+    @Override
+    public CNode describeStructure(BitbucketCloudEndpoint instance, ConfigurationContext context) {
+        return super.describeStructure(instance, context);
+    }
 }

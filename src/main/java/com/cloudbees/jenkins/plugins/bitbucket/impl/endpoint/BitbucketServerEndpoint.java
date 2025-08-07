@@ -35,6 +35,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
@@ -42,7 +43,6 @@ import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
@@ -230,8 +230,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
         @RequirePOST
         public Collection<? extends Descriptor<?>> getWebhookDescriptors() {
-            return Jenkins.get().getDescriptorList(BitbucketWebhook.class).stream()
-                    .map(BitbucketWebhookDescriptor.class::cast)
+            return ExtensionList.lookup(BitbucketWebhookDescriptor.class).stream()
                     .filter(webhook -> webhook.isApplicable(EndpointType.SERVER))
                     .toList();
         }

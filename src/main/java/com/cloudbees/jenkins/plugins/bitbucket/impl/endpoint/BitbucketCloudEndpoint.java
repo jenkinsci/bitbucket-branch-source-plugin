@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import java.util.Collection;
@@ -159,8 +160,7 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
 
         @RequirePOST
         public Collection<? extends Descriptor<?>> getWebhookDescriptors() {
-            return Jenkins.get().getDescriptorList(BitbucketWebhook.class).stream()
-                    .map(BitbucketWebhookDescriptor.class::cast)
+            return ExtensionList.lookup(BitbucketWebhookDescriptor.class).stream()
                     .filter(webhook -> webhook.isApplicable(EndpointType.CLOUD))
                     .toList();
         }
