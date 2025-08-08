@@ -38,7 +38,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
@@ -412,10 +411,8 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         public static FormValidation doCheckMirrorId(@QueryParameter String value,
                                                      @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
             if (!value.isEmpty()) {
-                BitbucketServerWebhookImplementation webhookImplementation =
-                    BitbucketServerEndpoint.findWebhookImplementation(serverURL);
-                if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
-                    return FormValidation.error("Mirror can only be used with native webhooks");
+                if (BitbucketServerEndpoint.supportsMirror(serverURL)) {
+                    return FormValidation.error("Mirror is not supported by the choosen webhooks");
                 }
             }
             return FormValidation.ok();
