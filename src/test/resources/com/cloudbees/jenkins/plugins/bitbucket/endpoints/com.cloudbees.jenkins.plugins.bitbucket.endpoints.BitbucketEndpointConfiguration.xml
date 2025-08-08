@@ -1,0 +1,37 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration plugin="cloudbees-bitbucket-branch-source@936.4.2-SNAPSHOT">
+  <endpoints class="java.util.concurrent.CopyOnWriteArrayList">
+    <com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint>
+      <manageHooks>false</manageHooks>
+      <enableHookSignature>false</enableHookSignature>
+      <enableCache>false</enableCache>
+      <teamCacheDuration>360</teamCacheDuration>
+      <repositoriesCacheDuration>180</repositoriesCacheDuration>
+    </com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint>
+    <com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+      <manageHooks>true</manageHooks>
+      <credentialsId>admin.basic.credentials</credentialsId>
+      <enableHookSignature>true</enableHookSignature>
+      <hookSignatureCredentialsId>datacenter.hook.signature</hookSignatureCredentialsId>
+      <bitbucketJenkinsRootUrl>http://host.docker.internal:8090/jenkins/</bitbucketJenkinsRootUrl>
+      <displayName>server</displayName>
+      <serverUrl>http://localhost:7990/bitbucket</serverUrl>
+      <webhookImplementation>NATIVE</webhookImplementation>
+      <serverVersion>VERSION_7</serverVersion>
+      <callCanMerge>true</callCanMerge>
+      <callChanges>true</callChanges>
+    </com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+    <com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+      <manageHooks>true</manageHooks>
+      <credentialsId>datacenter.certificate.credentials</credentialsId>
+      <enableHookSignature>false</enableHookSignature>
+      <bitbucketJenkinsRootUrl>http://host.docker.internal:8090/jenkins/</bitbucketJenkinsRootUrl>
+      <displayName>server ngix</displayName>
+      <serverUrl>https://localhost:1443/bitbucket</serverUrl>
+      <webhookImplementation>PLUGIN</webhookImplementation>
+      <serverVersion>VERSION_7</serverVersion>
+      <callCanMerge>true</callCanMerge>
+      <callChanges>true</callChanges>
+    </com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint>
+  </endpoints>
+</com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration>

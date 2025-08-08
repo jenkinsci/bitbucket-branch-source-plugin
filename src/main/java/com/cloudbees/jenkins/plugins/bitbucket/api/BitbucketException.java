@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 public class BitbucketException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
 
     public BitbucketException(String message, Throwable cause) {
         super(message, cause);
@@ -32,7 +33,5 @@ public class BitbucketException extends RuntimeException {
     public BitbucketException(String message) {
         super(message);
     }
-
-    private static final long serialVersionUID = 1L;
 
 }

@@ -35,7 +35,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessT
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
 import hudson.ProxyConfiguration;
 import java.io.InputStream;
@@ -269,7 +268,7 @@ class BitbucketServerAPIClientTest {
         j.jenkins.setProxy(proxyConfiguration);
 
         AtomicReference<HttpClientBuilder> builderReference = new AtomicReference<>();
-        try(BitbucketApi client = new BitbucketServerAPIClient(serverURL, "amuniz", "test-repos", mock(BitbucketUsernamePasswordAuthenticator.class), false, BitbucketServerWebhookImplementation.NATIVE) {
+        try(BitbucketApi client = new BitbucketServerAPIClient(serverURL, "amuniz", "test-repos", mock(BitbucketUsernamePasswordAuthenticator.class), false) {
             @Override
             protected void setClientProxyParams(HttpClientBuilder builder) {
                 builderReference.set(spy(builder));
