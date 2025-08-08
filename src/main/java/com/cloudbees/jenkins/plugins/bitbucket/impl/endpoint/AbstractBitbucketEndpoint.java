@@ -23,9 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhook;
@@ -34,8 +32,6 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 import java.util.logging.Logger;
-import jenkins.authentication.tokens.api.AuthenticationTokens;
-import jenkins.model.Jenkins;
 
 /**
  * Represents a {@link BitbucketCloudEndpoint} or a {@link BitbucketServerEndpoint}.
@@ -147,16 +143,6 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
         }
     }
 
-    /**
-     * Retrieves the {@link BitbucketAuthenticator} to use for auto-management of hooks.
-     *
-     * @return the authenticator or {@code null}.
-     */
-    @CheckForNull
-    public BitbucketAuthenticator authenticator() {
-        return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerURL()), credentials());
-    }
-
     protected Object readResolve() {
         if (webhook == null) {
             if ("NATIVE".equals(webhookImplementation)) {
@@ -173,11 +159,4 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
         return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public BitbucketEndpointDescriptor getDescriptor() {
-        return (BitbucketEndpointDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
-    }
 }

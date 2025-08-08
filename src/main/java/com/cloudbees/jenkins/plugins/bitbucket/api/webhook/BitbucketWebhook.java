@@ -23,12 +23,16 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookConfiguration;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.ExtensionPoint;
 import hudson.model.Describable;
+import java.util.Collection;
+import jenkins.model.Jenkins;
 
 /**
  * The implementation represents an a webhook configuration that can be used in
@@ -36,7 +40,7 @@ import hudson.model.Describable;
  *
  * @since 937.0.0
  */
-public interface BitbucketWebhook extends Describable<BitbucketWebhook>, ExtensionPoint {
+public interface BitbucketWebhook extends Describable<BitbucketWebhook> {
 
     /**
      * Name to use to describe the hook implementation.
@@ -72,5 +76,24 @@ public interface BitbucketWebhook extends Describable<BitbucketWebhook>, Extensi
      */
     @CheckForNull
     String getCredentialsId();
+
+    /**
+     * @see Describable#getDescriptor()
+     */
+    @Override
+    default BitbucketWebhookDescriptor getDescriptor() {
+        return (BitbucketWebhookDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
+    }
+
+    @NonNull
+    <T extends BitbucketWebHook> Collection<T> retrieveHooks(@NonNull String serverURL, @NonNull BitbucketWebhookClient client);
+    <T extends BitbucketWebHook> void registerHook(@NonNull T payload, @NonNull BitbucketWebhookClient client);
+    <T extends BitbucketWebHook> void updateHook(@NonNull T payload, @NonNull BitbucketWebhookClient client);
+    void removeHook(@NonNull BitbucketWebHook payload, @NonNull BitbucketWebhookClient client);
+
+    @NonNull
+    <T extends BitbucketWebHook> T buildPayload(@NonNull WebhookConfiguration hookConfig, @NonNull BitbucketSCMSource source);
+    <T extends BitbucketWebHook> boolean shouldUpdate(@NonNull T existing, @NonNull T newOne);
+
 
 }

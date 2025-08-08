@@ -165,10 +165,7 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
         }
     }
 
-    /*
-     * For test purpose.
-     */
-    StringCredentials lookupCredentials(@NonNull String signatureCredentialsId, @Nullable String serverURL) {
+    /* For test purpose */ StringCredentials lookupCredentials(@NonNull String signatureCredentialsId, @Nullable String serverURL) {
         return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), serverURL, signatureCredentialsId, StringCredentials.class);
     }
 

@@ -27,14 +27,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
 import hudson.Extension;
-import io.jenkins.plugins.casc.Attribute;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorException;
 import io.jenkins.plugins.casc.impl.configurators.DataBoundConfigurator;
-import io.jenkins.plugins.casc.model.CNode;
 import io.jenkins.plugins.casc.model.Mapping;
-import java.util.Set;
 import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -98,17 +95,4 @@ public class BitbucketCloudEndpointConfigurator extends DataBoundConfigurator<Bi
         return new CloudWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
     }
 
-    @Override
-    public CNode describe(BitbucketCloudEndpoint instance, ConfigurationContext context) throws Exception {
-        return super.describe(instance, context);
-    }
-
-    @Override
-    public Set<Attribute<BitbucketCloudEndpoint, ?>> describe() {
-        return super.describe();
-    }
-    @Override
-    public CNode describeStructure(BitbucketCloudEndpoint instance, ConfigurationContext context) {
-        return super.describeStructure(instance, context);
-    }
 }

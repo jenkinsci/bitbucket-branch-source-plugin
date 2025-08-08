@@ -31,7 +31,6 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
-import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -143,16 +142,10 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
     }
 
     @Override
+    @NonNull
     public String getDisplayName() {
         return Messages.ServerWebhookImplementation_displayName();
     }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public Descriptor<BitbucketWebhook> getDescriptor() {
-        return Jenkins.get().getDescriptorOrDie(getClass());
-    }
-
 
     public abstract static class AbstractBitbucketWebhookDescriptorImpl extends BitbucketWebhookDescriptor {
 

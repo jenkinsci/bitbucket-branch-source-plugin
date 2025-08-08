@@ -159,10 +159,12 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
         return StringUtils.equalsIgnoreCase(getServerURL(), endpoint.getServerURL());
     }
 
-    /**
+   /**
     *
     * @see Describable#getDescriptor()
     */
    @Override
-   BitbucketEndpointDescriptor getDescriptor();
+   default BitbucketEndpointDescriptor getDescriptor() {
+       return (BitbucketEndpointDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
+   }
 }
