@@ -86,7 +86,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
                 .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
                 .map(endpoint -> endpoint.getServerVersion())
                 .map(BitbucketServerVersion::valueOf)
-                .orElse(BitbucketServerVersion.VERSION_7);
+                .orElse(BitbucketServerVersion.getMinSupportedVersion());
     }
 
     /**
@@ -107,7 +107,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     /**
      * The server version for this endpoint.
      */
-    private BitbucketServerVersion serverVersion = BitbucketServerVersion.VERSION_7;
+    private BitbucketServerVersion serverVersion = BitbucketServerVersion.getMinSupportedVersion();
 
     /**
      * Default constructor.
@@ -157,7 +157,11 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
 
     @Nullable
     public String getServerVersion() {
-        return this.serverVersion != null ? this.serverVersion.name() : null;
+        if (serverVersion == null) {
+            // force value to the minimum supported version
+            this.serverVersion = BitbucketServerVersion.getMinSupportedVersion();
+        }
+        return this.serverVersion.name();
     }
 
     @DataBoundSetter
@@ -166,7 +170,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
             this.serverVersion = BitbucketServerVersion.valueOf(serverVersion);
         } catch (IllegalArgumentException e) {
             // use default
-            this.serverVersion = BitbucketServerVersion.VERSION_7;
+            this.serverVersion = BitbucketServerVersion.getMinSupportedVersion();
         }
     }
 
@@ -225,7 +229,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
             setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
         }
         if (serverVersion == null) {
-            serverVersion = BitbucketServerVersion.VERSION_7;
+            serverVersion = BitbucketServerVersion.getMinSupportedVersion();
         }
 
         return this;

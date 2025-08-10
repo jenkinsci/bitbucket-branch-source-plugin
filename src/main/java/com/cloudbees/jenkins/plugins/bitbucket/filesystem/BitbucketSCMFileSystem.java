@@ -31,10 +31,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -290,16 +288,8 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                 } else if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD) {
                     ref = "pull-requests/" + prHead.getId() + "/from";
                 } else if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.MERGE) {
-                    // Bitbucket server v7 doesn't have the `merge` ref for PRs
-                    // We don't return `ref` when working with v7
-                    // so that pipeline falls back to heavyweight checkout properly
-                    boolean ligthCheckout = BitbucketServerEndpoint.findServerVersion(serverURL) != BitbucketServerVersion.VERSION_7;
-                    if (ligthCheckout) {
-                        ref = "pull-requests/" + prHead.getId() + "/merge";
-                    } else {
-                        // returning null to fall back to heavyweight checkout
-                        return null;
-                    }
+                    // returning null to fall back to heavyweight checkout
+                    return null;
                 }
             } else if (head instanceof BitbucketTagSCMHead) {
                 ref = "tags/" + head.getName();

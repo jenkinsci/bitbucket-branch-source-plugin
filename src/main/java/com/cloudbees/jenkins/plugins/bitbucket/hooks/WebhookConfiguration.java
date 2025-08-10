@@ -70,7 +70,7 @@ public class WebhookConfiguration {
     /**
      * The list of events available in Bitbucket Data Center v8.x.
      */
-    private static final List<String> NATIVE_SERVER_EVENTS_v7 = Collections.unmodifiableList(Arrays.asList(
+    private static final List<String> NATIVE_SERVER_EVENTS_v8 = Collections.unmodifiableList(Arrays.asList(
             HookEventType.SERVER_REFS_CHANGED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(),
             HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
@@ -264,12 +264,12 @@ public class WebhookConfiguration {
         if (endpoint != null) {
             BitbucketServerVersion serverVersion = BitbucketServerVersion.valueOf(endpoint.getServerVersion());
             switch (serverVersion) {
-            case VERSION_7:
+            case VERSION_8:
             default:
-                return NATIVE_SERVER_EVENTS_v7;
+                return NATIVE_SERVER_EVENTS_v8;
             }
         }
-        return NATIVE_SERVER_EVENTS_v7;
+        return NATIVE_SERVER_EVENTS_v8;
     }
 
     private static String getCloudWebhookURL(String serverURL, String rootURL) {
