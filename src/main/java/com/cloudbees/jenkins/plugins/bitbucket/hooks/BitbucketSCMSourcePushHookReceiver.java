@@ -49,14 +49,16 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses.HttpResponseException;
 import org.kohsuke.stapler.StaplerRequest2;
 
-import static org.apache.commons.lang.StringUtils.trimToNull;
+import static org.apache.commons.lang3.StringUtils.lowerCase;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 /**
  * Process Bitbucket push and pull requests creations/updates hooks.
@@ -160,8 +162,8 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
         StringCredentials signatureCredentials = endpoint.hookSignatureCredentials();
         if (signatureCredentials != null) {
             String signatureHeader = req.getHeader("X-Hub-Signature");
-            String bitbucketAlgorithm = trimToNull(StringUtils.substringBefore(signatureHeader, "="));
-            String bitbucketSignature = trimToNull(StringUtils.substringAfter(signatureHeader, "="));
+            String bitbucketAlgorithm = trimToNull(substringBefore(signatureHeader, "="));
+            String bitbucketSignature = trimToNull(substringAfter(signatureHeader, "="));
             HmacAlgorithms algorithm = getAlgorithm(bitbucketAlgorithm);
             if (algorithm == null) {
                 return HttpResponses.error(HttpServletResponse.SC_FORBIDDEN, "Signature " + bitbucketAlgorithm + " not supported");
@@ -191,7 +193,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
 
     @CheckForNull
     private HmacAlgorithms getAlgorithm(String algorithm) {
-        switch (StringUtils.lowerCase(algorithm)) {
+        switch (lowerCase(algorithm)) {
         case "sha1":
             return HmacAlgorithms.HMAC_SHA_1;
         case "sha256":

@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 /**

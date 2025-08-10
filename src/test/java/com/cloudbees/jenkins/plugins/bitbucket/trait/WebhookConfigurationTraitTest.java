@@ -24,35 +24,30 @@
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
-import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookConfigurationTrait;
 import jenkins.scm.api.SCMHeadObserver;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
-public class WebhookConfigurationTraitTest {
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
-
+class WebhookConfigurationTraitTest {
     @Test
-    public void ignoredCommittersDefault()
-            throws Exception {
+    void ignoredCommittersDefault() {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), null);
+        assumeThat(ctx.webhookConfiguration().getCommittersToIgnore()).isNull();
+
         WebhookConfigurationTrait instance = new WebhookConfigurationTrait("");
         instance.decorateContext(ctx);
-        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), "");
+        assertThat(ctx.webhookConfiguration().getCommittersToIgnore()).isEmpty();
     }
 
     @Test
-    public void ignoredCommittersWithValue()
-            throws Exception {
+    void ignoredCommittersWithValue() {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), null);
+        assumeThat(ctx.webhookConfiguration().getCommittersToIgnore()).isNull();
+
         WebhookConfigurationTrait instance = new WebhookConfigurationTrait("jenkins");
         instance.decorateContext(ctx);
-        assertEquals(ctx.webhookConfiguration().getCommittersToIgnore(), "jenkins");
+        assertThat(ctx.webhookConfiguration().getCommittersToIgnore()).isEqualTo("jenkins");
     }
 }
