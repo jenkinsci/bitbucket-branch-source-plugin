@@ -62,7 +62,7 @@ import static org.mockito.Mockito.when;
 @WithJenkins
 class WebhookAutoRegisterListenerTest {
 
-    static JenkinsRule rule = new JenkinsRule();
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule r) {
@@ -94,9 +94,7 @@ class WebhookAutoRegisterListenerTest {
         scmSource.setOwner(getSCMSourceOwnerMock(scmSource));
 
         sut.onCreated(scmSource.getOwner());
-        HttpRequest request = BitbucketTestUtil.waitForRequest(client, req -> {
-            return "PUT".equals(req.getMethod()) && req.getPath().contains("webhooks");
-        }).get();
+        HttpRequest request = BitbucketTestUtil.waitForRequest(client, req -> "PUT".equals(req.getMethod()) && req.getPath().contains("webhooks")).get();
         assertThat(request).isNotNull()
             .isInstanceOf(HttpPut.class)
             .asInstanceOf(InstanceOfAssertFactories.type(HttpPut.class))

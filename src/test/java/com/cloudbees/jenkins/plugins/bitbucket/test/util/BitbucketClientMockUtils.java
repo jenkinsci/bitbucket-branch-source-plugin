@@ -48,7 +48,6 @@ import java.util.List;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -58,7 +57,7 @@ import static org.mockito.Mockito.when;
 public class BitbucketClientMockUtils {
 
     public static BitbucketCloudApiClient getAPIClientMock(boolean includePullRequests,
-            boolean includeWebHooks) throws IOException, InterruptedException {
+            boolean includeWebHooks) throws IOException {
         BitbucketCloudApiClient client = mock(BitbucketCloudApiClient.class);
 
         // mock branches
@@ -88,20 +87,17 @@ public class BitbucketClientMockUtils {
 
         // mock file exists
         when(client.getFile(any()))
-            .then(new Answer<SCMFile>() {
-                @Override
-                public SCMFile answer(InvocationOnMock invocation) throws Throwable {
-                    BitbucketSCMFile scmFile = invocation.getArgument(0);
-                    Type type;
-                    if ("markerfile.txt".equals(scmFile.getName())
-                            && (scmFile.getHash().equals("e851558f77c098d21af6bb8cc54a423f7cf12147")
-                                    || scmFile.getHash().equals("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"))) {
-                        type = Type.REGULAR_FILE;
-                    } else {
-                        type = Type.NONEXISTENT;
-                    }
-                    return new BitbucketSCMFile(scmFile, scmFile.getPath(), type, scmFile.getHash());
+            .then((Answer<SCMFile>) invocation -> {
+                BitbucketSCMFile scmFile = invocation.getArgument(0);
+                Type type;
+                if ("markerfile.txt".equals(scmFile.getName())
+                        && (scmFile.getHash().equals("e851558f77c098d21af6bb8cc54a423f7cf12147")
+                                || scmFile.getHash().equals("52fc8e220d77ec400f7fc96a91d2fd0bb1bc553a"))) {
+                    type = Type.REGULAR_FILE;
+                } else {
+                    type = Type.NONEXISTENT;
                 }
+                return new BitbucketSCMFile(scmFile, scmFile.getPath(), type, scmFile.getHash());
             });
 
         // Team discovering mocks
@@ -168,7 +164,7 @@ public class BitbucketClientMockUtils {
         return team;
     }
 
-    private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {
+    private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException {
         BitbucketCloudRepository repo = new BitbucketCloudRepository();
         repo.setFullName("amuniz/test-repos");
         repo.setPrivate(true);

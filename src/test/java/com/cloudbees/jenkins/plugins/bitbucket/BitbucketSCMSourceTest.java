@@ -117,7 +117,7 @@ class BitbucketSCMSourceTest {
     }
 
     @Test
-    void modern() throws Exception {
+    void modern() {
         BitbucketSCMSource instance = load(testName);
         assertThat(instance.getId()).isEqualTo("e4d8c11a-0d24-472f-b86b-4b017c160e9a");
         assertThat(instance.getServerUrl()).isEqualTo("https://bitbucket.org");
@@ -141,9 +141,7 @@ class BitbucketSCMSourceTest {
         GitSCM gitSCM = (GitSCM) scm;
         assertThat(gitSCM.getUserRemoteConfigs()).isNotEmpty()
             .element(0)
-            .satisfies(urc -> {
-                assertThat(urc.getUrl()).isEqualTo("https://bitbucket.org/amuniz/test-repos.git");
-            });
+            .satisfies(urc -> assertThat(urc.getUrl()).isEqualTo("https://bitbucket.org/amuniz/test-repos.git"));
     }
 
     @Test
@@ -177,7 +175,7 @@ class BitbucketSCMSourceTest {
     @Test
     void given__instance__when__setTraits_empty__then__traitsEmpty() {
         BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
-        instance.setTraits(Collections.<SCMSourceTrait>emptyList());
+        instance.setTraits(Collections.emptyList());
         assertThat(instance.getTraits()).isEmpty();
     }
 
@@ -226,7 +224,7 @@ class BitbucketSCMSourceTest {
     // properly loaded values (from XML fixtures) into the default Root URL lookup,
     // as coded and intended (config does exist, so we honor it).
     @Test
-    void bitbucketJenkinsRootUrl_emptyDefaulted() throws Exception {
+    void bitbucketJenkinsRootUrl_emptyDefaulted() {
         loadBEC(testName);
         BitbucketSCMSource instance = load(testName);
         assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo(ClassicDisplayURLProvider.get().getRoot());
@@ -248,19 +246,11 @@ class BitbucketSCMSourceTest {
         BitbucketSCMSource sut = new BitbucketSCMSource(client.getOwner(), client.getRepositoryName());
 
         assertThat(sut.fetchActions(null, TaskListener.NULL))
-            .anySatisfy(action -> {
-                assertThat(action).isInstanceOfSatisfying(BitbucketRepoAvatarMetadataAction.class, repoAction -> {
-                    assertThat(repoAction.getAvatarURL()).isNull();
-                });
-            });
+            .anySatisfy(action -> assertThat(action).isInstanceOfSatisfying(BitbucketRepoAvatarMetadataAction.class, repoAction -> assertThat(repoAction.getAvatarURL()).isNull()));
 
         sut.setTraits(List.of(new ShowBitbucketAvatarTrait()));
         assertThat(sut.fetchActions(null, TaskListener.NULL))
-            .anySatisfy(action -> {
-                assertThat(action).isInstanceOfSatisfying(BitbucketRepoAvatarMetadataAction.class, repoAction -> {
-                    assertThat(repoAction.getAvatarURL()).isNotNull();
-                });
-            });
+            .anySatisfy(action -> assertThat(action).isInstanceOfSatisfying(BitbucketRepoAvatarMetadataAction.class, repoAction -> assertThat(repoAction.getAvatarURL()).isNotNull()));
     }
 
     @Test

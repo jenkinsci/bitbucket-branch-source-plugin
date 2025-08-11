@@ -32,7 +32,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import hudson.model.listeners.ItemListener;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.logging.LogRecord;
@@ -41,12 +40,13 @@ import java.util.logging.SimpleFormatter;
 import jenkins.branch.BranchSource;
 import jenkins.branch.DefaultBranchPropertyStrategy;
 import jenkins.model.JenkinsLocationConfiguration;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 @WithJenkins
 class WebhooksAutoregisterTest {
@@ -104,7 +104,7 @@ class WebhooksAutoregisterTest {
         JenkinsLocationConfiguration.get().setUrl(j.getURL().toString().replace("localhost", "127.0.0.1"));
     }
 
-    private void waitForLogFileMessage(String string, RingBufferLogHandler logs) throws IOException, InterruptedException {
+    private void waitForLogFileMessage(String string, RingBufferLogHandler logs) throws InterruptedException {
         File rootDir = j.jenkins.getRootDir();
         synchronized (rootDir) {
             int limit = 0;
@@ -122,7 +122,7 @@ class WebhooksAutoregisterTest {
                 limit++;
             }
         }
-        Assertions.fail("Expected log not found: " + string);
+        fail("Expected log not found: " + string);
     }
 
     private RingBufferLogHandler createJULTestHandler() throws SecurityException {

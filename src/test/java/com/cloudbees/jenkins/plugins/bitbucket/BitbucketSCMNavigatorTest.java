@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithJenkins
 class BitbucketSCMNavigatorTest {
 
-    static JenkinsRule j;
+    private static JenkinsRule j;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
@@ -66,7 +66,7 @@ class BitbucketSCMNavigatorTest {
     }
 
     @Test
-    void modern() throws Exception {
+    void modern() {
         BitbucketSCMNavigator instance = load();
         assertThat(instance.id()).isEqualTo("https://bitbucket.org::cloudbeers");
         assertThat(instance.getRepoOwner()).isEqualTo("cloudbeers");
@@ -89,21 +89,15 @@ class BitbucketSCMNavigatorTest {
                 new WebhookRegistrationTrait(WebhookRegistration.DISABLE)));
 
         assertThat(instance.getTraits())
-            .anySatisfy(el -> {
-                assertThat(el).isInstanceOf(BranchDiscoveryTrait.class)
-                .asInstanceOf(InstanceOfAssertFactories.type(BranchDiscoveryTrait.class))
-                .satisfies(trait -> {
-                    assertThat(trait.isBuildBranch()).isTrue();
-                    assertThat(trait.isBuildBranchesWithPR()).isFalse();
-                });
-            })
-            .anySatisfy(el -> {
-                assertThat(el).isInstanceOf(WebhookRegistrationTrait.class)
-                .asInstanceOf(InstanceOfAssertFactories.type(WebhookRegistrationTrait.class))
-                .satisfies(trait -> {
-                    assertThat(trait.getMode()).isEqualTo(WebhookRegistration.DISABLE);
-                });
-            });
+            .anySatisfy(el -> assertThat(el).isInstanceOf(BranchDiscoveryTrait.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(BranchDiscoveryTrait.class))
+            .satisfies(trait -> {
+                assertThat(trait.isBuildBranch()).isTrue();
+                assertThat(trait.isBuildBranchesWithPR()).isFalse();
+            }))
+            .anySatisfy(el -> assertThat(el).isInstanceOf(WebhookRegistrationTrait.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(WebhookRegistrationTrait.class))
+            .satisfies(trait -> assertThat(trait.getMode()).isEqualTo(WebhookRegistration.DISABLE)));
     }
 
     @Test

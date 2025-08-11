@@ -24,13 +24,10 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
-import java.io.IOException;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.EntityDetails;
-import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.protocol.HttpContext;
@@ -64,7 +61,7 @@ class ExponentialBackOffRetryStrategyTest {
         try (BitbucketApi client = new BitbucketServerAPIClient("http://localhost:" + mockServer.getPort(),
                 "test",
                 "testRepos",
-                (BitbucketAuthenticator) null,
+            null,
                 false,
                 mock(BitbucketServerWebhookImplementation.class)) {
             @Override
@@ -84,7 +81,7 @@ class ExponentialBackOffRetryStrategyTest {
         private int retry = 0;
 
         @Override
-        public void process(HttpResponse response, EntityDetails entity, HttpContext context) throws HttpException, IOException {
+        public void process(HttpResponse response, EntityDetails entity, HttpContext context) {
             if (response.getCode() == 429) {
                 retry += 1;
             }

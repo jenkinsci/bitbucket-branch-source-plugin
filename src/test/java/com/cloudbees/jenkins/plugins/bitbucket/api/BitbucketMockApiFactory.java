@@ -34,6 +34,7 @@ import java.util.Objects;
 
 @Extension
 public class BitbucketMockApiFactory extends BitbucketApiFactory {
+
     private static final String NULL = "\u0000\u0000\u0000\u0000";
     private final Map<String, BitbucketApi> mocks = new HashMap<>();
 

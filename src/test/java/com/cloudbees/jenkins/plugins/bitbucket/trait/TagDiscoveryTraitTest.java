@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TagDiscoveryTraitTest {
     @Test
-    void given__discoverAll__when__appliedToContext__then__noFilter() throws Exception {
+    void given__discoverAll__when__appliedToContext__then__noFilter() {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
 
         TagDiscoveryTrait instance = new TagDiscoveryTrait();

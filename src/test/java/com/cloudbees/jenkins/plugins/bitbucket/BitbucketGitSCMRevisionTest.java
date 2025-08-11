@@ -77,7 +77,7 @@ class BitbucketGitSCMRevisionTest {
         BitbucketMockApiFactory.add(serverURL, getApiMockClient(serverURL));
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setServerUrl(serverURL);
-        source.setTraits(Arrays.<SCMSourceTrait> asList(trait));
+        source.setTraits(Arrays.asList(trait));
 
         TaskListener listener = BitbucketClientMockUtils.getTaskListenerMock();
         Set<SCMHead> heads = source.fetch(listener);

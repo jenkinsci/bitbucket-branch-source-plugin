@@ -79,42 +79,44 @@ import static org.mockito.Mockito.when;
  */
 @WithJenkins
 @WithGitSampleRepo
-public class BitbucketSCMSourceBuildTest {
+class BitbucketSCMSourceBuildTest {
 
     private static final String CLOUD_REPO_OWNER = "cloudbeers";
     private static final String REPO_NAME = "stunning-adventure";
     private static final String BRANCH_NAME = "master";
     // Test private key from ssh-credentials test case
     // https://github.com/jenkinsci/ssh-credentials-plugin/blob/343.v884f71d78167/src/test/resources/com/cloudbees/jenkins/plugins/sshcredentials/impl/BasicSSHUserPrivateKeyTest/readOldCredentials/credentials.xml
-    private static final String PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----\n" +
-        "MIIEpAIBAAKCAQEAu1r+HHzmpybc4iwoP5+44FjvcaMkNEWeGQZlmPwLx70XW8+8\n" +
-        "3d2BMLjhcw1zLsYG3FWpCyn8cB1OmjKiGjvnP5EBoAolvh3qOcWKyWlVGWGgs10B\n" +
-        "0Cgnd3OBXRPQd1cBdiQZmmeCrrH0OjQefYIF2WYN+F8iuNGraAaRsXLgITanjTb1\n" +
-        "6w1dnk+KLpU2J5G6kG1f/Qxl4pgny80S/3TktqoknbOrYDMOSA1Zdww39cpXJHp6\n" +
-        "feEs8tavC93rOsR2O4ZfVUCjTFAF5FtIdRv3LXY3Q5W/AyY1h45Wk6mMVnEluFjB\n" +
-        "aA+gzVAVaHFQfuhwoj4B7jWCmfHsPG1WmyK0YQIDAQABAoIBADt1qlXiMdV0mP9S\n" +
-        "okdm6maQ8xTugKvyODWa+R1vSFHQqhwiNr927+xFkI9SAm8iu8SrjuWTIqF2O57m\n" +
-        "WNnYjxB2dbyT29yVY+OH1P8M5cwTVsv1xYCJbdUUHEcs5akqPLWAyXteRHQq1+as\n" +
-        "6cxNOov/PonHr55WNH7kLtLRMV54jZ68nrEh5pWdabFa0f7d/ByIvYRJm7lpjtSp\n" +
-        "EBp5AseXzSg2EZP3HDPYYPDHK0tMPginz9+YuQCQFoMYAkVZoKFJGsWICktd5Uk7\n" +
-        "wveOJLOfMng1Iww6CEc871GcLn5LbafLWRxjZssK2Z1fC+pZYLLZPeKDMSxoRXm6\n" +
-        "PShUC1ECgYEA623dmwJNYfVRgAgOYhhcxzH4TAXUmUIpadEUjOkAhe3w/abDawFT\n" +
-        "9ianhqfhTjSZGBtUttcN40Vy+P4bsqfQKZ7p6KzrdR2zWjlYcICWhZDZPGmMxpMZ\n" +
-        "mUFhZXsLRVhn8qed8w1t6eju7S+t9satKIMC/KrhNsFzjrgbU9eC+m0CgYEAy7nN\n" +
-        "gMwQeGxAQSJr9H7eKkthnjMe77rLIAZEbDJhcwYVz+Iie/E4hjESQ+IuvXa1VawD\n" +
-        "O6cD0wWdOhH2McNdMNIbM4IOaO/TOaR5jfQwBWmb4iG2BZQWQQE/HUBnoJQWUhqm\n" +
-        "b+D+s4bHh4J+bs+ptgg9Sd9V+VxJBcu2QDmI6UUCgYBTb1pMJyK5hrFdiH1gcnXe\n" +
-        "+myetKpFrlby83AvCBxxWoQ/wKwc7hmNcOGKLVEB4E4pZvY83jZDx0cZyySRyjtR\n" +
-        "pMoM9ct0dBQt84jORiQSLeVvLZEAhv1ZfPxBdLvn1Y7xRkoJ60Z60Vxrnqwueva/\n" +
-        "Fr8mQIEUYLbNa53ztrrqeQKBgQCqOY4k2F3KwWjPA9wAZyFrZaEjdsOavBGNqK7z\n" +
-        "WQVj/umq0eDOfzgjqE0Cu7MiTFYoR5pL9bmUUVSWePuliQANEwH3f+xackmkGHIY\n" +
-        "0rhtTVkbEd/tuVb+6fO6lV4BJrufzvTS9sTbbPq7l6XdIVdE6o2LdDl6Kko5tYWL\n" +
-        "FIf5oQKBgQDLHK/9NTb3VHp+Qriu2Vp8Pnaw6YF6pETfgjyrH2ULSW/R07v+AECC\n" +
-        "sPr+d/hx2MQWp54HglY8lv98rOrRjMiRw1GVoXs+Ut9vkupmrpvzNE7ITl0tzBqD\n" +
-        "sroT/IHW2jKMD0v8kKLUnKCZYzlw0By7+RvJ8lgzHB0D71f6EC1UWg==\n" +
-        "-----END RSA PRIVATE KEY-----\n";
+    private static final String PRIVATE_KEY = """
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEpAIBAAKCAQEAu1r+HHzmpybc4iwoP5+44FjvcaMkNEWeGQZlmPwLx70XW8+8
+        3d2BMLjhcw1zLsYG3FWpCyn8cB1OmjKiGjvnP5EBoAolvh3qOcWKyWlVGWGgs10B
+        0Cgnd3OBXRPQd1cBdiQZmmeCrrH0OjQefYIF2WYN+F8iuNGraAaRsXLgITanjTb1
+        6w1dnk+KLpU2J5G6kG1f/Qxl4pgny80S/3TktqoknbOrYDMOSA1Zdww39cpXJHp6
+        feEs8tavC93rOsR2O4ZfVUCjTFAF5FtIdRv3LXY3Q5W/AyY1h45Wk6mMVnEluFjB
+        aA+gzVAVaHFQfuhwoj4B7jWCmfHsPG1WmyK0YQIDAQABAoIBADt1qlXiMdV0mP9S
+        okdm6maQ8xTugKvyODWa+R1vSFHQqhwiNr927+xFkI9SAm8iu8SrjuWTIqF2O57m
+        WNnYjxB2dbyT29yVY+OH1P8M5cwTVsv1xYCJbdUUHEcs5akqPLWAyXteRHQq1+as
+        6cxNOov/PonHr55WNH7kLtLRMV54jZ68nrEh5pWdabFa0f7d/ByIvYRJm7lpjtSp
+        EBp5AseXzSg2EZP3HDPYYPDHK0tMPginz9+YuQCQFoMYAkVZoKFJGsWICktd5Uk7
+        wveOJLOfMng1Iww6CEc871GcLn5LbafLWRxjZssK2Z1fC+pZYLLZPeKDMSxoRXm6
+        PShUC1ECgYEA623dmwJNYfVRgAgOYhhcxzH4TAXUmUIpadEUjOkAhe3w/abDawFT
+        9ianhqfhTjSZGBtUttcN40Vy+P4bsqfQKZ7p6KzrdR2zWjlYcICWhZDZPGmMxpMZ
+        mUFhZXsLRVhn8qed8w1t6eju7S+t9satKIMC/KrhNsFzjrgbU9eC+m0CgYEAy7nN
+        gMwQeGxAQSJr9H7eKkthnjMe77rLIAZEbDJhcwYVz+Iie/E4hjESQ+IuvXa1VawD
+        O6cD0wWdOhH2McNdMNIbM4IOaO/TOaR5jfQwBWmb4iG2BZQWQQE/HUBnoJQWUhqm
+        b+D+s4bHh4J+bs+ptgg9Sd9V+VxJBcu2QDmI6UUCgYBTb1pMJyK5hrFdiH1gcnXe
+        +myetKpFrlby83AvCBxxWoQ/wKwc7hmNcOGKLVEB4E4pZvY83jZDx0cZyySRyjtR
+        pMoM9ct0dBQt84jORiQSLeVvLZEAhv1ZfPxBdLvn1Y7xRkoJ60Z60Vxrnqwueva/
+        Fr8mQIEUYLbNa53ztrrqeQKBgQCqOY4k2F3KwWjPA9wAZyFrZaEjdsOavBGNqK7z
+        WQVj/umq0eDOfzgjqE0Cu7MiTFYoR5pL9bmUUVSWePuliQANEwH3f+xackmkGHIY
+        0rhtTVkbEd/tuVb+6fO6lV4BJrufzvTS9sTbbPq7l6XdIVdE6o2LdDl6Kko5tYWL
+        FIf5oQKBgQDLHK/9NTb3VHp+Qriu2Vp8Pnaw6YF6pETfgjyrH2ULSW/R07v+AECC
+        sPr+d/hx2MQWp54HglY8lv98rOrRjMiRw1GVoXs+Ut9vkupmrpvzNE7ITl0tzBqD
+        sroT/IHW2jKMD0v8kKLUnKCZYzlw0By7+RvJ8lgzHB0D71f6EC1UWg==
+        -----END RSA PRIVATE KEY-----
+        """;
 
-    public static JenkinsRule rule = new JenkinsRule();
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule r) {

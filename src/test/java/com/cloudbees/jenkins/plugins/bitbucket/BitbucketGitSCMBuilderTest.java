@@ -61,19 +61,18 @@ import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMSourceDefaults;
 import jenkins.plugins.git.MergeWithGitSCMExtension;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
-import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
-import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMBuilder;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
@@ -87,7 +86,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
-public class BitbucketGitSCMBuilderTest {
+@WithJenkins
+class BitbucketGitSCMBuilderTest {
+
     private static class SSHCheckoutTraitWrapper extends SSHCheckoutTrait {
         public SSHCheckoutTraitWrapper(String credentialsId) {
             super(credentialsId);
@@ -98,13 +99,18 @@ public class BitbucketGitSCMBuilderTest {
             super.decorateBuilder(builder);
         }
     }
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+
+    private static JenkinsRule j;
     private BitbucketSCMSource source;
     private WorkflowMultiBranchProject owner;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        j = rule;
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
         owner = j.createProject(WorkflowMultiBranchProject.class);
         source = new BitbucketSCMSource( "tester", "test-repo");
         owner.setSourcesList(Collections.singletonList(new BranchSource(source)));
@@ -113,19 +119,19 @@ public class BitbucketGitSCMBuilderTest {
         Credentials sshPrivateKeyCredential = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "user-key", "git",
                 new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource("privateKey"), null, null);
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
-                Arrays.<Credentials>asList(userPasswordCredential, sshPrivateKeyCredential)));
+                Arrays.asList(userPasswordCredential, sshPrivateKeyCredential)));
     }
 
-    @After
-    public void tearDown() throws IOException, InterruptedException {
+    @AfterEach
+    void tearDown() throws IOException, InterruptedException {
         SystemCredentialsProvider.getInstance()
-                .setDomainCredentialsMap(Collections.<Domain, List<Credentials>>emptyMap());
+                .setDomainCredentialsMap(Collections.emptyMap());
         owner.delete();
         BitbucketMockApiFactory.clear();
     }
 
     @Test
-    public void give_PR_revision_build_valid_GitSCM() throws Exception {
+    void give_PR_revision_build_valid_GitSCM() throws Exception {
         PullRequestSCMHead head = new PullRequestSCMHead("PR-1", "amuniz", "test-repo", "release/release-1",
                 PullRequestBranchType.BRANCH, "1", "Release/release 1",
                 new BranchSCMHead("master"), SCMHeadOrigin.DEFAULT,
@@ -158,14 +164,13 @@ public class BitbucketGitSCMBuilderTest {
             assertThat(candidates)
                 .hasSize(1)
                 .element(0)
-                .satisfies(rev -> {
-                    assertThat(rev.getSha1String()).isEqualTo("bf0e8b7962c024026ad01ae09d3a11732e26c0d4"); // source commit hash
-            });
+                .satisfies(rev ->
+                    assertThat(rev.getSha1String()).isEqualTo("bf0e8b7962c024026ad01ae09d3a11732e26c0d4"));
         });
     }
 
     @Test
-    public void given_server_endpoint_than_use_BitbucketServer_browser() throws Exception {
+    void given_server_endpoint_than_use_BitbucketServer_browser() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMRevision revision = new BitbucketGitSCMRevision(head, new BitbucketServerCommit("046d9a3c1532acf4cf08fe93235c00e4d673c1d2"));
@@ -184,7 +189,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given_cloud_endpoint_than_use_BitbucketWeb_browser() throws Exception {
+    void given_cloud_endpoint_than_use_BitbucketWeb_browser() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMRevision revision = new BitbucketGitSCMRevision(head, new BitbucketCloudCommit(null, null, "046d9a3c1532acf4cf08fe93235c00e4d673c1d2", null, null, null));
 
@@ -202,15 +207,15 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_branch_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_branch_rev_anon__when__build__then__scmBuilt() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
                 new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -252,15 +257,15 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_branch_rev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_branch_rev_userpass__when__build__then__scmBuilt() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
                 new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -302,14 +307,14 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_branch_rev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_branch_rev_userkey__when__build__then__scmBuilt() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
                 new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -351,12 +356,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_branch_norev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_branch_norev_anon__when__build__then__scmBuilt() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -387,12 +392,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_branch_norev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_branch_norev_userpass__when__build__then__scmBuilt() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -423,11 +428,11 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_branch_norev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_branch_norev_userkey__when__build__then__scmBuilt() throws Exception {
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -458,7 +463,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
@@ -466,8 +471,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -515,7 +520,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_rev_anon_with_extra_refSpec_when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_rev_anon_with_extra_refSpec_when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
@@ -524,8 +529,8 @@ public class BitbucketGitSCMBuilderTest {
                 head, revision, null);
         instance.withTrait(new RefSpecsSCMSourceTrait("+refs/heads/*:refs/remotes/@{remote}/*"));
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -581,7 +586,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_withMirror_branch_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_withMirror_branch_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
@@ -641,7 +646,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_rev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_rev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
@@ -649,8 +654,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -698,15 +703,15 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_rev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_rev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
                 new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -754,15 +759,15 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_rev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_rev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         AbstractGitSCMSource.SCMRevisionImpl revision =
                 new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
@@ -810,13 +815,13 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_norev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_norev_anon__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -853,13 +858,13 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_norev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_norev_userpass__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -896,12 +901,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_norev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_norev_userkey__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -938,12 +943,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_branch_norev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+    void given__server_branch_norev_userkey_different_clone_url__when__build__then__scmBuilt() {
         source.setServerUrl("https://www.bitbucket.test/web");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -980,7 +985,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -989,8 +994,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1032,7 +1037,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_userpass__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1041,8 +1046,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1084,7 +1089,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_userkey__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1092,8 +1097,8 @@ public class BitbucketGitSCMBuilderTest {
                         new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1135,7 +1140,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_anon_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_anon_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1144,8 +1149,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1193,7 +1198,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_userpass_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_userpass_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1202,8 +1207,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1251,7 +1256,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_userkey_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_userkey_sshtrait_anon__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1259,8 +1264,8 @@ public class BitbucketGitSCMBuilderTest {
                         new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1308,7 +1313,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_anon_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_anon_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1317,8 +1322,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1366,7 +1371,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_userpass_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_userpass_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1375,8 +1380,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1424,7 +1429,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_rev_userkey_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_rev_userkey_sshtrait_userkey__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -1433,8 +1438,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -1482,12 +1487,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -1518,12 +1523,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_norev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_norev_userpass__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -1554,11 +1559,11 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullHead_norev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullHead_norev_userkey__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -1589,7 +1594,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
@@ -1599,8 +1604,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -1648,7 +1653,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_withMirror_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_withMirror_pullHead_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
@@ -1658,8 +1663,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -1710,7 +1715,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHead(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
@@ -1720,8 +1725,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -1769,7 +1774,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_withMirror_pullHead_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_withMirror_pullHead_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHead(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
@@ -1832,7 +1837,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHead(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
@@ -1842,8 +1847,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
             head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
             instance.remote(), is("https://bitbucket.test"));
@@ -1902,7 +1907,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_withMirror_pullMerge_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_withMirror_pullMerge_defaultOrigin_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHead(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
@@ -1912,8 +1917,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
             head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
             instance.remote(), is("https://bitbucket.test"));
@@ -1976,7 +1981,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_rev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_rev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
@@ -1986,8 +1991,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -2035,7 +2040,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_rev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_rev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
@@ -2044,8 +2049,8 @@ public class BitbucketGitSCMBuilderTest {
                         new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -2093,7 +2098,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_rev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_rev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         PullRequestSCMRevision revision =
@@ -2102,8 +2107,8 @@ public class BitbucketGitSCMBuilderTest {
                         new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
@@ -2149,14 +2154,15 @@ public class BitbucketGitSCMBuilderTest {
         assertThat(revisions, hasSize(1));
         assertThat(revisions.iterator().next().getSha1String(), is("cafebabedeadbeefcafebabedeadbeefcafebabe"));
     }
+
     @Test
-    public void given__server_pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_norev_anon__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -2193,13 +2199,13 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_norev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_norev_userpass__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -2236,12 +2242,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_norev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_norev_userkey__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -2278,12 +2284,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullHead_norev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
+    void given__server_pullHead_norev_userkey__when_different_clone_url__build__then__scmBuilt() {
         source.setServerUrl("https://www.bitbucket.test/web");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -2320,7 +2326,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullMerge_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullMerge_rev_anon__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -2329,8 +2335,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -2392,7 +2398,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullMerge_rev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullMerge_rev_userpass__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -2401,8 +2407,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -2464,7 +2470,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullMerge_rev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullMerge_rev_userkey__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
                 new PullRequestSCMRevision(head, new AbstractGitSCMSource.SCMRevisionImpl(head.getTarget(),
@@ -2472,8 +2478,8 @@ public class BitbucketGitSCMBuilderTest {
                         new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.org"));
@@ -2535,12 +2541,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullMerge_norev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullMerge_norev_anon__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -2591,12 +2597,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullMerge_norev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullMerge_norev_userpass__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -2647,11 +2653,11 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__cloud_pullMerge_norev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__cloud_pullMerge_norev_userkey__when__build__then__scmBuilt() throws Exception {
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -2702,7 +2708,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_rev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_rev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
@@ -2712,8 +2718,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -2778,7 +2784,7 @@ public class BitbucketGitSCMBuilderTest {
 
 
     @Test
-    public void given__server_pullMerge_rev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_rev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
@@ -2788,8 +2794,8 @@ public class BitbucketGitSCMBuilderTest {
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, revision, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -2853,7 +2859,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_rev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_rev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
@@ -2862,8 +2868,8 @@ public class BitbucketGitSCMBuilderTest {
                         new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://bitbucket.test"));
@@ -2927,7 +2933,7 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_rev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_rev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         PullRequestSCMRevision revision =
@@ -2936,8 +2942,8 @@ public class BitbucketGitSCMBuilderTest {
                         new AbstractGitSCMSource.SCMRevisionImpl(head, "cafebabedeadbeefcafebabedeadbeefcafebabe"));
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, revision, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
-        assertThat(instance.revision(), is((SCMRevision) revision));
+        assertThat(instance.head(), is(head));
+        assertThat(instance.revision(), is(revision));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
                 instance.remote(), is("https://www.bitbucket.test/web"));
@@ -3001,13 +3007,13 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_norev_anon__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_norev_anon__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, null);
         assertThat(instance.credentialsId(), is(nullValue()));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -3061,13 +3067,13 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_norev_userpass__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_norev_userpass__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
                 head, null, "user-pass");
         assertThat(instance.credentialsId(), is("user-pass"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -3121,12 +3127,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_norev_userkey__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_norev_userkey__when__build__then__scmBuilt() {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",
@@ -3180,12 +3186,12 @@ public class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    public void given__server_pullMerge_norev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
+    void given__server_pullMerge_norev_userkey_different_clone_url__when__build__then__scmBuilt() {
         source.setServerUrl("https://www.bitbucket.test/web");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
         assertThat(instance.credentialsId(), is("user-key"));
-        assertThat(instance.head(), is((SCMHead) head));
+        assertThat(instance.head(), is(head));
         assertThat(instance.revision(), is(nullValue()));
         assertThat(instance.scmSource(), is(source));
         assertThat("expecting dummy value until clone links provided or withBitbucketRemote called",

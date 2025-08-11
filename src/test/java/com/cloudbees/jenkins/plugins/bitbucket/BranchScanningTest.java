@@ -62,7 +62,7 @@ import static org.mockito.Mockito.when;
 @WithJenkins
 class BranchScanningTest {
 
-    public static JenkinsRule rule = new JenkinsRule();
+    private static JenkinsRule rule;
 
     private static final String branchName = "branch1";
 
@@ -147,7 +147,7 @@ class BranchScanningTest {
     }
 
     private BitbucketSCMSource getBitbucketSCMSourceMock(boolean includePullRequests)
-            throws IOException, InterruptedException {
+            throws IOException {
         BitbucketCloudApiClient mock = BitbucketClientMockUtils.getAPIClientMock(includePullRequests, false);
 
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
@@ -187,7 +187,7 @@ class BranchScanningTest {
         return mocked;
     }
 
-    public final class SCMHeadObserverImpl extends SCMHeadObserver {
+    public static final class SCMHeadObserverImpl extends SCMHeadObserver {
 
         public List<String> branches = new ArrayList<>();
 

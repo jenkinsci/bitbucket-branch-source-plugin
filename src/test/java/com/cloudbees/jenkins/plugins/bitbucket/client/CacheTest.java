@@ -25,19 +25,19 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class CacheTest {
+class CacheTest {
 
     @Test
-    public void ensure_cache_hit() throws Exception {
+    void ensure_cache_hit() throws Exception {
         final Cache<String, Long> cache = new Cache<>(5, TimeUnit.HOURS);
         @SuppressWarnings("unchecked")
         final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
@@ -51,7 +51,7 @@ public class CacheTest {
     }
 
     @Test
-    public void ensure_expiration_works() throws Exception {
+    void ensure_expiration_works() throws Exception {
         final Cache<String, Long> cache = new Cache<>(1, TimeUnit.NANOSECONDS);
         @SuppressWarnings("unchecked")
         final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
@@ -66,7 +66,7 @@ public class CacheTest {
     }
 
     @Test
-    public void ensure_max_entries_works() throws Exception {
+    void ensure_max_entries_works() throws Exception {
         final Cache<String, Long> cache = new Cache<>(1, TimeUnit.NANOSECONDS, 10);
         @SuppressWarnings("unchecked")
         final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
