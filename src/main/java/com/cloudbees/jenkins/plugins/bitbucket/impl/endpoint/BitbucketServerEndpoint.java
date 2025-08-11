@@ -26,10 +26,10 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -73,11 +73,6 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     };
 
     @NonNull
-    public static boolean supportsMirror(String serverURL) {
-        return false; // depends on webhook type
-    }
-
-    @NonNull
     public static BitbucketServerVersion findServerVersion(String serverURL) {
         return BitbucketEndpointProvider
                 .lookupEndpoint(serverURL, BitbucketServerEndpoint.class)
@@ -108,7 +103,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * @param serverURL
      */
     public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverURL) {
-        this(displayName, serverURL, new ServerWebhook(false, null, false, null));
+        this(displayName, serverURL, new ServerWebhookConfiguration(false, null, false, null));
     }
 
     /**
@@ -119,7 +114,7 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * @param webhook implementation to work for this end-point.
      */
     @DataBoundConstructor
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverURL, @NonNull BitbucketWebhook webhook) {
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverURL, @NonNull BitbucketWebhookConfiguration webhook) {
         super(webhook);
         // use fixNull to silent nullability check
         this.serverURL = Util.fixNull(URLUtils.normalizeURL(serverURL));

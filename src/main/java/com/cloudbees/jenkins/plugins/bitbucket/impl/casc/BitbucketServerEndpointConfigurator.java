@@ -23,10 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.casc;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhook;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
 import hudson.Extension;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfigurationContext;
@@ -67,7 +67,7 @@ public class BitbucketServerEndpointConfigurator extends DataBoundConfigurator<B
         if (mapping.containsKey("serverVersion")) {
             serverVersion = mapping.getScalarValue("serverVersion");
         }
-        BitbucketWebhook webhook = getWebhook(mapping);
+        BitbucketWebhookConfiguration webhook = getWebhook(mapping);
         BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint(displayName, serverURL, webhook );
         if (serverVersion != null) {
             endpoint.setServerVersion(serverVersion);
@@ -85,7 +85,7 @@ public class BitbucketServerEndpointConfigurator extends DataBoundConfigurator<B
     }
 
     @SuppressWarnings("deprecation")
-    private BitbucketWebhook getWebhook(Mapping mapping) {
+    private BitbucketWebhookConfiguration getWebhook(Mapping mapping) {
         boolean manageHooks = false;
         if (mapping.containsKey("manageHooks")) {
             logger.warning("manageHooks is deprecated, replace from your CasC definition with the appropriate webhook definition.");
@@ -111,12 +111,12 @@ public class BitbucketServerEndpointConfigurator extends DataBoundConfigurator<B
             logger.warning("webhookImplementation is deprecated, replace from your CasC definition with the appropriate webhook definition.");
             webhookImplementation = mapping.getScalarValue("webhookImplementation");
         }
-        BitbucketWebhook webhook;
+        BitbucketWebhookConfiguration webhook;
         if ("NATIVE".equals(webhookImplementation)) {
-            webhook = new ServerWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+            webhook = new ServerWebhookConfiguration(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
         } else {
             // old default was plugin
-            webhook = new PluginWebhook(manageHooks, credentialsId);
+            webhook = new PluginWebhookConfiguration(manageHooks, credentialsId);
         }
         return webhook;
     }

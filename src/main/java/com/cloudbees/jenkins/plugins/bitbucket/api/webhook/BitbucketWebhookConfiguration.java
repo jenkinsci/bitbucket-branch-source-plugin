@@ -23,15 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
 
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookConfiguration;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Describable;
-import java.util.Collection;
 import jenkins.model.Jenkins;
 
 /**
@@ -40,7 +36,7 @@ import jenkins.model.Jenkins;
  *
  * @since 937.0.0
  */
-public interface BitbucketWebhook extends Describable<BitbucketWebhook> {
+public interface BitbucketWebhookConfiguration extends Describable<BitbucketWebhookConfiguration> {
 
     /**
      * Name to use to describe the hook implementation.
@@ -78,22 +74,30 @@ public interface BitbucketWebhook extends Describable<BitbucketWebhook> {
     String getCredentialsId();
 
     /**
+     * A custom Jenkins root URL to be used by the webhook implementation as
+     * part of the receiver callback endpoint.
+     * <p>
+     * The returned value must ensure that ends with a slash {@code /}
+     *
+     * @return the verbatim setting provided by endpoint configuration
+     */
+    @CheckForNull
+    String getEndpointJenkinsRootURL();
+
+    /**
+     * Returns the implementation that is in charge to apply this configuration to the Bitbucket.
+     * @param <T> the specific BitbucketWebhookIntegration subtype.
+     * @return a new instance of the integration, never return a singleton instance.
+     * FIXME think if returns class and in case instantiate via reflection and apply this configuration to ensure NO singleton.
+     */
+    <T extends BitbucketWebhookIntegration> T getIntegration();
+
+    /**
      * @see Describable#getDescriptor()
      */
     @Override
     default BitbucketWebhookDescriptor getDescriptor() {
         return (BitbucketWebhookDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
     }
-
-    @NonNull
-    <T extends BitbucketWebHook> Collection<T> retrieveHooks(@NonNull String serverURL, @NonNull BitbucketWebhookClient client);
-    <T extends BitbucketWebHook> void registerHook(@NonNull T payload, @NonNull BitbucketWebhookClient client);
-    <T extends BitbucketWebHook> void updateHook(@NonNull T payload, @NonNull BitbucketWebhookClient client);
-    void removeHook(@NonNull BitbucketWebHook payload, @NonNull BitbucketWebhookClient client);
-
-    @NonNull
-    <T extends BitbucketWebHook> T buildPayload(@NonNull WebhookConfiguration hookConfig, @NonNull BitbucketSCMSource source);
-    <T extends BitbucketWebHook> boolean shouldUpdate(@NonNull T existing, @NonNull T newOne);
-
 
 }

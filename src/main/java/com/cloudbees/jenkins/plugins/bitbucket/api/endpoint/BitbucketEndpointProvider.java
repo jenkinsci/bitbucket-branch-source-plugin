@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
@@ -104,14 +104,15 @@ public final class BitbucketEndpointProvider{
      *
      * @param serverURL the server url to check.
      * @return the verbatim setting provided by endpoint configuration
-     * @deprecated This is a value specific for of {@link BitbucketWebhook}
+     * @deprecated This value depends on the underline {@link BitbucketWebhookConfiguration} configured for the endpoint.
      */
     @Deprecated(since = "937.0.0", forRemoval = true)
     @NonNull
     public static String lookupEndpointJenkinsRootURL(@CheckForNull String serverURL) {
-        return lookupEndpoint(serverURL)
+        String jenkinsURL = lookupEndpoint(serverURL)
                 .map(BitbucketEndpoint::getEndpointJenkinsRootURL)
-                .orElse(Util.ensureEndsWith(URLUtils.normalizeURL(Util.fixEmptyAndTrim(DisplayURLProvider.get().getRoot())), "/"));
+                .orElse(URLUtils.normalizeURL(Util.fixEmptyAndTrim(DisplayURLProvider.get().getRoot())));
+        return Util.ensureEndsWith(jenkinsURL, "/");
     }
 
     /**

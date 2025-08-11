@@ -372,6 +372,11 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
                 public String get(String path) throws IOException {
                     return getRequest(path);
                 }
+
+                @Override
+                public void close() throws IOException {
+                    AbstractBitbucketApi.this.close();
+                }
             };
         } else {
             return null;

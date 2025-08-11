@@ -44,7 +44,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -291,14 +290,6 @@ public class BitbucketSCMSource extends SCMSource {
         } else {
             this.serverUrl = Util.fixNull(URLUtils.normalizeURL(serverURL));
         }
-    }
-
-    @Restricted(NoExternalUse.class)
-    @Deprecated(since = "936.4.0", forRemoval = true)
-    // expose if needed in BitbucketEndpointProvider, normally could be get from endpoint if not customized
-    @NonNull
-    public String getEndpointJenkinsRootURL() {
-        return BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(serverUrl);
     }
 
     @Override
@@ -1066,17 +1057,6 @@ public class BitbucketSCMSource extends SCMSource {
             }
             if (!BitbucketEndpointProvider.lookupEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
-            }
-            return FormValidation.ok();
-        }
-
-        @RequirePOST
-        public static FormValidation doCheckMirrorId(@QueryParameter String value,
-                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            if (!value.isEmpty()) {
-                if (BitbucketServerEndpoint.supportsMirror(serverURL)) {
-                    return FormValidation.error("Mirror can only be used with native webhooks");
-                }
             }
             return FormValidation.ok();
         }

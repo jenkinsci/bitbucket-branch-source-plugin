@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -80,11 +80,11 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     /**
      * Returns the webhook implementation that this endpoint is using to manage the incoming payload.
      *
-     * @return the {@link BitbucketWebhook} implementation selected for this endpoint.
+     * @return the {@link BitbucketWebhookConfiguration} implementation selected for this endpoint.
      * @since 937.0.0
      */
     @NonNull
-    BitbucketWebhook getWebhook();
+    BitbucketWebhookConfiguration getWebhook();
 
     /**
      * Returns {@code true} if and only if Jenkins is supposed to auto-manage

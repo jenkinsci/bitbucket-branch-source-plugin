@@ -25,7 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessorException;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.util.Secret;
 import java.io.IOException;
@@ -135,7 +135,7 @@ class AbstractWebhookProcessorTest {
     private BitbucketEndpoint getEndpoint() {
         String credentialsId = "hmac";
         BitbucketEndpoint endpoint = mock(BitbucketEndpoint.class);
-        when(endpoint.getWebhook()).thenReturn(new CloudWebhook(false, null, true, credentialsId));
+        when(endpoint.getWebhook()).thenReturn(new CloudWebhookConfiguration(false, null, true, credentialsId));
         return endpoint;
     }
 

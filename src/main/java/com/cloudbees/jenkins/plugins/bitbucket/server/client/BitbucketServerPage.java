@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * Bitbucket Server paginated resource
  */
-public class PagedApiResponse<V> {
+public class BitbucketServerPage<V> {
 
     private List<V> values;
 

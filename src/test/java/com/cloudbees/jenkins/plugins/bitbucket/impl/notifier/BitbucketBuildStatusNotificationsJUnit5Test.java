@@ -37,8 +37,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.notifier.BitbucketBuildStatusNotifications.JobCheckoutListener;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BitbucketBuildStatusNotificationsTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
@@ -281,7 +281,7 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
     @ParameterizedTest(name = "checkURL {0} against Bitbucket Server")
     @MethodSource("buildServerURLsProvider")
     void test_checkURL_for_Bitbucket_server(String jenkinsURL, String expectedExceptionMsg, @NonNull JenkinsRule r) {
-        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Bitbucket Server", "https://bitbucket.server", new ServerWebhook(true, "dummy"));
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint("Bitbucket Server", "https://bitbucket.server", new ServerWebhookConfiguration(true, "dummy"));
         BitbucketEndpointConfiguration.get().setEndpoints(List.of(endpoint));
 
         BitbucketApi client = getApiMockClient(endpoint.getServerURL());
@@ -316,7 +316,7 @@ class BitbucketBuildStatusNotificationsJUnit5Test {
     @ParameterizedTest(name = "checkURL {0} against Bitbucket Cloud")
     @MethodSource("buildCloudURLsProvider")
     void test_checkURL_for_Bitbucket_cloud(String jenkinsURL, String expectedExceptionMsg, @NonNull JenkinsRule r) {
-        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhook(true, "second"));
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhookConfiguration(true, "second"));
         BitbucketEndpointConfiguration.get().setEndpoints(List.of(endpoint));
 
         BitbucketApi client = getApiMockClient(endpoint.getServerURL());

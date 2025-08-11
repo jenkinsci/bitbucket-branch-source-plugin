@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -46,7 +46,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import static hudson.Util.fixEmptyAndTrim;
 
 @Restricted(NoExternalUse.class)
-public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
+public abstract class AbstractBitbucketWebhookConfiguration implements BitbucketWebhookConfiguration {
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -79,7 +79,7 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
      */
     private String endpointJenkinsRootURL;
 
-    protected AbstractBitbucketWebhook(boolean manageHooks, @CheckForNull String credentialsId,
+    protected AbstractBitbucketWebhookConfiguration(boolean manageHooks, @CheckForNull String credentialsId,
                                        boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? fixEmptyAndTrim(credentialsId) : null;
@@ -119,26 +119,17 @@ public abstract class AbstractBitbucketWebhook implements BitbucketWebhook {
         return enableHookSignature;
     }
 
+    @Override
     public String getEndpointJenkinsRootURL() {
         return endpointJenkinsRootURL;
     }
 
-    /**
-     * A Jenkins Server Root URL should end with a slash to use with webhooks.
-     *
-     * @param rootURL the original value of a URL which would be normalized
-     * @return the normalized URL ending with a slash
-     */
-    @NonNull
-    static String normalizeJenkinsRootURL(String rootURL) {
-        // This routine is not really BitbucketEndpointConfiguration
-        // specific, it just works on strings with some defaults:
-        return Util.ensureEndsWith(URLUtils.normalizeURL(fixEmptyAndTrim(rootURL)), "/");
-    }
-
     @DataBoundSetter
     public void setEndpointJenkinsRootURL(@CheckForNull String endpointJenkinsRootURL) {
-        this.endpointJenkinsRootURL = normalizeJenkinsRootURL(fixEmptyAndTrim(endpointJenkinsRootURL));
+        String url = fixEmptyAndTrim(endpointJenkinsRootURL);
+        if (url != null) {
+            this.endpointJenkinsRootURL = Util.ensureEndsWith(URLUtils.normalizeURL(url), "/");
+        }
     }
 
     @Override

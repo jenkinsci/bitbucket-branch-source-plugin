@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.hooks;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.MockRequest;
 import java.util.Collections;
@@ -99,7 +99,7 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void test_roundtrip() throws Exception {
-        CloudWebhook webhook = new CloudWebhook(false, null, true, "hmac");
+        CloudWebhookConfiguration webhook = new CloudWebhookConfiguration(false, null, true, "hmac");
         webhook.setEndpointJenkinsRootURL("https://jenkins.example.com");
         BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, webhook);
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);
@@ -147,7 +147,7 @@ class BitbucketSCMSourcePushHookReceiverTest {
 
     @Test
     void stop_process_when_multiple_processors_canHandle_incoming_webhook() throws Exception {
-        CloudWebhook webhook = new CloudWebhook(false, null, true, "hmac");
+        CloudWebhookConfiguration webhook = new CloudWebhookConfiguration(false, null, true, "hmac");
         webhook.setEndpointJenkinsRootURL("https://jenkins.example.com");
         BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, 0, 0, webhook);
         BitbucketEndpointConfiguration.get().updateEndpoint(endpoint);

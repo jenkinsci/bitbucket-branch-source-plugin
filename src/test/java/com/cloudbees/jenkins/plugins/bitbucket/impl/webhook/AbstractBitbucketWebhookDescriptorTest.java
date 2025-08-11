@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -67,7 +67,7 @@ class AbstractBitbucketWebhookDescriptorTest {
                     new Domain("cloud", "bb cloud", List.of(new HostnameSpecification("bitbucket.org", ""))),
                     List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass")))
             );
-        ListBoxModel result = new CloudWebhook.DescriptorImpl()
+        ListBoxModel result = new CloudWebhookConfiguration.DescriptorImpl()
                 .doFillCredentialsIdItems(null/*, "http://bitbucket.example.com"*/);
         assertThat(result).isEmpty();
     }
@@ -79,7 +79,7 @@ class AbstractBitbucketWebhookDescriptorTest {
                     new Domain("cloud", "bb cloud", List.of(new HostnameSpecification("bitbucket.org", ""))),
                     List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass")))
             );
-        ListBoxModel result = new CloudWebhook.DescriptorImpl()
+        ListBoxModel result = new CloudWebhookConfiguration.DescriptorImpl()
                 .doFillCredentialsIdItems(null /*, "https://bitbucket.org"*/);
         assertThat(result).hasSize(1);
     }
@@ -92,7 +92,7 @@ class AbstractBitbucketWebhookDescriptorTest {
                     new Domain("cloud", "bb cloud", domainSpecifications),
                     List.of(new StringCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", Secret.fromString("pass"))))
             );
-        ListBoxModel result = new CloudWebhook.DescriptorImpl()
+        ListBoxModel result = new CloudWebhookConfiguration.DescriptorImpl()
                 .doFillHookSignatureCredentialsIdItems(null /*, "https://bitbucket.org"*/);
         assertThat(result).hasSize(1);
     }

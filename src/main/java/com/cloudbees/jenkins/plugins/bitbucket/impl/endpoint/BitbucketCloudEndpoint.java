@@ -25,10 +25,10 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -73,11 +73,11 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * Default constructor.
      */
     public BitbucketCloudEndpoint() {
-        this(false, 0, 0, new CloudWebhook(false, null, false, null));
+        this(false, 0, 0, new CloudWebhookConfiguration(false, null, false, null));
     }
 
     @DataBoundConstructor
-    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, @NonNull BitbucketWebhook webhook) {
+    public BitbucketCloudEndpoint(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration, @NonNull BitbucketWebhookConfiguration webhook) {
         super(webhook);
         this.enableCache = enableCache;
         this.teamCacheDuration = teamCacheDuration;

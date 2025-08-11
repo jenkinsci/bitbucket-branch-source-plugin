@@ -27,7 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 
-public class DummyBitbucketWebhook extends AbstractBitbucketWebhook {
+public class DummyBitbucketWebhook extends AbstractBitbucketWebhookConfiguration {
 
     DummyBitbucketWebhook(boolean manageHooks, String credentialsId) {
         super(manageHooks, credentialsId, false, null);
@@ -48,6 +48,11 @@ public class DummyBitbucketWebhook extends AbstractBitbucketWebhook {
     @Override
     public String getEndpointJenkinsRootURL() {
         return "http://master.example.com";
+    }
+
+    @Override
+    public DummyWebhookIntegration getIntegration() {
+        return new DummyWebhookIntegration();
     }
 
     @Extension // TestExtension could be used only for embedded classes

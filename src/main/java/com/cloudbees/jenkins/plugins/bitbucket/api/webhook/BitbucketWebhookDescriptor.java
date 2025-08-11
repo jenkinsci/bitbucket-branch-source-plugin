@@ -28,11 +28,11 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Descriptor;
 
 /**
- * {@link Descriptor} for {@link BitbucketWebhook}s.
+ * {@link Descriptor} for {@link BitbucketWebhookConfiguration}s.
  *
  * @since 937.0.0
  */
-public abstract class BitbucketWebhookDescriptor extends Descriptor<BitbucketWebhook> {
+public abstract class BitbucketWebhookDescriptor extends Descriptor<BitbucketWebhookConfiguration> {
 
     /**
      * Returns if this implementation can supports and can be installed by the

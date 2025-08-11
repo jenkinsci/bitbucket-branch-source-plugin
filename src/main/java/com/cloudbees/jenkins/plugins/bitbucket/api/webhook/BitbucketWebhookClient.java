@@ -4,7 +4,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 
-public interface BitbucketWebhookClient {
+public interface BitbucketWebhookClient extends AutoCloseable {
 
     String post(@NonNull String path, @CheckForNull String payload) throws IOException ;
 
@@ -14,4 +14,7 @@ public interface BitbucketWebhookClient {
 
     @NonNull
     String get(@NonNull String path) throws IOException ;
+
+    @Override
+    void close() throws IOException;
 }

@@ -32,11 +32,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookIntegration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Item;
 import hudson.model.listeners.ItemListener;
 import hudson.triggers.SafeTimerTask;
@@ -54,7 +57,10 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+import jenkins.scm.api.trait.SCMSourceTrait;
+import jenkins.scm.api.trait.SCMTrait;
 import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
  * {@link SCMSourceOwner} item listener that traverse the list of {@link SCMSource} and register
@@ -145,7 +151,8 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 .withTraits(source.getTraits())
                 .webhookRegistration();
             if (registration == WebhookRegistration.DISABLE) {
-                logger.log(Level.INFO, "Registering hook disable by project configuration for {0}/{1}", new Object[] { source.getRepoOwner(), source.getRepository() });
+                logger.log(Level.INFO, "Registering hook disabled by project configuration for {0}/{1}",
+                        new Object[] { source.getRepoOwner(), source.getRepository() });
             } else {
                 registerHook(source, endpoint);
             }
@@ -157,26 +164,43 @@ public class WebhookAutoRegisterListener extends ItemListener {
         if (bitbucket == null) {
             return;
         }
-        BitbucketWebhookClient webhookClient = bitbucket.adapt(BitbucketWebhookClient.class);
 
-        BitbucketWebhook webhook = endpoint.getWebhook();
-        Collection<BitbucketWebHook> webhooks = webhook.retrieveHooks(endpoint.getServerURL(), webhookClient);
-
-        BitbucketWebHook existingHook = webhooks.stream()
-                .findFirst()
-                .orElse(null);
-
-        WebhookConfiguration hookConfig = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(source.getTraits())
-                .webhookConfiguration();
-        BitbucketWebHook payload = webhook.buildPayload(hookConfig, source);
-        if (existingHook == null) {
-            logger.log(Level.INFO, "Registering hook for {0}/{1}", new Object[] { source.getRepoOwner(), source.getRepository() });
-            webhook.registerHook(payload, webhookClient);
-        } else if (webhook.shouldUpdate(existingHook, payload)) {
-            logger.log(Level.INFO, "Updating hook for {0}/{1}", new Object[] { source.getRepoOwner(), source.getRepository() });
-            webhook.updateHook(payload, webhookClient);
+        BitbucketWebhookIntegration integration = buildWebhookIntegration(source, endpoint);
+        try (BitbucketWebhookClient webhookClient = bitbucket.adapt(BitbucketWebhookClient.class)) {
+            integration.register(webhookClient);
         }
+    }
+
+    private BitbucketWebhookIntegration buildWebhookIntegration(BitbucketSCMSource source, BitbucketEndpoint endpoint) {
+        BitbucketWebhookConfiguration webhookConfig = endpoint.getWebhook();
+
+        BitbucketWebhookIntegration integration = webhookConfig.getIntegration();
+        // setup the integration with base required information
+        integration.setServerURL(endpoint.getServerURL());
+        integration.setRepositoryOwner(source.getRepoOwner());
+        integration.setRepositoryName(source.getRepository());
+
+        String callbackRootURL = getCallbackRootURL(webhookConfig);
+        // this is the base callback URL that webhook usually should call to be processed
+        String callbackURL = callbackRootURL + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
+        integration.setCallbackURL(callbackURL);
+
+        // setup traits extra informations
+        for (Class<? extends SCMSourceTrait> traitClazz : integration.supportedTraits()) {
+            SCMSourceTrait trait = SCMTrait.find(source.getTraits(), traitClazz);
+            if (trait != null) {
+                integration.apply(trait);
+            }
+        }
+        return integration;
+    }
+
+    private String getCallbackRootURL(BitbucketWebhookConfiguration webhookConfig) {
+        String callbackRootURL = webhookConfig.getEndpointJenkinsRootURL();
+        if (callbackRootURL == null) {
+            callbackRootURL = Util.ensureEndsWith(URLUtils.normalizeURL(Util.fixEmptyAndTrim(DisplayURLProvider.get().getRoot())), "/");
+        }
+        return callbackRootURL;
     }
 
     private void removeHooks(SCMSourceOwner owner) throws IOException {
@@ -187,21 +211,28 @@ public class WebhookAutoRegisterListener extends ItemListener {
             if (endpoint == null) {
                 continue;
             }
-            BitbucketApi bitbucket = getClientBySource(source, endpoint);
-            if (bitbucket != null) {
-                BitbucketWebhookClient webhookClient = bitbucket.adapt(BitbucketWebhookClient.class);
+            BitbucketApi client = getClientBySource(source, endpoint);
+            if (client != null) {
+                try (BitbucketWebhookClient webhookClient = client.adapt(BitbucketWebhookClient.class)) {
+                    if (webhookClient == null) {
+                        continue;
+                    }
 
-                BitbucketWebhook webhook = endpoint.getWebhook();
-                Collection<BitbucketWebHook> webhooks = webhook.retrieveHooks(endpoint.getServerURL(), webhookClient);
+                    BitbucketWebhookIntegration integration = buildWebhookIntegration(source, endpoint);
+                    Collection<BitbucketWebHook> webhooks = integration.retrieve(webhookClient)
+                            .stream()
+                            .filter(hook -> hook.getUrl().startsWith(getCallbackRootURL(endpoint.getWebhook())))
+                            .toList();
 
-                for (BitbucketWebHook hook : webhooks) {
-                    if (hook != null && !isUsedSomewhereElse(owner, source.getRepoOwner(), source.getRepository())) {
-                        logger.log(Level.INFO, "Removing hook for {0}/{1}",
-                                new Object[] { source.getRepoOwner(), source.getRepository() });
-                        webhook.removeHook(hook, webhookClient);
-                    } else {
-                        logger.log(Level.FINE, "NOT removing hook for {0}/{1} because does not exists or its used in other project",
-                                new Object[] { source.getRepoOwner(), source.getRepository() });
+                    for (BitbucketWebHook hook : webhooks) {
+                        if (hook != null && !isUsedSomewhereElse(owner, source.getRepoOwner(), source.getRepository())) {
+                            logger.log(Level.INFO, "Removing hook for {0}/{1}",
+                                    new Object[] { source.getRepoOwner(), source.getRepository() });
+                            integration.remove(hook, webhookClient);
+                        } else {
+                            logger.log(Level.FINE, "NOT removing hook for {0}/{1} because does not exists or its used in other project",
+                                    new Object[] { source.getRepoOwner(), source.getRepository() });
+                        }
                     }
                 }
             }

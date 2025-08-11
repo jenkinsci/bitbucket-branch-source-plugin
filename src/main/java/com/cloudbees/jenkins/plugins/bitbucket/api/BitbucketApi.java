@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -193,7 +193,7 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
-     * @deprecated Use the {@link BitbucketWebhook} implementation to gather
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
      *             information about webhook.
      */
     @Deprecated(since = "937.0.0", forRemoval = true)
@@ -205,7 +205,7 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
-     * @deprecated Use the {@link BitbucketWebhook} implementation to gather
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
      *             information about webhook.
      */
     @Deprecated(since = "937.0.0", forRemoval = true)
@@ -217,7 +217,7 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
-     * @deprecated Use the {@link BitbucketWebhook} implementation to gather
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
      *             information about webhook.
      */
     @Deprecated(since = "937.0.0", forRemoval = true)
@@ -229,7 +229,7 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @return the list of webhooks registered in the repository.
      * @throws IOException if there was a network communications error.
-     * @deprecated Use the {@link BitbucketWebhook} implementation to gather
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
      *             information about webhook.
      */
     @Deprecated(since = "937.0.0", forRemoval = true)

@@ -24,10 +24,10 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhook;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
@@ -56,15 +56,15 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     private String webhookImplementation;
 
     @NonNull
-    private BitbucketWebhook webhook;
+    private BitbucketWebhookConfiguration webhook;
 
-    AbstractBitbucketEndpoint(@NonNull BitbucketWebhook webhook) {
+    AbstractBitbucketEndpoint(@NonNull BitbucketWebhookConfiguration webhook) {
         this.webhook = Objects.requireNonNull(webhook);
     }
 
     @NonNull
     @Override
-    public BitbucketWebhook getWebhook() {
+    public BitbucketWebhookConfiguration getWebhook() {
         return webhook;
     }
 
@@ -76,12 +76,12 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     public void setManageHooks(boolean manageHooks, String credentialsId) {
         logger.warning("You are calling the deprecated method setManageHooks(), this method will be remove in future releases.");
-        if (webhook instanceof CloudWebhook) {
-            webhook = new CloudWebhook(manageHooks, credentialsId);
-        } else if (webhook instanceof ServerWebhook) {
-            webhook = new ServerWebhook(manageHooks, credentialsId);
-        } else if (webhook instanceof PluginWebhook) {
-            webhook = new PluginWebhook(manageHooks, credentialsId);
+        if (webhook instanceof CloudWebhookConfiguration) {
+            webhook = new CloudWebhookConfiguration(manageHooks, credentialsId);
+        } else if (webhook instanceof ServerWebhookConfiguration) {
+            webhook = new ServerWebhookConfiguration(manageHooks, credentialsId);
+        } else if (webhook instanceof PluginWebhookConfiguration) {
+            webhook = new PluginWebhookConfiguration(manageHooks, credentialsId);
         } else {
             throw new UnsupportedOperationException("This method does not support webhook of type " + webhook.getClass().getName());
         }
@@ -95,11 +95,11 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     public String getEndpointJenkinsRootURL() {
         logger.warning("You are calling the deprecated method getEndpointJenkinsRootURL(), this method will be remove in future releases.");
-        if (webhook instanceof CloudWebhook cloud) {
+        if (webhook instanceof CloudWebhookConfiguration cloud) {
             return cloud.getEndpointJenkinsRootURL();
-        } else if (webhook instanceof ServerWebhook server) {
+        } else if (webhook instanceof ServerWebhookConfiguration server) {
             return server.getEndpointJenkinsRootURL();
-        } else if (webhook instanceof PluginWebhook plugin) {
+        } else if (webhook instanceof PluginWebhookConfiguration plugin) {
             return plugin.getEndpointJenkinsRootURL();
         } else {
             throw new UnsupportedOperationException("This method does not support webhook of type " + webhook.getClass().getName());
@@ -113,11 +113,11 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @Override
     public final boolean isManageHooks() {
         logger.warning("You are calling the deprecated method isManageHooks(), this method will be remove in future releases.");
-        if (webhook instanceof CloudWebhook cloud) {
+        if (webhook instanceof CloudWebhookConfiguration cloud) {
             return cloud.isManageHooks();
-        } else if (webhook instanceof ServerWebhook server) {
+        } else if (webhook instanceof ServerWebhookConfiguration server) {
             return server.isManageHooks();
-        } else if (webhook instanceof PluginWebhook plugin) {
+        } else if (webhook instanceof PluginWebhookConfiguration plugin) {
             return plugin.isManageHooks();
         } else {
             throw new UnsupportedOperationException("This deprecated method does not support webhook of type " + webhook.getClass().getName());
@@ -132,11 +132,11 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     @CheckForNull
     public final String getCredentialsId() {
         logger.warning("You are calling the deprecated method getCredentialsId(), this method will be remove in future releases.");
-        if (webhook instanceof CloudWebhook cloud) {
+        if (webhook instanceof CloudWebhookConfiguration cloud) {
             return cloud.getCredentialsId();
-        } else if (webhook instanceof ServerWebhook server) {
+        } else if (webhook instanceof ServerWebhookConfiguration server) {
             return server.getCredentialsId();
-        } else if (webhook instanceof PluginWebhook plugin) {
+        } else if (webhook instanceof PluginWebhookConfiguration plugin) {
             return plugin.getCredentialsId();
         } else {
             throw new UnsupportedOperationException("This deprecated method does not support webhook of type " + webhook.getClass().getName());
@@ -146,14 +146,14 @@ public abstract class AbstractBitbucketEndpoint implements BitbucketEndpoint {
     protected Object readResolve() {
         if (webhook == null) {
             if ("NATIVE".equals(webhookImplementation)) {
-                webhook = new ServerWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
-                ((ServerWebhook) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
+                webhook = new ServerWebhookConfiguration(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+                ((ServerWebhookConfiguration) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
             } else if ("PLUGIN".equals(webhookImplementation)) {
-                webhook = new PluginWebhook(manageHooks, credentialsId);
-                ((PluginWebhook) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
+                webhook = new PluginWebhookConfiguration(manageHooks, credentialsId);
+                ((PluginWebhookConfiguration) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
             } else {
-                webhook = new CloudWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
-                ((CloudWebhook) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
+                webhook = new CloudWebhookConfiguration(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+                ((CloudWebhookConfiguration) webhook).setEndpointJenkinsRootURL(bitbucketJenkinsRootUrl);
             }
         }
         return this;

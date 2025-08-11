@@ -713,7 +713,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
             @Override
             public java.lang.reflect.Type getRawType() {
-                return PagedApiResponse.class;
+                return BitbucketServerPage.class;
             }
 
             @Override
@@ -729,7 +729,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
         String url = null;
         try {
-            TypeReference<PagedApiResponse<V>> type = new TypeReference<PagedApiResponse<V>>(){
+            TypeReference<BitbucketServerPage<V>> type = new TypeReference<BitbucketServerPage<V>>(){
                 @Override
                 public java.lang.reflect.Type getType() {
                     return parameterizedType;
@@ -738,7 +738,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
             List<V> resources = new ArrayList<>();
 
-            PagedApiResponse<V> page;
+            BitbucketServerPage<V> page;
             Integer pageNumber = 0;
             Integer limit = DEFAULT_PAGE_LIMIT;
             do {
@@ -761,10 +761,10 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     }
 
-    private <V> V getResource(UriTemplate template, Class<? extends PagedApiResponse<V>> clazz, Predicate<V> filter) throws IOException {
+    private <V> V getResource(UriTemplate template, Class<? extends BitbucketServerPage<V>> clazz, Predicate<V> filter) throws IOException {
         String url = null;
         try {
-            PagedApiResponse<V> page;
+            BitbucketServerPage<V> page;
             Integer pageNumber = 0;
             Integer limit = DEFAULT_PAGE_LIMIT;
             do {

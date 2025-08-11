@@ -23,9 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.casc;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
 import hudson.Extension;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfigurationContext;
@@ -67,11 +67,11 @@ public class BitbucketCloudEndpointConfigurator extends DataBoundConfigurator<Bi
         if (mapping.containsKey("repositoriesCacheDuration")) {
             repositoriesCacheDuration = Integer.parseInt(mapping.getScalarValue("repositoriesCacheDuration"));
         }
-        BitbucketWebhook webhook = getWebhook(mapping);
+        BitbucketWebhookConfiguration webhook = getWebhook(mapping);
         return new BitbucketCloudEndpoint(enableCache, teamCacheDuration, repositoriesCacheDuration, webhook);
     }
 
-    private BitbucketWebhook getWebhook(Mapping mapping) {
+    private BitbucketWebhookConfiguration getWebhook(Mapping mapping) {
         boolean manageHooks = false;
         if (mapping.containsKey("manageHooks")) {
             logger.warning("manageHooks is deprecated, replace from your CasC definition with the appropriate webhook definition.");
@@ -92,7 +92,7 @@ public class BitbucketCloudEndpointConfigurator extends DataBoundConfigurator<Bi
             logger.warning("hookSignatureCredentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
             hookSignatureCredentialsId = mapping.getScalarValue("hookSignatureCredentialsId");
         }
-        return new CloudWebhook(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+        return new CloudWebhookConfiguration(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
     }
 
 }

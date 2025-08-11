@@ -25,14 +25,14 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessorException;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketType;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhook;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -136,13 +136,13 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
 
     @Override
     public void verifyPayload(@NonNull Map<String, String> headers, @NonNull String body, @NonNull BitbucketEndpoint endpoint) throws BitbucketWebhookProcessorException {
-        BitbucketWebhook webhook = endpoint.getWebhook();
+        BitbucketWebhookConfiguration webhook = endpoint.getWebhook();
         boolean signatureEnabled = false;
         String signatureCredentialsId = null;
-        if (webhook instanceof CloudWebhook cloud) {
+        if (webhook instanceof CloudWebhookConfiguration cloud) {
             signatureEnabled = cloud.isEnableHookSignature();
             signatureCredentialsId = cloud.getHookSignatureCredentialsId();
-        } else if (webhook instanceof ServerWebhook server) {
+        } else if (webhook instanceof ServerWebhookConfiguration server) {
             signatureEnabled = server.isEnableHookSignature();
             signatureCredentialsId = server.getHookSignatureCredentialsId();
         } else {
