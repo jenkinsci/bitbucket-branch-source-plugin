@@ -27,33 +27,33 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class BitbucketServerPushEventTest {
-    @Rule
-    public final TestName testName = new TestName();
+class BitbucketServerPushEventTest {
 
     private String payload;
 
-    @Before
-    public void loadPayload() throws IOException {
+    @BeforeEach
+    void loadPayload(TestInfo info) throws IOException {
         try (InputStream is = getClass()
-                .getResourceAsStream(getClass().getSimpleName() + "/" + testName.getMethodName() + ".json")) {
-            payload = IOUtils.toString(is, "UTF-8");
+            .getResourceAsStream(getClass().getSimpleName() + "/" + info.getTestMethod().orElseThrow().getName() + ".json")) {
+            assertNotNull(is);
+            payload = IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }
 
     @Test
-    public void updatePayload() throws Exception {
+    void updatePayload() {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -70,7 +70,7 @@ public class BitbucketServerPushEventTest {
     }
 
     @Test
-    public void legacyPayload() throws Exception {
+    void legacyPayload() {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));

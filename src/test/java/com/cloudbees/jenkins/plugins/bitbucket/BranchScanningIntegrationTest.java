@@ -47,22 +47,28 @@ import jenkins.branch.Branch;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class BranchScanningIntegrationTest {
+@WithJenkins
+class BranchScanningIntegrationTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void indexingTest() throws Exception {
+    void indexingTest() throws Exception {
         BitbucketEndpointConfiguration.get()
                 .addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test", false, null, false, null));
         BitbucketMockApiFactory.add("http://bitbucket.test", BitbucketClientMockUtils.getAPIClientMock(false, false));
@@ -89,7 +95,7 @@ public class BranchScanningIntegrationTest {
     }
 
     @Test
-    public void uriResolverByCredentialsTest() throws Exception {
+    void uriResolverByCredentialsTest() throws Exception {
         WorkflowMultiBranchProject context = j.jenkins.createProject(WorkflowMultiBranchProject.class, "context");
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setTraits(Arrays.asList(

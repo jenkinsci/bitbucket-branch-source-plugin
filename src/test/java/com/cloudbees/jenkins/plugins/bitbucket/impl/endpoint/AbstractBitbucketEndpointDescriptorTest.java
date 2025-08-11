@@ -46,7 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithJenkins
 class AbstractBitbucketEndpointDescriptorTest {
 
-    static JenkinsRule j;
+    private static JenkinsRule j;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
@@ -87,7 +87,7 @@ class AbstractBitbucketEndpointDescriptorTest {
 
     @Test
     void given__cloud_HMAC_Credentials__when__listingForCloud__then__credentials() {
-        List<DomainSpecification> domainSpecifications = Collections.<DomainSpecification>singletonList(new HostnameSpecification("bitbucket.org", ""));
+        List<DomainSpecification> domainSpecifications = Collections.singletonList(new HostnameSpecification("bitbucket.org", ""));
         SystemCredentialsProvider.getInstance()
             .setDomainCredentialsMap(Map.of(
                     new Domain("cloud", "bb cloud", domainSpecifications),

@@ -38,9 +38,7 @@ import hudson.model.Descriptor.FormException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.model.TaskListener;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collections;
@@ -198,15 +196,9 @@ class BitbucketBuildStatusNotificationsTest {
             }
         }
 
-        @SuppressWarnings("serial")
         @Override
         protected SCMSourceCriteria getSCMSourceCriteria(SCMSource source) {
-            return new SCMSourceCriteria() {
-                @Override
-                public boolean isHead(Probe probe, TaskListener listener) throws IOException {
-                    return true;
-                }
-            };
+            return (probe, listener) -> true;
         }
     }
 }

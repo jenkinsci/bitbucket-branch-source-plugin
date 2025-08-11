@@ -52,26 +52,29 @@ import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.Parameter;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
 import static com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.getApiMockClient;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(Parameterized.class)
-public class SCMTraitCommitTest {
+@WithJenkins
+@ParameterizedClass(name = "verify revision information from {0}")
+@MethodSource("data")
+class SCMTraitCommitTest {
 
-    private final class SCMHeadObserverImpl extends SCMHeadObserver {
+    private static final class SCMHeadObserverImpl extends SCMHeadObserver {
 
         public List<SCMRevision> revisions = new ArrayList<>();
 
@@ -95,8 +98,7 @@ public class SCMTraitCommitTest {
                 @Override
                 public boolean isExcluded(SCMSourceRequest request, SCMHead head) throws IOException, InterruptedException {
                     BitbucketSCMSourceRequest bbRequest = (BitbucketSCMSourceRequest) request;
-                    if (head instanceof PullRequestSCMHead) {
-                        PullRequestSCMHead prHead = (PullRequestSCMHead) head;
+                    if (head instanceof PullRequestSCMHead prHead) {
                         for (BitbucketPullRequest pr : bbRequest.getPullRequests()) {
                             if (prHead.getId().equals(pr.getId())) {
                                 verify(pr.getSource().getBranch());
@@ -124,13 +126,13 @@ public class SCMTraitCommitTest {
                 private void verify(BitbucketBranch branch) {
                     assertThat("commit message is not valued", Util.fixEmptyAndTrim(branch.getMessage()), notNullValue());
                     assertThat("commit author is not valued", Util.fixEmptyAndTrim(branch.getAuthor()), notNullValue());
-                    assertTrue("commit date is not valued", branch.getDateMillis() > 0);
+                    assertTrue(branch.getDateMillis() > 0, "commit date is not valued");
                 }
 
                 private void verify(BitbucketCommit commit) {
                     assertThat("commit message is not valued", Util.fixEmptyAndTrim(commit.getMessage()), notNullValue());
                     assertThat("commit author is not valued", Util.fixEmptyAndTrim(commit.getAuthor()), notNullValue());
-                    assertTrue("commit date is not valued", commit.getDateMillis() > 0);
+                    assertTrue(commit.getDateMillis() > 0, "commit date is not valued");
                 }
             });
         }
@@ -145,8 +147,8 @@ public class SCMTraitCommitTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Parameters(name = "verify revision informations from {0}")
-    public static Collection<Object[]> data() {
+
+    static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] { //
             { "branch on cloud", new BranchDiscoveryTrait(true, true), BitbucketCloudEndpoint.SERVER_URL }, //
             { "branch on server", new BranchDiscoveryTrait(true, true), "localhost" }, //
@@ -157,30 +159,33 @@ public class SCMTraitCommitTest {
         });
     }
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    private static JenkinsRule j;
 
-    private final SCMSourceTrait trait;
-    private final String serverURL;
+    @Parameter(0)
+    private String testName;
+    @Parameter(1)
+    private SCMSourceTrait trait;
+    @Parameter(2)
+    private String serverURL;
 
-    public SCMTraitCommitTest(String testName, SCMSourceTrait trait, String serverURL) {
-        this.trait = trait;
-        this.serverURL = serverURL;
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        j = rule;
     }
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         BitbucketMockApiFactory.clear();
     }
 
     @Test
-    public void verify_commit_info_are_valued() throws Exception {
+    void verify_commit_info_are_valued() throws Exception {
         CommitVerifierTrait commitTrait = new CommitVerifierTrait();
 
         BitbucketMockApiFactory.add(serverURL, getApiMockClient(serverURL));
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setServerUrl(serverURL);
-        source.setTraits(Arrays.<SCMSourceTrait> asList(trait, commitTrait));
+        source.setTraits(Arrays.asList(trait, commitTrait));
 
         TaskListener listener = BitbucketClientMockUtils.getTaskListenerMock();
         Set<SCMHead> heads = source.fetch(listener);

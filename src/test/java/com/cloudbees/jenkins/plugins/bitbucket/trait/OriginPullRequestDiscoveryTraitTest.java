@@ -24,36 +24,33 @@
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
-import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Set;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMHeadFilter;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class OriginPullRequestDiscoveryTraitTest {
+class OriginPullRequestDiscoveryTraitTest {
+
     @Test
-    public void given__discoverHeadMerge__when__appliedToContext__then__strategiesCorrect() throws Exception {
+    void given__discoverHeadMerge__when__appliedToContext__then__strategiesCorrect() {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(ctx.wantBranches(), is(false));
-        assumeThat(ctx.wantPRs(), is(false));
-        assumeThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
-        assumeThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
-        assumeThat(ctx.authorities(), not((Matcher) hasItem(
-                instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
-        )));
+        assumeFalse(ctx.wantBranches());
+        assumeFalse(ctx.wantPRs());
+        assumeTrue(ctx.prefilters().isEmpty());
+        assumeTrue(ctx.filters().isEmpty());
+        assumeTrue(ctx.authorities().stream().anyMatch(item -> item instanceof OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority));
+
         OriginPullRequestDiscoveryTrait instance = new OriginPullRequestDiscoveryTrait(
                 EnumSet.allOf(ChangeRequestCheckoutStrategy.class)
         );
@@ -63,22 +60,21 @@ public class OriginPullRequestDiscoveryTraitTest {
         assertThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
         assertThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
         assertThat(ctx.originPRStrategies(),
-                Matchers.<Set<ChangeRequestCheckoutStrategy>>is(EnumSet.allOf(ChangeRequestCheckoutStrategy.class)));
-        assertThat(ctx.authorities(), (Matcher) hasItem(
+                Matchers.is(EnumSet.allOf(ChangeRequestCheckoutStrategy.class)));
+        assertThat(ctx.authorities(), hasItem(
                 instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
         ));
     }
 
     @Test
-    public void given__discoverHeadOnly__when__appliedToContext__then__strategiesCorrect() throws Exception {
+    void given__discoverHeadOnly__when__appliedToContext__then__strategiesCorrect() {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(ctx.wantBranches(), is(false));
-        assumeThat(ctx.wantPRs(), is(false));
-        assumeThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
-        assumeThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
-        assumeThat(ctx.authorities(), not((Matcher) hasItem(
-                instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
-        )));
+        assumeFalse(ctx.wantBranches());
+        assumeFalse(ctx.wantPRs());
+        assumeTrue(ctx.prefilters().isEmpty());
+        assumeTrue(ctx.filters().isEmpty());
+        assumeTrue(ctx.authorities().stream().anyMatch(item -> item instanceof OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority));
+
         OriginPullRequestDiscoveryTrait instance = new OriginPullRequestDiscoveryTrait(
                 EnumSet.of(ChangeRequestCheckoutStrategy.HEAD)
         );
@@ -88,22 +84,21 @@ public class OriginPullRequestDiscoveryTraitTest {
         assertThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
         assertThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
         assertThat(ctx.originPRStrategies(),
-                Matchers.<Set<ChangeRequestCheckoutStrategy>>is(EnumSet.of(ChangeRequestCheckoutStrategy.HEAD)));
-        assertThat(ctx.authorities(), (Matcher) hasItem(
+                Matchers.is(EnumSet.of(ChangeRequestCheckoutStrategy.HEAD)));
+        assertThat(ctx.authorities(), hasItem(
                 instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
         ));
     }
 
     @Test
-    public void given__discoverMergeOnly__when__appliedToContext__then__strategiesCorrect() throws Exception {
+    void given__discoverMergeOnly__when__appliedToContext__then__strategiesCorrect() {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(ctx.wantBranches(), is(false));
-        assumeThat(ctx.wantPRs(), is(false));
-        assumeThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
-        assumeThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
-        assumeThat(ctx.authorities(), not((Matcher) hasItem(
-                instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
-        )));
+        assumeFalse(ctx.wantBranches());
+        assumeFalse(ctx.wantPRs());
+        assumeTrue(ctx.prefilters().isEmpty());
+        assumeTrue(ctx.filters().isEmpty());
+        assumeTrue(ctx.authorities().stream().anyMatch(item -> item instanceof OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority));
+
         OriginPullRequestDiscoveryTrait instance = new OriginPullRequestDiscoveryTrait(
                 EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)
         );
@@ -113,22 +108,21 @@ public class OriginPullRequestDiscoveryTraitTest {
         assertThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
         assertThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
         assertThat(ctx.originPRStrategies(),
-                Matchers.<Set<ChangeRequestCheckoutStrategy>>is(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)));
-        assertThat(ctx.authorities(), (Matcher) hasItem(
+                Matchers.is(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)));
+        assertThat(ctx.authorities(), hasItem(
                 instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
         ));
     }
 
     @Test
-    public void given__programmaticConstructor__when__appliedToContext__then__strategiesCorrect() throws Exception {
+    void given__programmaticConstructor__when__appliedToContext__then__strategiesCorrect() {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(ctx.wantBranches(), is(false));
-        assumeThat(ctx.wantPRs(), is(false));
-        assumeThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
-        assumeThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
-        assumeThat(ctx.authorities(), not((Matcher) hasItem(
-                instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
-        )));
+        assumeFalse(ctx.wantBranches());
+        assumeFalse(ctx.wantPRs());
+        assumeTrue(ctx.prefilters().isEmpty());
+        assumeTrue(ctx.filters().isEmpty());
+        assumeTrue(ctx.authorities().stream().anyMatch(item -> item instanceof OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority));
+
         OriginPullRequestDiscoveryTrait instance =
                 new OriginPullRequestDiscoveryTrait(EnumSet.allOf(ChangeRequestCheckoutStrategy.class));
         instance.decorateContext(ctx);
@@ -137,8 +131,8 @@ public class OriginPullRequestDiscoveryTraitTest {
         assertThat(ctx.prefilters(), is(Collections.<SCMHeadPrefilter>emptyList()));
         assertThat(ctx.filters(), is(Collections.<SCMHeadFilter>emptyList()));
         assertThat(ctx.originPRStrategies(),
-                Matchers.<Set<ChangeRequestCheckoutStrategy>>is(EnumSet.allOf(ChangeRequestCheckoutStrategy.class)));
-        assertThat(ctx.authorities(), (Matcher) hasItem(
+                Matchers.is(EnumSet.allOf(ChangeRequestCheckoutStrategy.class)));
+        assertThat(ctx.authorities(), hasItem(
                 instanceOf(OriginPullRequestDiscoveryTrait.OriginChangeRequestSCMHeadAuthority.class)
         ));
     }

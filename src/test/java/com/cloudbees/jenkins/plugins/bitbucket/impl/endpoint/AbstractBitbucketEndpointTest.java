@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
-import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -42,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithJenkins
 class AbstractBitbucketEndpointTest {
 
-    static JenkinsRule j;
+    private static JenkinsRule j;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
@@ -52,7 +51,7 @@ class AbstractBitbucketEndpointTest {
     @BeforeEach
     void setup() {
         SystemCredentialsProvider.getInstance()
-                .setDomainCredentialsMap(Collections.<Domain, List<Credentials>>emptyMap());
+                .setDomainCredentialsMap(Collections.emptyMap());
     }
 
     @Test
@@ -83,7 +82,7 @@ class AbstractBitbucketEndpointTest {
     @Test
     void given__mange__when__systemCredentials__then__credentialsFound() throws Exception {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(Collections.singletonMap(Domain.global(),
-                Collections.<Credentials>singletonList(new UsernamePasswordCredentialsImpl(
+                Collections.singletonList(new UsernamePasswordCredentialsImpl(
                         CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass"))));
         assertThat(new DummyEndpointConfiguration(true, "dummy").credentials()).isNotNull();
     }

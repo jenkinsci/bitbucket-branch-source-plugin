@@ -27,24 +27,30 @@ import java.net.HttpURLConnection;
 import jenkins.model.Jenkins;
 import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
-public class Security2467Test {
+@WithJenkins
+class Security2467Test {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Issue("SECURITY-2467")
     @Test
-    public void doFillRepositoryItemsWhenInvokedUsingGetMethodThenReturnMethodNotAllowed() throws Exception {
+    void doFillRepositoryItemsWhenInvokedUsingGetMethodThenReturnMethodNotAllowed() throws Exception {
         String admin = "Admin";
         String projectName = "p";
         WorkflowMultiBranchProject pr = j.jenkins.createProject(WorkflowMultiBranchProject.class, projectName);

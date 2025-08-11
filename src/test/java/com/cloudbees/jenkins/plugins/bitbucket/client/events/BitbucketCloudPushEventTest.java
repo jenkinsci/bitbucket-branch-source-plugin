@@ -28,33 +28,34 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPaylo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class BitbucketCloudPushEventTest {
-    @Rule
-    public final TestName testName = new TestName();
+class BitbucketCloudPushEventTest {
 
     private String payload;
 
-    @Before
-    public void loadPayload() throws IOException {
-        try (InputStream is = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + testName.getMethodName() + ".json")) {
-            payload = IOUtils.toString(is, "UTF-8");
+    @BeforeEach
+    void loadPayload(TestInfo info) throws IOException {
+        try (InputStream is = getClass()
+            .getResourceAsStream(getClass().getSimpleName() + "/" + info.getTestMethod().orElseThrow().getName() + ".json")) {
+            assertNotNull(is);
+            payload = IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }
 
     @Test
-    public void createPayload() throws Exception {
+    void createPayload() {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -80,7 +81,7 @@ public class BitbucketCloudPushEventTest {
     }
 
     @Test
-    public void updatePayload() throws Exception {
+    void updatePayload() {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -97,7 +98,7 @@ public class BitbucketCloudPushEventTest {
     }
 
     @Test
-    public void emptyPayload() throws Exception {
+    void emptyPayload() {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -114,7 +115,7 @@ public class BitbucketCloudPushEventTest {
     }
 
     @Test
-    public void newTagPayload() throws Exception {
+    void newTagPayload() {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -135,7 +136,7 @@ public class BitbucketCloudPushEventTest {
     }
 
     @Test
-    public void multipleChangesPayload() throws Exception {
+    void multipleChangesPayload() {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));

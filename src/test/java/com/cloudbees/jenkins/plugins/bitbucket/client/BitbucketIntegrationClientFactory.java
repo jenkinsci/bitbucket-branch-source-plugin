@@ -113,7 +113,7 @@ public class BitbucketIntegrationClientFactory {
             if (waitingRequestTask != null) {
                 throw new IllegalStateException("There is already someone waiting for a request");
             }
-            waitingRequestTask = new CompletableFuture<HttpRequest>();
+            waitingRequestTask = new CompletableFuture<>();
             return waitingRequestTask;
         }
 

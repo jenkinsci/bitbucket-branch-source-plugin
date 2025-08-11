@@ -32,6 +32,7 @@ import hudson.model.Item;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import hudson.security.AccessDeniedException3;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.HttpURLConnection;
@@ -39,12 +40,12 @@ import jenkins.model.Jenkins;
 import org.hamcrest.CoreMatchers;
 import org.htmlunit.Page;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,22 +53,23 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class Security2033Test {
+@WithJenkins
+class Security2033Test {
 
     private static final String PROJECT_NAME = "p";
     private static final String NOT_AUTHORIZED_USER = "userNoPermission";
     private static final String NO_ITEM_READ_USER = "userNoReadPermission";
     private static final String SERVER_URL = "server.url";
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
 
     private WorkflowMultiBranchProject pr;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup(JenkinsRule rule) throws Exception {
+        j = rule;
         pr = j.jenkins.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
         setUpAuthorization();
         initCredentials();
@@ -75,7 +77,7 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
-    public void doFillCredentialsIdItemsSCMSourceWhenUserWithoutCredentialsViewPermissionThenListNotPopulated() {
+    void doFillCredentialsIdItemsSCMSourceWhenUserWithoutCredentialsViewPermissionThenListNotPopulated() {
         BitbucketSCMSource.DescriptorImpl descriptor = (BitbucketSCMSource.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketSCMSource.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
             ListBoxModel actual = descriptor.doFillCredentialsIdItems(pr, SERVER_URL);
@@ -86,7 +88,7 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
-    public void doFillCredentialsIdItemsSCMNavigatorWhenUserWithoutCredentialsViewPermissionThenListNotPopulated() {
+    void doFillCredentialsIdItemsSCMNavigatorWhenUserWithoutCredentialsViewPermissionThenListNotPopulated() {
         BitbucketSCMNavigator.DescriptorImpl descriptor = (BitbucketSCMNavigator.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketSCMNavigator.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
             ListBoxModel actual = descriptor.doFillCredentialsIdItems(pr, SERVER_URL);
@@ -97,31 +99,27 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
-    public void doCheckCredentialsIdSCMNavigatorWhenUserWithoutCredentialsViewPermissionThenReturnForbiddenStatus() {
+    void doCheckCredentialsIdSCMNavigatorWhenUserWithoutCredentialsViewPermissionThenReturnForbiddenStatus() {
         BitbucketSCMNavigator.DescriptorImpl descriptor = (BitbucketSCMNavigator.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketSCMNavigator.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
-            descriptor.doCheckCredentialsId(pr, SERVER_URL, "nonEmpty");
-            fail("Should fail with AccessDeniedException2");
-        } catch (Exception accessDeniedException2) {
-            assertThat(accessDeniedException2.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Credentials/View permission"));
+            AccessDeniedException3 ex = assertThrows(AccessDeniedException3.class, () -> descriptor.doCheckCredentialsId(pr, SERVER_URL, "nonEmpty"));
+            assertThat(ex.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Credentials/View permission"));
         }
     }
 
     @Issue("SECURITY-2033")
     @Test
-    public void doCheckCredentialsIdSCMSourceWhenUserWithoutCredentialsViewPermissionThenReturnForbiddenStatus() {
+    void doCheckCredentialsIdSCMSourceWhenUserWithoutCredentialsViewPermissionThenReturnForbiddenStatus() {
         BitbucketSCMSource.DescriptorImpl descriptor = (BitbucketSCMSource.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketSCMSource.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
-            descriptor.doCheckCredentialsId(pr, SERVER_URL, "nonEmpty");
-            fail("Should fail with AccessDeniedException2 but not");
-        } catch (Exception accessDeniedException2) {
-            assertThat(accessDeniedException2.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Credentials/View permission"));
+            AccessDeniedException3 ex = assertThrows(AccessDeniedException3.class, () -> descriptor.doCheckCredentialsId(pr, SERVER_URL, "nonEmpty"));
+            assertThat(ex.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Credentials/View permission"));
         }
     }
 
     @Issue("SECURITY-2033")
     @Test
-    public void doCheckServerUrlWhenUserWithoutPermissionThenReturnForbiddenMessage() {
+    void doCheckServerUrlWhenUserWithoutPermissionThenReturnForbiddenMessage() {
         ((MockAuthorizationStrategy) j.jenkins.getAuthorizationStrategy())
             .grant(Jenkins.READ, Item.READ).everywhere().to(NOT_AUTHORIZED_USER);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NO_ITEM_READ_USER))) {
@@ -132,7 +130,7 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
-    public void doFillServerUrlItemsSCMNavigatorWhenUserWithoutPermissionThenReturnEmptyList() {
+    void doFillServerUrlItemsSCMNavigatorWhenUserWithoutPermissionThenReturnEmptyList() {
         BitbucketSCMNavigator.DescriptorImpl descriptor = (BitbucketSCMNavigator.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketSCMNavigator.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
             ListBoxModel actual = descriptor.doFillServerUrlItems(pr);
@@ -142,7 +140,7 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
-    public void doFillServerUrlItemsSCMSourceWhenUserWithoutPermissionThenReturnEmptyList() {
+    void doFillServerUrlItemsSCMSourceWhenUserWithoutPermissionThenReturnEmptyList() {
         BitbucketSCMSource.DescriptorImpl descriptor = (BitbucketSCMSource.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketSCMSource.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
             ListBoxModel actual = descriptor.doFillServerUrlItems(pr);
@@ -152,31 +150,29 @@ public class Security2033Test {
 
     @Issue("SECURITY-2033")
     @Test
-    public void doShowStatsWhenUserWithoutAdminPermissionThenReturnForbiddenStatus() {
+    void doShowStatsWhenUserWithoutAdminPermissionThenReturnForbiddenStatus() {
         BitbucketCloudEndpoint.DescriptorImpl descriptor = (BitbucketCloudEndpoint.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketCloudEndpoint.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
-            descriptor.doShowStats();
-            fail("Should fail with AccessDeniedException2");
-        } catch (Exception accessDeniedException2) {
-            assertThat(accessDeniedException2.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Overall/Administer permission"));
+            AccessDeniedException3 ex = assertThrows(AccessDeniedException3.class,
+                descriptor::doShowStats);
+            assertThat(ex.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Overall/Administer permission"));
         }
     }
 
     @Issue("SECURITY-2033")
     @Test
-    public void doClearWhenUserWithoutAdminPermissionThenReturnForbiddenStatus() {
+    void doClearWhenUserWithoutAdminPermissionThenReturnForbiddenStatus() {
         BitbucketCloudEndpoint.DescriptorImpl descriptor = (BitbucketCloudEndpoint.DescriptorImpl) Jenkins.get().getDescriptorOrDie(BitbucketCloudEndpoint.class);
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
-            descriptor.doClear();
-            fail("Should fail with AccessDeniedException2");
-        } catch (Exception accessDeniedException2) {
-            assertThat(accessDeniedException2.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Overall/Administer permission"));
+            AccessDeniedException3 ex = assertThrows(AccessDeniedException3.class,
+                descriptor::doClear);
+            assertThat(ex.getMessage(), is(NOT_AUTHORIZED_USER + " is missing the Overall/Administer permission"));
         }
     }
 
     @Issue("SECURITY-2033")
     @Test
-    public void doClearWhenInvokedUsingGetMethodThenResourceNotFound() throws Exception {
+    void doClearWhenInvokedUsingGetMethodThenResourceNotFound() throws Exception {
         JenkinsRule.WebClient webClient = j .createWebClient().withThrowExceptionOnFailingStatusCode(false);
         webClient.login(NOT_AUTHORIZED_USER);
         Page page = webClient.goTo("job/" + PROJECT_NAME +"/descriptorByName/com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint/clear");

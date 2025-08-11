@@ -57,7 +57,7 @@ class NativeServerPushHookProcessorTest {
     private NativeServerPushHookProcessor sut;
     private SCMHeadEvent<?> scmEvent;
 
-    static JenkinsRule rule;
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule r) {

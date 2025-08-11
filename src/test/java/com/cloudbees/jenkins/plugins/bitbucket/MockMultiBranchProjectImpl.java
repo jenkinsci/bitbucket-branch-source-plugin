@@ -126,7 +126,7 @@ public class MockMultiBranchProjectImpl extends MultiBranchProject<FreeStyleProj
         }
 
         @Override
-        public TopLevelItem newInstance(@SuppressWarnings("rawtypes") ItemGroup parent, String name) {
+        public TopLevelItem newInstance(ItemGroup parent, String name) {
             return new MockMultiBranchProjectImpl(parent, name);
         }
 

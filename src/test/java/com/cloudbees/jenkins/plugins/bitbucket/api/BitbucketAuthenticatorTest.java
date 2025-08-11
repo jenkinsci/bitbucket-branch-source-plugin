@@ -58,9 +58,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @WithJenkins
 class BitbucketAuthenticatorTest {
+
     private StandardUsernameCredentials credentials;
 
-    static JenkinsRule j;
+    private static JenkinsRule j;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
@@ -104,7 +105,7 @@ class BitbucketAuthenticatorTest {
                 credentials.getDescription(),
                 clientId,
                 clientSecret);
-        List<Credentials> list = Collections.<Credentials>singletonList(credentials);
+        List<Credentials> list = Collections.singletonList(credentials);
         AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext(null);
         Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
         assertThat(c).isNotNull();
@@ -132,7 +133,7 @@ class BitbucketAuthenticatorTest {
                 credentials.getId(),
                 credentials.getDescription(),
                 Secret.fromString("XXXTT3xFfGN0YR0qSTr0SoRZeTZ2InfnX8U1BGTvAFY6_OzZRHn-0RjTmNseIV84KfdBq3nHlL4mNF1UMBTZwbpWUnNO1MXIsI4kgimuOSlHFwfWyD78Fz7OBYw-K_z1UwvhSgsvVt0K6xalAKgrTYbgOQubublL7A1Fav6BzaIrprZ11XJDRWY=455AEB4D"));
-        List<Credentials> list = Collections.<Credentials>singletonList(tokenCredentials);
+        List<Credentials> list = Collections.singletonList(tokenCredentials);
         AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext(null);
         Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
         assertThat(c).isNotNull();
@@ -150,7 +151,7 @@ class BitbucketAuthenticatorTest {
                 credentials.getDescription(),
                 "john@example.com",
                 "ATAFT8xFfGF0s08_-rJbnKoYbZrzN7grw-XBOfQ1MDawDijWCQViqWHqaN0XJJ0nm2hycPEkMv3hWD27LbL-ftI1WRlwyo2ROtVfwvAHtneEQogEni_3U9Uj3BJdniDZGQ566sk5ldd_2Gl3AS8Ag2dTR2TsjEP8LWGeNFTL5jfVsPdiMZ14x_w=A75716D7");
-        List<Credentials> list = Collections.<Credentials>singletonList(tokenCredentials);
+        List<Credentials> list = Collections.singletonList(tokenCredentials);
         AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext(null);
         Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
         assertThat(c).isNotNull();
@@ -167,7 +168,7 @@ class BitbucketAuthenticatorTest {
                 credentials.getDescription(),
                 password,
                 new DummyKeyStoreSource(password));
-        List<Credentials> list = Collections.<Credentials>singletonList(certCredentials);
+        List<Credentials> list = Collections.singletonList(certCredentials);
 
         AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext(null);
         Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));

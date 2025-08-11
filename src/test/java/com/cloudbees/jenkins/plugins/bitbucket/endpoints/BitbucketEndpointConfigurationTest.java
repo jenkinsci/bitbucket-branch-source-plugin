@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndp
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerVersion;
 import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
-import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -83,7 +82,7 @@ class BitbucketEndpointConfigurationTest {
         new XmlFile(new File(Jenkins.get().getRootDir(), BitbucketEndpointConfiguration.get().getId() + ".xml"))
                 .delete();
         SystemCredentialsProvider.getInstance()
-                .setDomainCredentialsMap(Collections.<Domain, List<Credentials>>emptyMap());
+                .setDomainCredentialsMap(Collections.emptyMap());
     }
 
     @Test
@@ -105,9 +104,7 @@ class BitbucketEndpointConfigurationTest {
         assumeFalse("dummy".equals(instance.getEndpoints().get(0).getCredentialsId()));
         instance.setEndpoints(List.of(buildEndpoint(true, "dummy")));
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
     }
 
     @Test
@@ -116,9 +113,7 @@ class BitbucketEndpointConfigurationTest {
         assumeFalse("first".equals(instance.getEndpoints().get(0).getCredentialsId()));
         instance.setEndpoints(List.of(buildEndpoint(true, "first"), buildEndpoint(true, "second"), buildEndpoint(true, "third")));
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("first");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("first"));
     }
 
     @Test
@@ -145,9 +140,7 @@ class BitbucketEndpointConfigurationTest {
         try (ACLContext context = ACL.as(User.get("admin"))) {
             instance.setEndpoints(List.of(buildEndpoint(true, "first"), buildEndpoint(true, "second"), buildEndpoint(true, "third")));
             assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
-            assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-                assertThat(endpoint.getCredentialsId()).isEqualTo("first");
-            });
+            assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("first"));
         } finally {
             r.jenkins.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED);
         }
@@ -162,9 +155,7 @@ class BitbucketEndpointConfigurationTest {
                 buildEndpoint(true, "second"),
                 buildEndpoint(true, "third")));
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
     }
 
     @Test
@@ -213,9 +204,7 @@ class BitbucketEndpointConfigurationTest {
 
         assertThat(instance.addEndpoint(new BitbucketCloudEndpoint())).isFalse();
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
     }
 
     @Test
@@ -226,16 +215,10 @@ class BitbucketEndpointConfigurationTest {
 
         assertThat(instance.addEndpoint(buildEndpoint(true, "added"))).isTrue();
         assertThat(instance.getEndpoints()).hasExactlyElementsOfTypes(BitbucketServerEndpoint.class, BitbucketCloudEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
 
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
-        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("added");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
+        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("added"));
     }
 
     @Test
@@ -246,12 +229,8 @@ class BitbucketEndpointConfigurationTest {
 
         assertThat(instance.addEndpoint(new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "added"))).isTrue();
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
-        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("added");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
+        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("added"));
     }
 
     @Test
@@ -262,9 +241,7 @@ class BitbucketEndpointConfigurationTest {
 
         assertThat(instance.addEndpoint(new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", false, null))).isFalse();
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
     }
 
     @Test
@@ -276,9 +253,7 @@ class BitbucketEndpointConfigurationTest {
         instance.updateEndpoint(new BitbucketCloudEndpoint());
 
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketCloudEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isNull();
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isNull());
     }
 
     @Test
@@ -289,12 +264,8 @@ class BitbucketEndpointConfigurationTest {
         instance.updateEndpoint(buildEndpoint(true, "added"));
 
         assertThat(instance.getEndpoints()).hasExactlyElementsOfTypes(BitbucketServerEndpoint.class, BitbucketCloudEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
-        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("added");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
+        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("added"));
     }
 
     @Test
@@ -306,12 +277,8 @@ class BitbucketEndpointConfigurationTest {
         instance.updateEndpoint(new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "added", false, null));
 
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
-        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("dummy");
-        });
-        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> {
-            assertThat(endpoint.getCredentialsId()).isEqualTo("added");
-        });
+        assertThat(instance.getEndpoints()).element(0).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("dummy"));
+        assertThat(instance.getEndpoints()).element(1).satisfies(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("added"));
     }
 
     @Test
@@ -429,24 +396,16 @@ class BitbucketEndpointConfigurationTest {
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", true, "third")
                 ));
         assertThat(BitbucketEndpointProvider.lookupEndpoint(BitbucketCloudEndpoint.SERVER_URL)).isPresent()
-            .hasValueSatisfying(endpoint -> {
-                assertThat(endpoint.getCredentialsId()).isEqualTo("first");
-            });
+            .hasValueSatisfying(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("first"));
 
         assertThat(BitbucketEndpointProvider.lookupEndpoint("https://bitbucket.example.com/")).isPresent()
-            .hasValueSatisfying(endpoint -> {
-                assertThat(endpoint.getCredentialsId()).isEqualTo("second");
-            });
+            .hasValueSatisfying(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("second"));
 
         assertThat(BitbucketEndpointProvider.lookupEndpoint("https://BITBUCKET.EXAMPLE.COM:443/")).isPresent()
-            .hasValueSatisfying(endpoint -> {
-                assertThat(endpoint.getCredentialsId()).isEqualTo("second");
-            });
+            .hasValueSatisfying(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("second"));
 
         assertThat(BitbucketEndpointProvider.lookupEndpoint("http://example.org:8080/bitbucket/../bitbucket/")).isPresent()
-            .hasValueSatisfying(endpoint -> {
-                assertThat(endpoint.getCredentialsId()).isEqualTo("third");
-            });
+            .hasValueSatisfying(endpoint -> assertThat(endpoint.getCredentialsId()).isEqualTo("third"));
     }
 
     @Test
@@ -604,7 +563,7 @@ class BitbucketEndpointConfigurationTest {
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/", false, null, false, null)
                 ));
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
-                Collections.singletonMap(Domain.global(), Arrays.<Credentials>asList(
+                Collections.singletonMap(Domain.global(), Arrays.asList(
                         new UsernamePasswordCredentialsImpl(
                                 CredentialsScope.SYSTEM, "first", null, "user1", "pass1"),
                         new UsernamePasswordCredentialsImpl(
