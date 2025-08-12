@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookIntegration;
 import java.io.IOException;
 import java.util.Collection;
@@ -14,7 +15,6 @@ public class DummyWebhookIntegration implements BitbucketWebhookIntegration {
     private String repositoryName;
     private String serverURL;
     private String callbackURL;
-
 
     public String getRepositoryOwner() {
         return repositoryOwner;
@@ -53,6 +53,10 @@ public class DummyWebhookIntegration implements BitbucketWebhookIntegration {
     }
 
     @Override
+    public void apply(BitbucketWebhookConfiguration configuration) {
+    }
+
+    @Override
     public Collection<Class<? extends SCMSourceTrait>> supportedTraits() {
         return Collections.emptyList();
     }
@@ -62,7 +66,7 @@ public class DummyWebhookIntegration implements BitbucketWebhookIntegration {
     }
 
     @Override
-    public Collection<BitbucketWebHook> retrieve(BitbucketWebhookClient client) throws IOException {
+    public Collection<BitbucketWebHook> read(BitbucketWebhookClient client) throws IOException {
         return Collections.emptyList();
     }
 
@@ -71,7 +75,7 @@ public class DummyWebhookIntegration implements BitbucketWebhookIntegration {
     }
 
     @Override
-    public void remove(BitbucketWebHook payload, BitbucketWebhookClient client) throws IOException {
+    public void remove(String webhookId, BitbucketWebhookClient client) throws IOException {
     }
 
 }

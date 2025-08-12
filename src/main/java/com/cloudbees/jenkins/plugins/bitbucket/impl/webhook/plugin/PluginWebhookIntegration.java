@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookIntegration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketPluginWebhook;
@@ -77,10 +78,6 @@ public class PluginWebhookIntegration implements BitbucketWebhookIntegration {
     private String callbackURL;
     private String committersToIgnore;
 
-    public PluginWebhookIntegration(@NonNull PluginWebhookConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
     @Override
     public Collection<Class<? extends SCMSourceTrait>> supportedTraits() {
         return List.of(WebhookConfigurationTrait.class);
@@ -91,6 +88,11 @@ public class PluginWebhookIntegration implements BitbucketWebhookIntegration {
         if (trait instanceof WebhookConfigurationTrait cfgTrait) {
             committersToIgnore = Util.fixEmptyAndTrim(cfgTrait.getCommittersToIgnore());
         }
+    }
+
+    @Override
+    public void apply(BitbucketWebhookConfiguration configuration) {
+        this.configuration = (PluginWebhookConfiguration) configuration;
     }
 
     @NonNull
@@ -139,7 +141,7 @@ public class PluginWebhookIntegration implements BitbucketWebhookIntegration {
 
     @Override
     @NonNull
-    public Collection<BitbucketWebHook> retrieve(@NonNull BitbucketWebhookClient client) throws IOException {
+    public Collection<BitbucketWebHook> read(@NonNull BitbucketWebhookClient client) throws IOException {
         String url = UriTemplate.fromTemplate(serverURL + WEBHOOK_API)
                 .set("owner", repositoryOwner)
                 .set("repo", repositoryName)
@@ -213,18 +215,18 @@ public class PluginWebhookIntegration implements BitbucketWebhookIntegration {
     }
 
     @Override
-    public void remove(@NonNull BitbucketWebHook payload, @NonNull BitbucketWebhookClient client) throws IOException {
+    public void remove(@NonNull String webhookId, @NonNull BitbucketWebhookClient client) throws IOException {
         String url = UriTemplate.fromTemplate(serverURL + WEBHOOK_API)
                 .set("owner", repositoryOwner)
                 .set("repo", repositoryName)
-                .set("id", payload.getUuid())
+                .set("id", webhookId)
                 .expand();
         client.delete(url);
     }
 
     @Override
     public void register(@NonNull BitbucketWebhookClient client) throws IOException {
-        BitbucketPluginWebhook existingHook = (BitbucketPluginWebhook) retrieve(client)
+        BitbucketPluginWebhook existingHook = (BitbucketPluginWebhook) read(client)
                 .stream()
                 // FIXME !! the endpoint could be null must rely on default !!
                 .filter(hook -> hook.getUrl().startsWith(configuration.getEndpointJenkinsRootURL()))

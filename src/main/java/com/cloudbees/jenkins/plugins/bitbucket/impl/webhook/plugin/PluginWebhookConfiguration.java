@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookIntegration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
@@ -130,10 +131,9 @@ public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration
         return "PLUGIN";
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public PluginWebhookIntegration getIntegration() {
-        return new PluginWebhookIntegration(this);
+    public Class<? extends BitbucketWebhookIntegration> getIntegration() {
+        return PluginWebhookIntegration.class;
     }
 
     @Symbol("pluginWebhook")

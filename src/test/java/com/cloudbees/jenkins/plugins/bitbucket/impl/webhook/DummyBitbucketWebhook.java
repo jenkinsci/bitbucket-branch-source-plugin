@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookIntegration;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 
@@ -51,8 +52,8 @@ public class DummyBitbucketWebhook extends AbstractBitbucketWebhookConfiguration
     }
 
     @Override
-    public DummyWebhookIntegration getIntegration() {
-        return new DummyWebhookIntegration();
+    public Class<? extends BitbucketWebhookIntegration> getIntegration() {
+        return DummyWebhookIntegration.class;
     }
 
     @Extension // TestExtension could be used only for embedded classes

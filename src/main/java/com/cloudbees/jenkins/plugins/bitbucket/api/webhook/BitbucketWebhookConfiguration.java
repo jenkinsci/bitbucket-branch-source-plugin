@@ -29,6 +29,8 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * The implementation represents an a webhook configuration that can be used in
@@ -36,6 +38,7 @@ import jenkins.model.Jenkins;
  *
  * @since 937.0.0
  */
+@Restricted(Beta.class)
 public interface BitbucketWebhookConfiguration extends Describable<BitbucketWebhookConfiguration> {
 
     /**
@@ -88,9 +91,8 @@ public interface BitbucketWebhookConfiguration extends Describable<BitbucketWebh
      * Returns the implementation that is in charge to apply this configuration to the Bitbucket.
      * @param <T> the specific BitbucketWebhookIntegration subtype.
      * @return a new instance of the integration, never return a singleton instance.
-     * FIXME think if returns class and in case instantiate via reflection and apply this configuration to ensure NO singleton.
      */
-    <T extends BitbucketWebhookIntegration> T getIntegration();
+    Class<? extends BitbucketWebhookIntegration> getIntegration();
 
     /**
      * @see Describable#getDescriptor()

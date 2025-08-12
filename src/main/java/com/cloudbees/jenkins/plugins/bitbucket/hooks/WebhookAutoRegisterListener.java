@@ -39,6 +39,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.model.listeners.ItemListener;
@@ -174,8 +175,9 @@ public class WebhookAutoRegisterListener extends ItemListener {
     private BitbucketWebhookIntegration buildWebhookIntegration(BitbucketSCMSource source, BitbucketEndpoint endpoint) {
         BitbucketWebhookConfiguration webhookConfig = endpoint.getWebhook();
 
-        BitbucketWebhookIntegration integration = webhookConfig.getIntegration();
+        BitbucketWebhookIntegration integration = ExtensionList.lookupFirst(webhookConfig.getIntegration());
         // setup the integration with base required information
+        integration.apply(webhookConfig);
         integration.setServerURL(endpoint.getServerURL());
         integration.setRepositoryOwner(source.getRepoOwner());
         integration.setRepositoryName(source.getRepository());
@@ -219,7 +221,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                     }
 
                     BitbucketWebhookIntegration integration = buildWebhookIntegration(source, endpoint);
-                    Collection<BitbucketWebHook> webhooks = integration.retrieve(webhookClient)
+                    Collection<BitbucketWebHook> webhooks = integration.read(webhookClient)
                             .stream()
                             .filter(hook -> hook.getUrl().startsWith(getCallbackRootURL(endpoint.getWebhook())))
                             .toList();
@@ -228,7 +230,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
                         if (hook != null && !isUsedSomewhereElse(owner, source.getRepoOwner(), source.getRepository())) {
                             logger.log(Level.INFO, "Removing hook for {0}/{1}",
                                     new Object[] { source.getRepoOwner(), source.getRepository() });
-                            integration.remove(hook, webhookClient);
+                            integration.remove(hook.getUuid(), webhookClient);
                         } else {
                             logger.log(Level.FINE, "NOT removing hook for {0}/{1} because does not exists or its used in other project",
                                     new Object[] { source.getRepoOwner(), source.getRepository() });

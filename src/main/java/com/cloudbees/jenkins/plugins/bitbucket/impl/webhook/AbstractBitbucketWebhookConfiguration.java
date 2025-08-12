@@ -120,6 +120,7 @@ public abstract class AbstractBitbucketWebhookConfiguration implements Bitbucket
     }
 
     @Override
+    @CheckForNull
     public String getEndpointJenkinsRootURL() {
         return endpointJenkinsRootURL;
     }
