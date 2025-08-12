@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -32,18 +33,12 @@ import hudson.Extension;
 public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
 
     DummyEndpointConfiguration(boolean manageHooks, String credentialsId) {
-        super(manageHooks, credentialsId, false, null);
+        super(new ServerWebhookConfiguration(manageHooks, credentialsId, false, null));
     }
 
     @Override
     public String getDisplayName() {
         return "Dummy";
-    }
-
-    @NonNull
-    @Override
-    public String getServerUrl() {
-        return getServerURL();
     }
 
     @NonNull
@@ -65,7 +60,7 @@ public class DummyEndpointConfiguration extends AbstractBitbucketEndpoint {
 
     @NonNull
     @Override
-    public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
+    public String getRepositoryURL(@NonNull String repoOwner, @NonNull String repository) {
         return UriTemplate
                 .fromTemplate("http://dummy.example.com{/owner,repo}")
                 .set("owner", repoOwner)

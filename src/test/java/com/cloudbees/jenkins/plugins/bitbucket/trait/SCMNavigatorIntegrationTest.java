@@ -55,7 +55,7 @@ class SCMNavigatorIntegrationTest {
     @Test
     void teamDiscoveringTest(JenkinsRule j) throws Exception {
         BitbucketEndpointConfiguration
-                .get().addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test", false, null));
+                .get().addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test"));
         BitbucketMockApiFactory.add("http://bitbucket.test", BitbucketClientMockUtils.getAPIClientMock(true, false));
 
         OrganizationFolder teamFolder = j.jenkins.createProject(OrganizationFolder.class, "test");

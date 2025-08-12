@@ -23,9 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -80,7 +82,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
 @Restricted(ProtectedExternally.class)
-public abstract class AbstractBitbucketApi implements AutoCloseable {
+public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseable {
     protected final Logger logger = Logger.getLogger(this.getClass().getName());
     private final BitbucketAuthenticator authenticator;
     private HttpClientContext context;
@@ -343,5 +345,41 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
 
     protected BitbucketAuthenticator getAuthenticator() {
         return authenticator;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T adapt(Class<T> clazz) {
+        if (clazz == BitbucketWebhookClient.class) {
+            return (T) new BitbucketWebhookClient() {
+
+                @Override
+                public String post(@NonNull String path, @NonNull String payload) throws IOException {
+                    return postRequest(path, payload);
+                }
+
+                @Override
+                public String put(String path, String payload) throws IOException {
+                    return putRequest(path, payload);
+                }
+
+                @Override
+                public String delete(String path) throws IOException {
+                    return deleteRequest(path);
+                }
+
+                @Override
+                public String get(String path) throws IOException {
+                    return getRequest(path);
+                }
+
+                @Override
+                public void close() throws IOException {
+                    AbstractBitbucketApi.this.close();
+                }
+            };
+        } else {
+            return null;
+        }
     }
 }

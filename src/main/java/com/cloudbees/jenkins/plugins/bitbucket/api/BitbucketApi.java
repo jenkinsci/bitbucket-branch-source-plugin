@@ -23,12 +23,15 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.impl.avatars.AvatarImage;
@@ -190,33 +193,50 @@ public interface BitbucketApi extends AutoCloseable {
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
+     *             information about webhook.
      */
-    void registerCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException;
+    @Deprecated(since = "937.0.0", forRemoval = true)
+    default void registerCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException {
+    }
 
     /**
      * Update a webhook on the repository.
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
+     *             information about webhook.
      */
-    void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException;
+    @Deprecated(since = "937.0.0", forRemoval = true)
+    default void updateCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException {
+    }
 
     /**
      * Remove the webhook (ID field required) from the repository.
      *
      * @param hook the webhook object
      * @throws IOException if there was a network communications error.
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
+     *             information about webhook.
      */
-    void removeCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException;
+    @Deprecated(since = "937.0.0", forRemoval = true)
+    default void removeCommitWebHook(@NonNull BitbucketWebHook hook) throws IOException {
+    }
 
     /**
      * Returns the webhooks defined in the repository.
      *
      * @return the list of webhooks registered in the repository.
      * @throws IOException if there was a network communications error.
+     * @deprecated Use the {@link BitbucketWebhookConfiguration} implementation to gather
+     *             information about webhook.
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @NonNull
-    List<? extends BitbucketWebHook> getWebHooks() throws IOException;
+    default List<? extends BitbucketWebHook> getWebHooks() throws IOException {
+        return Collections.emptyList();
+    }
 
     /**
      * Returns the team of the current owner or {@code null} if the current owner is not a team.
@@ -340,6 +360,17 @@ public interface BitbucketApi extends AutoCloseable {
      */
     @NonNull
     List<? extends BitbucketCommit> getCommits(@CheckForNull String from, @NonNull String to) throws IOException;
+
+    /**
+     * Adapt this implementation to the given class.
+     * @param <T> the return type
+     * @param clazz of type T to adapt to
+     * @return the adapted class or {@code null} if given class is not supported.
+     */
+    @Nullable
+    default <T> T adapt(@NonNull Class<T> clazz) {
+        return null;
+    }
 
 //    /**
 //     * Return a set changes between the two given commits.
