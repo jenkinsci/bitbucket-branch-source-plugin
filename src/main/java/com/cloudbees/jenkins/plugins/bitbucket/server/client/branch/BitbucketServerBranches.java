@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.branch;
 
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.PagedApiResponse;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerPage;
 
-public class BitbucketServerBranches extends PagedApiResponse<BitbucketServerBranch> {
+public class BitbucketServerBranches extends BitbucketServerPage<BitbucketServerBranch> {
 }

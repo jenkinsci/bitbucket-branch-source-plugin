@@ -44,7 +44,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -53,7 +52,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUti
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
@@ -286,20 +284,12 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     @DataBoundSetter
-    public void setServerUrl(@CheckForNull String serverUrl) {
-        if (serverUrl == null) {
+    public void setServerUrl(@CheckForNull String serverURL) {
+        if (serverURL == null) {
             this.serverUrl = BitbucketEndpointConfiguration.get().getDefaultEndpoint().getServerURL();
         } else {
-            this.serverUrl = Util.fixNull(URLUtils.normalizeURL(serverUrl));
+            this.serverUrl = Util.fixNull(URLUtils.normalizeURL(serverURL));
         }
-    }
-
-    @Restricted(NoExternalUse.class)
-    @Deprecated(since = "936.4.0", forRemoval = true)
-    // expose if needed in BitbucketEndpointProvider, normally could be get from endpoint if not customized
-    @NonNull
-    public String getEndpointJenkinsRootURL() {
-        return BitbucketEndpointProvider.lookupEndpointJenkinsRootURL(serverUrl);
     }
 
     @Override
@@ -1067,19 +1057,6 @@ public class BitbucketSCMSource extends SCMSource {
             }
             if (!BitbucketEndpointProvider.lookupEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
-            }
-            return FormValidation.ok();
-        }
-
-        @RequirePOST
-        public static FormValidation doCheckMirrorId(@QueryParameter String value,
-                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            if (!value.isEmpty()) {
-                BitbucketServerWebhookImplementation webhookImplementation =
-                    BitbucketServerEndpoint.findWebhookImplementation(serverURL);
-                if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
-                    return FormValidation.error("Mirror can only be used with native webhooks");
-                }
             }
             return FormValidation.ok();
         }

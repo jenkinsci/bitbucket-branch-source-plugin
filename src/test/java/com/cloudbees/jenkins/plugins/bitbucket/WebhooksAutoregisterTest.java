@@ -25,14 +25,18 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookAutoRegisterListener;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookManager;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhookManager;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import hudson.model.listeners.ItemListener;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.logging.LogRecord;
@@ -46,7 +50,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
-import org.mockito.Mockito;
 
 @WithJenkins
 class WebhooksAutoregisterTest {
@@ -59,9 +62,9 @@ class WebhooksAutoregisterTest {
     }
 
     @Test
-    void registerHookTest() throws Exception {
-        BitbucketApi mock = Mockito.mock(BitbucketApi.class);
-        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
+    void test_register_webhook_using_item_configuration() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
         RingBufferLogHandler log = createJULTestHandler();
 
         MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
@@ -76,16 +79,17 @@ class WebhooksAutoregisterTest {
         setRootUrl();
         p.save(); // force item listener to run onUpdated
 
-        waitForLogFileMessage("Registering hook for amuniz/test-repos", log);
+        waitForLogFileMessage("Registering cloud hook for amuniz/test-repos", log);
 
     }
 
     @Test
-    void registerHookTest2() throws Exception {
-        BitbucketEndpointConfiguration.get().setEndpoints(List.of(new BitbucketCloudEndpoint(false, 0, 0, true, "dummy", false, null)));
-        BitbucketApi mock = Mockito.mock(BitbucketApi.class);
-        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);
+    void test_register_webhook_using_system_configuration() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
         RingBufferLogHandler log = createJULTestHandler();
+
+        BitbucketEndpointConfiguration.get().setEndpoints(List.of(new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhookConfiguration(true, "dummy"))));
 
         MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource( "amuniz", "test-repos");
@@ -96,7 +100,7 @@ class WebhooksAutoregisterTest {
         setRootUrl();
         ItemListener.fireOnUpdated(p);
 
-        waitForLogFileMessage("Registering hook for amuniz/test-repos", log);
+        waitForLogFileMessage("Registering cloud hook for amuniz/test-repos", log);
 
     }
 
@@ -104,7 +108,7 @@ class WebhooksAutoregisterTest {
         JenkinsLocationConfiguration.get().setUrl(j.getURL().toString().replace("localhost", "127.0.0.1"));
     }
 
-    private void waitForLogFileMessage(String string, RingBufferLogHandler logs) throws IOException, InterruptedException {
+    private void waitForLogFileMessage(String string, RingBufferLogHandler logs) throws InterruptedException {
         File rootDir = j.jenkins.getRootDir();
         synchronized (rootDir) {
             int limit = 0;
@@ -129,8 +133,10 @@ class WebhooksAutoregisterTest {
         RingBufferLogHandler handler = new RingBufferLogHandler(RingBufferLogHandler.getDefaultRingBufferSize());
         SimpleFormatter formatter = new SimpleFormatter();
         handler.setFormatter(formatter);
-        Logger logger = Logger.getLogger(WebhookAutoRegisterListener.class.getName());
-        logger.addHandler(handler);
+        Logger.getLogger(WebhookAutoRegisterListener.class.getName()).addHandler(handler);
+        Logger.getLogger(CloudWebhookManager.class.getName()).addHandler(handler);
+        Logger.getLogger(ServerWebhookManager.class.getName()).addHandler(handler);
+        Logger.getLogger(PluginWebhookManager.class.getName()).addHandler(handler);
         return handler;
     }
 

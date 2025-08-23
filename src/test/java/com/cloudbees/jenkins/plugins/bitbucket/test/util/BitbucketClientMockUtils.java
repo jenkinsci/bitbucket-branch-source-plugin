@@ -34,8 +34,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommi
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestDestination;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import hudson.model.TaskListener;
@@ -119,8 +119,8 @@ public class BitbucketClientMockUtils {
         return client;
     }
 
-    private static List<BitbucketCloudHook> getWebHooks() {
-        BitbucketCloudHook hook = new BitbucketCloudHook();
+    private static List<BitbucketCloudWebhook> getWebHooks() {
+        BitbucketCloudWebhook hook = new BitbucketCloudWebhook();
         hook.setUrl(Jenkins.get().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
         return Collections.singletonList(hook);
     }

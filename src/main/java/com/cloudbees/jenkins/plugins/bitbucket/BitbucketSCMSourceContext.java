@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookConfiguration;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
@@ -76,11 +75,6 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     @NonNull
     private WebhookRegistration webhookRegistration = WebhookRegistration.SYSTEM;
-    /**
-     * The {@link WebhookConfiguration} to use in this context.
-     */
-    @NonNull
-    private WebhookConfiguration webhookConfiguration = new WebhookConfiguration();
 
     /**
      * {@code true} if notifications should be disabled in this context.
@@ -200,16 +194,6 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     @NonNull
     public final WebhookRegistration webhookRegistration() {
         return webhookRegistration;
-    }
-
-    /**
-     * Returns the {@link WebhookConfiguration} configuration.
-     *
-     * @return the {@link WebhookConfiguration} configuration.
-     */
-    @NonNull
-    public final WebhookConfiguration webhookConfiguration() {
-        return webhookConfiguration;
     }
 
     /**
@@ -338,18 +322,6 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     public final BitbucketSCMSourceContext withForkPRStrategies(
             @NonNull Set<ChangeRequestCheckoutStrategy> strategies) {
         forkPRStrategies.addAll(strategies);
-        return this;
-    }
-
-    /**
-     * Defines the {@link WebhookRegistration} mode to use in this context.
-     *
-     * @param configuration the webhook configuration.
-     * @return {@code this} for method chaining.
-     */
-    @NonNull
-    public final BitbucketSCMSourceContext webhookConfiguration(WebhookConfiguration configuration) {
-        webhookConfiguration = configuration;
         return this;
     }
 

@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
@@ -39,7 +40,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
  * A provider of {@link BitbucketEndpoint}s
@@ -103,12 +103,15 @@ public final class BitbucketEndpointProvider{
      *
      * @param serverURL the server url to check.
      * @return the verbatim setting provided by endpoint configuration
+     * @deprecated This value depends on the underline {@link BitbucketWebhookConfiguration} configured for the endpoint.
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @NonNull
     public static String lookupEndpointJenkinsRootURL(@CheckForNull String serverURL) {
-        return lookupEndpoint(serverURL)
+        String jenkinsURL = lookupEndpoint(serverURL)
                 .map(BitbucketEndpoint::getEndpointJenkinsRootURL)
-                .orElse(Util.ensureEndsWith(URLUtils.normalizeURL(Util.fixEmptyAndTrim(DisplayURLProvider.get().getRoot())), "/"));
+                .orElse(BitbucketWebhookConfiguration.getDefaultJenkinsRootURL());
+        return Util.ensureEndsWith(jenkinsURL, "/");
     }
 
     /**
@@ -159,7 +162,7 @@ public final class BitbucketEndpointProvider{
         if (BitbucketApiUtils.isCloud(serverURL)) {
             endpoint = new BitbucketCloudEndpoint();
         } else {
-            endpoint = new BitbucketServerEndpoint(name, serverURL, false, null, false, null);
+            endpoint = new BitbucketServerEndpoint(name, serverURL);
         }
         if (endpointCustomiser != null) {
             endpoint = endpointCustomiser.apply(endpoint);

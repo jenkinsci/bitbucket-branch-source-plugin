@@ -1,0 +1,42 @@
+{
+    "type": "webhook_subscription",
+    "uuid": "{202cf34e-7ccf-44b7-ba6b-8827a14d5324}",
+    "description": "Jenkins hook",
+    "url": "https://jenkins.io/jenkins/bitbucket-scmsource-hook/notify",
+    "active": true,
+    "skip_cert_verification": false,
+    "events": [
+        "pullrequest:created",
+        "pullrequest:fulfilled",
+        "repo:push",
+        "pullrequest:rejected",
+        "pullrequest:updated"
+    ],
+    "created_at": "2025-08-23T15:07:25.469063524Z",
+    "subject": {
+        "type": "repository",
+        "full_name": "amuniz/test-repos",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos"
+            },
+            "avatar": {
+                "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+            }
+        },
+        "name": "test-repos",
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+    },
+    "links": {
+        "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"
+        }
+    },
+    "source": null,
+    "read_only": false,
+    "history_enabled": false,
+    "secret_set": true
+}

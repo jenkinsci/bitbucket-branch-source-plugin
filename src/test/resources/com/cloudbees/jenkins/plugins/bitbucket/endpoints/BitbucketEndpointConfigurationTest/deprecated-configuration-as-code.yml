@@ -1,0 +1,54 @@
+---
+unclassified:
+  bitbucketendpointconfiguration:
+    endpoints:
+    - bitbucketCloudEndpoint:
+        credentialsId: "first"
+        manageHooks: true
+        enableCache: true
+        teamCacheDuration: 1
+        repositoriesCacheDuration: 2
+        enableHookSignature: true
+        hookSignatureCredentialsId: "secretId"
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        manageHooks: true
+        credentialsId: "second"
+        serverUrl: "https://bitbucket.example.com"
+        callCanMerge: false
+    - bitbucketServerEndpoint:
+        displayName: "Example Org"
+        serverUrl: "http://example.org:8080/bitbucket"
+        webhookImplementation: NATIVE
+        enableHookSignature: true
+        hookSignatureCredentialsId: "secretId"
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        manageHooks: true
+        credentialsId: "third"
+        serverUrl: "http://bitbucket.example.com:8083"
+        callCanMerge: true
+        webhookImplementation: NATIVE
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        manageHooks: true
+        credentialsId: "fourth"
+        serverUrl: "http://bitbucket.example.com:8084"
+        callCanMerge: false
+        callChanges: false
+        webhookImplementation: PLUGIN
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        manageHooks: true
+        credentialsId: "fifth"
+        serverUrl: "http://bitbucket.example.com:8085"
+        callCanMerge: false
+        webhookImplementation: PLUGIN
+        callChanges: true
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: "http://bitbucket.example.com:8086"
+        manageHooks: false
+        callCanMerge: false
+        callChanges: false
+        serverVersion: VERSION_7

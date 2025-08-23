@@ -33,12 +33,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
@@ -406,19 +404,6 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                                                           @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverURL,
                                                           @QueryParameter String value) {
             return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
-        }
-
-        @RequirePOST
-        public static FormValidation doCheckMirrorId(@QueryParameter String value,
-                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            if (!value.isEmpty()) {
-                BitbucketServerWebhookImplementation webhookImplementation =
-                    BitbucketServerEndpoint.findWebhookImplementation(serverURL);
-                if (webhookImplementation == BitbucketServerWebhookImplementation.PLUGIN) {
-                    return FormValidation.error("Mirror can only be used with native webhooks");
-                }
-            }
-            return FormValidation.ok();
         }
 
         @RequirePOST

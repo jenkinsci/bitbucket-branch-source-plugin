@@ -38,8 +38,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranc
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositorySource;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
@@ -511,13 +511,13 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudHook> getWebHooks() throws IOException {
+    public List<BitbucketCloudWebhook> getWebHooks() throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/hooks{?page,pagelen}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
                 .set("pagelen", MAX_PAGE_LENGTH)
                 .expand();
-        return getPagedRequest(url, BitbucketCloudHook.class);
+        return getPagedRequest(url, BitbucketCloudWebhook.class);
     }
 
     /**
