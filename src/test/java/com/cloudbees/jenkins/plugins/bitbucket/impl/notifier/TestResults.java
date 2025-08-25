@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025, Falco Nikolas
+ * Copyright (c) 2025, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,29 +21,53 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
+package com.cloudbees.jenkins.plugins.bitbucket.impl.notifier;
 
 /**
- * The implementation provides an authenticated client to the configured
- * Bitbucket endpoint.
- *
- * @author Nikolas Falco
+ * A summary of the passed, failed and skipped tests
  */
-public interface BitbucketWebhookClient extends AutoCloseable {
+public class TestResults {
 
-    String post(@NonNull String path, @CheckForNull String payload) throws IOException;
+    private int successful;
+    private int failed;
+    private int skipped;
 
-    String put(@NonNull String path, @CheckForNull String payload) throws IOException;
+    public TestResults() {
+    }
 
-    String delete(@NonNull String path) throws IOException;
+    public TestResults(int successful, int failed, int skipped) {
+        this.successful = successful;
+        this.failed = failed;
+        this.skipped = skipped;
+    }
 
-    @NonNull
-    String get(@NonNull String path) throws IOException;
+    public TestResults(TestResults other) {
+        this.successful = other.successful;
+        this.failed = other.failed;
+        this.skipped = other.skipped;
+    }
 
-    @Override
-    void close() throws IOException;
+    public int getSuccessful() {
+        return successful;
+    }
+
+    public void setSuccessful(int successful) {
+        this.successful = successful;
+    }
+
+    public int getFailed() {
+        return failed;
+    }
+
+    public void setFailed(int failed) {
+        this.failed = failed;
+    }
+
+    public int getSkipped() {
+        return skipped;
+    }
+
+    public void setSkipped(int skipped) {
+        this.skipped = skipped;
+    }
 }

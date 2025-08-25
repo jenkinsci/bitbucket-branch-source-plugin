@@ -23,13 +23,18 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import jenkins.scm.api.trait.SCMTrait;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 
@@ -39,30 +44,10 @@ import org.kohsuke.accmod.restrictions.Beta;
  * webhook commit
  *
  * @author Nikolas Falco
+ * @since 937.0.0
  */
 @Restricted(Beta.class)
 public interface BitbucketWebhookManager extends ExtensionPoint {
-
-    /**
-     * The owner of the repository where register the webhook.
-     *
-     * @param repositoryOwner name
-     */
-    void setRepositoryOwner(@NonNull String repositoryOwner);
-
-    /**
-     * Name of the repository where register the webhook.
-     *
-     * @param repositoryName
-     */
-    void setRepositoryName(@NonNull String repositoryName);
-
-    /**
-     * The base URL of endpoint of the Bitbucket host.
-     *
-     * @param serverURL the base of the endpoint to call.
-     */
-    void setServerURL(@NonNull String serverURL);
 
     /**
      * The callback URL where send event payload.
@@ -73,8 +58,10 @@ public interface BitbucketWebhookManager extends ExtensionPoint {
      * endpoint to process own events.
      *
      * @param callbackURL used to send webhook payload.
+     * @param endpoint this webhook is registered for, it could be used to
+     *        retrieve additional information to compose the callbackURL
      */
-    void setCallbackURL(@NonNull String callbackURL);
+    void setCallbackURL(@NonNull String callbackURL, @NonNull BitbucketEndpoint endpoint);
 
     /**
      * The configuration that returned this implementation class.
@@ -89,19 +76,35 @@ public interface BitbucketWebhookManager extends ExtensionPoint {
      *
      * @return a list of {@link SCMSourceTrait} classes.
      */
-    Collection<Class<? extends SCMSourceTrait>> supportedTraits();
+    default Collection<Class<? extends SCMSourceTrait>> supportedTraits() {
+        return Collections.emptyList();
+    }
 
     /**
      * Trait instance associate to a {@link SCMSource} where gather extra
      * configuration options.
      * <p>
      * Each {@link BitbucketWebhookConfiguration} that would obtain additional
-     * configuration options per project mst provide an own specific trait
+     * configuration options per project must provide an own specific trait
      * implementation.
      *
      * @param trait to apply
      */
-    void apply(SCMSourceTrait trait);
+    default void apply(SCMSourceTrait trait) {}
+
+    /**
+     * Convenient method to apply only supported traits to this customiser.
+     *
+     * @param traits to apply if supported too
+     */
+    default void withTraits(List<SCMSourceTrait> traits) {
+        supportedTraits().forEach(traitClass -> {
+            SCMSourceTrait trait = SCMTrait.find(traits, traitClass);
+            if (trait != null) {
+                apply(trait);
+            }
+        });
+    }
 
     /**
      * Returns the list of all registered webhook at this repository related to
@@ -111,7 +114,7 @@ public interface BitbucketWebhookManager extends ExtensionPoint {
      * @return a list of registered {@link BitbucketWebHook}.
      * @throws IOException in case of communication issue with Bitbucket
      */
-    Collection<BitbucketWebHook> read(@NonNull BitbucketWebhookClient client) throws IOException;
+    Collection<BitbucketWebHook> read(@NonNull BitbucketAuthenticatedClient client) throws IOException;
 
     /**
      * Save a webhook (updating or creating a new one) using the actual
@@ -120,7 +123,7 @@ public interface BitbucketWebhookManager extends ExtensionPoint {
      * @param client authenticated to communicate with Bitbucket
      * @throws IOException in case of communication issue with Bitbucket
      */
-    void register(@NonNull BitbucketWebhookClient client) throws IOException;
+    void register(@NonNull BitbucketAuthenticatedClient client) throws IOException;
 
     /**
      * Remove the webhook from the Bitbucket repository with the given
@@ -130,5 +133,5 @@ public interface BitbucketWebhookManager extends ExtensionPoint {
      * @param client authenticated to communicate with Bitbucket
      * @throws IOException in case of communication issue with Bitbucket
      */
-    void remove(@NonNull String webhookId, @NonNull BitbucketWebhookClient client) throws IOException;
+    void remove(@NonNull String webhookId, @NonNull BitbucketAuthenticatedClient client) throws IOException;
 }

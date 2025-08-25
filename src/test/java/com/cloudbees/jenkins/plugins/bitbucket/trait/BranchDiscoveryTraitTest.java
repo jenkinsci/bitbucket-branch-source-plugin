@@ -29,10 +29,7 @@ import java.util.Collections;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.trait.SCMHeadFilter;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -42,15 +39,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@WithJenkins
 class BranchDiscoveryTraitTest {
-
-    private static JenkinsRule j;
-
-    @BeforeAll
-    static void setUp(JenkinsRule rule) {
-        j = rule;
-    }
 
     @Test
     void given__discoverAll__when__appliedToContext__then__noFilter() {
@@ -115,8 +104,7 @@ class BranchDiscoveryTraitTest {
 
     @Test
     void given__descriptor__when__displayingOptions__then__allThreePresent() {
-        ListBoxModel options =
-                j.jenkins.getDescriptorByType(BranchDiscoveryTrait.DescriptorImpl.class).doFillStrategyIdItems();
+        ListBoxModel options = new BranchDiscoveryTrait.DescriptorImpl().doFillStrategyIdItems();
         assertThat(options.size(), is(3));
         assertThat(options.get(0).value, is("1"));
         assertThat(options.get(1).value, is("2"));

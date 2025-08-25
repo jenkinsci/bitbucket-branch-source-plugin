@@ -41,11 +41,8 @@ import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockFolder;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 @WithJenkins
 class SSHCheckoutTraitTest {
@@ -53,36 +50,33 @@ class SSHCheckoutTraitTest {
     private static JenkinsRule j;
 
     @BeforeAll
-    static void setUp(JenkinsRule rule) {
+    static void init(JenkinsRule rule) {
         j = rule;
     }
 
     @Test
-    void given__legacyConfig__when__creatingTrait__then__convertedToModern() {
-        assertThat(new SSHCheckoutTrait(BitbucketSCMSource.DescriptorImpl.ANONYMOUS).getCredentialsId(),
-                is(nullValue()));
+    void given__legacyConfig__when__creatingTrait__then__convertedToModern() throws Exception {
+        assertThat(new SSHCheckoutTrait(BitbucketSCMSource.DescriptorImpl.ANONYMOUS).getCredentialsId()).isNull();
     }
 
     @Test
-    void given__sshCheckoutWithCredentials__when__decoratingGit__then__credentialsApplied() {
+    void given__sshCheckoutWithCredentials__when__decoratingGit__then__credentialsApplied() throws Exception {
         SSHCheckoutTrait instance = new SSHCheckoutTrait("keyId");
-        BitbucketGitSCMBuilder probe =
-                new BitbucketGitSCMBuilder(new BitbucketSCMSource("example", "does-not-exist"),
-                        new BranchSCMHead("main"), null, "scanId");
-        assumeTrue("scanId".equals(probe.credentialsId()));
+        BitbucketGitSCMBuilder probe = new BitbucketGitSCMBuilder(new BitbucketSCMSource("example", "does-not-exist"), new BranchSCMHead("main"), null, "scanId");
+        assumeThat(probe.credentialsId()).isEqualTo("scanId");
+
         instance.decorateBuilder(probe);
-        assertThat(probe.credentialsId(), is("keyId"));
+        assertThat(probe.credentialsId()).isEqualTo("keyId");
     }
 
     @Test
-    void given__sshCheckoutWithAgentKey__when__decoratingGit__then__useAgentKeyApplied() {
+    void given__sshCheckoutWithAgentKey__when__decoratingGit__then__useAgentKeyApplied() throws Exception {
         SSHCheckoutTrait instance = new SSHCheckoutTrait(null);
-        BitbucketGitSCMBuilder probe =
-                new BitbucketGitSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"),
-                        new BranchSCMHead("main"), null, "scanId");
-        assumeTrue("scanId".equals(probe.credentialsId()));
+        BitbucketGitSCMBuilder probe = new BitbucketGitSCMBuilder(new BitbucketSCMSource( "example", "does-not-exist"), new BranchSCMHead("main"), null, "scanId");
+        assumeThat(probe.credentialsId()).isEqualTo("scanId");
+
         instance.decorateBuilder(probe);
-        assertThat(probe.credentialsId(), is(nullValue()));
+        assertThat(probe.credentialsId()).isNull();
     }
 
     @Test
@@ -93,39 +87,46 @@ class SSHCheckoutTraitTest {
         AuthorizationStrategy strategy = j.jenkins.getAuthorizationStrategy();
         try {
             j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+
             MockAuthorizationStrategy mockStrategy = new MockAuthorizationStrategy();
             mockStrategy.grant(Jenkins.ADMINISTER).onRoot().to("admin");
             mockStrategy.grant(Item.CONFIGURE).onItems(dummy).to("bob");
             mockStrategy.grant(Item.EXTENDED_READ).onItems(dummy).to("jim");
             j.jenkins.setAuthorizationStrategy(mockStrategy);
+
             try (ACLContext context = ACL.as(User.getOrCreateByIdOrFullName("admin"))) {
                 ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
-                assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
-                        is("does-not-exist"));
+                assertThat(rsp).describedAs("Expecting only the provided value so that form config unchanged")
+                    .hasSize(1)
+                    .element(0).satisfies(el -> assertThat(el.value).isEqualTo("does-not-exist"));
+
                 rsp = d.doFillCredentialsIdItems(null, "", "does-not-exist");
-                assertThat("Expecting just the empty entry", rsp, hasSize(1));
-                assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
+                assertThat(rsp).describedAs("Expecting just the empty entry")
+                    .hasSize(1)
+                    .element(0).satisfies(el -> assertThat(el.value).isEmpty());
             }
             try (ACLContext context = ACL.as(User.getOrCreateByIdOrFullName("bob"))) {
                 ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                assertThat("Expecting just the empty entry", rsp, hasSize(1));
-                assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
+                assertThat(rsp).describedAs("Expecting just the empty entry")
+                    .hasSize(1)
+                    .element(0).satisfies(el -> assertThat(el.value).isEmpty());
+
                 rsp = d.doFillCredentialsIdItems(null, "", "does-not-exist");
-                assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
-                assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
-                        is("does-not-exist"));
+                assertThat(rsp).describedAs("Expecting only the provided value so that form config unchanged")
+                    .hasSize(1)
+                    .element(0).satisfies(el -> assertThat(el.value).isEqualTo("does-not-exist"));
             }
             try (ACLContext context = ACL.as(User.getOrCreateByIdOrFullName("jim"))) {
                 ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                assertThat("Expecting just the empty entry", rsp, hasSize(1));
-                assertThat("Expecting just the empty entry", rsp.get(0).value, is(""));
+                assertThat(rsp).describedAs("Expecting just the empty entry")
+                    .hasSize(1)
+                    .element(0).satisfies(el -> assertThat(el.value).isEmpty());
             }
             try (ACLContext context = ACL.as(User.getOrCreateByIdOrFullName("sue"))) {
                 ListBoxModel rsp = d.doFillCredentialsIdItems(dummy, "", "does-not-exist");
-                assertThat("Expecting only the provided value so that form config unchanged", rsp, hasSize(1));
-                assertThat("Expecting only the provided value so that form config unchanged", rsp.get(0).value,
-                        is("does-not-exist"));
+                assertThat(rsp).describedAs("Expecting only the provided value so that form config unchanged")
+                    .hasSize(1)
+                    .element(0).satisfies(el -> assertThat(el.value).isEqualTo("does-not-exist"));
             }
         } finally {
             j.jenkins.setSecurityRealm(realm);

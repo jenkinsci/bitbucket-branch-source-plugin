@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
-  <id>com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator::https://bitbucket.test::DUB::stunning-adventure</id>
-  <credentialsId>bb-beescloud</credentialsId>
-  <repoOwner>DUB</repoOwner>
-  <repository>stunning-adventure</repository>
-  <serverUrl>https://bitbucket-hook-5.test</serverUrl>
-</com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>

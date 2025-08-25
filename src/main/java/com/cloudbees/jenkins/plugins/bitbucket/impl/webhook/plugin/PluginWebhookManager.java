@@ -23,8 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
@@ -74,9 +75,6 @@ public class PluginWebhookManager implements BitbucketWebhookManager {
             "TAG_CREATED"));
 
     private PluginWebhookConfiguration configuration;
-    private String serverURL;
-    private String repositoryOwner;
-    private String repositoryName;
     private String callbackURL;
     private String committersToIgnore;
 
@@ -97,58 +95,23 @@ public class PluginWebhookManager implements BitbucketWebhookManager {
         this.configuration = (PluginWebhookConfiguration) configuration;
     }
 
-    @NonNull
-    public String getRepositoryOwner() {
-        return repositoryOwner;
-    }
-
     @Override
-    public void setRepositoryOwner(@NonNull String repositoryOwner) {
-        this.repositoryOwner = repositoryOwner;
-    }
-
-    @NonNull
-    public String getRepositoryName() {
-        return repositoryName;
-    }
-
-    @Override
-    public void setRepositoryName(@NonNull String repositoryName) {
-        this.repositoryName = repositoryName;
-    }
-
-    @NonNull
-    public String getServerURL() {
-        return serverURL;
-    }
-
-    @Override
-    public void setServerURL(@NonNull String serverURL) {
-        this.serverURL = serverURL;
-    }
-
-    @Override
-    public void setCallbackURL(@NonNull String callbackURL) {
-        this.callbackURL = callbackURL;
-    }
-
-    @NonNull
-    private String getCallbackURL() {
-        return UriTemplate.buildFromTemplate(callbackURL)
+    public void setCallbackURL(@NonNull String callbackURL, @NonNull BitbucketEndpoint endpoint) {
+        this.callbackURL = UriTemplate.buildFromTemplate(callbackURL)
                 .query("server_url")
                 .build()
-                .set("server_url", serverURL)
-                .expand();
+                .set("server_url", endpoint.getServerURL())
+                .expand();;
     }
 
     @Override
     @NonNull
-    public Collection<BitbucketWebHook> read(@NonNull BitbucketWebhookClient client) throws IOException {
+    public Collection<BitbucketWebHook> read(@NonNull BitbucketAuthenticatedClient client) throws IOException {
         String endpointJenkinsRootURL = ObjectUtils.firstNonNull(configuration.getEndpointJenkinsRootURL(), BitbucketWebhookConfiguration.getDefaultJenkinsRootURL());
 
-        String url = UriTemplate.fromTemplate(serverURL + WEBHOOK_API)
-                .set("owner", repositoryOwner)
-                .set("repo", repositoryName)
+        String url = UriTemplate.fromTemplate(WEBHOOK_API)
+                .set("owner", client.getRepositoryOwner())
+                .set("repo", client.getRepositoryName())
                 .expand();
 
         BitbucketPluginWebhook[] hooks = JsonParser.toJava(client.get(url), BitbucketPluginWebhook[].class);
@@ -163,16 +126,16 @@ public class PluginWebhookManager implements BitbucketWebhookManager {
         BitbucketPluginWebhook hook = new BitbucketPluginWebhook();
         hook.setActive(true);
         hook.setDescription("Jenkins hook");
-        hook.setUrl(getCallbackURL());
+        hook.setUrl(callbackURL);
         hook.setEvents(PLUGIN_SERVER_EVENTS);
         hook.setCommittersToIgnore(committersToIgnore);
         return hook;
     }
 
-    private void register(@NonNull BitbucketPluginWebhook payload, @NonNull BitbucketWebhookClient client) throws IOException {
-        String url = UriTemplate.fromTemplate(serverURL + WEBHOOK_API)
-                .set("owner", repositoryOwner)
-                .set("repo", repositoryName)
+    private void register(@NonNull BitbucketPluginWebhook payload, @NonNull BitbucketAuthenticatedClient client) throws IOException {
+        String url = UriTemplate.fromTemplate(WEBHOOK_API)
+                .set("owner", client.getRepositoryOwner())
+                .set("repo", client.getRepositoryName())
                 .expand();
         client.post(url, JsonParser.toString(payload));
     }
@@ -208,38 +171,38 @@ public class PluginWebhookManager implements BitbucketWebhookManager {
         return update;
     }
 
-    private void update(@NonNull BitbucketPluginWebhook payload, @NonNull BitbucketWebhookClient client) throws IOException {
+    private void update(@NonNull BitbucketPluginWebhook payload, @NonNull BitbucketAuthenticatedClient client) throws IOException {
         String url = UriTemplate
-                .fromTemplate(serverURL + WEBHOOK_API)
-                .set("owner", repositoryOwner)
-                .set("repo", repositoryName)
+                .fromTemplate(WEBHOOK_API)
+                .set("owner", client.getRepositoryOwner())
+                .set("repo", client.getRepositoryName())
                 .set("id", payload.getUuid())
                 .expand();
         client.put(url, JsonParser.toString(payload));
     }
 
     @Override
-    public void remove(@NonNull String webhookId, @NonNull BitbucketWebhookClient client) throws IOException {
-        String url = UriTemplate.fromTemplate(serverURL + WEBHOOK_API)
-                .set("owner", repositoryOwner)
-                .set("repo", repositoryName)
+    public void remove(@NonNull String webhookId, @NonNull BitbucketAuthenticatedClient client) throws IOException {
+        String url = UriTemplate.fromTemplate(WEBHOOK_API)
+                .set("owner", client.getRepositoryOwner())
+                .set("repo", client.getRepositoryName())
                 .set("id", webhookId)
                 .expand();
         client.delete(url);
     }
 
     @Override
-    public void register(@NonNull BitbucketWebhookClient client) throws IOException {
+    public void register(@NonNull BitbucketAuthenticatedClient client) throws IOException {
         BitbucketPluginWebhook existingHook = (BitbucketPluginWebhook) read(client)
                 .stream()
                 .findFirst()
                 .orElse(null);
 
         if (existingHook == null) {
-            logger.log(Level.INFO, "Registering cloud hook for {0}/{1}", new Object[] { repositoryOwner, repositoryName });
+            logger.log(Level.INFO, "Registering cloud hook for {0}/{1}", new Object[] { client.getRepositoryOwner(), client.getRepositoryName() });
             register(buildPayload(), client);
         } else if (shouldUpdate(existingHook, buildPayload())) {
-            logger.log(Level.INFO, "Updating cloud hook for {0}/{1}", new Object[] { repositoryOwner, repositoryName });
+            logger.log(Level.INFO, "Updating cloud hook for {0}/{1}", new Object[] { client.getRepositoryOwner(), client.getRepositoryName() });
             update(existingHook, client);
         }
     }
