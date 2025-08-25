@@ -25,10 +25,8 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
-import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
@@ -42,7 +40,6 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import com.thoughtworks.xstream.XStream;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -97,21 +94,6 @@ class BitbucketSCMSourceTest {
         URL url = getClass().getResource(path);
         BitbucketSCMSource bss = (BitbucketSCMSource) Jenkins.XSTREAM2.fromXML(url);
         return bss;
-    }
-
-    // Also initialize the external endpoint configuration storage for some
-    // tests. Relevant XMLs are in a subdir of this class' fixtures.
-    private void loadBEC(String dataSet) {
-        // Note to use original BitbucketSCMSourceTest::getClass() here to get proper paths
-        String path = getClass().getSimpleName() + "/" + BitbucketEndpointConfiguration.class.getSimpleName() + "/" + dataSet + ".xml";
-        XStream xs = new BitbucketEndpointConfiguration().getConfigFile().getXStream();
-        URL url = getClass().getResource(path);
-        BitbucketEndpointConfiguration bec = (BitbucketEndpointConfiguration) xs.fromXML(url);
-        for (BitbucketEndpoint abe : bec.getEndpoints()) {
-            if (abe != null) {
-                BitbucketEndpointConfiguration.get().updateEndpoint(abe);
-            }
-        }
     }
 
     @Test
@@ -216,56 +198,6 @@ class BitbucketSCMSourceTest {
         instance.setCredentialsId("test");
         assertThat(instance.getCredentialsId()).isEqualTo("test");
     }
-
-    // NOTE: The tests below require that a BitbucketEndpointConfiguration with
-    // expected BB server and J root URLs exists, otherwise a dummy one is
-    // instantiated via readResolveServerUrl() in BitbucketSCMSource::readResolve()
-    // and then causes readResolve() call stack to revert the object from the
-    // properly loaded values (from XML fixtures) into the default Root URL lookup,
-    // as coded and intended (config does exist, so we honor it).
-//    @Test
-//    void bitbucketJenkinsRootUrl_emptyDefaulted() throws Exception {
-//        loadBEC(testName);
-//        BitbucketSCMSource instance = load(testName);
-//        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo(ClassicDisplayURLProvider.get().getRoot());
-//
-//        // Verify that an empty custom URL keeps returning the
-//        // current global root URL (ending with a slash),
-//        // meaning "current value at the moment when we ask".
-//        JenkinsLocationConfiguration.get().setUrl("http://localjenkins:80");
-//        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("http://localjenkins/");
-//
-//        JenkinsLocationConfiguration.get().setUrl("https://ourjenkins.master:8443/ci");
-//        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://ourjenkins.master:8443/ci/");
-//    }
-//
-//    @Test
-//    void bitbucketJenkinsRootUrl_goodAsIs() {
-//        loadBEC(testName);
-//        BitbucketSCMSource instance = load(testName);
-//        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("http://jenkins.test:8080/");
-//    }
-//
-//    @Test
-//    void bitbucketJenkinsRootUrl_normalized() {
-//        loadBEC(testName);
-//        BitbucketSCMSource instance = load(testName);
-//        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://jenkins.test/");
-//    }
-//
-//    @Test
-//    void bitbucketJenkinsRootUrl_slashed() {
-//        loadBEC(testName);
-//        BitbucketSCMSource instance = load(testName);
-//        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://jenkins.test/jenkins/");
-//    }
-//
-//    @Test
-//    void bitbucketJenkinsRootUrl_notslashed() {
-//        loadBEC(testName);
-//        BitbucketSCMSource instance = load(testName);
-//        assertThat(instance.getEndpointJenkinsRootURL()).isEqualTo("https://jenkins.test/jenkins/");
-//    }
 
     @Test
     void test_show_bitbucket_avatar_trait() throws Exception {

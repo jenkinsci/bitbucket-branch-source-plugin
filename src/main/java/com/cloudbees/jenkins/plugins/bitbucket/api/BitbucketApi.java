@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.buildstatus.BitbucketBuildStatusNotifier;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
@@ -297,8 +298,10 @@ public interface BitbucketApi extends AutoCloseable {
      * Set the build status for the given commit hash.
      *
      * @param status the status object to be serialized
+     * @deprecated Use the appropriate {@link BitbucketBuildStatusNotifier} instead of this
      * @throws IOException if there was a network communications error.
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException;
 
     /**

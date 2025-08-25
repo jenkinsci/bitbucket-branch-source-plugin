@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2025, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,47 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
+package com.cloudbees.jenkins.plugins.bitbucket.api.buildstatus;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Extension;
+import hudson.ExtensionPoint;
+import java.io.IOException;
 
-public class DummyBitbucketWebhook extends AbstractBitbucketWebhookConfiguration {
+public interface BitbucketBuildStatusNotifier extends ExtensionPoint {
 
-    DummyBitbucketWebhook(boolean manageHooks, String credentialsId) {
-        super(manageHooks, credentialsId, false, null);
-    }
+    /**
+     * Returns if this implementation supports the given endpoint type.
+     *
+     * @param type of the endpoint
+     * @return {@code true} if this implementation can manage API for this
+     *         endpoint, {@code false} otherwise.
+     */
+    boolean isApplicable(@NonNull EndpointType type);
 
-    @Override
-    public String getDisplayName() {
-        return "Dummy";
-    }
-
-    @NonNull
-    @Override
-    public String getId() {
-        return "DUMMY";
-    }
-
-    @NonNull
-    @Override
-    public String getEndpointJenkinsRootURL() {
-        return "http://master.example.com";
-    }
-
-    @Override
-    public Class<? extends BitbucketWebhookManager> getManager() {
-        return DummyWebhookManager.class;
-    }
-
-    @Extension // TestExtension could be used only for embedded classes
-    public static class DescriptorImpl extends AbstractBitbucketWebhookDescriptorImpl {
-        @Override
-        public boolean isApplicable(@NonNull EndpointType type) {
-            return true;
-        }
-    }
-
+    void sendBuildStatus(@NonNull BitbucketBuildStatus status, @NonNull BitbucketAuthenticatedClient client) throws IOException;
 }

@@ -31,13 +31,21 @@ import com.cloudbees.jenkins.plugins.bitbucket.FirstCheckoutCompletedInvisibleAc
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.buildstatus.BitbucketBuildStatusCustomizer;
+import com.cloudbees.jenkins.plugins.bitbucket.api.buildstatus.BitbucketBuildStatusNotifier;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait.ExcludeOriginPRBranchesSCMHeadFilter;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -50,6 +58,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.logging.Logger;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
@@ -57,6 +67,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
@@ -67,6 +78,7 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
  * Only builds derived from a job that was created as part of a multi-branch project will be processed by this listener.
  */
 public final class BitbucketBuildStatusNotifications {
+    private static final Logger logger = Logger.getLogger(BitbucketBuildStatusNotifications.class.getName());
 
     private static String getRootURL(@NonNull Run<?, ?> build) {
         JenkinsLocationConfiguration cfg = JenkinsLocationConfiguration.get();
@@ -82,10 +94,10 @@ public final class BitbucketBuildStatusNotifications {
      * Check if the build URL is compatible with Bitbucket API.
      * For example, Bitbucket Cloud API requires fully qualified or IP
      * Where we actively do not allow localhost
-     * Throws an IllegalStateException if it is not valid, or return the url otherwise
      *
      * @param url the URL of the build to check
      * @param client the bitbucket client we are facing.
+     * @throws IllegalStateException if it is not valid, or return the url otherwise
      */
     static String checkURL(@NonNull String url, BitbucketApi client) {
         try {
@@ -111,10 +123,10 @@ public final class BitbucketBuildStatusNotifications {
                                      @NonNull BitbucketApi client,
                                      @NonNull String key,
                                      @NonNull String hash,
-                                     @Nullable String refName) throws IOException, InterruptedException {
+                                     @Nullable String refName) throws IOException {
 
-        final SCMSource source = SCMSource.SourceByItem.findSource(build.getParent());
-        if (!(source instanceof BitbucketSCMSource)) {
+        final BitbucketSCMSource source = findBitbucketSCMSource(build);
+        if (source == null) {
             return;
         }
 
@@ -132,8 +144,9 @@ public final class BitbucketBuildStatusNotifications {
         }
         boolean isCloud = BitbucketApiUtils.isCloud(client);
 
+        List<SCMSourceTrait> traits = source.getTraits();
         BitbucketSCMSourceContext context = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(source.getTraits()); // NOSONAR
+                .withTraits(traits); // NOSONAR
         final Result result = build.getResult();
         final String name = build.getFullDisplayName(); // use the build number as the display name of the status
         String buildDescription = build.getDescription();
@@ -174,7 +187,6 @@ public final class BitbucketBuildStatusNotifications {
         }
 
         if (state != null) {
-            BitbucketDefaulNotifier notifier = new BitbucketDefaulNotifier(client);
             String notificationKey = DigestUtils.md5Hex(key);
             String notificationParentKey = null;
             if (context.useReadableNotificationIds() && !isCloud) {
@@ -185,8 +197,8 @@ public final class BitbucketBuildStatusNotifications {
             buildStatus.setBuildDuration(build.getDuration());
             buildStatus.setBuildNumber(build.getNumber());
             buildStatus.setParent(notificationParentKey);
-            // TODO testResults should be provided by an extension point that integrates JUnit or anything else plugin
-            notifier.notifyBuildStatus(buildStatus);
+
+            sendNotification(source, build, buildStatus, client);
             if (result != null) {
                 listener.getLogger().println("[Bitbucket] Build result notified");
             }
@@ -195,15 +207,50 @@ public final class BitbucketBuildStatusNotifications {
         }
     }
 
+    private static void sendNotification(@NonNull BitbucketSCMSource source,
+                                         @NonNull Run<?, ?> build,
+                                         @NonNull BitbucketBuildStatus buildStatus,
+                                         @NonNull BitbucketApi client) throws IOException {
+        EndpointType endpointType = BitbucketEndpointProvider.lookupEndpoint(source.getServerUrl())
+                .map(BitbucketEndpoint::getType)
+                .orElseThrow(() -> new BitbucketException("No configured endpoint found for server URL " + source.getServerUrl()));
+
+        BitbucketBuildStatus newBuildStatus = new BitbucketBuildStatus(buildStatus);
+
+        List<BitbucketBuildStatusCustomizer> customizers = ExtensionList.lookup(BitbucketBuildStatusCustomizer.class)
+                .stream()
+                .filter(n -> n.isApplicable(endpointType))
+                .toList();
+        for (BitbucketBuildStatusCustomizer customizer : customizers) {
+            customizer.withTraits(source.getTraits());
+            customizer.customize(build, newBuildStatus);
+            if (!buildStatus.equals(newBuildStatus)) {
+                logger.info("Build status enriched by " + customizer.getClass().getName());
+            }
+        }
+        // restore unmodifiable fields to respect traits options or avoid strange behaviours on builds
+        newBuildStatus.setState(buildStatus.getState());
+        newBuildStatus.setKey(buildStatus.getKey());
+        newBuildStatus.setRefname(buildStatus.getRefname());
+        newBuildStatus.setParent(buildStatus.getParent());
+        newBuildStatus.setUrl(buildStatus.getUrl());
+
+        BitbucketBuildStatusNotifier notifier = ExtensionList.lookup(BitbucketBuildStatusNotifier.class)
+                .stream()
+                .filter(n -> n.isApplicable(endpointType))
+                .findFirst()
+                .orElseThrow(() -> new BitbucketException("No notifier found that supports endpoint of type " + endpointType));
+        notifier.sendBuildStatus(newBuildStatus, client.adapt(BitbucketAuthenticatedClient.class));
+    }
+
     private static @CheckForNull BitbucketSCMSource findBitbucketSCMSource(Run<?, ?> build) {
         SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
         return s instanceof BitbucketSCMSource scm ? scm : null;
     }
 
-    private static void sendNotifications(BitbucketSCMSource source, Run<?, ?> build, TaskListener listener)
-            throws IOException, InterruptedException {
-        BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null,
-            SCMHeadObserver.none()).withTraits(source.getTraits());
+    private static void sendNotifications(BitbucketSCMSource source, Run<?, ?> build, TaskListener listener) throws IOException {
+        BitbucketSCMSourceContext sourceContext = new BitbucketSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits(source.getTraits());
         if (sourceContext.notificationsDisabled()) {
             listener.getLogger().println("[Bitbucket] Notification is disabled by configuration");
             return;
@@ -267,10 +314,8 @@ public final class BitbucketBuildStatusNotifications {
                 }
             }
         }
-        try {
+        try (client) {
             createStatus(build, listener, client, key, hash, refName);
-        } finally {
-            client.close();
         }
     }
 
@@ -333,7 +378,7 @@ public final class BitbucketBuildStatusNotifications {
 
                 try {
                     sendNotifications(source, build, listener);
-                } catch (IOException | InterruptedException e) {
+                } catch (IOException e) {
                     e.printStackTrace(listener.error("Could not send notifications"));
                 }
             }
@@ -355,7 +400,7 @@ public final class BitbucketBuildStatusNotifications {
 
             try {
                 sendNotifications(source, build, listener);
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 e.printStackTrace(listener.error("Could not send notifications"));
             }
         }

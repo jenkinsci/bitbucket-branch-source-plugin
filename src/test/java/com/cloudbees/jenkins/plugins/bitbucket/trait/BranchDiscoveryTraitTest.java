@@ -30,9 +30,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.trait.SCMHeadFilter;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
 import org.hamcrest.Matcher;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -43,9 +41,6 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
 public class BranchDiscoveryTraitTest {
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
-
     @Test
     public void given__discoverAll__when__appliedToContext__then__noFilter() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
@@ -112,8 +107,7 @@ public class BranchDiscoveryTraitTest {
 
     @Test
     public void given__descriptor__when__displayingOptions__then__allThreePresent() {
-        ListBoxModel options =
-                j.jenkins.getDescriptorByType(BranchDiscoveryTrait.DescriptorImpl.class).doFillStrategyIdItems();
+        ListBoxModel options = new BranchDiscoveryTrait.DescriptorImpl().doFillStrategyIdItems();
         assertThat(options.size(), is(3));
         assertThat(options.get(0).value, is("1"));
         assertThat(options.get(1).value, is("2"));

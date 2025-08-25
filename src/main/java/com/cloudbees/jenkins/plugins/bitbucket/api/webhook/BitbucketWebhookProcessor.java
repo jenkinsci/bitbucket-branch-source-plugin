@@ -46,6 +46,8 @@ import org.kohsuke.accmod.restrictions.Beta;
  * a specific event installed on the system, meaning the processor must fit to
  * the incoming request as much as possible or the hook will be rejected in case
  * of multiple matches.
+ *
+ * @since 937.0.0
  */
 @Restricted(Beta.class)
 public interface BitbucketWebhookProcessor extends ExtensionPoint {

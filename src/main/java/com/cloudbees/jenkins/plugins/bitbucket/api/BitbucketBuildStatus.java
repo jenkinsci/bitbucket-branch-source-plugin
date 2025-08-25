@@ -23,14 +23,20 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.buildstatus.BitbucketBuildStatusCustomizer;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
 public class BitbucketBuildStatus {
-
     /**
      * Enumeration of possible Bitbucket commit notification states
      */
@@ -43,20 +49,18 @@ public class BitbucketBuildStatus {
         CANCELLED("CANCELLED"),
         SUCCESSFUL("SUCCESSFUL");
 
-        private final String status;
+        @JsonValue
+        private final String label;
 
-        Status(final String status) {
-            this.status = status;
-        }
-
-        @Override
-        public String toString() {
-            return status;
+        Status(final String label) {
+            this.label = label;
         }
     }
 
     /**
-     * The commit hash to set the status on
+     * The commit hash to set the status on.
+     * <p>
+     * This is not part of the payload.
      */
     @JsonIgnore
     private String hash;
@@ -107,9 +111,16 @@ public class BitbucketBuildStatus {
      */
     private int buildNumber;
 
+    /**
+     * A set of new informations.
+     */
+    private Map<String, Object> optionalData;
+
     // Used for marshalling/unmarshalling
     @Restricted(DoNotUse.class)
-    public BitbucketBuildStatus() {}
+    public BitbucketBuildStatus() {
+        this.optionalData = new HashMap<>();
+    }
 
     public BitbucketBuildStatus(String hash,
                                 String description,
@@ -141,7 +152,9 @@ public class BitbucketBuildStatus {
         this.name = other.name;
         this.refname = other.refname;
         this.buildDuration = other.buildDuration;
+        this.buildNumber = other.buildNumber;
         this.parent = other.parent;
+        this.optionalData = other.optionalData != null ? new HashMap<>(other.optionalData) : new HashMap<>();
     }
 
     public String getHash() {
@@ -160,8 +173,8 @@ public class BitbucketBuildStatus {
         this.description = description;
     }
 
-    public String getState() {
-        return state.toString();
+    public Status getState() {
+        return state;
     }
 
     public void setState(Status state) {
@@ -223,4 +236,83 @@ public class BitbucketBuildStatus {
     public String getParent() {
         return parent;
     }
+
+    /**
+     * This represent additional informations contributed by
+     * {@link BitbucketBuildStatusCustomizer}s.
+     * <p>
+     * The contents of this map will be added to the root of the sent payload.
+     * <p>
+     * For example:
+     *
+     * <pre>
+     * buildStatus.addOptionalData("testResults", new TestResult(1, 2, 3));
+     * buildStatus.addOptionalData("optX", true);
+     * </pre>
+     *
+     * Will be serialised as:
+     *
+     * <pre>
+     * {
+     *     "description": "The build is in progress..."
+     *     ...
+     *     "testResult": {
+     *         "successful": 5,
+     *         "failed": 2,
+     *         "skipped": 1
+     *     },
+     *     "optX": true
+     * }
+     * </pre>
+     *
+     * @return an unmodifiable map of extra informations
+     */
+    @JsonAnyGetter
+    public Map<String, Object> getOptionalData() {
+        return Collections.unmodifiableMap(optionalData);
+    }
+
+    /**
+     * Add a new attribute to the payload to send. If the attribute has already
+     * been valued than it is ignored.
+     *
+     * @param attribute attribute of build status, refer to the Bitbucket API
+     * @param value bean to associate to the given attribute name
+     * @see <a href="https://developer.atlassian.com/cloud/bitbucket/rest/api-group-commit-statuses/#api-repositories-workspace-repo-slug-commit-commit-statuses-build-post">Cloud REST API</a>
+     * @see <a href="https://developer.atlassian.com/server/bitbucket/rest/v906/api-group-builds-and-deployments/#api-api-latest-projects-projectkey-repos-repositoryslug-commits-commitid-builds-post">Data Center REST API</a>
+     */
+    public void addOptionalData(String attribute, Object value) {
+        this.optionalData.putIfAbsent(attribute, value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(buildDuration, buildNumber, description, hash, key, name, parent, refname, state, url, optionalData);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        BitbucketBuildStatus other = (BitbucketBuildStatus) obj;
+        return buildDuration == other.buildDuration
+                && buildNumber == other.buildNumber
+                && Objects.equals(description, other.description)
+                && Objects.equals(hash, other.hash)
+                && Objects.equals(key, other.key)
+                && Objects.equals(name, other.name)
+                && Objects.equals(parent, other.parent)
+                && Objects.equals(refname, other.refname)
+                && state == other.state
+                && Objects.equals(url, other.url)
+                && Objects.equals(optionalData, other.optionalData);
+    }
+
 }

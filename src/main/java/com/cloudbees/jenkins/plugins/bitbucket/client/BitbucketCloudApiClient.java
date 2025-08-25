@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
@@ -43,6 +44,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudW
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositorySource;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.buildstatus.CloudBuildStatusNotifier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
@@ -86,7 +88,6 @@ import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 public class BitbucketCloudApiClient extends AbstractBitbucketApi implements BitbucketApi {
 
@@ -523,17 +524,11 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     /**
      * {@inheritDoc}
      */
+    @Deprecated
     @Override
     public void postBuildStatus(@NonNull BitbucketBuildStatus status) throws IOException {
-        BitbucketBuildStatus newStatus = new BitbucketBuildStatus(status);
-        newStatus.setName(abbreviate(newStatus.getName(), 255));
-
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commit/{hash}/statuses/build")
-                .set("owner", owner)
-                .set("repo", repositoryName)
-                .set("hash", newStatus.getHash())
-                .expand();
-        postRequest(url, JsonParser.toString(newStatus));
+        CloudBuildStatusNotifier notifier = new CloudBuildStatusNotifier();
+        notifier.sendBuildStatus(status, adapt(BitbucketAuthenticatedClient.class));
     }
 
     /**
@@ -680,6 +675,12 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @Override
     protected HttpHost getHost() {
         return API_HOST;
+    }
+
+    @NonNull
+    @Override
+    protected String getBaseURL() {
+        return "https://api.bitbucket.org";
     }
 
     @NonNull

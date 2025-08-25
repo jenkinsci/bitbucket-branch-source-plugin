@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
-import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;

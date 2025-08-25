@@ -28,11 +28,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
@@ -61,8 +61,6 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
-import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMTrait;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
@@ -178,7 +176,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
         }
 
         BitbucketWebhookManager manager = buildWebhookManager(source, endpoint);
-        try (BitbucketWebhookClient webhookClient = client.adapt(BitbucketWebhookClient.class)) {
+        try (BitbucketAuthenticatedClient webhookClient = client.adapt(BitbucketAuthenticatedClient.class)) {
             manager.register(webhookClient);
         }
     }
@@ -189,22 +187,14 @@ public class WebhookAutoRegisterListener extends ItemListener {
         BitbucketWebhookManager manager = ExtensionList.lookupFirst(webhookConfig.getManager());
         // setup manager with base required information
         manager.apply(webhookConfig);
-        manager.setServerURL(endpoint.getServerURL());
-        manager.setRepositoryOwner(source.getRepoOwner());
-        manager.setRepositoryName(source.getRepository());
 
         String callbackRootURL = getCallbackRootURL(webhookConfig);
         // this is the base callback URL that webhook usually should call to be processed
         String callbackURL = callbackRootURL + BitbucketSCMSourcePushHookReceiver.FULL_PATH;
-        manager.setCallbackURL(callbackURL);
+        manager.setCallbackURL(callbackURL, endpoint);
 
         // setup traits extra informations
-        for (Class<? extends SCMSourceTrait> traitClazz : manager.supportedTraits()) {
-            SCMSourceTrait trait = SCMTrait.find(source.getTraits(), traitClazz);
-            if (trait != null) {
-                manager.apply(trait);
-            }
-        }
+        manager.withTraits(source.getTraits());
         return manager;
     }
 
@@ -226,7 +216,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             }
             BitbucketApi client = getClientBySource(source, endpoint);
             if (client != null) {
-                try (BitbucketWebhookClient webhookClient = client.adapt(BitbucketWebhookClient.class)) {
+                try (BitbucketAuthenticatedClient webhookClient = client.adapt(BitbucketAuthenticatedClient.class)) {
                     if (webhookClient == null) {
                         continue;
                     }
