@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -132,22 +131,13 @@ public class BitbucketIntegrationClientFactory {
         }
     }
 
-    @Deprecated
-    public static BitbucketApi getServerClient(String serverURL, String owner, String repositoryName, BitbucketServerWebhookImplementation webhoook) {
-        return new BitbucketServerIntegrationClient(serverURL, owner, repositoryName, webhoook);
-    }
-
     private static class BitbucketServerIntegrationClient extends BitbucketServerAPIClient implements IAuditable {
         private static final String PAYLOAD_RESOURCE_ROOTPATH = "/com/cloudbees/jenkins/plugins/bitbucket/server/payload/";
 
         private final IRequestAudit audit;
 
         private BitbucketServerIntegrationClient(String baseURL, String owner, String repositoryName) {
-            this(baseURL, owner, repositoryName, BitbucketServerWebhookImplementation.NATIVE);
-        }
-
-        private BitbucketServerIntegrationClient(String baseURL, String owner, String repositoryName, BitbucketServerWebhookImplementation webhook) {
-            super(baseURL, owner, repositoryName, mock(BitbucketAuthenticator.class), false, webhook);
+            super(baseURL, owner, repositoryName, mock(BitbucketAuthenticator.class), false);
 
             this.audit = new RequestAudit();
         }

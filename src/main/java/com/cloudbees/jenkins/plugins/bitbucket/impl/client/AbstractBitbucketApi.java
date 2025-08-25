@@ -23,12 +23,21 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.client;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.ExtensionList;
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import java.io.FileNotFoundException;
@@ -38,6 +47,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -80,7 +90,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
 @Restricted(ProtectedExternally.class)
-public abstract class AbstractBitbucketApi implements AutoCloseable {
+public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseable {
     protected final Logger logger = Logger.getLogger(this.getClass().getName());
     private final BitbucketAuthenticator authenticator;
     private HttpClientContext context;
@@ -343,5 +353,86 @@ public abstract class AbstractBitbucketApi implements AutoCloseable {
 
     protected BitbucketAuthenticator getAuthenticator() {
         return authenticator;
+    }
+
+    @Override
+    public List<? extends BitbucketWebHook> getWebHooks() throws IOException {
+        logger.warning("getWebHooks is deprecated, do not use this API method anymore, webhook are now handled by the BitbucketWebhookManager.");
+        BitbucketWebhookManager manager = buildManager();
+        BitbucketWebhookClient webhookClient = adapt(BitbucketWebhookClient.class);
+        return new ArrayList<>(manager.read(webhookClient));
+    }
+
+    @Override
+    public void registerCommitWebHook(BitbucketWebHook hook) throws IOException {
+        logger.warning("registerCommitWebHook is deprecated, do not use this API method anymore, webhook are now handled by the BitbucketWebhookManager.");
+        this.updateCommitWebHook(hook);
+    }
+
+    @Override
+    public void updateCommitWebHook(BitbucketWebHook hook) throws IOException {
+        logger.warning("updateCommitWebHook is deprecated, do not use this API method anymore, webhook are now handled by the BitbucketWebhookManager.");
+        BitbucketWebhookManager manager = buildManager();
+        BitbucketWebhookClient webhookClient = adapt(BitbucketWebhookClient.class);
+        manager.register(webhookClient);
+    }
+
+    @Override
+    public void removeCommitWebHook(BitbucketWebHook hook) throws IOException {
+        logger.warning("removeCommitWebHook is deprecated, do not use this API method anymore, webhook are now handled by the BitbucketWebhookManager.");
+        BitbucketWebhookManager integmanagerration = buildManager();
+        BitbucketWebhookClient webhookClient = adapt(BitbucketWebhookClient.class);
+        integmanagerration.remove(hook.getUuid(), webhookClient);
+    }
+
+    @Deprecated
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
+    @NonNull
+    private BitbucketWebhookManager buildManager() {
+        String serverURL = getHost().toString(); // not 100% true in case of bitbucket data center...but this method must not be used so does not matter
+        BitbucketEndpoint endpoint = BitbucketEndpointProvider.lookupEndpoint(serverURL)
+                .orElseThrow();
+        BitbucketWebhookConfiguration configuration = endpoint.getWebhook();
+        BitbucketWebhookManager manager = ExtensionList.lookupFirst(configuration.getManager());
+        manager.apply(configuration);
+        manager.setRepositoryOwner(getOwner());
+        manager.setRepositoryName(getRepositoryName());
+        return manager;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T adapt(Class<T> clazz) {
+        if (clazz == BitbucketWebhookClient.class) {
+            return (T) new BitbucketWebhookClient() {
+
+                @Override
+                public String post(@NonNull String path, @CheckForNull String payload) throws IOException {
+                    return postRequest(path, payload);
+                }
+
+                @Override
+                public String put(@NonNull String path, @CheckForNull String payload) throws IOException {
+                    return putRequest(path, payload);
+                }
+
+                @Override
+                public String delete(@NonNull String path) throws IOException {
+                    return deleteRequest(path);
+                }
+
+                @Override
+                public String get(@NonNull String path) throws IOException {
+                    return getRequest(path);
+                }
+
+                @Override
+                public void close() throws IOException {
+                    AbstractBitbucketApi.this.close();
+                }
+            };
+        } else {
+            return null;
+        }
     }
 }

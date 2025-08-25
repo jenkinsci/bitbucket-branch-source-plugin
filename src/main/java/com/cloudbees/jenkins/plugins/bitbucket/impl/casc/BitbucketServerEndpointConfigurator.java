@@ -23,18 +23,19 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.casc;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookConfiguration;
 import hudson.Extension;
-import io.jenkins.plugins.casc.BaseConfigurator;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorException;
+import io.jenkins.plugins.casc.impl.configurators.DataBoundConfigurator;
 import io.jenkins.plugins.casc.model.Mapping;
+import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
@@ -46,12 +47,11 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
  */
 @Extension
 @Restricted(NoExternalUse.class)
-public class BitbucketServerEndpointConfigurator extends BaseConfigurator<BitbucketServerEndpoint> {
-    private final static Logger logger = LoggerFactory.getLogger(BitbucketServerEndpointConfigurator.class);
+public class BitbucketServerEndpointConfigurator extends DataBoundConfigurator<BitbucketServerEndpoint> {
+    private static final Logger logger = Logger.getLogger(BitbucketServerEndpointConfigurator.class.getName());
 
-    @Override
-    public Class<BitbucketServerEndpoint> getTarget() {
-        return BitbucketServerEndpoint.class;
+    public BitbucketServerEndpointConfigurator() {
+        super(BitbucketServerEndpoint.class);
     }
 
     @Override
@@ -63,47 +63,62 @@ public class BitbucketServerEndpointConfigurator extends BaseConfigurator<Bitbuc
         } else {
             serverURL = mapping.getScalarValue("serverURL");
         }
-        boolean manageHooks = false;
-        if (mapping.containsKey("manageHooks")) {
-            manageHooks = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("manageHooks")));
-        }
-        String credentialsId = null;
-        if (mapping.containsKey("credentialsId")) {
-            credentialsId = mapping.getScalarValue("credentialsId");
-        }
-        boolean enableHookSignature = false;
-        if (mapping.containsKey("enableHookSignature")) {
-            enableHookSignature = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("enableHookSignature")));
-        }
-        String hookSignatureCredentialsId = null;
-        if (mapping.containsKey("hookSignatureCredentialsId")) {
-            credentialsId = mapping.getScalarValue("hookSignatureCredentialsId");
-        }
         String serverVersion = null;
         if (mapping.containsKey("serverVersion")) {
             serverVersion = mapping.getScalarValue("serverVersion");
         }
-        BitbucketServerWebhookImplementation webhookImplementation = null;
-        if (mapping.containsKey("webhookImplementation")) {
-            webhookImplementation = BitbucketServerWebhookImplementation.valueOf(mapping.getScalarValue("webhookImplementation"));
-        }
-        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint(displayName, serverURL, manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+        BitbucketWebhookConfiguration webhook = getWebhook(mapping);
+        BitbucketServerEndpoint endpoint = new BitbucketServerEndpoint(displayName, serverURL, webhook );
         if (serverVersion != null) {
             endpoint.setServerVersion(serverVersion);
         }
-        if (webhookImplementation != null) {
-            endpoint.setWebhookImplementation(webhookImplementation);
-        }
         // remove unmapped attributes
         if (mapping.containsKey("callCanMerge")) {
-            logger.warn("callCanMerge is deprecated and ignore for BitbucketServerEndpoint definition, remove from your CasC definition.");
+            logger.warning("callCanMerge is deprecated and ignored for BitbucketServerEndpoint definition, remove from your CasC definition.");
             mapping.remove("callCanMerge");
         }
         if (mapping.containsKey("callChanges")) {
-            logger.warn("callChanges is deprecated and ignore for BitbucketServerEndpoint definition, remove from your CasC definition.");
+            logger.warning("callChanges is deprecated and ignored for BitbucketServerEndpoint definition, remove from your CasC definition.");
             mapping.remove("callChanges");
         }
         return endpoint;
+    }
+
+    @SuppressWarnings("deprecation")
+    private BitbucketWebhookConfiguration getWebhook(Mapping mapping) {
+        boolean manageHooks = false;
+        if (mapping.containsKey("manageHooks")) {
+            logger.warning("manageHooks is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            manageHooks = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("manageHooks")));
+        }
+        String credentialsId = null;
+        if (mapping.containsKey("credentialsId")) {
+            logger.warning("credentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            credentialsId = mapping.getScalarValue("credentialsId");
+        }
+        boolean enableHookSignature = false;
+        if (mapping.containsKey("enableHookSignature")) {
+            logger.warning("enableHookSignature is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            enableHookSignature = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("enableHookSignature")));
+        }
+        String hookSignatureCredentialsId = null;
+        if (mapping.containsKey("hookSignatureCredentialsId")) {
+            logger.warning("hookSignatureCredentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            hookSignatureCredentialsId = mapping.getScalarValue("hookSignatureCredentialsId");
+        }
+        String webhookImplementation = null;
+        if (mapping.containsKey("webhookImplementation")) {
+            logger.warning("webhookImplementation is deprecated, replace from your CasC definition with the appropriate webhook definition.");
+            webhookImplementation = mapping.getScalarValue("webhookImplementation");
+        }
+        BitbucketWebhookConfiguration webhook;
+        if ("NATIVE".equals(webhookImplementation)) {
+            webhook = new ServerWebhookConfiguration(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
+        } else {
+            // old default was plugin
+            webhook = new PluginWebhookConfiguration(manageHooks, credentialsId);
+        }
+        return webhook;
     }
 
 }

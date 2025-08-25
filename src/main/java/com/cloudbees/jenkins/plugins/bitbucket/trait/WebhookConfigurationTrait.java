@@ -24,19 +24,16 @@
 package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.Messages;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.WebhookConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * A {@link SCMSourceTrait} for {@link BitbucketSCMSource} that sets the committersToIgnore
- * setting in {@link WebhookConfiguration}.
+ * A {@link SCMSourceTrait} for {@link BitbucketSCMSource} to configure extra information in a {@link BitbucketWebhookManager}.
  *
  * @since 2.4.5
  */
@@ -63,24 +60,6 @@ public class WebhookConfigurationTrait extends SCMSourceTrait {
      */
     public String getCommittersToIgnore() {
         return this.committersToIgnore;
-    }
-
-    /**
-     * Gets the WebhookConfiguration to apply.
-     *
-     * @return the WebhookConfiguration to apply.
-     */
-    @NonNull
-    public final WebhookConfiguration getWebhookConfiguration() {
-        return new WebhookConfiguration(this.committersToIgnore);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((BitbucketSCMSourceContext) context).webhookConfiguration(getWebhookConfiguration());
     }
 
     /**

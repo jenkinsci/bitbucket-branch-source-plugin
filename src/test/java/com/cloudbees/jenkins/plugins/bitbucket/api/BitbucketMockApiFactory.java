@@ -42,12 +42,12 @@ public class BitbucketMockApiFactory extends BitbucketApiFactory {
         instance().mocks.clear();
     }
 
-    public static void add(String serverUrl, BitbucketApi api) {
-        instance().mocks.put(Objects.toString(serverUrl, NULL), api);
+    public static void add(String serverURL, BitbucketApi client) {
+        instance().mocks.put(Objects.toString(serverURL, NULL), client);
     }
 
-    public static void remove(String serverUrl) {
-        instance().mocks.remove(Objects.toString(serverUrl, NULL));
+    public static void remove(String serverURL) {
+        instance().mocks.remove(Objects.toString(serverURL, NULL));
     }
 
     private static BitbucketMockApiFactory instance() {
@@ -56,14 +56,14 @@ public class BitbucketMockApiFactory extends BitbucketApiFactory {
 
 
     @Override
-    protected boolean isMatch(@Nullable String serverUrl) {
-        return mocks.containsKey(Objects.toString(serverUrl, NULL));
+    protected boolean isMatch(@Nullable String serverURL) {
+        return mocks.containsKey(Objects.toString(serverURL, NULL));
     }
 
     @NonNull
     @Override
-    protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
+    protected BitbucketApi create(@Nullable String serverURL, @Nullable BitbucketAuthenticator authenticator,
                                   @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
-        return mocks.get(Objects.toString(serverUrl, NULL));
+        return mocks.get(Objects.toString(serverURL, NULL));
     }
 }

@@ -86,6 +86,8 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
         XStream2 xs = new XStream2(XStream2.getDefaultDriver());
         xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint", BitbucketCloudEndpoint.class);
         xs.alias("com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint", BitbucketServerEndpoint.class);
+        xs.aliasField("serverUrl", BitbucketCloudEndpoint.class, "serverURL");
+        xs.aliasField("serverUrl", BitbucketServerEndpoint.class, "serverURL");
         xs.omitField(BitbucketServerEndpoint.class, "callCanMerge");
         xs.omitField(BitbucketServerEndpoint.class, "callChanges");
         return new XmlFile(xs, cfgFile);
@@ -126,7 +128,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
                 // exception case
                 endpoint = new BitbucketCloudEndpoint();
             } else {
-                endpoint = new BitbucketServerEndpoint(normalizedURL);
+                endpoint = new BitbucketServerEndpoint(null, normalizedURL);
             }
             addEndpoint(endpoint);
         }
@@ -199,13 +201,6 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             if (StringUtils.isBlank(serverURL) || serverURLs.contains(serverURL)) {
                 iterator.remove();
                 continue;
-            } else if (!(endpoint instanceof BitbucketCloudEndpoint) && BitbucketApiUtils.isCloud(serverURL)) {
-                // fix type for the special case
-                BitbucketCloudEndpoint cloudEndpoint = new BitbucketCloudEndpoint(false, 0, 0,
-                        endpoint.isManageHooks(), endpoint.getCredentialsId(),
-                        endpoint.isEnableHookSignature(), endpoint.getHookSignatureCredentialsId());
-                cloudEndpoint.setBitbucketJenkinsRootUrl(endpoint.getEndpointJenkinsRootURL());
-                iterator.set(cloudEndpoint);
             }
             serverURLs.add(serverURL);
         }

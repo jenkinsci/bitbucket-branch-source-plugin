@@ -70,7 +70,7 @@ class BranchScanningIntegrationTest {
     @Test
     void indexingTest() throws Exception {
         BitbucketEndpointConfiguration.get()
-                .addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test", false, null, false, null));
+                .addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test"));
         BitbucketMockApiFactory.add("http://bitbucket.test", BitbucketClientMockUtils.getAPIClientMock(false, false));
 
         MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");

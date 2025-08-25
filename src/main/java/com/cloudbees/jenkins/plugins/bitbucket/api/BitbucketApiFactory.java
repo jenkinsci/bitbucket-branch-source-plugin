@@ -51,7 +51,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
      * Creates a {@link BitbucketApi} for the specified URL with the supplied credentials, owner and (optional)
      * repository.
      *
-     * @param serverUrl   the server URL.
+     * @param serverURL   the server URL.
      * @param authenticator the (optional) authenticator.
      * @param owner       the owner name.
      * @param projectKey  the (optional) project key.
@@ -59,7 +59,7 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
      * @return the {@link BitbucketApi}.
      */
     @NonNull
-    protected abstract BitbucketApi create(@Nullable String serverUrl,
+    protected abstract BitbucketApi create(@Nullable String serverURL,
                                            @Nullable BitbucketAuthenticator authenticator,
                                            @NonNull String owner,
                                            @CheckForNull String projectKey,
@@ -67,12 +67,12 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
 
     @NonNull
     @Deprecated
-    protected BitbucketApi create(@Nullable String serverUrl,
+    protected BitbucketApi create(@Nullable String serverURL,
                                            @Nullable StandardUsernamePasswordCredentials credentials,
                                            @NonNull String owner,
                                            @CheckForNull String repository) {
         BitbucketAuthenticator auth = credentials != null ? new BitbucketUsernamePasswordAuthenticator(credentials) : null;
-        return create(serverUrl, auth, owner, null, repository);
+        return create(serverURL, auth, owner, null, repository);
     }
 
     /**
@@ -101,14 +101,4 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
         throw new IllegalArgumentException("Unsupported Bitbucket server URL: " + serverURL);
     }
 
-    @NonNull
-    @Deprecated
-    public static BitbucketApi newInstance(@Nullable String serverUrl,
-                                           @Nullable StandardUsernamePasswordCredentials credentials,
-                                           @NonNull String owner,
-                                           @CheckForNull String projectKey,
-                                           @CheckForNull String repository) {
-        BitbucketAuthenticator auth = credentials != null ? new BitbucketUsernamePasswordAuthenticator(credentials) : null;
-        return newInstance(serverUrl, auth, owner, projectKey, repository);
-    }
 }

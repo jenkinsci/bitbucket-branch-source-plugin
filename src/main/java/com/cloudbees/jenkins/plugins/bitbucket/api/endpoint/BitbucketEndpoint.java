@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -33,9 +34,6 @@ import hudson.Util;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.plugins.plaincredentials.StringCredentials;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * The implementation represents an endpoint configuration to be used in
@@ -80,12 +78,23 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
     String getServerURL();
 
     /**
+     * Returns the webhook implementation that this endpoint is using to manage the incoming payload.
+     *
+     * @return the {@link BitbucketWebhookConfiguration} implementation selected for this endpoint.
+     * @since 937.0.0
+     */
+    @NonNull
+    BitbucketWebhookConfiguration getWebhook();
+
+    /**
      * Returns {@code true} if and only if Jenkins is supposed to auto-manage
      * hooks for this end-point.
      *
      * @return {@code true} if and only if Jenkins is supposed to auto-manage
      *         hooks for this end-point.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     boolean isManageHooks();
 
     /**
@@ -94,7 +103,9 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      * @param manageHooks   if Jenkins must auto-manage hooks registration.
      * @param credentialsId credentialsId to use with rights to create or update web
      *                      hook for Bitbucket repositories.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     void setManageHooks(boolean manageHooks, @CheckForNull String credentialsId);
 
     /**
@@ -103,8 +114,10 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      *
      * @return the {@link StandardUsernamePasswordCredentials#getId()} of the
      *         credentials to use for auto-management of hooks.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
     @CheckForNull
+    @Deprecated(since = "937.0.0", forRemoval = true)
     String getCredentialsId();
 
     /**
@@ -113,69 +126,26 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      * null or equals an empty string.
      *
      * @return the verbatim setting provided by endpoint configuration
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @NonNull
     String getEndpointJenkinsRootURL();
-
-    /**
-     * Returns if the should or not verify incoming web hook payload from this
-     * endpoint.
-     *
-     * @apiNote This method is under development so could be moved to an interface
-     *          dedicated to webhooks implementation
-     *
-     * @return the {@code true} if the web hook implementation configured for this
-     *         endpoint should or not verify web hook payload that could be signed
-     *         or crypted.
-     */
-    @Restricted(Beta.class)
-    boolean isEnableHookSignature();
-
-    /**
-     * The {@link StringCredentials#getId()} of the credentials to use to verify the
-     * signature of hooks.
-     *
-     * @apiNote This method is under development so could be moved to an interface
-     *          dedicated to webhooks implementation
-     *
-     * @return the configured credentials identifier to use
-     */
-    @Restricted(Beta.class)
-    @CheckForNull
-    String getHookSignatureCredentialsId();
 
     /**
      * Looks up the {@link StandardCredentials} to use for auto-management of hooks.
      *
      * @return the credentials or {@code null}.
+     * @deprecated Use {@link #getWebhook()} instead of this to retrieve information webhook
      */
+    @Deprecated(since = "937.0.0", forRemoval = true)
     @CheckForNull
     default StandardCredentials credentials() {
-        String credentialsId = Util.fixEmptyAndTrim(getCredentialsId());
+        String credentialsId = Util.fixEmptyAndTrim(getWebhook().getCredentialsId());
         if (credentialsId == null) {
             return null;
         } else {
             return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), credentialsId, StandardCredentials.class);
-        }
-    }
-
-    /**
-     * Looks up the {@link StringCredentials} to use to verify the signature of
-     * hooks.
-     *
-     * @apiNote This method is under development so could be moved to an interface
-     *          dedicated to webhook provider
-     *
-     * @return the credentials or {@code null}.
-     */
-    @Restricted(Beta.class)
-    @CheckForNull
-    default StringCredentials hookSignatureCredentials() {
-        String credentialsId = Util.fixEmptyAndTrim(getHookSignatureCredentialsId());
-        if (credentialsId == null) {
-            return null;
-        } else {
-            return BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), getServerURL(), credentialsId, StringCredentials.class);
         }
     }
 
@@ -189,10 +159,12 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
         return StringUtils.equalsIgnoreCase(getServerURL(), endpoint.getServerURL());
     }
 
-    /**
+   /**
     *
     * @see Describable#getDescriptor()
     */
    @Override
-   BitbucketEndpointDescriptor getDescriptor();
+   default BitbucketEndpointDescriptor getDescriptor() {
+       return (BitbucketEndpointDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
+   }
 }

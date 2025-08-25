@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.FallbackToOtherRepositoryGitSCMExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -113,7 +114,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
 
         String serverURL = scmSource.getServerUrl();
         BitbucketEndpoint endpoint = BitbucketEndpointProvider.lookupEndpoint(serverURL)
-                .orElse(new BitbucketServerEndpoint(null, serverURL, false, null, false, null));
+                .orElse(BitbucketApiUtils.isCloud(serverURL) ? new BitbucketCloudEndpoint() : new BitbucketServerEndpoint("tmp", serverURL));
 
         String repositoryURL = endpoint.getRepositoryURL(scmSource.getRepoOwner(), scmSource.getRepository());
         if (BitbucketApiUtils.isCloud(endpoint.getServerURL())) {

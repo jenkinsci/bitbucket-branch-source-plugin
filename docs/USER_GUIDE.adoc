@@ -7,7 +7,7 @@ _Bitbucket Branch Source plugin_ allows use of Bitbucket Cloud and Data Center a
  * *Single repository source*: automatic creation of jobs for branches and pull requests in a specific repository.
  * *Organization folders*: automatic creation of multi-branch projects for each visible repository in a specific Bitbucket Team or Project.
 
-IMPORTANT: Since version 937.0.0 this plugin officially supports *only* versions of Bitbucket Data Center *not* declared as in link:https://confluence.atlassian.com/support/atlassian-end-of-support-policy-201851003.html[End Of Support (EOS)].
+IMPORTANT: Since version 937.0.0 this plugin officially supports *only* versions of Bitbucket Data Center *not* excluded by the link:https://confluence.atlassian.com/support/atlassian-end-of-support-policy-201851003.html[End Of Support (EOS)] policy.
 
 [id=bitbucket-scm-source]
 == Branches and pull requests auto-discovering
@@ -304,12 +304,12 @@ System.setProperty("http.socket.timeout", "300") // 5 minutes
 In case Bitbucket has been configured to expire OAuth2 tokens before 5 minutes, you can configure via a JVM property the release time of the cache where all obtained OAuth2 tokens are stored. This setting is to avoid requests with expired tokens that will produce HTTP 401 responses. link:https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/[Bitbucket Cloud] access tokens expire in two hours.
 To change this amount of time (default is 300 seconds), add the system property `bitbucket.oauth2.cache.timeout=60` on Jenkins startup.
 
-=== Disable Branch Indexing on Empty changes
+=== Enable Branch Indexing on Empty changes
 
-By default, the plugin triggers *a full branch indexing* when a push event contains *empty* changes. This may happen on various scenario, mainly in Bitbucket Data Center, such as:
+By default, the plugin does not triggers *a full branch indexing* when a push event contains *empty* changes. This may happen on various scenario, mainly in Bitbucket Data Center, such as:
 
 * When manually merging remote **Open** pull requests. This particular scenario produces 2 events and cause duplicated builds.
 * For a fork, when link:https://confluence.atlassian.com/bitbucketserver/keeping-forks-synchronized-776639961.html[Auto-Sync] is on and a branch cannot be synchronised
 * A link:http://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html#Eventpayload-Mirrorsynchronized[mirror:repo_synchronized] event with too many refs
 
-This behaviour can be disabled by adding the system property `bitbucket.hooks.processor.scanOnEmptyChanges=false` on Jenkins startup.
+This behaviour can be enabled by adding the system property `bitbucket.hooks.processor.scanOnEmptyChanges=true` on Jenkins startup.
