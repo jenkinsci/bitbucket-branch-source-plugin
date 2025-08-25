@@ -55,7 +55,7 @@ class BitbucketCloudPushEventTest {
     }
 
     @Test
-    void createPayload() {
+    void createPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -81,7 +81,7 @@ class BitbucketCloudPushEventTest {
     }
 
     @Test
-    void updatePayload() {
+    void updatePayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -98,7 +98,7 @@ class BitbucketCloudPushEventTest {
     }
 
     @Test
-    void emptyPayload() {
+    void emptyPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -115,7 +115,7 @@ class BitbucketCloudPushEventTest {
     }
 
     @Test
-    void newTagPayload() {
+    void newTagPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -136,7 +136,7 @@ class BitbucketCloudPushEventTest {
     }
 
     @Test
-    void multipleChangesPayload() {
+    void multipleChangesPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));

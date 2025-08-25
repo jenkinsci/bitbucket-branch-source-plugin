@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class BranchDiscoveryTraitTest {
 
     @Test
-    void given__discoverAll__when__appliedToContext__then__noFilter() {
+    void given__discoverAll__when__appliedToContext__then__noFilter() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(ctx.wantBranches());
         assumeFalse(ctx.wantPRs());
@@ -62,7 +62,7 @@ class BranchDiscoveryTraitTest {
     }
 
     @Test
-    void given__excludingPRs__when__appliedToContext__then__filter() {
+    void given__excludingPRs__when__appliedToContext__then__filter() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(ctx.wantBranches());
         assumeFalse(ctx.wantPRs());
@@ -83,7 +83,7 @@ class BranchDiscoveryTraitTest {
     }
 
     @Test
-    void given__onlyPRs__when__appliedToContext__then__filter() {
+    void given__onlyPRs__when__appliedToContext__then__filter() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(ctx.wantBranches());
         assumeFalse(ctx.wantPRs());

@@ -815,7 +815,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_branch_norev_anon__when__build__then__scmBuilt() {
+    void given__server_branch_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -858,7 +858,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_branch_norev_userpass__when__build__then__scmBuilt() {
+    void given__server_branch_norev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -901,7 +901,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_branch_norev_userkey__when__build__then__scmBuilt() {
+    void given__server_branch_norev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
@@ -943,7 +943,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_branch_norev_userkey_different_clone_url__when__build__then__scmBuilt() {
+    void given__server_branch_norev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         BranchSCMHead head = new BranchSCMHead("test-branch");
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
@@ -2156,7 +2156,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullHead_norev_anon__when__build__then__scmBuilt() {
+    void given__server_pullHead_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2199,7 +2199,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullHead_norev_userpass__when__build__then__scmBuilt() {
+    void given__server_pullHead_norev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -2242,7 +2242,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullHead_norev_userkey__when__build__then__scmBuilt() {
+    void given__server_pullHead_norev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
@@ -2284,7 +2284,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullHead_norev_userkey__when_different_clone_url__build__then__scmBuilt() {
+    void given__server_pullHead_norev_userkey__when_different_clone_url__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.HEAD);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
@@ -3007,7 +3007,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullMerge_norev_anon__when__build__then__scmBuilt() {
+    void given__server_pullMerge_norev_anon__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -3067,7 +3067,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullMerge_norev_userpass__when__build__then__scmBuilt() {
+    void given__server_pullMerge_norev_userpass__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source,
@@ -3127,7 +3127,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullMerge_norev_userkey__when__build__then__scmBuilt() {
+    void given__server_pullMerge_norev_userkey__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://bitbucket.test");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");
@@ -3186,7 +3186,7 @@ class BitbucketGitSCMBuilderTest {
     }
 
     @Test
-    void given__server_pullMerge_norev_userkey_different_clone_url__when__build__then__scmBuilt() {
+    void given__server_pullMerge_norev_userkey_different_clone_url__when__build__then__scmBuilt() throws Exception {
         source.setServerUrl("https://www.bitbucket.test/web");
         PullRequestSCMHead head = buildHeadFromFork(ChangeRequestCheckoutStrategy.MERGE);
         BitbucketGitSCMBuilder instance = new BitbucketGitSCMBuilder(source, head, null, "user-key");

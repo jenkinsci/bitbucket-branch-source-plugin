@@ -72,7 +72,7 @@ class BitbucketCloudApiClientTest {
 
     @Test
     @WithJenkins
-    void test_proxy_configured_without_password(JenkinsRule r) {
+    void test_proxy_configured_without_password(JenkinsRule r) throws Exception {
         ProxyConfiguration proxyConfiguration = spy(new ProxyConfiguration("proxy.lan", 8080, "username", null));
 
         r.jenkins.setProxy(proxyConfiguration);

@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 class PullRequestTargetBranchRefSpecTraitTest {
 
     @Test
-    void verify_that_pull_request_target_branch_is_added_as_ref_spec() {
+    void verify_that_pull_request_target_branch_is_added_as_ref_spec() throws Exception {
         PullRequestSCMHead head = mock(PullRequestSCMHead.class);
         when(head.getTarget()).thenReturn(new SCMHead("support/1.x"));
         BitbucketGitSCMRevision revision = mock(BitbucketGitSCMRevision.class);
@@ -52,7 +52,7 @@ class PullRequestTargetBranchRefSpecTraitTest {
     }
 
     @Test
-    void verify_that_no_ref_spec_is_added_for_non_pull_request() {
+    void verify_that_no_ref_spec_is_added_for_non_pull_request() throws Exception {
         BranchSCMHead head = mock(BranchSCMHead.class);
         when(head.getName()).thenReturn("support/1.x");
         BitbucketGitSCMRevision revision = mock(BitbucketGitSCMRevision.class);

@@ -55,7 +55,7 @@ class BitbucketServerPullRequestEventTest {
     }
 
     @Test
-    void updatePayload() {
+    void updatePayload() throws Exception {
         BitbucketPullRequestEvent event =
                 BitbucketServerWebhookPayload.pullRequestEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());

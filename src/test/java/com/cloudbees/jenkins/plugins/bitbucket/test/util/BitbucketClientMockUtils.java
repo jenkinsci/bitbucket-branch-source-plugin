@@ -57,7 +57,7 @@ import static org.mockito.Mockito.when;
 public class BitbucketClientMockUtils {
 
     public static BitbucketCloudApiClient getAPIClientMock(boolean includePullRequests,
-            boolean includeWebHooks) throws IOException {
+            boolean includeWebHooks) throws IOException, InterruptedException {
         BitbucketCloudApiClient client = mock(BitbucketCloudApiClient.class);
 
         // mock branches
@@ -164,7 +164,7 @@ public class BitbucketClientMockUtils {
         return team;
     }
 
-    private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException {
+    private static void withMockGitRepos(BitbucketApi bitbucket) throws IOException, InterruptedException {
         BitbucketCloudRepository repo = new BitbucketCloudRepository();
         repo.setFullName("amuniz/test-repos");
         repo.setPrivate(true);

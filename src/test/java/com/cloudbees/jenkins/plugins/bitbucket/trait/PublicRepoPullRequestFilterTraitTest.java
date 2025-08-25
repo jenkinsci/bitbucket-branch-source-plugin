@@ -45,7 +45,7 @@ class PublicRepoPullRequestFilterTraitTest {
     }
 
     @Test
-    void given__instance__when__decoratingContext__then__filterApplied() {
+    void given__instance__when__decoratingContext__then__filterApplied() throws Exception {
         PublicRepoPullRequestFilterTrait instance = new PublicRepoPullRequestFilterTrait();
         BitbucketSCMSourceContext probe = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(probe.skipPublicPRs());

@@ -187,7 +187,7 @@ class SCMNavigatorTest {
             }
 
             @Override
-            public void complete() throws IllegalStateException {
+            public void complete() throws IllegalStateException, InterruptedException {
             }
 
             public List<SCMSource> getSources() {

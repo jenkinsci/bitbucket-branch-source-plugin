@@ -53,7 +53,7 @@ class BitbucketServerPushEventTest {
     }
 
     @Test
-    void updatePayload() {
+    void updatePayload() throws Exception {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -70,7 +70,7 @@ class BitbucketServerPushEventTest {
     }
 
     @Test
-    void legacyPayload() {
+    void legacyPayload() throws Exception {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));

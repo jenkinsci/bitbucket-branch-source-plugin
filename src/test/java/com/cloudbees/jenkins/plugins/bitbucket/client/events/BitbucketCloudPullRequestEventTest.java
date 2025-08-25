@@ -53,7 +53,7 @@ class BitbucketCloudPullRequestEventTest {
     }
 
     @Test
-    void createPayloadOrigin() {
+    void createPayloadOrigin() throws Exception {
         BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -118,7 +118,7 @@ class BitbucketCloudPullRequestEventTest {
     }
 
     @Test
-    void createPayloadFork() {
+    void createPayloadFork() throws Exception {
         BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
 
         assertThat(event.getRepository(), notNullValue());
@@ -184,7 +184,7 @@ class BitbucketCloudPullRequestEventTest {
     }
 
     @Test
-    void updatePayload_newCommit() {
+    void updatePayload_newCommit() throws Exception {
         BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -249,7 +249,7 @@ class BitbucketCloudPullRequestEventTest {
     }
 
     @Test
-    void updatePayload_newDestination() {
+    void updatePayload_newDestination() throws Exception {
         BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -314,7 +314,7 @@ class BitbucketCloudPullRequestEventTest {
     }
 
     @Test
-    void updatePayload_newDestinationCommit() {
+    void updatePayload_newDestinationCommit() throws Exception {
         BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -379,7 +379,7 @@ class BitbucketCloudPullRequestEventTest {
     }
 
     @Test
-    void rejectedPayload() {
+    void rejectedPayload() throws Exception {
         BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));
@@ -445,7 +445,7 @@ class BitbucketCloudPullRequestEventTest {
     }
 
     @Test
-    void fulfilledPayload() {
+    void fulfilledPayload() throws Exception {
         BitbucketPullRequestEvent event = BitbucketCloudWebhookPayload.pullRequestEventFromPayload(payload);
         assertThat(event.getRepository(), notNullValue());
         assertThat(event.getRepository().getScm(), is("git"));

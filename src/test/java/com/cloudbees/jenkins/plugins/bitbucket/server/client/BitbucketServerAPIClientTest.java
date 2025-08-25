@@ -180,7 +180,7 @@ class BitbucketServerAPIClientTest {
     }
 
     @Test
-    void disableCookieManager() {
+    void disableCookieManager() throws Exception {
         try (MockedStatic<HttpClientBuilder> staticHttpClientBuilder = mockStatic(HttpClientBuilder.class)) {
             HttpClientBuilder httpClientBuilder = mock(HttpClientBuilder.class, RETURNS_SELF);
             staticHttpClientBuilder.when(HttpClientBuilder::create).thenReturn(httpClientBuilder);

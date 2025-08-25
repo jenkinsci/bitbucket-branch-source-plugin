@@ -66,7 +66,7 @@ class BitbucketSCMNavigatorTest {
     }
 
     @Test
-    void modern() {
+    void modern() throws Exception {
         BitbucketSCMNavigator instance = load();
         assertThat(instance.id()).isEqualTo("https://bitbucket.org::cloudbeers");
         assertThat(instance.getRepoOwner()).isEqualTo("cloudbeers");

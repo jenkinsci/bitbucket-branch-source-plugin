@@ -147,7 +147,7 @@ class BranchScanningTest {
     }
 
     private BitbucketSCMSource getBitbucketSCMSourceMock(boolean includePullRequests)
-            throws IOException {
+            throws IOException, InterruptedException {
         BitbucketCloudApiClient mock = BitbucketClientMockUtils.getAPIClientMock(includePullRequests, false);
 
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, mock);

@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class OriginPullRequestDiscoveryTraitTest {
 
     @Test
-    void given__discoverHeadMerge__when__appliedToContext__then__strategiesCorrect() {
+    void given__discoverHeadMerge__when__appliedToContext__then__strategiesCorrect() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(ctx.wantBranches());
         assumeFalse(ctx.wantPRs());
@@ -67,7 +67,7 @@ class OriginPullRequestDiscoveryTraitTest {
     }
 
     @Test
-    void given__discoverHeadOnly__when__appliedToContext__then__strategiesCorrect() {
+    void given__discoverHeadOnly__when__appliedToContext__then__strategiesCorrect() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(ctx.wantBranches());
         assumeFalse(ctx.wantPRs());
@@ -91,7 +91,7 @@ class OriginPullRequestDiscoveryTraitTest {
     }
 
     @Test
-    void given__discoverMergeOnly__when__appliedToContext__then__strategiesCorrect() {
+    void given__discoverMergeOnly__when__appliedToContext__then__strategiesCorrect() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(ctx.wantBranches());
         assumeFalse(ctx.wantPRs());
@@ -115,7 +115,7 @@ class OriginPullRequestDiscoveryTraitTest {
     }
 
     @Test
-    void given__programmaticConstructor__when__appliedToContext__then__strategiesCorrect() {
+    void given__programmaticConstructor__when__appliedToContext__then__strategiesCorrect() throws Exception {
         BitbucketSCMSourceContext ctx = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
         assumeFalse(ctx.wantBranches());
         assumeFalse(ctx.wantPRs());

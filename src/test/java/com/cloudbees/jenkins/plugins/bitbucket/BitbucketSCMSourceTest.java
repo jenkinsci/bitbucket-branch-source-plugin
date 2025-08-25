@@ -97,7 +97,7 @@ class BitbucketSCMSourceTest {
     }
 
     @Test
-    void modern() {
+    void modern() throws Exception {
         BitbucketSCMSource instance = load(testName);
         assertThat(instance.getId()).isEqualTo("e4d8c11a-0d24-472f-b86b-4b017c160e9a");
         assertThat(instance.getServerUrl()).isEqualTo("https://bitbucket.org");

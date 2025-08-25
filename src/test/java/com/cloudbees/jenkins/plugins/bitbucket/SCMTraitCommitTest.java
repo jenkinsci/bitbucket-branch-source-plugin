@@ -147,7 +147,6 @@ class SCMTraitCommitTest {
     }
 
     @SuppressWarnings("unchecked")
-
     static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] { //
             { "branch on cloud", new BranchDiscoveryTrait(true, true), BitbucketCloudEndpoint.SERVER_URL }, //
