@@ -66,7 +66,7 @@ class ServerPushWebhookProcessorTest {
     private SCMHeadEvent<?> scmEvent;
     private BitbucketEndpoint endpoint;
 
-    static JenkinsRule rule;
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule r) {

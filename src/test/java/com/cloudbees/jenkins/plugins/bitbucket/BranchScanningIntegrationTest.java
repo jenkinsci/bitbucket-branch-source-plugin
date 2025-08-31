@@ -47,27 +47,31 @@ import jenkins.branch.Branch;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class BranchScanningIntegrationTest {
+@WithJenkins
+class BranchScanningIntegrationTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule rule;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        this.rule = rule;
+    }
 
     @Test
-    public void indexingTest() throws Exception {
+    void indexingTest() throws Exception {
         BitbucketEndpointConfiguration.get()
                 .addEndpoint(new BitbucketServerEndpoint("test", "http://bitbucket.test"));
         BitbucketMockApiFactory.add("http://bitbucket.test", BitbucketClientMockUtils.getAPIClientMock(false, false));
 
-        MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
+        MockMultiBranchProjectImpl p = rule.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, true),
@@ -81,16 +85,18 @@ public class BranchScanningIntegrationTest {
         source.setOwner(p);
         p.getSourcesList().add(new BranchSource(source));
         p.scheduleBuild2(0);
-        j.waitUntilNoActivity();
+        rule.waitUntilNoActivity();
 
         // Only branch1 contains the marker file (branch2 does not meet the criteria)
-        assertEquals(1, p.getAllJobs().size());
-        assertEquals("branch1", p.getAllJobs().iterator().next().getName());
+        assertThat(p.getAllJobs()).hasSize(1)
+            .element(0).satisfies(job -> {
+                assertThat(job.getName()).isEqualTo("branch1");
+            });
     }
 
     @Test
-    public void uriResolverByCredentialsTest() throws Exception {
-        WorkflowMultiBranchProject context = j.jenkins.createProject(WorkflowMultiBranchProject.class, "context");
+    void uriResolverByCredentialsTest() throws Exception {
+        WorkflowMultiBranchProject context = rule.jenkins.createProject(WorkflowMultiBranchProject.class, "context");
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(true, true),
@@ -103,7 +109,7 @@ public class BranchScanningIntegrationTest {
         source.setServerUrl("http://bitbucket.test");
         context.getSourcesList().add(new BranchSource(source));
         IdCredentials c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "user", "pass");
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next()
+        CredentialsProvider.lookupStores(rule.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
 
         StandardCredentials creds = BitbucketCredentialsUtils.lookupCredentials(
@@ -112,10 +118,10 @@ public class BranchScanningIntegrationTest {
                 c.getId(),
                 UsernamePasswordCredentialsImpl.class
         );
-        assertThat(creds, instanceOf(UsernamePasswordCredentialsImpl.class));
+        assertThat(creds).isInstanceOf(UsernamePasswordCredentialsImpl.class);
 
         c = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, null, "user", null, null, null);
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next()
+        CredentialsProvider.lookupStores(rule.jenkins).iterator().next()
                 .addCredentials(Domain.global(), c);
 
         creds = BitbucketCredentialsUtils.lookupCredentials(
@@ -124,7 +130,7 @@ public class BranchScanningIntegrationTest {
                 c.getId(),
                 BasicSSHUserPrivateKey.class
         );
-        assertThat(creds, instanceOf(BasicSSHUserPrivateKey.class));
+        assertThat(creds).isInstanceOf(BasicSSHUserPrivateKey.class);
     }
 
     public static class BranchProperty extends JobProperty<FreeStyleProject> {

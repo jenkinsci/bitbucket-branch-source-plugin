@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketClientMockUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,22 +36,28 @@ import jenkins.scm.api.SCMSourceObserver.ProjectObserver;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.impl.NullSCMSource;
 import jenkins.scm.impl.trait.RegexSCMSourceFilterTrait;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-public class SCMNavigatorTest {
+@WithJenkins
+class SCMNavigatorTest {
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    @SuppressWarnings("unused")
+    private static JenkinsRule rule;
+
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        SCMNavigatorTest.rule = rule;
+    }
 
     @Test
-    public void teamRepositoriesDiscovering() throws IOException, InterruptedException {
+    void teamRepositoriesDiscovering() throws Exception {
         BitbucketMockApiFactory.add("http://bitbucket.test",
                 BitbucketClientMockUtils.getAPIClientMock(true, false));
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam");
@@ -64,28 +69,27 @@ public class SCMNavigatorTest {
         SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(), mock);
         navigator.visitSources(observer);
 
-        assertEquals("myteam", navigator.getRepoOwner());
+        assertThat(navigator.getRepoOwner()).isEqualTo("myteam");
 
         List<String> observed = observer.getObserved();
         // Only 2 repositories match the pattern
-        assertEquals("There must be 2 repositories in the team", 2, observed.size());
-        assertEquals("repo2 should be first", "repo2", observed.get(0));
-        assertEquals("repo1 should be second", "repo1", observed.get(1));
+        assertThat(observed).hasSize(2).containsExactly("repo2", "repo1");
 
         List<ProjectObserver> observers = observer.getProjectObservers();
         for (ProjectObserver obs : observers) {
             List<SCMSource> sources = ((SCMSourceObserverImpl.ProjectObserverImpl) obs).getSources();
             // It should contain only one source
-            assertEquals("Only one source must be created per observed repository", 1, sources.size());
-            SCMSource scmSource = sources.get(0);
-            assertTrue("BitbucketSCMSource instances must be added", scmSource instanceof BitbucketSCMSource);
-            // Check correct repoOwner (team name in this case) was set
-            assertEquals(((BitbucketSCMSource) scmSource).getRepoOwner(), "myteam");
+            assertThat(sources)
+                .describedAs("Only one source must be created per observed repository").hasSize(1)
+                .element(0)
+                .isInstanceOfSatisfying(BitbucketSCMSource.class, scmSource -> {
+                    assertThat(scmSource.getRepoOwner()).isEqualTo("myteam");
+                });
         }
     }
 
     @Test
-    public void teamRepositoriesDiscoveringNullSource() throws IOException, InterruptedException {
+    void teamRepositoriesDiscoveringNullSource() throws Exception {
         BitbucketMockApiFactory.add("http://bitbucket.test",
                                     BitbucketClientMockUtils.getAPIClientMock(true, false));
         BitbucketSCMNavigator navigator = new BitbucketSCMNavigator("myteam");
@@ -95,30 +99,30 @@ public class SCMNavigatorTest {
         final SCMSourceOwner mock = Mockito.mock(SCMSourceOwner.class);
         when(mock.getSCMSources()).thenReturn(List.of(new BitbucketSCMSource("myteam", "repo1"), new NullSCMSource()));
 
-        SCMSourceObserverImpl observer = new SCMSourceObserverImpl(BitbucketClientMockUtils.getTaskListenerMock(), mock);
+        SCMSourceObserverImpl observer = new SCMSourceObserverImpl(
+            BitbucketClientMockUtils.getTaskListenerMock(), mock);
         navigator.visitSources(observer);
 
-        assertEquals("myteam", navigator.getRepoOwner());
+        assertThat(navigator.getRepoOwner()).isEqualTo("myteam");
 
         List<String> observed = observer.getObserved();
         // Only 2 repositories match the pattern
-        assertEquals("There must be 2 repositories in the team", 2, observed.size());
-        assertEquals("repo2 should be first", "repo2", observed.get(0));
-        assertEquals("repo1 should be second", "repo1", observed.get(1));
+        assertThat(observed).hasSize(2).containsExactly("repo2", "repo1");
 
         List<ProjectObserver> observers = observer.getProjectObservers();
         for (ProjectObserver obs : observers) {
             List<SCMSource> sources = ((SCMSourceObserverImpl.ProjectObserverImpl) obs).getSources();
             // It should contain only one source
-            assertEquals("Only one source must be created per observed repository", 1, sources.size());
-            SCMSource scmSource = sources.get(0);
-            assertTrue("BitbucketSCMSource instances must be added", scmSource instanceof BitbucketSCMSource);
-            // Check correct repoOwner (team name in this case) was set
-            assertEquals(((BitbucketSCMSource) scmSource).getRepoOwner(), "myteam");
+            assertThat(sources)
+            .describedAs("Only one source must be created per observed repository").hasSize(1)
+            .element(0)
+            .isInstanceOfSatisfying(BitbucketSCMSource.class, scmSource -> {
+                assertThat(scmSource.getRepoOwner()).isEqualTo("myteam");
+            });
         }
     }
 
-    private class SCMSourceObserverImpl extends SCMSourceObserver {
+    private static class SCMSourceObserverImpl extends SCMSourceObserver {
 
         List<String> observed = new ArrayList<>();
         List<ProjectObserver> projectObservers = new ArrayList<>();
@@ -163,7 +167,7 @@ public class SCMNavigatorTest {
             return projectObservers;
         }
 
-        public class ProjectObserverImpl extends ProjectObserver {
+        private static class ProjectObserverImpl extends ProjectObserver {
 
             private List<SCMSource> sources = new ArrayList<>();
 

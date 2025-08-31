@@ -42,11 +42,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithJenkins
 class BitbucketSCMNavigatorTest {
 
-    static JenkinsRule j;
+    @SuppressWarnings("unused")
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
-        j = rule;
+        BitbucketSCMNavigatorTest.rule = rule;
     }
 
     private String currentTestName;

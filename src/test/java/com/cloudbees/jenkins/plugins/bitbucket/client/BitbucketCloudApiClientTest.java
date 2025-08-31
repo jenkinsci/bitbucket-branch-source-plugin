@@ -66,13 +66,13 @@ class BitbucketCloudApiClientTest {
 
     private String loadPayload(String api) throws IOException {
         try (InputStream is = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + api + "Payload.json")) {
-            return IOUtils.toString(is, "UTF-8");
+            return IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }
 
     @Test
     @WithJenkins
-    void test_proxy_configurated_without_password(JenkinsRule r) throws Exception {
+    void test_proxy_configured_without_password(JenkinsRule r) throws Exception {
         ProxyConfiguration proxyConfiguration = spy(new ProxyConfiguration("proxy.lan", 8080, "username", null));
 
         r.jenkins.setProxy(proxyConfiguration);
@@ -84,7 +84,7 @@ class BitbucketCloudApiClientTest {
     }
 
     @Test
-    void verify_status_notitication_name_max_length() throws Exception {
+    void verify_status_notification_name_max_length() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
         BitbucketBuildStatus status = new BitbucketBuildStatus();
         status.setName(RandomStringUtils.secure().nextAlphanumeric(300));

@@ -32,7 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTra
 import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.TagDiscoveryTrait;
 import hudson.model.TaskListener;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import jenkins.scm.api.SCMHead;
@@ -52,11 +52,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 class BitbucketGitSCMRevisionTest {
 
     @SuppressWarnings("unused")
-    private static JenkinsRule j;
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
-        j = rule;
+        BitbucketGitSCMRevisionTest.rule = rule;
     }
 
     private static Stream<Arguments> revisionDataProvider() {
@@ -77,7 +77,7 @@ class BitbucketGitSCMRevisionTest {
         BitbucketMockApiFactory.add(serverURL, getApiMockClient(serverURL));
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setServerUrl(serverURL);
-        source.setTraits(Arrays.<SCMSourceTrait> asList(trait));
+        source.setTraits(List.of(trait));
 
         TaskListener listener = BitbucketClientMockUtils.getTaskListenerMock();
         Set<SCMHead> heads = source.fetch(listener);

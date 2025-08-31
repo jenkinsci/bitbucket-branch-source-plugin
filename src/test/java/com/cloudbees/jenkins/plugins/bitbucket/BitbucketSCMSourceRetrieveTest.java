@@ -97,7 +97,8 @@ class BitbucketSCMSourceRetrieveTest {
     private static final String COMMIT_HASH = "e851558f77c098d21af6bb8cc54a423f7cf12147";
     private static final Integer PR_ID = 1;
 
-    public static JenkinsRule jenkinsRule = new JenkinsRule();
+    @SuppressWarnings("unused")
+    private static JenkinsRule jenkinsRule;
 
     @Mock
     private BitbucketRepository repository;

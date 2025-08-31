@@ -74,11 +74,11 @@ import static org.mockito.Mockito.verify;
 
 @WithJenkins
 class BitbucketSCMSourceTest {
-    private static JenkinsRule j;
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
-        j = rule;
+        BitbucketSCMSourceTest.rule = rule;
         BitbucketPlugin.aliases();
     }
 
@@ -225,7 +225,7 @@ class BitbucketSCMSourceTest {
     void verify_built_scm_with_username_password_authenticator() throws Exception {
         UsernamePasswordCredentialsImpl userCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "username-password", "desc", "user", "password");
 
-        CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
+        CredentialsStore store = CredentialsProvider.lookupStores(rule.getInstance()).iterator().next();
         store.addCredentials(Domain.global(), userCredentials);
 
         BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
@@ -251,7 +251,7 @@ class BitbucketSCMSourceTest {
     void verify_built_scm_with_token_authenticator() throws Exception {
         StringCredentials tokenCredentials = new StringCredentialsImpl(CredentialsScope.GLOBAL, "token-id", "desc", Secret.fromString("password"));
 
-        CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
+        CredentialsStore store = CredentialsProvider.lookupStores(rule.getInstance()).iterator().next();
         store.addCredentials(Domain.global(), tokenCredentials);
 
         BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");

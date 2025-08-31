@@ -62,13 +62,13 @@ import static org.mockito.Mockito.when;
 @WithJenkins
 class BranchScanningTest {
 
-    public static JenkinsRule rule = new JenkinsRule();
-
-    private static final String branchName = "branch1";
+    private static final String BRANCH_NAME = "branch1";
+    @SuppressWarnings("unused")
+    private static JenkinsRule rule;
 
     @BeforeAll
-    static void init(JenkinsRule r) {
-        rule = r;
+    static void init(JenkinsRule rule) {
+        BranchScanningTest.rule = rule;
     }
 
     @BeforeEach
@@ -100,7 +100,7 @@ class BranchScanningTest {
                 BitbucketClientMockUtils.getAPIClientMock(false, false));
         BitbucketSCMSource source = getBitbucketSCMSourceMock(false);
 
-        BranchSCMHead head = new BranchSCMHead(branchName);
+        BranchSCMHead head = new BranchSCMHead(BRANCH_NAME);
         SCMRevision rev = source.retrieve(head, BitbucketClientMockUtils.getTaskListenerMock());
 
         // Last revision on branch1 must be returned
@@ -165,13 +165,14 @@ class BranchScanningTest {
         return source;
     }
 
+    @SuppressWarnings("serial")
     private SCMSourceOwner getSCMSourceOwnerMock() {
         SCMSourceOwner mocked = mock(SCMSourceOwner.class);
         when(mocked.getSCMSourceCriteria(any(SCMSource.class))).thenReturn(new SCMSourceCriteria() {
 
             @Override
             public boolean isHead(Probe probe, TaskListener listener) throws IOException {
-                return probe.exists("markerfile.txt");
+                return probe.stat("markerfile.txt").exists();
             }
 
             @Override
@@ -187,7 +188,7 @@ class BranchScanningTest {
         return mocked;
     }
 
-    public final class SCMHeadObserverImpl extends SCMHeadObserver {
+    public static final class SCMHeadObserverImpl extends SCMHeadObserver {
 
         public List<String> branches = new ArrayList<>();
 

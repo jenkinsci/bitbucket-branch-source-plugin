@@ -25,24 +25,18 @@ package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import jenkins.scm.api.SCMHeadObserver;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assume.assumeThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
-public class PublicRepoPullRequestFilterTraitTest {
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
-
+class PublicRepoPullRequestFilterTraitTest {
     @Test
-    public void given__instance__when__decoratingContext__then__filterApplied() throws Exception {
+    void given__instance__when__decoratingContext__then__filterApplied() throws Exception {
         PublicRepoPullRequestFilterTrait instance = new PublicRepoPullRequestFilterTrait();
         BitbucketSCMSourceContext probe = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(probe.skipPublicPRs(), is(false));
+        assumeThat(probe.skipPublicPRs()).isFalse();
         instance.decorateContext(probe);
-        assertThat(probe.skipPublicPRs(), is(true));
+        assertThat(probe.skipPublicPRs()).isTrue();
     }
 }

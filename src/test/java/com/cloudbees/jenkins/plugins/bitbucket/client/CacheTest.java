@@ -25,48 +25,48 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class CacheTest {
+class CacheTest {
 
     @Test
-    public void ensure_cache_hit() throws Exception {
+    void ensure_cache_hit() throws Exception {
         final Cache<String, Long> cache = new Cache<>(5, TimeUnit.HOURS);
         @SuppressWarnings("unchecked")
         final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
         when(callable.call()).thenReturn(1L);
 
-        assertEquals(Long.valueOf(1L), cache.get("a key", callable));
-        assertEquals(Long.valueOf(1L), cache.get("a key", callable));
+        assertThat(cache.get("a key", callable)).isEqualTo(1L);
+        assertThat(cache.get("a key", callable)).isEqualTo(1L);
 
         verify(callable).call();
         verifyNoMoreInteractions(callable);
     }
 
     @Test
-    public void ensure_expiration_works() throws Exception {
+    void ensure_expiration_works() throws Exception {
         final Cache<String, Long> cache = new Cache<>(1, TimeUnit.NANOSECONDS);
         @SuppressWarnings("unchecked")
         final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
         when(callable.call()).thenReturn(1L);
 
-        assertEquals(Long.valueOf(1L), cache.get("a key", callable));
+        assertThat(cache.get("a key", callable)).isEqualTo(1L);
         Thread.sleep(200);
-        assertEquals(Long.valueOf(1L), cache.get("a key", callable));
+        assertThat(cache.get("a key", callable)).isEqualTo(1L);
 
         verify(callable, times(2)).call();
         verifyNoMoreInteractions(callable);
     }
 
     @Test
-    public void ensure_max_entries_works() throws Exception {
+    void ensure_max_entries_works() throws Exception {
         final Cache<String, Long> cache = new Cache<>(1, TimeUnit.NANOSECONDS, 10);
         @SuppressWarnings("unchecked")
         final ICheckedCallable<Long, Exception> callable = mock(ICheckedCallable.class);
@@ -75,9 +75,9 @@ public class CacheTest {
         for (int i = 0; i < 10; i++) {
             cache.get("key" + i, callable);
         }
-        assertEquals(10, cache.size());
+        assertThat(cache.size()).isEqualTo(10);
 
         cache.get("another key", callable);
-        assertEquals(10, cache.size());
+        assertThat(cache.size()).isEqualTo(10);
     }
 }

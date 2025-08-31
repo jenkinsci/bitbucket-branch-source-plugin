@@ -129,6 +129,7 @@ class WebhooksAutoregisterTest {
         Assertions.fail("Expected log not found: " + string);
     }
 
+    @SuppressWarnings("deprecation")
     private RingBufferLogHandler createJULTestHandler() throws SecurityException {
         RingBufferLogHandler handler = new RingBufferLogHandler(RingBufferLogHandler.getDefaultRingBufferSize());
         SimpleFormatter formatter = new SimpleFormatter();

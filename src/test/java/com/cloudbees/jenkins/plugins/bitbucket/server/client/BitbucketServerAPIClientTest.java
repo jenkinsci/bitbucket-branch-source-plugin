@@ -62,10 +62,6 @@ import org.mockito.MockedStatic;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_SELF;
@@ -76,13 +72,14 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @WithJenkins
+@SuppressWarnings("removal")
 class BitbucketServerAPIClientTest {
 
-    private static JenkinsRule j;
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
-        j = rule;
+        BitbucketServerAPIClientTest.rule = rule;
     }
 
     @Test
@@ -167,8 +164,8 @@ class BitbucketServerAPIClientTest {
         BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "foo", "test-repos");
         List<? extends BitbucketRepository> repos = client.getRepositories();
         List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).toList();
-        assertThat(names, not(hasItem("bar-archived")));
-        assertThat(names, is(List.of("bar-active")));
+        assertThat(names).doesNotContain("bar-archived");
+        assertThat(names).containsOnly("bar-active");
     }
 
     @Test
@@ -176,7 +173,7 @@ class BitbucketServerAPIClientTest {
         BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "amuniz", "test-repos");
         List<? extends BitbucketRepository> repos = client.getRepositories();
         List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).toList();
-        assertThat(names, is(List.of("another-repo", "dogs-repo", "test-repos")));
+        assertThat(names).containsOnly("another-repo", "dogs-repo", "test-repos");
     }
 
     @Test
@@ -265,7 +262,7 @@ class BitbucketServerAPIClientTest {
         String serverURL = "https://git.internaldomain.com:7990/bitbucket";
         ProxyConfiguration proxyConfiguration = spy(new ProxyConfiguration("proxy.lan", 8080, null, null, "*.internaldomain.com"));
 
-        j.jenkins.setProxy(proxyConfiguration);
+        rule.jenkins.setProxy(proxyConfiguration);
 
         AtomicReference<HttpClientBuilder> builderReference = new AtomicReference<>();
         try(BitbucketApi client = new BitbucketServerAPIClient(serverURL, "amuniz", "test-repos", mock(BitbucketUsernamePasswordAuthenticator.class), false) {

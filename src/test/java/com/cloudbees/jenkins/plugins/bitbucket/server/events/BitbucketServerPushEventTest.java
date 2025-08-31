@@ -27,59 +27,54 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitbucketServerPushEventTest {
-    @Rule
-    public final TestName testName = new TestName();
+class BitbucketServerPushEventTest {
 
     private String payload;
 
-    @Before
-    public void loadPayload() throws IOException {
+    @BeforeEach
+    void loadPayload(TestInfo info) throws IOException {
         try (InputStream is = getClass()
-                .getResourceAsStream(getClass().getSimpleName() + "/" + testName.getMethodName() + ".json")) {
-            payload = IOUtils.toString(is, "UTF-8");
+            .getResourceAsStream(getClass().getSimpleName() + "/" + info.getTestMethod().orElseThrow().getName() + ".json")) {
+            assertThat(is).isNotNull();
+            payload = IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }
 
     @Test
-    public void updatePayload() throws Exception {
+    void updatePayload() throws Exception {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getFullName(), is("PROJECT_1/rep_1"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("Project 1"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("PROJECT_1"));
-        assertThat(event.getRepository().getRepositoryName(), is("rep_1"));
-        assertThat(event.getRepository().isPrivate(), is(true));
-        assertThat(event.getRepository().getLinks(), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
-                is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
-        assertThat(event.getChanges().size(), is(1));
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getFullName()).isEqualTo("PROJECT_1/rep_1");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("Project 1");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("PROJECT_1");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("rep_1");
+        assertThat(event.getRepository().isPrivate()).isTrue();
+        assertThat(event.getRepository().getLinks()).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref())
+            .isEqualTo("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse");
+        assertThat(event.getChanges()).hasSize(1);
     }
-
     @Test
-    public void legacyPayload() throws Exception {
+    void legacyPayload() throws Exception {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getFullName(), is("PROJECT_1/rep_1"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("Project 1"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("PROJECT_1"));
-        assertThat(event.getRepository().getRepositoryName(), is("rep_1"));
-        assertThat(event.getRepository().isPrivate(), is(true));
-        assertThat(event.getRepository().getLinks(), nullValue());
-        assertThat(event.getChanges().size(), is(0));
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getFullName()).isEqualTo("PROJECT_1/rep_1");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("Project 1");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("PROJECT_1");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("rep_1");
+        assertThat(event.getRepository().isPrivate()).isTrue();
+        assertThat(event.getRepository().getLinks()).isNull();
+        assertThat(event.getChanges()).isEmpty();
     }
 }

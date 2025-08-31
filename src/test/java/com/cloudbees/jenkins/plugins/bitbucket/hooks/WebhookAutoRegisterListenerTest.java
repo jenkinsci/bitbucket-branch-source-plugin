@@ -63,7 +63,7 @@ import static org.mockito.Mockito.when;
 @WithJenkins
 class WebhookAutoRegisterListenerTest {
 
-    static JenkinsRule rule = new JenkinsRule();
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule r) {

@@ -29,148 +29,140 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebh
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitbucketServerPullRequestEventTest {
-    @Rule
-    public final TestName testName = new TestName();
+class BitbucketServerPullRequestEventTest {
 
     private String payload;
 
-    @Before
-    public void loadPayload() throws IOException {
+    @BeforeEach
+    void loadPayload(TestInfo info) throws IOException {
         try (InputStream is = getClass()
-                .getResourceAsStream(getClass().getSimpleName() + "/" + testName.getMethodName() + ".json")) {
-            payload = IOUtils.toString(is, "UTF-8");
+            .getResourceAsStream(getClass().getSimpleName() + "/" + info.getTestMethod().orElseThrow().getName() + ".json")) {
+            assertThat(is).isNotNull();
+            payload = IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }
 
     @Test
-    public void updatePayload() throws Exception {
-        BitbucketPullRequestEvent event =
-                BitbucketServerWebhookPayload.pullRequestEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getFullName(), is("PROJECT_1/rep_1"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("Project 1"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("PROJECT_1"));
-        assertThat(event.getRepository().getRepositoryName(), is("rep_1"));
-        assertThat(event.getRepository().isPrivate(), is(true));
-        assertThat(event.getRepository().getLinks(), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
-                is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
+    void updatePayload() throws Exception {
+        BitbucketPullRequestEvent event = BitbucketServerWebhookPayload.pullRequestEventFromPayload(payload);
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getFullName()).isEqualTo("PROJECT_1/rep_1");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("Project 1");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("PROJECT_1");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("rep_1");
+        assertThat(event.getRepository().isPrivate()).isTrue();
+        assertThat(event.getRepository().getLinks()).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref())
+            .isEqualTo("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse");
 
-        assertThat(event.getPullRequest(), notNullValue());
-        assertThat(event.getPullRequest().getTitle(), is("Markdown formatting"));
-        assertThat(event.getPullRequest().getAuthorLogin(), is("User"));
-        assertThat(event.getPullRequest().getLink(),
-                is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/pull-requests/1"));
+        assertThat(event.getPullRequest()).isNotNull();
+        assertThat(event.getPullRequest().getTitle()).isEqualTo("Markdown formatting");
+        assertThat(event.getPullRequest().getAuthorLogin()).isEqualTo("User");
+        assertThat(event.getPullRequest().getLink())
+            .isEqualTo("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/pull-requests/1");
 
-        assertThat(event.getPullRequest().getDestination(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getScm(), is("git"));
-        assertThat(event.getPullRequest().getDestination().getRepository().getFullName(), is("PROJECT_1/rep_1"));
-        assertThat(event.getPullRequest().getDestination().getRepository().getOwner().getDisplayName(), is("Project 1"));
-        assertThat(event.getPullRequest().getDestination().getRepository().getOwner().getUsername(), is("PROJECT_1"));
-        assertThat(event.getPullRequest().getDestination().getRepository().getRepositoryName(), is("rep_1"));
-        assertThat(event.getPullRequest().getDestination().getRepository().isPrivate(), is(true));
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref(),
-                is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
-        assertThat(event.getPullRequest().getDestination().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getBranch().getName(), is("main"));
-        assertThat(event.getPullRequest().getDestination().getBranch().getRawNode(), is("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"));
-        assertThat(event.getPullRequest().getDestination().getCommit(), notNullValue());
-        assertThat(event.getPullRequest().getDestination().getCommit().getHash(), is(
-                "d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"));
+        assertThat(event.getPullRequest().getDestination()).isNotNull();
+        assertThat(event.getPullRequest().getDestination().getRepository()).isNotNull();
+        assertThat(event.getPullRequest().getDestination().getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getPullRequest().getDestination().getRepository().getFullName()).isEqualTo("PROJECT_1/rep_1");
+        assertThat(event.getPullRequest().getDestination().getRepository().getOwner().getDisplayName()).isEqualTo("Project 1");
+        assertThat(event.getPullRequest().getDestination().getRepository().getOwner().getUsername()).isEqualTo("PROJECT_1");
+        assertThat(event.getPullRequest().getDestination().getRepository().getRepositoryName()).isEqualTo("rep_1");
+        assertThat(event.getPullRequest().getDestination().getRepository().isPrivate()).isTrue();
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks()).isNotNull();
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getPullRequest().getDestination().getRepository().getLinks().get("self").get(0).getHref())
+            .isEqualTo("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse");
+        assertThat(event.getPullRequest().getDestination().getBranch()).isNotNull();
+        assertThat(event.getPullRequest().getDestination().getBranch().getName()).isEqualTo("main");
+        assertThat(event.getPullRequest().getDestination().getBranch().getRawNode()).isEqualTo("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49");
+        assertThat(event.getPullRequest().getDestination().getCommit()).isNotNull();
+        assertThat(event.getPullRequest().getDestination().getCommit().getHash())
+            .isEqualTo("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49");
 
-        assertThat(event.getPullRequest().getSource(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getScm(), is("git"));
-        assertThat(event.getPullRequest().getSource().getRepository().getFullName(), is("~USER/rep_1"));
-        assertThat(event.getPullRequest().getSource().getRepository().getOwner().getDisplayName(), is("User"));
-        assertThat(event.getPullRequest().getSource().getRepository().getOwner().getUsername(), is("~USER"));
-        assertThat(event.getPullRequest().getSource().getRepository().getRepositoryName(), is("rep_1"));
-        assertThat(event.getPullRequest().getSource().getRepository().isPrivate(), is(true));
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref(),
-                anyOf(is("http://local.example.com:7990/bitbucket/projects/~USER/repos/rep_1/browse"),
-                        is("http://local.example.com:7990/bitbucket/users/user/repos/rep_1/browse")));
+        assertThat(event.getPullRequest().getSource()).isNotNull();
+        assertThat(event.getPullRequest().getSource().getRepository()).isNotNull();
+        assertThat(event.getPullRequest().getSource().getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getPullRequest().getSource().getRepository().getFullName()).isEqualTo("~USER/rep_1");
+        assertThat(event.getPullRequest().getSource().getRepository().getOwner().getDisplayName()).isEqualTo("User");
+        assertThat(event.getPullRequest().getSource().getRepository().getOwner().getUsername()).isEqualTo("~USER");
+        assertThat(event.getPullRequest().getSource().getRepository().getRepositoryName()).isEqualTo("rep_1");
+        assertThat(event.getPullRequest().getSource().getRepository().isPrivate()).isTrue();
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks()).isNotNull();
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getPullRequest().getSource().getRepository().getLinks().get("self").get(0).getHref())
+            .containsAnyOf("http://local.example.com:7990/bitbucket/projects/~USER/repos/rep_1/browse",
+                           "http://local.example.com:7990/bitbucket/users/user/repos/rep_1/browse");
 
-        assertThat(event.getPullRequest().getSource().getBranch(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getBranch().getName(), is("main"));
-        assertThat(event.getPullRequest().getSource().getBranch().getRawNode(),
-                is("feb8d676cd70406cecd4128c8fd1bee30282db11"));
-        assertThat(event.getPullRequest().getSource().getCommit(), notNullValue());
-        assertThat(event.getPullRequest().getSource().getCommit().getHash(), is(
-                "feb8d676cd70406cecd4128c8fd1bee30282db11"));
+        assertThat(event.getPullRequest().getSource().getBranch()).isNotNull();
+        assertThat(event.getPullRequest().getSource().getBranch().getName()).isEqualTo("main");
+        assertThat(event.getPullRequest().getSource().getBranch().getRawNode())
+            .isEqualTo("feb8d676cd70406cecd4128c8fd1bee30282db11");
+        assertThat(event.getPullRequest().getSource().getCommit()).isNotNull();
+        assertThat(event.getPullRequest().getSource().getCommit().getHash())
+            .isEqualTo("feb8d676cd70406cecd4128c8fd1bee30282db11");
     }
 
     @Test
-    public void apiResponse() throws Exception {
+    void apiResponse() throws Exception {
         BitbucketServerPullRequest pullRequest =
                 JsonParser.toJava(payload, BitbucketServerPullRequest.class);
-        assertThat(pullRequest, notNullValue());
-        assertThat(pullRequest.getTitle(), is("Markdown formatting"));
-        assertThat(pullRequest.getAuthorLogin(), is("User"));
-        assertThat(pullRequest.getLink(),
-                is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/pull-requests/1"));
+        assertThat(pullRequest).isNotNull();
+        assertThat(pullRequest.getTitle()).isEqualTo("Markdown formatting");
+        assertThat(pullRequest.getAuthorLogin()).isEqualTo("User");
+        assertThat(pullRequest.getLink())
+                .isEqualTo("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/pull-requests/1");
 
-        assertThat(pullRequest.getDestination(), notNullValue());
-        assertThat(pullRequest.getDestination().getRepository(), notNullValue());
-        assertThat(pullRequest.getDestination().getRepository().getScm(), is("git"));
-        assertThat(pullRequest.getDestination().getRepository().getFullName(), is("PROJECT_1/rep_1"));
-        assertThat(pullRequest.getDestination().getRepository().getOwner().getDisplayName(),
-                is("Project 1"));
-        assertThat(pullRequest.getDestination().getRepository().getOwner().getUsername(), is("PROJECT_1"));
-        assertThat(pullRequest.getDestination().getRepository().getRepositoryName(), is("rep_1"));
-        assertThat(pullRequest.getDestination().getRepository().isPrivate(), is(true));
-        assertThat(pullRequest.getDestination().getRepository().getLinks(), notNullValue());
-        assertThat(pullRequest.getDestination().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(pullRequest.getDestination().getRepository().getLinks().get("self").get(0).getHref(),
-                is("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse"));
-        assertThat(pullRequest.getDestination().getBranch(), notNullValue());
-        assertThat(pullRequest.getDestination().getBranch().getName(), is("main"));
-        assertThat(pullRequest.getDestination().getBranch().getRawNode(),
-                is("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"));
-        assertThat(pullRequest.getDestination().getCommit(), notNullValue());
-        assertThat(pullRequest.getDestination().getCommit().getHash(), is(
-                "d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49"));
+        assertThat(pullRequest.getDestination()).isNotNull();
+        assertThat(pullRequest.getDestination().getRepository()).isNotNull();
+        assertThat(pullRequest.getDestination().getRepository().getScm()).isEqualTo("git");
+        assertThat(pullRequest.getDestination().getRepository().getFullName()).isEqualTo("PROJECT_1/rep_1");
+        assertThat(pullRequest.getDestination().getRepository().getOwner().getDisplayName()).isEqualTo("Project 1");
+        assertThat(pullRequest.getDestination().getRepository().getOwner().getUsername()).isEqualTo("PROJECT_1");
+        assertThat(pullRequest.getDestination().getRepository().getRepositoryName()).isEqualTo("rep_1");
+        assertThat(pullRequest.getDestination().getRepository().isPrivate()).isTrue();
+        assertThat(pullRequest.getDestination().getRepository().getLinks()).isNotNull();
+        assertThat(pullRequest.getDestination().getRepository().getLinks().get("self")).isNotNull();
+        assertThat(pullRequest.getDestination().getRepository().getLinks().get("self").get(0).getHref())
+                .isEqualTo("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse");
+        assertThat(pullRequest.getDestination().getBranch()).isNotNull();
+        assertThat(pullRequest.getDestination().getBranch().getName()).isEqualTo("main");
+        assertThat(pullRequest.getDestination().getBranch().getRawNode())
+                .isEqualTo("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49");
+        assertThat(pullRequest.getDestination().getCommit()).isNotNull();
+        assertThat(pullRequest.getDestination().getCommit().getHash()).isEqualTo("d235f0c0aa22f4c75b2fb63b217e39e2d3c29f49");
 
-        assertThat(pullRequest.getSource(), notNullValue());
-        assertThat(pullRequest.getSource().getRepository(), notNullValue());
-        assertThat(pullRequest.getSource().getRepository().getScm(), is("git"));
-        assertThat(pullRequest.getSource().getRepository().getFullName(), is("~USER/rep_1"));
-        assertThat(pullRequest.getSource().getRepository().getOwner().getDisplayName(), is("User"));
-        assertThat(pullRequest.getSource().getRepository().getOwner().getUsername(), is("~USER"));
-        assertThat(pullRequest.getSource().getRepository().getRepositoryName(), is("rep_1"));
-        assertThat(pullRequest.getSource().getRepository().isPrivate(), is(true));
-        assertThat(pullRequest.getSource().getRepository().getLinks(), notNullValue());
-        assertThat(pullRequest.getSource().getRepository().getLinks().get("self"), notNullValue());
-        assertThat(pullRequest.getSource().getRepository().getLinks().get("self").get(0).getHref(),
-                anyOf(is("http://local.example.com:7990/bitbucket/projects/~USER/repos/rep_1/browse"),
-                        is("http://local.example.com:7990/bitbucket/users/user/repos/rep_1/browse"))
-        );
+        assertThat(pullRequest.getSource()).isNotNull();
+        assertThat(pullRequest.getSource().getRepository()).isNotNull();
+        assertThat(pullRequest.getSource().getRepository().getScm()).isEqualTo("git");
+        assertThat(pullRequest.getSource().getRepository().getFullName()).isEqualTo("~USER/rep_1");
+        assertThat(pullRequest.getSource().getRepository().getOwner().getDisplayName()).isEqualTo("User");
+        assertThat(pullRequest.getSource().getRepository().getOwner().getUsername()).isEqualTo("~USER");
+        assertThat(pullRequest.getSource().getRepository().getRepositoryName()).isEqualTo("rep_1");
+        assertThat(pullRequest.getSource().getRepository().isPrivate()).isTrue();
+        assertThat(pullRequest.getSource().getRepository().getLinks()).isNotNull();
+        assertThat(pullRequest.getSource().getRepository().getLinks().get("self")).isNotNull();
+        assertThat(pullRequest.getSource().getRepository().getLinks().get("self").get(0).getHref())
+            .containsAnyOf("http://local.example.com:7990/bitbucket/projects/~USER/repos/rep_1/browse",
+                           "http://local.example.com:7990/bitbucket/users/user/repos/rep_1/browse");
 
-        assertThat(pullRequest.getSource().getBranch(), notNullValue());
-        assertThat(pullRequest.getSource().getBranch().getName(), is("main"));
-        assertThat(pullRequest.getSource().getBranch().getRawNode(),
-                is("feb8d676cd70406cecd4128c8fd1bee30282db11"));
-        assertThat(pullRequest.getSource().getCommit(), notNullValue());
-        assertThat(pullRequest.getSource().getCommit().getHash(), is(
-                "feb8d676cd70406cecd4128c8fd1bee30282db11"));
+        assertThat(pullRequest.getSource().getBranch()).isNotNull();
+        assertThat(pullRequest.getSource().getBranch().getName()).isEqualTo("main");
+        assertThat(pullRequest.getSource().getBranch().getRawNode())
+            .isEqualTo("feb8d676cd70406cecd4128c8fd1bee30282db11");
+        assertThat(pullRequest.getSource().getCommit()).isNotNull();
+        assertThat(pullRequest.getSource().getCommit().getHash())
+            .isEqualTo("feb8d676cd70406cecd4128c8fd1bee30282db11");
 
     }
 }

@@ -28,157 +28,154 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudWebhookPaylo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitbucketCloudPushEventTest {
-    @Rule
-    public final TestName testName = new TestName();
+class BitbucketCloudPushEventTest {
 
     private String payload;
 
-    @Before
-    public void loadPayload() throws IOException {
-        try (InputStream is = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + testName.getMethodName() + ".json")) {
-            payload = IOUtils.toString(is, "UTF-8");
+    @BeforeEach
+    void loadPayload(TestInfo info) throws IOException {
+        try (InputStream is = getClass()
+            .getResourceAsStream(getClass().getSimpleName() + "/" + info.getTestMethod().orElseThrow().getName() + ".json")) {
+            assertThat(is).isNotNull();
+            payload = IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }
 
     @Test
-    public void createPayload() throws Exception {
+    void createPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getFullName(), is("cloudbeers/temp"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("cloudbeers"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("cloudbeers"));
-        assertThat(event.getRepository().getRepositoryName(), is("temp"));
-        assertThat(event.getRepository().isPrivate(), is(true));
-        assertThat(event.getRepository().getLinks(), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
-        assertThat(event.getChanges().size(), is(1));
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getFullName()).isEqualTo("cloudbeers/temp");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("temp");
+        assertThat(event.getRepository().isPrivate()).isTrue();
+        assertThat(event.getRepository().getLinks()).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref())
+                .isEqualTo("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp");
+        assertThat(event.getChanges()).hasSize(1);
         BitbucketPushEvent.Change change = event.getChanges().get(0);
-        assertThat(change.getOld(), nullValue());
-        assertThat(change.isCreated(), is(true));
-        assertThat(change.isClosed(), is(false));
-        assertThat(change.getNew(), notNullValue());
-        assertThat(change.getNew().getName(), is("main"));
-        assertThat(change.getNew().getType(), is("branch"));
-        assertThat(change.getNew().getTarget(), notNullValue());
-        assertThat(change.getNew().getTarget().getHash(), is("501bf5b99365d1d870882254b9360c17172bda0e"));
+        assertThat(change.getOld()).isNull();
+        assertThat(change.isCreated()).isTrue();
+        assertThat(change.isClosed()).isFalse();
+        assertThat(change.getNew()).isNotNull();
+        assertThat(change.getNew().getName()).isEqualTo("main");
+        assertThat(change.getNew().getType()).isEqualTo("branch");
+        assertThat(change.getNew().getTarget()).isNotNull();
+        assertThat(change.getNew().getTarget().getHash()).isEqualTo("501bf5b99365d1d870882254b9360c17172bda0e");
     }
 
     @Test
-    public void updatePayload() throws Exception {
+    void updatePayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getFullName(), is("cloudbeers/temp"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("cloudbeers"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("cloudbeers"));
-        assertThat(event.getRepository().getRepositoryName(), is("temp"));
-        assertThat(event.getRepository().isPrivate(), is(true));
-        assertThat(event.getRepository().getLinks(), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
-        assertThat(event.getChanges().size(), is(1));
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getFullName()).isEqualTo("cloudbeers/temp");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("temp");
+        assertThat(event.getRepository().isPrivate()).isTrue();
+        assertThat(event.getRepository().getLinks()).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref())
+                .isEqualTo("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp");
+        assertThat(event.getChanges()).hasSize(1);
     }
 
     @Test
-    public void emptyPayload() throws Exception {
+    void emptyPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getFullName(), is("cloudbeers/temp"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("cloudbeers"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("cloudbeers"));
-        assertThat(event.getRepository().getRepositoryName(), is("temp"));
-        assertThat(event.getRepository().isPrivate(), is(true));
-        assertThat(event.getRepository().getLinks(), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
-        assertThat(event.getChanges().size(), is(0));
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getFullName()).isEqualTo("cloudbeers/temp");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("temp");
+        assertThat(event.getRepository().isPrivate()).isTrue();
+        assertThat(event.getRepository().getLinks()).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref())
+                .isEqualTo("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp");
+        assertThat(event.getChanges()).isEmpty();
     }
 
     @Test
-    public void newTagPayload() throws Exception {
+    void newTagPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("ACME"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("acme"));
-        assertThat(event.getRepository().getRepositoryName(), is("tds.cm.maven.plugins-java"));
-        assertThat(event.getRepository().isPrivate(), is(true));
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("ACME");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("acme");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("tds.cm.maven.plugins-java");
+        assertThat(event.getRepository().isPrivate()).isTrue();
         BitbucketPushEvent.Change change = event.getChanges().get(0);
-        assertThat(change.isCreated(), is(true));
-        assertThat(change.isClosed(), is(false));
-        assertThat(change.getNew(), notNullValue());
-        assertThat(change.getNew().getName(), is("test"));
-        assertThat(change.getNew().getType(), is("tag"));
+        assertThat(change.isCreated()).isTrue();
+        assertThat(change.isClosed()).isFalse();
+        assertThat(change.getNew()).isNotNull();
+        assertThat(change.getNew().getName()).isEqualTo("test");
+        assertThat(change.getNew().getType()).isEqualTo("tag");
         Date date = DateUtils.getDate(2018, 4, 27, 9, 4, 24, 0);
-        assertThat(change.getNew().getDate().getTime(), is(date.getTime()));
-        assertThat(change.getNew().getTarget(), notNullValue());
-        assertThat(change.getNew().getTarget().getHash(), is("fee1dcdb330d1318502f303ccd4792531c28dc8e"));
+        assertThat(change.getNew().getDate()).isEqualTo(date);
+        assertThat(change.getNew().getTarget()).isNotNull();
+        assertThat(change.getNew().getTarget().getHash()).isEqualTo("fee1dcdb330d1318502f303ccd4792531c28dc8e");
     }
 
     @Test
-    public void multipleChangesPayload() throws Exception {
+    void multipleChangesPayload() throws Exception {
         BitbucketPushEvent event = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
-        assertThat(event.getRepository(), notNullValue());
-        assertThat(event.getRepository().getScm(), is("git"));
-        assertThat(event.getRepository().getFullName(), is("cloudbeers/temp"));
-        assertThat(event.getRepository().getOwner().getDisplayName(), is("cloudbeers"));
-        assertThat(event.getRepository().getOwner().getUsername(), is("cloudbeers"));
-        assertThat(event.getRepository().getRepositoryName(), is("temp"));
-        assertThat(event.getRepository().isPrivate(), is(true));
-        assertThat(event.getRepository().getLinks(), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self"), notNullValue());
-        assertThat(event.getRepository().getLinks().get("self").get(0).getHref(),
-                is("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp"));
-        assertThat(event.getChanges().size(), is(3));
+        assertThat(event.getRepository()).isNotNull();
+        assertThat(event.getRepository().getScm()).isEqualTo("git");
+        assertThat(event.getRepository().getFullName()).isEqualTo("cloudbeers/temp");
+        assertThat(event.getRepository().getOwner().getDisplayName()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getOwner().getUsername()).isEqualTo("cloudbeers");
+        assertThat(event.getRepository().getRepositoryName()).isEqualTo("temp");
+        assertThat(event.getRepository().isPrivate()).isTrue();
+        assertThat(event.getRepository().getLinks()).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self")).isNotNull();
+        assertThat(event.getRepository().getLinks().get("self").get(0).getHref())
+                .isEqualTo("https://api.bitbucket.org/2.0/repositories/cloudbeers/temp");
+        assertThat(event.getChanges()).hasSize(3);
         BitbucketPushEvent.Change change = event.getChanges().get(0);
-        assertThat(change.getOld(), notNullValue());
-        assertThat(change.getOld().getName(), is("main"));
-        assertThat(change.getOld().getType(), is("branch"));
-        assertThat(change.getOld().getTarget(), notNullValue());
-        assertThat(change.getOld().getTarget().getHash(), is("fc4d1ce2853b6f1ac0d0dbad643d17ef4a6e0be7"));
-        assertThat(change.isCreated(), is(false));
-        assertThat(change.isClosed(), is(false));
-        assertThat(change.getNew(), notNullValue());
-        assertThat(change.getNew().getName(), is("main"));
-        assertThat(change.getNew().getType(), is("branch"));
-        assertThat(change.getNew().getTarget(), notNullValue());
-        assertThat(change.getNew().getTarget().getHash(), is("325d37697849f4b1fe42cb19c20134af08e03a82"));
+        assertThat(change.getOld()).isNotNull();
+        assertThat(change.getOld().getName()).isEqualTo("main");
+        assertThat(change.getOld().getType()).isEqualTo("branch");
+        assertThat(change.getOld().getTarget()).isNotNull();
+        assertThat(change.getOld().getTarget().getHash()).isEqualTo("fc4d1ce2853b6f1ac0d0dbad643d17ef4a6e0be7");
+        assertThat(change.isCreated()).isFalse();
+        assertThat(change.isClosed()).isFalse();
+        assertThat(change.getNew()).isNotNull();
+        assertThat(change.getNew().getName()).isEqualTo("main");
+        assertThat(change.getNew().getType()).isEqualTo("branch");
+        assertThat(change.getNew().getTarget()).isNotNull();
+        assertThat(change.getNew().getTarget().getHash()).isEqualTo("325d37697849f4b1fe42cb19c20134af08e03a82");
         change = event.getChanges().get(1);
-        assertThat(change.getOld(), nullValue());
-        assertThat(change.isCreated(), is(true));
-        assertThat(change.isClosed(), is(false));
-        assertThat(change.getNew(), notNullValue());
-        assertThat(change.getNew().getName(), is("manchu"));
-        assertThat(change.getNew().getType(), is("branch"));
-        assertThat(change.getNew().getTarget(), notNullValue());
-        assertThat(change.getNew().getTarget().getHash(), is("e22fcb49645b4586a845938afac5eb3ac1950586"));
+        assertThat(change.getOld()).isNull();
+        assertThat(change.isCreated()).isTrue();
+        assertThat(change.isClosed()).isFalse();
+        assertThat(change.getNew()).isNotNull();
+        assertThat(change.getNew().getName()).isEqualTo("manchu");
+        assertThat(change.getNew().getType()).isEqualTo("branch");
+        assertThat(change.getNew().getTarget()).isNotNull();
+        assertThat(change.getNew().getTarget().getHash()).isEqualTo("e22fcb49645b4586a845938afac5eb3ac1950586");
         change = event.getChanges().get(2);
-        assertThat(change.getOld(), nullValue());
-        assertThat(change.isCreated(), is(true));
-        assertThat(change.isClosed(), is(false));
-        assertThat(change.getNew(), notNullValue());
-        assertThat(change.getNew().getName(), is("v0.1"));
-        assertThat(change.getNew().getType(), is("tag"));
-        assertThat(change.getNew().getTarget(), notNullValue());
-        assertThat(change.getNew().getTarget().getHash(), is("1986c228494671574242f99b62d1a00a4bfb69a5"));
+        assertThat(change.getOld()).isNull();
+        assertThat(change.isCreated()).isTrue();
+        assertThat(change.isClosed()).isFalse();
+        assertThat(change.getNew()).isNotNull();
+        assertThat(change.getNew().getName()).isEqualTo("v0.1");
+        assertThat(change.getNew().getType()).isEqualTo("tag");
+        assertThat(change.getNew().getTarget()).isNotNull();
+        assertThat(change.getNew().getTarget().getHash()).isEqualTo("1986c228494671574242f99b62d1a00a4bfb69a5");
     }
 }

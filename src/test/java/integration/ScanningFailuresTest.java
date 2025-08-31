@@ -50,30 +50,24 @@ import java.util.concurrent.TimeUnit;
 import jenkins.branch.Branch;
 import jenkins.branch.BranchSource;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.junit.jupiter.WithGitSampleRepo;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -81,7 +75,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Issue("JENKINS-36029")
-public class ScanningFailuresTest {
+@WithJenkins
+@WithGitSampleRepo
+class ScanningFailuresTest {
 
     private static final Map<String, List<BitbucketHref>> REPOSITORY_LINKS = Map.of(
         "clone",
@@ -91,17 +87,21 @@ public class ScanningFailuresTest {
         )
     );
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    private static JenkinsRule j;
     private static final Random entropy = new Random();
 
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    private GitSampleRepoRule sampleRepo;
 
     private String message;
 
-    @Before
-    public void resetEnvironment() throws Exception {
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        j = rule;
+    }
+
+    @BeforeEach
+    void resetEnvironment(GitSampleRepoRule repo) throws Exception {
+        sampleRepo = repo;
         for (TopLevelItem i : j.getInstance().getItems()) {
             i.delete();
         }
@@ -111,22 +111,22 @@ public class ScanningFailuresTest {
     }
 
     @Test
-    public void getBranchesFailsWithIOException() throws Exception {
+    void getBranchesFailsWithIOException() throws Exception {
         getBranchesFails(() -> new IOException(message), Result.FAILURE);
     }
 
     @Test
-    public void getBranchesFailsWithInterruptedException() throws Exception {
+    void getBranchesFailsWithInterruptedException() throws Exception {
         getBranchesFails(() -> new InterruptedException(message), Result.ABORTED);
     }
 
     @Test
-    public void getBranchesFailsWithRuntimeException() throws Exception {
+    void getBranchesFailsWithRuntimeException() throws Exception {
         getBranchesFails(() -> new RuntimeException(message), Result.FAILURE);
     }
 
     @Test
-    public void getBranchesFailsWithError() throws Exception {
+    void getBranchesFailsWithError() throws Exception {
         getBranchesFails(() -> new Error(message), Result.NOT_BUILT);
     }
 
@@ -173,11 +173,11 @@ public class ScanningFailuresTest {
         mp.getSourcesList().add(new BranchSource(source));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
+        assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
+        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8)).doesNotContain(message);
         j.waitUntilNoActivity();
         WorkflowJob master = mp.getItem("main");
-        assertThat(master, notNullValue());
+        assertThat(master).isNotNull();
 
         // an error in getBranches()
 
@@ -187,19 +187,19 @@ public class ScanningFailuresTest {
             // when not built or aborted the future will never complete and the log may not contain the exception stack trace
             mp.scheduleBuild2(0);
             j.waitUntilNoActivity();
-            assertThat(mp.getIndexing().getResult(), is(expectedResult));
+            assertThat(mp.getIndexing().getResult()).isEqualTo(expectedResult);
         } else {
             mp.scheduleBuild2(0).getFuture().get(10, TimeUnit.SECONDS);
-            assertThat(mp.getIndexing().getResult(), is(expectedResult));
-            assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), containsString(message));
+            assertThat(mp.getIndexing().getResult()).isEqualTo(expectedResult);
+            assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8)).contains(message);
         }
         master = mp.getItem("main");
-        assertThat(master, notNullValue());
-        assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
+        assertThat(master).isNotNull();
+        assertThat(mp.getProjectFactory().getBranch(master)).isNotInstanceOf(Branch.Dead.class);
     }
 
     @Test
-    public void checkPathExistsFails() throws Exception {
+    void checkPathExistsFails() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
@@ -207,12 +207,9 @@ public class ScanningFailuresTest {
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=InitialCommit");
         BitbucketApi api = Mockito.mock(BitbucketApi.class);
-        when(api.getFile(any())).thenAnswer(new Answer<SCMFile>() {
-            @Override
-            public SCMFile answer(InvocationOnMock invocation) throws Throwable {
-                BitbucketSCMFile scmFile = invocation.getArgument(0);
-                return new BitbucketSCMFile((BitbucketSCMFile) scmFile.parent(), scmFile.getName(), Type.REGULAR_FILE, scmFile.getHash());
-            }
+        when(api.getFile(any())).thenAnswer((Answer<SCMFile>) invocation -> {
+            BitbucketSCMFile scmFile = invocation.getArgument(0);
+            return new BitbucketSCMFile((BitbucketSCMFile) scmFile.parent(), scmFile.getName(), Type.REGULAR_FILE, scmFile.getHash());
         });
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
@@ -248,24 +245,24 @@ public class ScanningFailuresTest {
         mp.getSourcesList().add(new BranchSource(source));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8), not(containsString(message)));
+        assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
+        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8)).doesNotContain(message);
         j.waitUntilNoActivity();
         WorkflowJob master = mp.getItem("main");
-        assertThat(master, notNullValue());
+        assertThat(master).isNotNull();
 
         // an error in checkPathExists(...)
         doThrow(new IOException(message)).when(api).getFile(any(BitbucketSCMFile.class));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8), containsString("‘Jenkinsfile’ not found"));
+        assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
+        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8)).contains("‘Jenkinsfile’ not found");
         master = mp.getItem("main");
-        assertThat(master, nullValue());
+        assertThat(master).isNull();
     }
 
     @Test
-    public void resolveCommitFails() throws Exception {
+    void resolveCommitFails() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
@@ -308,28 +305,28 @@ public class ScanningFailuresTest {
         mp.getSourcesList().add(new BranchSource(source));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
+        assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
+        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8)).doesNotContain(message);
         j.waitUntilNoActivity();
         WorkflowJob master = mp.getItem("main");
-        assertThat(master, notNullValue());
-        assertThat(master.getLastBuild(), notNullValue());
-        assertThat(master.getNextBuildNumber(), is(2));
+        assertThat(master).isNotNull();
+        assertThat(master.getLastBuild()).isNotNull();
+        assertThat(master.getNextBuildNumber()).isEqualTo(2);
 
         // an error in resolveCommit(...)
         when(api.resolveCommit(sampleRepo.head())).thenThrow(new IOException(message));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
+        assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
         master = mp.getItem("main");
-        assertThat(master, notNullValue());
-        assertThat(mp.getProjectFactory().getBranch(master), not(instanceOf(Branch.Dead.class)));
-        assertThat(master.getLastBuild(), notNullValue());
-        assertThat(master.getNextBuildNumber(), is(2));
+        assertThat(master).isNotNull();
+        assertThat(mp.getProjectFactory().getBranch(master)).isNotInstanceOf(Branch.Dead.class);
+        assertThat(master.getLastBuild()).isNotNull();
+        assertThat(master.getNextBuildNumber()).isEqualTo(2);
     }
 
     @Test
-    public void branchRemoved() throws Exception {
+    void branchRemoved() throws Exception {
         // we are going to set up just enough fake bitbucket
         sampleRepo.init();
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file')}");
@@ -372,20 +369,20 @@ public class ScanningFailuresTest {
         mp.getSourcesList().add(new BranchSource(source));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
-        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile()), not(containsString(message)));
+        assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
+        assertThat(FileUtils.readFileToString(mp.getIndexing().getLogFile(), StandardCharsets.UTF_8)).doesNotContain(message);
         j.waitUntilNoActivity();
         WorkflowJob master = mp.getItem("main");
-        assertThat(master, notNullValue());
-        assertThat(master.getLastBuild(), notNullValue());
-        assertThat(master.getNextBuildNumber(), is(2));
+        assertThat(master).isNotNull();
+        assertThat(master.getLastBuild()).isNotNull();
+        assertThat(master.getNextBuildNumber()).isEqualTo(2);
 
         // the branch is actually removed
         when(api.getBranches()).thenAnswer(new Returns(Collections.emptyList()));
 
         mp.scheduleBuild2(0).getFuture().get();
-        assertThat(mp.getIndexing().getResult(), is(Result.SUCCESS));
+        assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);
         master = mp.getItem("main");
-        assertThat(master, nullValue());
+        assertThat(master).isNull();
     }
 }
