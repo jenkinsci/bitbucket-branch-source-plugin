@@ -53,6 +53,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
             pullRequestEvent = JsonParser.toJava(payload, NativeServerPullRequestEvent.class);
         } catch (final IOException e) {
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
+            Logger.getLogger("JENKINS-76042").log(Level.SEVERE, "Can not read hook payload", e);
             return;
         }
 
@@ -72,6 +73,7 @@ public class NativeServerPullRequestHookProcessor extends HookProcessor {
                 eventType = SCMEvent.Type.UPDATED;
                 break;
             default:
+                Logger.getLogger("JENKINS-76042").log(Level.SEVERE, "Unknown hook event {0} received from Bitbucket Server", hookEvent);
                 LOGGER.log(Level.INFO, "Unknown hook event {0} received from Bitbucket Server", hookEvent);
                 return;
         }
