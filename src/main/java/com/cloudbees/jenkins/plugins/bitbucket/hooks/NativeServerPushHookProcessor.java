@@ -91,6 +91,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                         + "Please fill an issue at https://issues.jenkins.io to the bitbucket-branch-source-plugin component.");
             }
         } catch (final IOException e) {
+            Logger.getLogger("JENKINS-76042").log(Level.SEVERE, "Can not read hook payload", e);
             LOGGER.log(Level.SEVERE, "Can not read hook payload", e);
             return;
         }
@@ -104,6 +105,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                     new Object[]{owner, repositoryName, SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME});
                 scmSourceReIndex(owner, repositoryName, mirrorId);
             } else {
+                Logger.getLogger("JENKINS-76042").log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.", new Object[]{owner, repositoryName});
                 LOGGER.log(Level.INFO, "Received push hook with empty changes from Bitbucket for {0}/{1}. Skipping.",
                     new Object[]{owner, repositoryName});
             }
@@ -118,6 +120,7 @@ public class NativeServerPushHookProcessor extends HookProcessor {
                 } else if ("ADD".equals(type)) {
                     events.put(SCMEvent.Type.CREATED, change);
                 } else {
+                    Logger.getLogger("JENKINS-76042").log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
                     LOGGER.log(Level.INFO, "Unknown change event type of {0} received from Bitbucket Server", type);
                 }
             }

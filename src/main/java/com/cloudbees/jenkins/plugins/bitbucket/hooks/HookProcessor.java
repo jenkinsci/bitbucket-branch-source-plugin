@@ -81,6 +81,7 @@ public abstract class HookProcessor {
      * @param mirrorId the mirror id if applicable, may be null
      */
     protected void scmSourceReIndex(final String owner, final String repository, final String mirrorId) {
+        Logger.getLogger("JENKINS-76042").log(Level.FINE, "Reindex requested");
         try (ACLContext context = ACL.as2(ACL.SYSTEM2)) {
             boolean reindexed = false;
             for (SCMSourceOwner scmOwner : SCMSourceOwners.all()) {
@@ -94,12 +95,14 @@ public abstract class HookProcessor {
                         LOGGER.log(Level.INFO, "Multibranch project found, reindexing " + scmOwner.getName());
                         // TODO: SCMSourceOwner.onSCMSourceUpdated is deprecated. We may explore options with an
                         //  SCMEventListener extension and firing SCMSourceEvents.
+                        Logger.getLogger("JENKINS-76042").log(Level.FINE, "Reindex scheduled");
                         scmOwner.onSCMSourceUpdated(source);
                         reindexed = true;
                     }
                 }
             }
             if (!reindexed) {
+                Logger.getLogger("JENKINS-76042").log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
                 LOGGER.log(Level.INFO, "No multibranch project matching for reindex on {0}/{1}", new Object[] {owner, repository});
             }
         }
@@ -115,6 +118,7 @@ public abstract class HookProcessor {
      *        used.
      */
     protected void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+        Logger.getLogger("JENKINS-76042").log(Level.FINER, "Event {0} will be fired in {1} seconds.", new Object[] { event.getClass().getSimpleName(), BitbucketSCMSource.getEventDelaySeconds() });
         if (delaySeconds == 0) {
             SCMHeadEvent.fireNow(event);
         } else {
