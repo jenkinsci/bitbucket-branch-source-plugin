@@ -1,0 +1,11 @@
+---
+unclassified:
+  bitbucketendpointconfiguration:
+    endpoints:
+    - bitbucketServerEndpoint:
+        displayName: "Example Inc"
+        serverUrl: ${SERVER_URL}
+        callCanMerge: false
+        callChanges: false
+        serverVersion: VERSION_7
+        webhookImplementation: NATIVE

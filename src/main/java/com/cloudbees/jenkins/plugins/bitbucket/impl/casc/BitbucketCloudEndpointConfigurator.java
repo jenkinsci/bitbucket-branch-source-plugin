@@ -26,17 +26,17 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.casc;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfigurationContext;
+import io.jenkins.plugins.casc.Configurator;
 import io.jenkins.plugins.casc.ConfiguratorException;
 import io.jenkins.plugins.casc.impl.configurators.DataBoundConfigurator;
 import io.jenkins.plugins.casc.model.Mapping;
 import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 /**
  * Specialised class to configure how to build a new instance of
@@ -54,43 +54,56 @@ public class BitbucketCloudEndpointConfigurator extends DataBoundConfigurator<Bi
     }
 
     @Override
-    protected BitbucketCloudEndpoint instance(Mapping mapping, ConfigurationContext context) throws ConfiguratorException {
+    protected BitbucketCloudEndpoint instance(@NonNull Mapping mapping, @NonNull ConfigurationContext context) throws ConfiguratorException {
+        final Configurator<Boolean> boolConfigurator = context.lookupOrFail(Boolean.class);
+        final Configurator<Integer> intConfigurator = context.lookupOrFail(Integer.class);
+
         boolean enableCache = false;
         if (mapping.containsKey("enableCache")) {
-            enableCache = Boolean.parseBoolean(mapping.getScalarValue("enableCache"));
+            enableCache = boolConfigurator.configure(mapping.get("enableCache"), context);
+            mapping.remove("enableCache");
         }
         int teamCacheDuration = 0;
         if (mapping.containsKey("teamCacheDuration")) {
-            teamCacheDuration = Integer.parseInt(mapping.getScalarValue("teamCacheDuration"));
+            teamCacheDuration = intConfigurator.configure(mapping.get("teamCacheDuration"), context);
+            mapping.remove("teamCacheDuration");
         }
         int repositoriesCacheDuration = 0;
         if (mapping.containsKey("repositoriesCacheDuration")) {
-            repositoriesCacheDuration = Integer.parseInt(mapping.getScalarValue("repositoriesCacheDuration"));
+            repositoriesCacheDuration = intConfigurator.configure(mapping.get("repositoriesCacheDuration"), context);
+            mapping.remove("repositoriesCacheDuration");
         }
-        BitbucketWebhookConfiguration webhook = getWebhook(mapping);
+        BitbucketWebhookConfiguration webhook = getWebhook(mapping, context);
         return new BitbucketCloudEndpoint(enableCache, teamCacheDuration, repositoriesCacheDuration, webhook);
     }
 
-    private BitbucketWebhookConfiguration getWebhook(Mapping mapping) {
+    private BitbucketWebhookConfiguration getWebhook(@NonNull Mapping mapping, @NonNull ConfigurationContext context) {
+        final Configurator<String> stringConfigurator = context.lookupOrFail(String.class);
+        final Configurator<Boolean> boolConfigurator = context.lookupOrFail(Boolean.class);
+
         boolean manageHooks = false;
         if (mapping.containsKey("manageHooks")) {
             logger.warning("manageHooks is deprecated, replace from your CasC definition with the appropriate webhook definition.");
-            manageHooks = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("manageHooks")));
+            manageHooks = boolConfigurator.configure(mapping.get("manageHooks"), context);
+            mapping.remove("manageHooks");
         }
         String credentialsId = null;
         if (mapping.containsKey("credentialsId")) {
             logger.warning("credentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
-            credentialsId = mapping.getScalarValue("credentialsId");
+            credentialsId = stringConfigurator.configure(mapping.get("credentialsId"), context);
+            mapping.remove("credentialsId");
         }
         boolean enableHookSignature = false;
         if (mapping.containsKey("enableHookSignature")) {
             logger.warning("enableHookSignature is deprecated, replace from your CasC definition with the appropriate webhook definition.");
-            enableHookSignature = Boolean.parseBoolean(trimToNull(mapping.getScalarValue("enableHookSignature")));
+            enableHookSignature = boolConfigurator.configure(mapping.get("enableHookSignature"), context);
+            mapping.remove("enableHookSignature");
         }
         String hookSignatureCredentialsId = null;
         if (mapping.containsKey("hookSignatureCredentialsId")) {
             logger.warning("hookSignatureCredentialsId is deprecated, replace from your CasC definition with the appropriate webhook definition.");
-            hookSignatureCredentialsId = mapping.getScalarValue("hookSignatureCredentialsId");
+            hookSignatureCredentialsId = stringConfigurator.configure(mapping.get("hookSignatureCredentialsId"), context);
+            mapping.remove("hookSignatureCredentialsId");
         }
         return new CloudWebhookConfiguration(manageHooks, credentialsId, enableHookSignature, hookSignatureCredentialsId);
     }
