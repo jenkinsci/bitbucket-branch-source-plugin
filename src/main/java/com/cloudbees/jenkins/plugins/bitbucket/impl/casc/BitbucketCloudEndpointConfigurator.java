@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfi
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookConfiguration;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Extension;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.Configurator;
@@ -35,6 +34,7 @@ import io.jenkins.plugins.casc.ConfiguratorException;
 import io.jenkins.plugins.casc.impl.configurators.DataBoundConfigurator;
 import io.jenkins.plugins.casc.model.Mapping;
 import java.util.logging.Logger;
+import org.jenkinsci.plugins.variant.OptionalExtension;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -44,7 +44,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  *
  * @since 937.0.0
  */
-@Extension
+@OptionalExtension(requirePlugins = "configuration-as-code")
 @Restricted(NoExternalUse.class)
 public class BitbucketCloudEndpointConfigurator extends DataBoundConfigurator<BitbucketCloudEndpoint> {
     private static final Logger logger = Logger.getLogger(BitbucketCloudEndpointConfigurator.class.getName());
