@@ -53,10 +53,27 @@ public class CloudPullRequestWebhookProcessor extends AbstractWebhookProcessor {
 
     @Override
     public boolean canHandle(@NonNull Map<String, String> headers, @NonNull MultiValuedMap<String, String> parameters) {
-        return headers.containsKey(EVENT_TYPE_HEADER)
-                && headers.containsKey(REQUEST_ID_CLOUD_HEADER)
-                && supportedEvents.contains(headers.get(EVENT_TYPE_HEADER))
-                && !parameters.containsKey(SERVER_URL_PARAMETER);
+        boolean eventTypeHeader = headers.containsKey(EVENT_TYPE_HEADER);
+        if (!eventTypeHeader) {
+            logger.severe("Miss header " + EVENT_TYPE_HEADER);
+            return false;
+        }
+        boolean requestIdHeader = headers.containsKey(REQUEST_ID_CLOUD_HEADER);
+        if (!requestIdHeader) {
+            logger.severe("Miss header " + REQUEST_ID_CLOUD_HEADER);
+            return false;
+        }
+        boolean supportedEvent = supportedEvents.contains(headers.get(EVENT_TYPE_HEADER));
+        if (!supportedEvent) {
+            logger.severe("Event Type " + headers.get(EVENT_TYPE_HEADER) + "not supported");
+            return false;
+        }
+        boolean noServerURLParam = !parameters.containsKey(SERVER_URL_PARAMETER);
+        if (!noServerURLParam) {
+            logger.severe(SERVER_URL_PARAMETER + " query parameter in the request must not be present");
+            return false;
+        }
+        return true;
     }
 
     @NonNull
