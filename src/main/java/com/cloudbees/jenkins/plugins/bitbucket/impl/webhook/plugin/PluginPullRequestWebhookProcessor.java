@@ -53,10 +53,27 @@ public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor 
 
     @Override
     public boolean canHandle(@NonNull Map<String, String> headers, @NonNull MultiValuedMap<String, String> parameters) {
-        return headers.containsKey(EVENT_TYPE_HEADER)
-                && headers.containsKey("X-Bitbucket-Type")
-                && supportedEvents.contains(headers.get(EVENT_TYPE_HEADER))
-                && parameters.containsKey(SERVER_URL_PARAMETER);
+        boolean eventTypeHeader = headers.containsKey(EVENT_TYPE_HEADER);
+        if (!eventTypeHeader) {
+            logger.severe("Miss header " + EVENT_TYPE_HEADER);
+            return false;
+        }
+        boolean requestIdHeader = headers.containsKey("X-Bitbucket-Type");
+        if (!requestIdHeader) {
+            logger.severe("Miss header " + "X-Bitbucket-Type");
+            return false;
+        }
+        boolean supportedEvent = supportedEvents.contains(headers.get(EVENT_TYPE_HEADER));
+        if (!supportedEvent) {
+            logger.severe("Event Type " + headers.get(EVENT_TYPE_HEADER) + "not supported");
+            return false;
+        }
+        boolean serverURLParameter = parameters.containsKey(SERVER_URL_PARAMETER);
+        if (!serverURLParameter) {
+            logger.severe(SERVER_URL_PARAMETER + " query parameter in the request is required");
+            return false;
+        }
+        return true;
     }
 
     @Override
