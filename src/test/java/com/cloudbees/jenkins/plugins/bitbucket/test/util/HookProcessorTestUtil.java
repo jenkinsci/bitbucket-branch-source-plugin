@@ -23,9 +23,9 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.test.util;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 public final class HookProcessorTestUtil {
 
@@ -33,7 +33,7 @@ public final class HookProcessorTestUtil {
     }
 
     public static Map<String, String> getCloudHeaders() {
-        Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new CaseInsensitiveMap<>();
         headers.put("User-Agent", "Bitbucket-Webhooks/2.0");
         headers.put("X-Attempt-Number", "1");
         headers.put("Content-Type", "application/json");
@@ -45,7 +45,7 @@ public final class HookProcessorTestUtil {
     }
 
     public static Map<String, String> getNativeHeaders() {
-        Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new CaseInsensitiveMap<>();
         headers.put("Content-Type", "application/json; charset=utf-8");
         headers.put("X-Request-Id", UUID.randomUUID().toString());
         headers.put("User-Agent", "Atlassian HttpClient 4.2.0 / Bitbucket-9.5.2 (9005002) / Default");
@@ -53,7 +53,7 @@ public final class HookProcessorTestUtil {
     }
 
     public static Map<String, String> getPluginHeaders() {
-        Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new CaseInsensitiveMap<>();
         headers.put("Content-Type", "application/json; charset=utf-8");
         headers.put("X-Bitbucket-Type", "server");
         headers.put("User-Agent", "Bitbucket version: 8.18.0, Post webhook plugin version: 7.13.41-SNAPSHOT");

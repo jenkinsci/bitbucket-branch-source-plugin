@@ -66,8 +66,8 @@ class WebhookAutoRegisterListenerTest {
     private static JenkinsRule rule;
 
     @BeforeAll
-    static void init(JenkinsRule r) {
-        rule = r;
+    static void init(JenkinsRule rule) {
+        WebhookAutoRegisterListenerTest.rule = rule;
     }
 
     private WebhookAutoRegisterListener sut;
@@ -108,6 +108,7 @@ class WebhookAutoRegisterListenerTest {
             });
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void test_do_not_update_plugin_hook_if_no_changes() throws Exception {
         String serverURL = "http://localhost:7990/bitbucket";
@@ -127,6 +128,7 @@ class WebhookAutoRegisterListenerTest {
             .isNotInstanceOf(HttpPut.class);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void test_update_plugin_hook_when_serverURL_is_changed() throws Exception {
         String serverURL = "http://myserver:7990";

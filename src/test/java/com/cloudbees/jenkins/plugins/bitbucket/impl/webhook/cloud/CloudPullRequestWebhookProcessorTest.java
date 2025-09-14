@@ -43,6 +43,7 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMSource;
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +71,7 @@ class CloudPullRequestWebhookProcessorTest {
 
     @Test
     void test_getServerURL_return_always_cloud_URL() throws Exception {
-        Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new CaseInsensitiveMap<>();
         MultiValuedMap<String, String> parameters = new ArrayListValuedHashMap<>();
         parameters.put("server_url", "https://localhost:8080");
 

@@ -66,11 +66,12 @@ class ServerPushWebhookProcessorTest {
     private SCMHeadEvent<?> scmEvent;
     private BitbucketEndpoint endpoint;
 
+    @SuppressWarnings("unused")
     private static JenkinsRule rule;
 
     @BeforeAll
-    static void init(JenkinsRule r) {
-        rule = r;
+    static void init(JenkinsRule rule) {
+        ServerPushWebhookProcessorTest.rule = rule;
     }
 
     @BeforeEach

@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,6 +48,7 @@ import java.util.stream.Stream;
 import org.apache.commons.collections4.EnumerationUtils;
 import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -163,7 +163,8 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
     }
 
     private Map<String, String> getHeaders(StaplerRequest2 req) {
-        Map<String, String> reqHeaders = new HashMap<>();
+        // HTTP headers are case insensitive
+        Map<String, String> reqHeaders = new CaseInsensitiveMap<>();
         for (String headerName : EnumerationUtils.asIterable(req.getHeaderNames())) {
             reqHeaders.put(headerName, req.getHeader(headerName));
         }

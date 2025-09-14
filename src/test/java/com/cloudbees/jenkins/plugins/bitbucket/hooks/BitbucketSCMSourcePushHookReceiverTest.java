@@ -31,10 +31,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.MockRequest;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,7 @@ import org.mockito.stubbing.Answer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -58,11 +60,12 @@ import static org.mockito.Mockito.when;
 @WithJenkins
 class BitbucketSCMSourcePushHookReceiverTest {
 
-    private static JenkinsRule j;
+    @SuppressWarnings("unused")
+    private static JenkinsRule rule;
 
     @BeforeAll
     static void init(JenkinsRule rule) {
-        j = rule;
+        BitbucketSCMSourcePushHookReceiverTest.rule = rule;
     }
 
     private StaplerRequest2 req;
@@ -72,7 +75,7 @@ class BitbucketSCMSourcePushHookReceiverTest {
     @BeforeEach
     void setup() throws Exception {
         req = mock(StaplerRequest2.class);
-        headers = new HashMap<>();
+        headers = new CaseInsensitiveMap<>();
         when(req.getHeader(anyString())).thenAnswer(new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
@@ -119,7 +122,9 @@ class BitbucketSCMSourcePushHookReceiverTest {
             when(hookProcessor.getEventType(any(), any())).thenReturn("event:X");
 
             sut.doNotify(req);
+            @SuppressWarnings("unchecked")
             ArgumentCaptor<Map<String, String>> headersCaptor = ArgumentCaptor.forClass(Map.class);
+            @SuppressWarnings("unchecked")
             ArgumentCaptor<MultiValuedMap<String, String>> parametersCaptor = ArgumentCaptor.forClass(MultiValuedMap.class);
 
             verify(hookProcessor).canHandle(headersCaptor.capture(),  parametersCaptor.capture());
@@ -174,6 +179,32 @@ class BitbucketSCMSourcePushHookReceiverTest {
         } finally {
             BitbucketEndpointConfiguration.get().removeEndpoint(endpoint.getServerURL());
         }
+    }
+
+    @Test
+    void request_headers_must_be_case_insensitive() throws Exception {
+        AtomicReference<Map<String, String>> requestHeaders = new AtomicReference<>();
+
+        BitbucketWebhookProcessor hookProcessor = mock(BitbucketWebhookProcessor.class);
+        when(hookProcessor.canHandle(anyMap(), any())).thenAnswer(new Answer<Boolean>() {
+            @Override
+            public Boolean answer(InvocationOnMock invocation) throws Throwable {
+                requestHeaders.set(invocation.getArgument(0));
+                // stop to process the request
+                return false;
+            }
+        });
+        sut = new BitbucketSCMSourcePushHookReceiver() {
+            @Override
+            Stream<BitbucketWebhookProcessor> getHookProcessors() {
+                return Stream.of(hookProcessor);
+            }
+        };
+        mockRequest();
+        headers.putAll(HookProcessorTestUtil.getCloudHeaders());
+
+        sut.doNotify(req);
+        assertThat(requestHeaders.get()).containsKeys("X-Request-UUID", "X-Request-UUID".toLowerCase());
     }
 
 }
