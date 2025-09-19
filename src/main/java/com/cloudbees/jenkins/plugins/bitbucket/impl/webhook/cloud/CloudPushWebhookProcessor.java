@@ -35,6 +35,7 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import jenkins.scm.api.SCMEvent;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.kohsuke.accmod.Restricted;
@@ -64,6 +65,7 @@ public class CloudPushWebhookProcessor extends AbstractWebhookProcessor {
 
     @Override
     public void process(@NonNull String hookEventType, @NonNull String payload, @NonNull Map<String, Object> context, @NonNull BitbucketEndpoint endpoint) {
+        logger.log(Level.FINE, () -> "Processing hook: " + hookEventType + " payload: " + " from: " + endpoint.getServerURL());
         BitbucketPushEvent push = BitbucketCloudWebhookPayload.pushEventFromPayload(payload);
         if (push != null) {
             if (push.getChanges().isEmpty()) {
