@@ -62,6 +62,8 @@ public class PluginPushWebhookProcessor extends AbstractWebhookProcessor {
 
     @Override
     public void process(@NonNull String eventType, @NonNull String payload, @NonNull Map<String, Object> context, @NonNull BitbucketEndpoint endpoint) {
+        PluginDeprecationLogger.log(logger);
+        logger.log(Level.FINE, () -> "Processing hook: " + eventType + " payload: " + " from: " + endpoint.getServerURL());
         BitbucketPushEvent push = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
         if (push != null) {
             if (push.getChanges().isEmpty()) {

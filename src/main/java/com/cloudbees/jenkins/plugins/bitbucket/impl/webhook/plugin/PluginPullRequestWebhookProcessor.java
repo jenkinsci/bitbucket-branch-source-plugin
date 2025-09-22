@@ -34,6 +34,8 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.kohsuke.accmod.Restricted;
@@ -44,6 +46,8 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
 public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor {
+
+    private static final Logger logger = Logger.getLogger(PluginPullRequestWebhookProcessor.class.getName());
 
     private static final List<String> supportedEvents = List.of(
             HookEventType.PULL_REQUEST_CREATED.getKey(), // needed to create job
@@ -61,6 +65,8 @@ public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor 
 
     @Override
     public void process(@NonNull String hookEventType, @NonNull String payload, @NonNull Map<String, Object> context, @NonNull BitbucketEndpoint endpoint) {
+        PluginDeprecationLogger.log(logger);
+        logger.log(Level.FINE, () -> "Processing hook: " + hookEventType + " payload: " + " from: " + endpoint.getServerURL());
         HookEventType hookEvent = HookEventType.fromString(hookEventType);
         BitbucketPullRequestEvent pull = BitbucketServerWebhookPayload.pullRequestEventFromPayload(payload);
         if (pull != null) {
