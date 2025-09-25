@@ -107,7 +107,7 @@ class PluginPushWebhookProcessorTest {
         assertThat(sut.canHandle(headers, parameters)).isTrue();
 
         headers.put("X-Event-Key", "pullrequest:updated");
-        assertThat(sut.canHandle(headers, parameters)).isTrue();
+        assertThat(sut.canHandle(headers, parameters)).isFalse();
     }
 
     @Test

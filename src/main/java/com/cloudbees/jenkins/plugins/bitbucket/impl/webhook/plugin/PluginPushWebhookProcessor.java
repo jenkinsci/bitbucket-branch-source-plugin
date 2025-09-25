@@ -49,8 +49,7 @@ public class PluginPushWebhookProcessor extends AbstractWebhookProcessor {
 
     private static final Logger logger = Logger.getLogger(PluginPushWebhookProcessor.class.getName());
     private static final List<String> supportedEvents = List.of(
-            HookEventType.PUSH.getKey(),
-            HookEventType.PULL_REQUEST_UPDATED.getKey());
+            HookEventType.PUSH.getKey());
 
     @Override
     public boolean canHandle(Map<String, String> headers, MultiValuedMap<String, String> parameters) {
