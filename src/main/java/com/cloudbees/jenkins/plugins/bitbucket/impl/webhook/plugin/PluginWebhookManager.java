@@ -193,6 +193,7 @@ public class PluginWebhookManager implements BitbucketWebhookManager {
 
     @Override
     public void register(@NonNull BitbucketAuthenticatedClient client) throws IOException {
+        PluginDeprecationLogger.log(logger);
         BitbucketPluginWebhook existingHook = (BitbucketPluginWebhook) read(client)
                 .stream()
                 .findFirst()
