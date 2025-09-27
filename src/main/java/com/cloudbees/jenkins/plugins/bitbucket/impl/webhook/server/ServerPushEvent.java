@@ -65,7 +65,7 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import static java.util.Objects.requireNonNull;
 
@@ -237,7 +237,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             for (final BitbucketServerPullRequest pullRequest : getPullRequests(src, change).values()) {
                 final BitbucketServerRepository targetRepo = pullRequest.getDestination().getRepository();
                 // check if the target of the PR is actually this source
-                if (!StringUtils.equalsIgnoreCase(sourceOwnerName, targetRepo.getOwnerName())
+                if (!Strings.CI.equals(sourceOwnerName, targetRepo.getOwnerName())
                     || !sourceRepoName.equalsIgnoreCase(targetRepo.getRepositoryName())) {
                     continue;
                 }
@@ -335,7 +335,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
 
     @Override
     protected boolean eventMatchesRepo(BitbucketSCMSource source) {
-        return StringUtils.equalsIgnoreCase(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
+        return Strings.CI.equals(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
     }
 
 }

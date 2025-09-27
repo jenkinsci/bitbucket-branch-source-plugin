@@ -62,7 +62,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
@@ -286,7 +286,7 @@ public class WebhookAutoRegisterListener extends ItemListener {
             if (owner != other) {
                 for(SCMSource otherSource : other.getSCMSources()) {
                     if (otherSource instanceof BitbucketSCMSource bbSCMSource
-                            && StringUtils.equalsIgnoreCase(bbSCMSource.getRepoOwner(), repoOwner)
+                            && Strings.CI.equals(bbSCMSource.getRepoOwner(), repoOwner)
                             && bbSCMSource.getRepository().equals(repoName)) {
                         return true;
                     }

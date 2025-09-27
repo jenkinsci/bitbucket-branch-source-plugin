@@ -136,7 +136,7 @@ public class BitbucketCloudBranch implements BitbucketBranch {
         try {
             BitbucketCommit commit = commitClosure.call();
 
-            this.dateInMillis = commit.getDateMillis();
+            this.dateInMillis = commit.getCommitterDate() != null ? commit.getCommitterDate().getTime() : 0;
             this.message = commit.getMessage();
             this.author = commit.getAuthor();
         } catch (Exception e) {

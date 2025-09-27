@@ -54,7 +54,7 @@ import jenkins.model.Jenkins;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 @Extension
@@ -151,7 +151,7 @@ public class CloudWebhookManager implements BitbucketWebhookManager {
 
     private boolean shouldUpdate(@NonNull BitbucketCloudWebhook current, @NonNull BitbucketCloudWebhook expected) {
         boolean update = false;
-        if (!StringUtils.equals(current.getUrl(), expected.getUrl())) {
+        if (!Strings.CI.equals(current.getUrl(), expected.getUrl())) {
             current.setUrl(expected.getUrl());
             logger.info(() -> "Update webhook " + current.getUuid() + " callback URL");
             update = true;

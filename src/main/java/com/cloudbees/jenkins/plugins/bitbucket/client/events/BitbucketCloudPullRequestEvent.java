@@ -34,7 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloud
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepositoryOwner;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent {
 
@@ -73,7 +73,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                         sourceRepository.setScm(repository.getScm());
                     }
                     if (sourceRepository.getOwner() == null) {
-                        if (!StringUtils.equalsIgnoreCase(sourceRepository.getOwnerName(), repository.getOwnerName())) { // i.e., a fork
+                        if (!Strings.CI.equals(sourceRepository.getOwnerName(), repository.getOwnerName())) { // i.e., a fork
                             BitbucketCloudRepositoryOwner owner = new BitbucketCloudRepositoryOwner();
                             owner.setUsername(sourceRepository.getOwnerName());
                             owner.setDisplayName(this.pullRequest.getAuthorLogin());
@@ -108,7 +108,7 @@ public class BitbucketCloudPullRequestEvent implements BitbucketPullRequestEvent
                     destination.getRepository().setScm(repository.getScm());
                 }
                 if (destination.getRepository().getOwner() == null
-                        && StringUtils.equalsIgnoreCase(destination.getRepository().getOwnerName(), repository.getOwnerName())) {
+                        && Strings.CI.equals(destination.getRepository().getOwnerName(), repository.getOwnerName())) {
                     destination.getRepository().setOwner(repository.getOwner());
                     destination.getRepository().setPrivate(repository.isPrivate());
                 }

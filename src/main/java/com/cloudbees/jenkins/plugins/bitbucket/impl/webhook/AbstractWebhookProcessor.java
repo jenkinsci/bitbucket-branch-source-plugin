@@ -55,6 +55,7 @@ import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -93,9 +94,9 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
                 for (SCMSource source : sources) {
                     // Search for the correct SCM source
                     if (source instanceof BitbucketSCMSource scmSource
-                            && StringUtils.equalsIgnoreCase(scmSource.getRepoOwner(), owner)
+                            && Strings.CI.equals(scmSource.getRepoOwner(), owner)
                             && scmSource.getRepository().equals(repository)
-                            && (mirrorId == null || StringUtils.equalsIgnoreCase(mirrorId, scmSource.getMirrorId()))) {
+                            && (mirrorId == null || Strings.CI.equals(mirrorId, scmSource.getMirrorId()))) {
                         logger.log(Level.INFO, "Multibranch project found, reindexing {0}", scmOwner.getName());
                         // TODO: SCMSourceOwner.onSCMSourceUpdated is deprecated. We may explore options with an
                         //  SCMEventListener extension and firing SCMSourceEvents.

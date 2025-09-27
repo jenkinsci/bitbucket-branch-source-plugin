@@ -62,6 +62,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
@@ -276,7 +277,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                 if (BitbucketApiUtils.isCloud(serverURL)) {
                     // support lightweight checkout for branches with same owner and repository
                     if (prHead.getCheckoutStrategy() == ChangeRequestCheckoutStrategy.HEAD &&
-                        StringUtils.equalsIgnoreCase(prHead.getRepoOwner(), src.getRepoOwner()) &&
+                            Strings.CI.equals(prHead.getRepoOwner(), src.getRepoOwner()) &&
                         prHead.getRepository().equals(src.getRepository())) {
                         ref = prHead.getOriginName();
                     } else {

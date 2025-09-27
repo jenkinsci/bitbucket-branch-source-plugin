@@ -90,6 +90,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -126,6 +127,7 @@ import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
@@ -414,7 +416,7 @@ public class BitbucketSCMSource extends SCMSource {
                     pull.getSource().getBranchType() == PullRequestBranchType.TAG ? "tag" : "branch",
                     originalBranchName
             );
-            boolean fork = !StringUtils.equalsIgnoreCase(fullName, pull.getSource().getRepository().getFullName());
+            boolean fork = !Strings.CI.equals(fullName, pull.getSource().getRepository().getFullName());
             String pullRepoOwner = pull.getSource().getRepository().getOwnerName();
             String pullRepository = pull.getSource().getRepository().getRepositoryName();
             final BitbucketApi forkClient = fork && BitbucketApiUtils.isCloud(getServerUrl())
@@ -750,7 +752,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     private void setPrimaryCloneLinks(List<BitbucketHref> links) {
         links.forEach(link -> {
-            if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
+            if (Strings.CI.startsWith(link.getName(), "http")) {
                 // Remove the username from URL because it will be set into the GIT_URL variable
                 // credentials used to git clone or push/pull operation could be different than this (for example SSH)
                 // and will run into a failure
@@ -893,9 +895,9 @@ public class BitbucketSCMSource extends SCMSource {
         SCMSourceOwner owner = getOwner();
         if (owner instanceof Actionable actionable) {
             for (BitbucketDefaultBranch p : actionable.getActions(BitbucketDefaultBranch.class)) {
-                if (StringUtils.equalsIgnoreCase(getRepoOwner(), p.getRepoOwner())
-                        && StringUtils.equals(repository, p.getRepository())
-                        && StringUtils.equals(p.getDefaultBranch(), head.getName())) {
+                if (Strings.CI.equals(getRepoOwner(), p.getRepoOwner())
+                        && Objects.equals(repository, p.getRepository())
+                        && Objects.equals(p.getDefaultBranch(), head.getName())) {
                     result.add(new PrimaryInstanceMetadataAction());
                     break;
                 }
@@ -923,7 +925,7 @@ public class BitbucketSCMSource extends SCMSource {
     @NonNull
     public SCMHeadOrigin originOf(@NonNull String repoOwner, @NonNull String repository) {
         if (this.repository.equalsIgnoreCase(repository)) {
-            if (StringUtils.equalsIgnoreCase(this.repoOwner, repoOwner)) {
+            if (Strings.CI.equals(this.repoOwner, repoOwner)) {
                 return SCMHeadOrigin.DEFAULT;
             }
             return new SCMHeadOrigin.Fork(repoOwner);

@@ -39,7 +39,7 @@ import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> {
 
@@ -63,7 +63,7 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> {
         if (!isServerURLMatch(src.getServerUrl())) {
             return Collections.emptyMap();
         }
-        if (!StringUtils.equalsIgnoreCase(src.getRepoOwner(), getPayload().getRepository().getOwnerName())) {
+        if (!Strings.CI.equals(src.getRepoOwner(), getPayload().getRepository().getOwnerName())) {
             return Collections.emptyMap();
         }
         if (!src.getRepository().equalsIgnoreCase(getPayload().getRepository().getRepositoryName())) {

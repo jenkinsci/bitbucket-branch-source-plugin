@@ -633,7 +633,6 @@ class BitbucketEndpointConfigurationTest {
         final BitbucketEndpointConfiguration instance = new BitbucketEndpointConfiguration();
 
         assertThat(instance.getEndpoints()).hasOnlyElementsOfType(BitbucketServerEndpoint.class);
-        final BitbucketServerEndpoint endpoint = (BitbucketServerEndpoint) instance.getEndpoints().get(0);
     }
 
     @Test

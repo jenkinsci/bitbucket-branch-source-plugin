@@ -797,6 +797,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return this.baseURL;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Iterable<SCMFile> getDirectoryContent(BitbucketSCMFile directory) throws IOException {
         List<SCMFile> files = new ArrayList<>();
@@ -828,6 +829,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return files;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void collectFileAndDirectories(BitbucketSCMFile parent, List<Map> values, List<SCMFile> files) {
         for(Map file:values) {
             String type = (String) file.get("type");
@@ -876,6 +878,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     private Map<String,Object> collectLines(String response, final List<String> lines) throws IOException {
         Map<String,Object> content = JsonParser.toJava(response, new TypeReference<Map<String,Object>>(){});
+        @SuppressWarnings("unchecked")
         List<Map<String, String>> lineMap = (List<Map<String, String>>) content.get("lines");
         for(Map<String,String> line: lineMap){
             String text = line.get("text");

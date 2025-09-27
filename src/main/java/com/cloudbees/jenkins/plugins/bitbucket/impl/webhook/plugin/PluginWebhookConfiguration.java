@@ -40,7 +40,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
@@ -57,8 +56,6 @@ import static hudson.Util.fixEmptyAndTrim;
 // https://help.moveworkforward.com/BPW/atlassian-bitbucket-post-webhook-api
 // https://help.moveworkforward.com/BPW/how-to-get-configurations-using-post-webhooks-for-
 public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration {
-    private static final Logger logger = Logger.getLogger(PluginWebhookConfiguration.class.getName());
-
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for
      * this end-point.

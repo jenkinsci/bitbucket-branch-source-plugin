@@ -66,6 +66,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
@@ -218,10 +219,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     }
 
     @DataBoundSetter
-    public void setServerUrl(@CheckForNull String serverUrl) {
-        serverUrl = Util.fixEmpty(URLUtils.normalizeURL(serverUrl));
-        if (serverUrl != null && !StringUtils.equals(this.serverUrl, serverUrl)) {
-            this.serverUrl = serverUrl;
+    public void setServerUrl(@CheckForNull String serverURL) {
+        serverURL = Util.fixEmpty(URLUtils.normalizeURL(serverURL));
+        if (serverURL != null && !Objects.equals(this.serverUrl, serverURL)) {
+            this.serverUrl = serverURL;
             resetId();
         }
     }

@@ -26,8 +26,8 @@ package com.cloudbees.jenkins.plugins.bitbucket.trait;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistration;
 import hudson.util.ListBoxModel;
+import java.util.Objects;
 import jenkins.scm.api.SCMHeadObserver;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,7 +58,7 @@ class WebhookRegistrationTraitTest {
     void given__descriptor__when__displayingOptions__then__SYSTEM_not_present() {
         ListBoxModel items = new WebhookRegistrationTrait.DescriptorImpl().doFillModeItems();
         assertThat(items).isNotEmpty()
-            .noneMatch(el -> StringUtils.equals(el.value, WebhookRegistration.SYSTEM.name()));
+            .noneMatch(el -> Objects.equals(el.value, WebhookRegistration.SYSTEM.name()));
     }
 
 }

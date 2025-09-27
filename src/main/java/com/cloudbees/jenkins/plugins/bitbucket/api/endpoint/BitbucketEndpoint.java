@@ -33,7 +33,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 /**
  * The implementation represents an endpoint configuration to be used in
@@ -156,7 +156,7 @@ public interface BitbucketEndpoint extends Describable<BitbucketEndpoint> {
      * @return {@code true} if endpoint are the same, {@code false} otherwise
      */
     default boolean isEquals(BitbucketEndpoint endpoint) {
-        return StringUtils.equalsIgnoreCase(getServerURL(), endpoint.getServerURL());
+        return Strings.CI.equals(getServerURL(), endpoint.getServerURL());
     }
 
    /**

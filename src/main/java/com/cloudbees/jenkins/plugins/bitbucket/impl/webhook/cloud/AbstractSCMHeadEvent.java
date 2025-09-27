@@ -40,6 +40,7 @@ import java.util.Map;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMNavigator;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 public abstract class AbstractSCMHeadEvent<P> extends SCMHeadEvent<P> {
 
@@ -60,7 +61,7 @@ public abstract class AbstractSCMHeadEvent<P> extends SCMHeadEvent<P> {
         if (!isServerURLMatch(bbNav.getServerUrl())) {
             return false;
         }
-        return StringUtils.equalsIgnoreCase(bbNav.getRepoOwner(), getRepository().getOwnerName());
+        return Strings.CI.equals(bbNav.getRepoOwner(), getRepository().getOwnerName());
     }
 
     protected abstract BitbucketRepository getRepository();

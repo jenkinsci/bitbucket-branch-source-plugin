@@ -60,6 +60,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.TagSCMHead;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 /**
  * A {@link GitSCMBuilder} specialized for bitbucket.
@@ -222,7 +223,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         String scmSourceRepository = scmSource.getRepository();
         String pullRequestRepoOwner = head.getRepoOwner();
         String pullRequestRepository = head.getRepository();
-        boolean prFromTargetRepository = StringUtils.equalsIgnoreCase(pullRequestRepoOwner, scmSourceRepoOwner)
+        boolean prFromTargetRepository = Strings.CI.equals(pullRequestRepoOwner, scmSourceRepoOwner)
             && pullRequestRepository.equalsIgnoreCase(scmSourceRepository);
         SCMRevision revision = revision();
         ChangeRequestCheckoutStrategy checkoutStrategy = head.getCheckoutStrategy();
