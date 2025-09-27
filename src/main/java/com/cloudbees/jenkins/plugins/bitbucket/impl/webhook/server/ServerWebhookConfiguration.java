@@ -60,7 +60,7 @@ public class ServerWebhookConfiguration extends AbstractBitbucketWebhookConfigur
     @NonNull
     @Override
     public String getId() {
-        return "NATIVE";
+        return "SERVER_NATIVE";
     }
 
     @Override

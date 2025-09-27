@@ -28,12 +28,14 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfi
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookDescriptor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
@@ -56,7 +58,6 @@ import static hudson.Util.fixEmptyAndTrim;
 // https://help.moveworkforward.com/BPW/how-to-get-configurations-using-post-webhooks-for-
 public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration {
     private static final Logger logger = Logger.getLogger(PluginWebhookConfiguration.class.getName());
-    private static final String WEBHOOK_API = "/rest/webhook/1.0/projects/{owner}/repos/{repo}/configurations";
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for
@@ -116,7 +117,10 @@ public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration
 
     @DataBoundSetter
     public void setEndpointJenkinsRootURL(@CheckForNull String endpointJenkinsRootURL) {
-        this.endpointJenkinsRootURL = fixEmptyAndTrim(endpointJenkinsRootURL);
+        String url = fixEmptyAndTrim(endpointJenkinsRootURL);
+        if (url != null) {
+            this.endpointJenkinsRootURL = Util.ensureEndsWith(URLUtils.normalizeURL(url), "/");
+        }
     }
 
     @Override

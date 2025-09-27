@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -168,6 +169,27 @@ public final class BitbucketEndpointProvider{
             endpoint = endpointCustomiser.apply(endpoint);
         }
         BitbucketEndpointConfiguration.get().addEndpoint(endpoint);
+        return endpoint;
+    }
+
+    /**
+     * Register a new {@link BitbucketEndpoint} to the global configuration. The
+     * endpoint is created with default values and could be customised by the
+     * given endpointCustomiser.
+     * <p>
+     * The given customiser can also return a different implementation
+     *
+     * @param name of the endpoint, alias for label
+     * @param serverURL the bitbucket endpoint URL
+     * @param webhook configuration
+     * @param endpointCustomiser an optional customiser for the created endpoint
+     * @return the registered endpoint instance.
+     */
+    public static BitbucketEndpoint registerEndpoint(@NonNull String name, @NonNull String serverURL, @NonNull BitbucketWebhookConfiguration webhook, @Nullable UnaryOperator<BitbucketEndpoint> endpointCustomiser) {
+        BitbucketEndpoint endpoint = registerEndpoint(name, serverURL, endpointCustomiser);
+        if (endpoint instanceof AbstractBitbucketEndpoint ep) {
+            ep.setWebhook(webhook);
+        }
         return endpoint;
     }
 

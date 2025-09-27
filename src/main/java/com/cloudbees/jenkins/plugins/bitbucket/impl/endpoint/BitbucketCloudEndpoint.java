@@ -38,6 +38,8 @@ import hudson.util.FormValidation;
 import java.util.Collection;
 import java.util.List;
 import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.verb.POST;
@@ -73,7 +75,17 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * Default constructor.
      */
     public BitbucketCloudEndpoint() {
-        this(false, 0, 0, new CloudWebhookConfiguration(false, null, false, null));
+        this(new CloudWebhookConfiguration(false, null, false, null));
+    }
+
+    /**
+     * Internal Constructor.
+     *
+     * @param webhook configuration
+     */
+    @Restricted(NoExternalUse.class)
+    public BitbucketCloudEndpoint(BitbucketWebhookConfiguration webhook) {
+        this(false, 0, 0, webhook);
     }
 
     /**
