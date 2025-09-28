@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfigurationBuilder;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.NativeBitbucketWebhookConfigurationBuilder;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -38,13 +39,13 @@ public abstract class AbstractBitbucketWebhookConfigurationBuilderImpl implement
 
     @Override
     public NativeBitbucketWebhookConfigurationBuilder autoManaged(@NonNull String credentialsId) {
-        this.credentialsId = credentialsId;
+        this.credentialsId = Util.fixEmptyAndTrim(credentialsId);
         return this;
     }
 
     @Override
     public NativeBitbucketWebhookConfigurationBuilder signature(@NonNull String credentialsId) {
-        this.signatureId = credentialsId;
+        this.signatureId = Util.fixEmptyAndTrim(credentialsId);
         return this;
     }
 

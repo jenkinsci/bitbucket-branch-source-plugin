@@ -33,112 +33,73 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookCo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.plugin.PluginWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server.ServerWebhookManager;
+import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import hudson.model.listeners.ItemListener;
 import hudson.util.RingBufferLogHandler;
-import java.io.File;
-import java.text.MessageFormat;
 import java.util.List;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import jenkins.branch.BranchSource;
 import jenkins.branch.DefaultBranchPropertyStrategy;
 import jenkins.model.JenkinsLocationConfiguration;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-@WithJenkins
 class WebhooksAutoregisterTest {
 
-    private JenkinsRule j;
-
-    @BeforeEach
-    void init(JenkinsRule rule) {
-        j = rule;
-    }
-
+    @WithJenkins
     @Test
-    void test_register_webhook_using_item_configuration() throws Exception {
+    void test_register_webhook_using_item_configuration(JenkinsRule rule) throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
-        RingBufferLogHandler log = createJULTestHandler();
+        RingBufferLogHandler log = HookProcessorTestUtil.createJULTestHandler(WebhookAutoRegisterListener.class,
+                CloudWebhookManager.class,
+                ServerWebhookManager.class,
+                PluginWebhookManager.class);
 
-        MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
+        MockMultiBranchProjectImpl p = rule.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource("amuniz", "test-repos");
         source.setTraits(List.of(new WebhookRegistrationTrait(WebhookRegistration.ITEM)));
         BranchSource branchSource = new BranchSource(source);
         branchSource.setStrategy(new DefaultBranchPropertyStrategy(null));
         p.getSourcesList().add(branchSource);
         p.scheduleBuild2(0);
-        waitForLogFileMessage("Can not register hook. Jenkins root URL is not valid", log);
+        HookProcessorTestUtil.waitForLogFileMessage(rule, "Can not register hook. Jenkins root URL is not valid", log);
 
-        setRootUrl();
+        setRootUrl(rule);
         p.save(); // force item listener to run onUpdated
 
-        waitForLogFileMessage("Registering cloud hook for amuniz/test-repos", log);
+        HookProcessorTestUtil.waitForLogFileMessage(rule, "Registering cloud hook for amuniz/test-repos", log);
 
     }
 
+    @WithJenkins
     @Test
-    void test_register_webhook_using_system_configuration() throws Exception {
+    void test_register_webhook_using_system_configuration(JenkinsRule rule) throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
         BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
-        RingBufferLogHandler log = createJULTestHandler();
+        RingBufferLogHandler log = HookProcessorTestUtil.createJULTestHandler(WebhookAutoRegisterListener.class,
+                CloudWebhookManager.class,
+                ServerWebhookManager.class,
+                PluginWebhookManager.class);
 
         BitbucketEndpointConfiguration.get().setEndpoints(List.of(new BitbucketCloudEndpoint(false, 0, 0, new CloudWebhookConfiguration(true, "dummy"))));
 
-        MockMultiBranchProjectImpl p = j.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
+        MockMultiBranchProjectImpl p = rule.jenkins.createProject(MockMultiBranchProjectImpl.class, "test");
         BitbucketSCMSource source = new BitbucketSCMSource( "amuniz", "test-repos");
         p.getSourcesList().add(new BranchSource(source));
         p.scheduleBuild2(0);
-        waitForLogFileMessage("Can not register hook. Jenkins root URL is not valid", log);
+        HookProcessorTestUtil.waitForLogFileMessage(rule, "Can not register hook. Jenkins root URL is not valid", log);
 
-        setRootUrl();
+        setRootUrl(rule);
         ItemListener.fireOnUpdated(p);
 
-        waitForLogFileMessage("Registering cloud hook for amuniz/test-repos", log);
+        HookProcessorTestUtil.waitForLogFileMessage(rule, "Registering cloud hook for amuniz/test-repos", log);
 
     }
 
-    private void setRootUrl() throws Exception {
-        JenkinsLocationConfiguration.get().setUrl(j.getURL().toString().replace("localhost", "127.0.0.1"));
-    }
-
-    private void waitForLogFileMessage(String string, RingBufferLogHandler logs) throws InterruptedException {
-        File rootDir = j.jenkins.getRootDir();
-        synchronized (rootDir) {
-            int limit = 0;
-            while (limit < 5) {
-                rootDir.wait(1000);
-                for (LogRecord r : logs.getView()) {
-                    String message = r.getMessage();
-                    if (r.getParameters() != null) {
-                        message = MessageFormat.format(message, r.getParameters());
-                    }
-                    if (message.contains(string)) {
-                        return;
-                    }
-                }
-                limit++;
-            }
-        }
-        Assertions.fail("Expected log not found: " + string);
-    }
-
-    @SuppressWarnings("deprecation")
-    private RingBufferLogHandler createJULTestHandler() throws SecurityException {
-        RingBufferLogHandler handler = new RingBufferLogHandler(RingBufferLogHandler.getDefaultRingBufferSize());
-        SimpleFormatter formatter = new SimpleFormatter();
-        handler.setFormatter(formatter);
-        Logger.getLogger(WebhookAutoRegisterListener.class.getName()).addHandler(handler);
-        Logger.getLogger(CloudWebhookManager.class.getName()).addHandler(handler);
-        Logger.getLogger(ServerWebhookManager.class.getName()).addHandler(handler);
-        Logger.getLogger(PluginWebhookManager.class.getName()).addHandler(handler);
-        return handler;
+    private void setRootUrl(JenkinsRule rule) throws Exception {
+        JenkinsLocationConfiguration.get().setUrl(rule.getURL().toString().replace("localhost", "127.0.0.1"));
     }
 
 }
