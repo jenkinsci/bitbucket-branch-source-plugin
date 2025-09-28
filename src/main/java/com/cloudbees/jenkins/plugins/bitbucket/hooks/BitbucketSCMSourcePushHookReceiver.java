@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookProcessorException;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.UnprotectedRootAction;
@@ -90,14 +91,17 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
      * @throws IOException if there is any issue reading the HTTP content payload.
      */
     public HttpResponse doNotify(StaplerRequest2 req) throws IOException {
+        WebhookProcessorListenersHandler listenersHandler = new WebhookProcessorListenersHandler();
+
         try {
             Map<String, String> reqHeaders = getHeaders(req);
             MultiValuedMap<String, String> reqParameters = getParameters(req);
             BitbucketWebhookProcessor hookProcessor = getHookProcessor(reqHeaders, reqParameters);
+            listenersHandler.onStart(hookProcessor.getClass());
 
             String body = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
             if (StringUtils.isEmpty(body)) {
-                return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST, "Payload is empty.");
+                throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "Payload is empty.");
             }
 
             String serverURL = hookProcessor.getServerURL(Collections.unmodifiableMap(reqHeaders), MultiMapUtils.unmodifiableMultiValuedMap(reqParameters));
@@ -106,7 +110,7 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
                     .orElse(null);
             if (endpoint == null) {
                 logger.log(Level.SEVERE, "No configured bitbucket endpoint found for {0}.", serverURL);
-                return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST, "No bitbucket endpoint found for " + serverURL);
+                throw new BitbucketWebhookProcessorException(HttpServletResponse.SC_BAD_REQUEST, "No bitbucket endpoint found for " + serverURL);
             }
 
             logger.log(Level.FINE, "Payload endpoint host {0}, request endpoint host {1}", new Object[] { endpoint, req.getRemoteAddr() });
@@ -116,14 +120,16 @@ public class BitbucketSCMSourcePushHookReceiver extends CrumbExclusion implement
             String eventType = hookProcessor.getEventType(Collections.unmodifiableMap(reqHeaders), MultiMapUtils.unmodifiableMultiValuedMap(reqParameters));
 
             hookProcessor.process(eventType, body, context, endpoint);
+            listenersHandler.onProcess(eventType, body, endpoint);
         } catch(BitbucketWebhookProcessorException e) {
+            listenersHandler.onFailure(e);
             return HttpResponses.error(e.getHttpCode(), e.getMessage());
         }
         return HttpResponses.ok();
     }
 
-    private BitbucketWebhookProcessor getHookProcessor(Map<String, String> reqHeaders,
-                                                    MultiValuedMap<String, String> reqParameters) {
+    @NonNull
+    private BitbucketWebhookProcessor getHookProcessor(Map<String, String> reqHeaders, MultiValuedMap<String, String> reqParameters) {
         BitbucketWebhookProcessor hookProcessor;
 
         List<BitbucketWebhookProcessor> matchingProcessors = getHookProcessors()
