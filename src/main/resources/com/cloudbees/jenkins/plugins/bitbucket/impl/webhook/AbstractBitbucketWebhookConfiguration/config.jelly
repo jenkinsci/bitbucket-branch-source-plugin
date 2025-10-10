@@ -38,4 +38,12 @@ THE SOFTWARE.
             <c:select />
         </f:entry>
     </f:optionalBlock>
+
+    <f:optionalBlock title="${%Enable cache}" field="enableCache" inline="true">
+        <f:entry title="${%How long to cache webhook requests, in minutes}" field="webhooksCacheDuration">
+            <f:number default="180" />
+        </f:entry>
+        <f:validateButton title="${%Clear caches}" method="clear" />
+        <f:validateButton title="${%Show statistics}" method="showStats" />
+    </f:optionalBlock>
 </j:jelly>

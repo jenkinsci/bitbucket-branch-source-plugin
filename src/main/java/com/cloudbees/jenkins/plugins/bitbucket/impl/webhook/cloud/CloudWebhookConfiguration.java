@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -68,6 +69,16 @@ public class CloudWebhookConfiguration extends AbstractBitbucketWebhookConfigura
     @Symbol("cloudWebhook")
     @Extension
     public static class DescriptorImpl extends AbstractBitbucketWebhookDescriptorImpl {
+
+        @Override
+        protected void clearCaches() {
+            CloudWebhookManager.clearCaches();
+        }
+
+        @Override
+        protected List<String> getStats() {
+            return CloudWebhookManager.stats();
+        }
 
         @Override
         public String getDisplayName() {

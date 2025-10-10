@@ -48,8 +48,8 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
                 .lookupEndpoint(BitbucketCloudEndpoint.SERVER_URL, BitbucketCloudEndpoint.class)
                 .orElse(null);
         boolean enableCache = false;
-        int teamCacheDuration = 0;
-        int repositoriesCacheDuration = 0;
+        int teamCacheDuration = 360;
+        int repositoriesCacheDuration = 180;
         if (endpoint != null) {
             enableCache = endpoint.isEnableCache();
             teamCacheDuration = endpoint.getTeamCacheDuration();

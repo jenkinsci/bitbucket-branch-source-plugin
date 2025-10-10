@@ -94,8 +94,8 @@ You can setup a custom Jenkins URL to be used as callback URL by the webhooks.
 For Bitbucket Data Center only, it is possible chose which webhooks implementation server side to use:
 
 - Native implementation will configure the webhooks provided by default with the Server, so it will always be available.
-
-- Plugin implementation (*deprecated*) relies on the configuration available via specific APIs provided by the link:https://marketplace.atlassian.com/apps/1215474/post-webhooks-for-bitbucket?tab=overview&hosting=datacenter[Post Webhooks for Bitbucket] plugin itself. To get it worked plugin must be already pre-installed on the server instance. This provider allows custom settings managed by the _ignore committers_ trait. _Note: This specific implementation will be moved to an individual repository as soon as link:https://issues.jenkins.io/browse/JENKINS-74913[JENKINS-74913] is implemented._
+- Plugin implementation (*deprecated*) replaced by https://github.com/jenkinsci/bitbucket-webhooks-plugin[this plugin]
+- Any other extension point implementation installed in your Jenkins instance 
 
 image::images/screenshot-14.png[]
 
@@ -119,6 +119,35 @@ To ensure your self-hosted server only processes deliveries from Bitbucket, you 
 Any incoming webhook payloads from that given endpoint will be validated against the configured token, to verify they are coming from the configured Bitbucket endpoint URL.
 
 image::images/screenshot-20.png[]
+
+=== Enable webhooks cache
+
+If your organisation has a large number of repositories (over 500), you may easily reach the API rate limit.
+Any requests made to Bitbucket beyond 1,000 per hour will be rejected. In this case, enable caching to allow webhooks from repositories beyond the 500th to be processed within the next hour (when the rate is unlocked).
+
+See https://issues.jenkins.io/browse/JENKINS-76184[JENKINS-76184] for the use case.
+
+image::images/screenshot-23.png[]
+
+=== Manual registration
+
+If your organisation does not allow credentials to handle repository webhooks than you can provide to register webhook manually. You can follow one of these official Atlassian guides: for https://support.atlassian.com/bitbucket-cloud/docs/manage-webhooks[Cloud] or for https://confluence.atlassian.com/bitbucketserver/manage-webhooks-938025878.html[Data Center].
+
+Go to the Bitbucket _Repository_ » _Repository settings_ » _Webhooks than _Add Webhook_
+
+Provide a title of your choice, if you generate a secret for payload verification than confiure signature verification in Bitbucket endpoint as in the previous chapter.
+
+Select events as shown in the image; any other types selected will be ignored.
+
+The callback URL must be configured as follow:
+* Cloud: <Jenkins root URL>/bitbucket-scmsource-hook/notify
+* Server: <Jenkins root URL>/bitbucket-scmsource-hook/notify?server_url=<Bitbucket Data Center URL>
+
+The <Jenkins root URL> must match the Jenkins public host; if Jenkins is behind a reverse proxy, ensure the URL provided matches the one in Manage Jenkins » System » Jenkins Location.
+In other cases, you can provide the Jenkins root URL to use, in the webhook configuration page on the Bitbucket endpoint.
+The <Bitbucket Data Center URL> must match the server address configured in the Bitbucket endpoint. Otherwise, incoming webhooks will be discarded.
+
+image::images/screenshot-24.png[]
 
 [id=bitbucket-creds-config]
 == Credentials configuration

@@ -24,14 +24,18 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudPage;
+import com.cloudbees.jenkins.plugins.bitbucket.client.Cache;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.damnhandy.uri.template.UriTemplate;
@@ -48,6 +52,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -57,10 +62,25 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.Strings;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.apache.commons.lang3.StringUtils.upperCase;
+
 @Extension
 public class CloudWebhookManager implements BitbucketWebhookManager {
     private static final String WEBHOOK_URL = "/2.0/repositories{/owner,repo}/hooks{/hook}{?page,pagelen}";
     private static final Logger logger = Logger.getLogger(CloudWebhookManager.class.getName());
+    private static final Cache<String, List<BitbucketWebHook>> cachedRepositoryWebhooks = new Cache<>(3, HOURS);
+
+    public static void clearCaches() {
+        cachedRepositoryWebhooks.evictAll();
+    }
+
+    public static List<String> stats() {
+        List<String> stats = new ArrayList<>();
+        stats.add("Repositories webhooks: " + cachedRepositoryWebhooks.stats().toString());
+        return stats;
+    }
 
     // The list of events available in Bitbucket Cloud.
     private static final List<String> CLOUD_EVENTS = Collections.unmodifiableList(Arrays.asList(
@@ -87,6 +107,9 @@ public class CloudWebhookManager implements BitbucketWebhookManager {
     @Override
     public void apply(BitbucketWebhookConfiguration configuration) {
         this.configuration = (CloudWebhookConfiguration) configuration;
+        if (this.configuration.isEnableCache()) {
+            cachedRepositoryWebhooks.setExpireDuration(this.configuration.getWebhooksCacheDuration(), MINUTES);
+        }
     }
 
     @Override
@@ -105,21 +128,38 @@ public class CloudWebhookManager implements BitbucketWebhookManager {
                 .set("pagelen", 100)
                 .expand();
 
-        List<BitbucketWebHook> resources = new ArrayList<>();
+        ICheckedCallable<List<BitbucketWebHook>, IOException> request = () -> {
+            List<BitbucketWebHook> resources = new ArrayList<>();
 
-        TypeReference<BitbucketCloudPage<BitbucketCloudWebhook>> type = new TypeReference<BitbucketCloudPage<BitbucketCloudWebhook>>(){};
-        BitbucketCloudPage<BitbucketCloudWebhook> page = JsonParser.toJava(client.get(url), type);
-        resources.addAll(page.getValues().stream()
-                .filter(hook -> hook.getUrl().startsWith(endpointJenkinsRootURL))
-                .toList());
-        while (!page.isLastPage()){
-            String response = client.get(page.getNext());
-            page = JsonParser.toJava(response, type);
+            TypeReference<BitbucketCloudPage<BitbucketCloudWebhook>> type = new TypeReference<BitbucketCloudPage<BitbucketCloudWebhook>>(){};
+            BitbucketCloudPage<BitbucketCloudWebhook> page = JsonParser.toJava(client.get(url), type);
             resources.addAll(page.getValues().stream()
                     .filter(hook -> hook.getUrl().startsWith(endpointJenkinsRootURL))
                     .toList());
+            while (!page.isLastPage()){
+                String response = client.get(page.getNext());
+                page = JsonParser.toJava(response, type);
+                resources.addAll(page.getValues().stream()
+                        .filter(hook -> hook.getUrl().startsWith(endpointJenkinsRootURL))
+                        .toList());
+            }
+            return resources;
+        };
+        if (configuration.isEnableCache()) {
+            try {
+                String cacheKey = upperCase(client.getRepositoryOwner()) + "::" + ObjectUtils.firstNonNull(client.getRepositoryName(), "<anonymous>");
+                return cachedRepositoryWebhooks.get(cacheKey, request);
+            } catch (ExecutionException e) {
+                BitbucketRequestException bre = BitbucketApiUtils.unwrap(e);
+                if (bre != null) {
+                    throw bre;
+                } else {
+                    throw new IOException(e);
+                }
+            }
+        } else {
+            return request.call();
         }
-        return resources;
     }
 
     @NonNull

@@ -39,6 +39,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -83,6 +84,13 @@ public abstract class AbstractBitbucketWebhookConfiguration implements Bitbucket
      * and returned by getter as such.
      */
     private String endpointJenkinsRootURL;
+
+    private boolean enableCache = false;
+
+    /**
+     * How long, in minutes, to cache the webhook response.
+     */
+    private Integer webhooksCacheDuration;
 
     protected AbstractBitbucketWebhookConfiguration(boolean manageHooks, @CheckForNull String credentialsId,
                                        boolean enableHookSignature, @CheckForNull String hookSignatureCredentialsId) {
@@ -144,7 +152,47 @@ public abstract class AbstractBitbucketWebhookConfiguration implements Bitbucket
         return Messages.ServerWebhookImplementation_displayName();
     }
 
+    public boolean isEnableCache() {
+        return enableCache;
+    }
+
+    @DataBoundSetter
+    public void setEnableCache(boolean enableCache) {
+        this.enableCache = enableCache;
+    }
+
+    public Integer getWebhooksCacheDuration() {
+        return webhooksCacheDuration;
+    }
+
+    @DataBoundSetter
+    public void setWebhooksCacheDuration(Integer webhooksCacheDuration) {
+        this.webhooksCacheDuration = webhooksCacheDuration == null || webhooksCacheDuration < 0 ? Integer.valueOf(180) : webhooksCacheDuration;
+    }
+
     public abstract static class AbstractBitbucketWebhookDescriptorImpl extends BitbucketWebhookDescriptor {
+        protected abstract void clearCaches();
+        protected abstract List<String> getStats();
+
+        @RequirePOST
+        public FormValidation doShowStats() {
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
+
+            List<String> stats = getStats();
+            StringBuilder builder = new StringBuilder();
+            for (String stat : stats) {
+                builder.append(stat).append("<br>");
+            }
+            return FormValidation.okWithMarkup(builder.toString());
+        }
+
+        @RequirePOST
+        public FormValidation doClear() {
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
+
+            clearCaches();
+            return FormValidation.ok("Caches cleared");
+        }
 
         @RequirePOST
         public static FormValidation doCheckEndpointJenkinsRootURL(@QueryParameter String value) {

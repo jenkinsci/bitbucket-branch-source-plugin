@@ -32,6 +32,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -71,6 +72,16 @@ public class ServerWebhookConfiguration extends AbstractBitbucketWebhookConfigur
     @Symbol("serverWebhook")
     @Extension
     public static class DescriptorImpl extends AbstractBitbucketWebhookDescriptorImpl {
+
+        @Override
+        protected void clearCaches() {
+            ServerWebhookManager.clearCaches();
+        }
+
+        @Override
+        protected List<String> getStats() {
+            return ServerWebhookManager.stats();
+        }
 
         @Override
         public String getDisplayName() {

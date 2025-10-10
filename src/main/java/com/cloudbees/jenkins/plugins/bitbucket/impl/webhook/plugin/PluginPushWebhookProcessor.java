@@ -61,6 +61,8 @@ public class PluginPushWebhookProcessor extends AbstractWebhookProcessor {
 
     @Override
     public void process(@NonNull String eventType, @NonNull String payload, @NonNull Map<String, Object> context, @NonNull BitbucketEndpoint endpoint) {
+        logger.warning("Plugin webhook is deprecated, it has been replaced by the bitbucket-webhooks-plugin, documentation available at https://github.com/jenkinsci/bitbucket-webhooks-plugin.");
+
         BitbucketPushEvent push = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
         if (push != null) {
             if (push.getChanges().isEmpty()) {

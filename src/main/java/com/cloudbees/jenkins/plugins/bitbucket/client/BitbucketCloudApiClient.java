@@ -113,7 +113,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     private static final Cache<String, BitbucketTeam> cachedTeam = new Cache<>(6, HOURS);
     private static final Cache<String, List<BitbucketCloudRepository>> cachedRepositories = new Cache<>(3, HOURS);
     private static final Cache<String, BitbucketCloudCommit> cachedCommits = new Cache<>(24, HOURS);
-    private transient BitbucketRepository cachedRepository;
+    private transient BitbucketRepository localCachedRepository;
     private transient String cachedDefaultBranch;
 
     public static List<String> stats() {
@@ -265,14 +265,14 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         if (repositoryName == null) {
             throw new UnsupportedOperationException("Cannot get a repository from an API instance that is not associated with a repository");
         }
-        if (!enableCache || cachedRepository == null) {
+        if (!enableCache || localCachedRepository == null) {
             String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE)
                     .set("owner", owner)
                     .set("repo", repositoryName)
                     .expand();
-            cachedRepository = getRequestAs(url, BitbucketCloudRepository.class);
+            localCachedRepository = getRequestAs(url, BitbucketCloudRepository.class);
         }
-        return cachedRepository;
+        return localCachedRepository;
     }
 
     /**
