@@ -28,7 +28,7 @@
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
         <jenkins.baseline>2.504</jenkins.baseline>
-        <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
         <hpi.compatibleSinceVersion>937.0.0</hpi.compatibleSinceVersion>
         <tagNameFormat>@{project.version}</tagNameFormat>

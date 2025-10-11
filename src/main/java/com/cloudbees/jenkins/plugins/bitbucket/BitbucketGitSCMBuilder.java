@@ -35,8 +35,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpo
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.FallbackToOtherRepositoryGitSCMExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.SCMUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.common.IdCredentials;

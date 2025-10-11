@@ -32,9 +32,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestDestinati
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;

@@ -35,8 +35,6 @@ import java.util.List;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMTrait;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * The implementation is in charge to apply a specific
@@ -46,7 +44,6 @@ import org.kohsuke.accmod.restrictions.Beta;
  * @author Nikolas Falco
  * @since 937.0.0
  */
-@Restricted(Beta.class)
 public interface BitbucketWebhookManager extends ExtensionPoint {
 
     /**

@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.avatars;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;

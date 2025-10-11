@@ -21,9 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
+package com.cloudbees.jenkins.plugins.bitbucket.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;

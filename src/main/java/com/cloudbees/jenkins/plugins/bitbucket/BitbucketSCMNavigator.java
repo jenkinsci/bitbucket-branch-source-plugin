@@ -34,7 +34,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
@@ -43,6 +42,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryT
 import com.cloudbees.jenkins.plugins.bitbucket.trait.PublicRepoPullRequestFilterTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.SSHCheckoutTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;

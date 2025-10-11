@@ -30,7 +30,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.hooks.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;

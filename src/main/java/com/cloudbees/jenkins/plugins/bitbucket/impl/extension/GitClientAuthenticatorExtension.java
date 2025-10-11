@@ -24,7 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.extension;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;

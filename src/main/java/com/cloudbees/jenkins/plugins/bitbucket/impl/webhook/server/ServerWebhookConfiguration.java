@@ -25,9 +25,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.EndpointType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractBitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.Messages;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;

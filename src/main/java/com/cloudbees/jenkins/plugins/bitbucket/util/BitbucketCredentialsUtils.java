@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
+package com.cloudbees.jenkins.plugins.bitbucket.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;

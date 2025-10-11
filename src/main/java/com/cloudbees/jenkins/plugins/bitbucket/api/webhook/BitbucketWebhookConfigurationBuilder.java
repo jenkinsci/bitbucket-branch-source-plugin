@@ -25,8 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.api.webhook;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * Base interface that a builder must implement or extend to provide an instance
@@ -34,7 +32,6 @@ import org.kohsuke.accmod.restrictions.Beta;
  *
  * @since 937.1.0
  */
-@Restricted(Beta.class)
 public interface BitbucketWebhookConfigurationBuilder extends ExtensionPoint {
 
     /**

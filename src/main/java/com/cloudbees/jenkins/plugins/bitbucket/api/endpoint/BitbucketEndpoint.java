@@ -25,7 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.api.endpoint;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketCredentialsUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;

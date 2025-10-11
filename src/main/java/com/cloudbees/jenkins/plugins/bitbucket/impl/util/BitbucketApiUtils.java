@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;

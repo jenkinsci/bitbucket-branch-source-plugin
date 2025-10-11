@@ -21,10 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.hooks;
+package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 
 public interface HasPullRequests {
 

@@ -34,8 +34,6 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.util.SystemProperties;
 import org.apache.commons.collections4.MultiValuedMap;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * Implementations of this extension point must provide new behaviours to
@@ -49,7 +47,6 @@ import org.kohsuke.accmod.restrictions.Beta;
  *
  * @since 937.0.0
  */
-@Restricted(Beta.class)
 public interface BitbucketWebhookProcessor extends ExtensionPoint {
     static final String SCAN_ON_EMPTY_CHANGES_PROPERTY_NAME = "bitbucket.hooks.processor.scanOnEmptyChanges";
 

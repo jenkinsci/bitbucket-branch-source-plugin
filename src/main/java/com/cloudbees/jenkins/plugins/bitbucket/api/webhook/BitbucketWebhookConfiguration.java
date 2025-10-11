@@ -32,8 +32,6 @@ import hudson.Util;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * The implementation represents an a webhook configuration that can be used in
@@ -41,7 +39,6 @@ import org.kohsuke.accmod.restrictions.Beta;
  *
  * @since 937.0.0
  */
-@Restricted(Beta.class)
 public interface BitbucketWebhookConfiguration extends Describable<BitbucketWebhookConfiguration> {
 
     /**

@@ -27,8 +27,6 @@ import com.google.common.base.Objects;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.ExtensionList;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * Provider of {@link BitbucketWebhookConfiguration} builders registered in the
@@ -36,7 +34,6 @@ import org.kohsuke.accmod.restrictions.Beta;
  *
  * @since 937.1.0
  */
-@Restricted(Beta.class)
 public final class BitbucketWebhookConfigurationsBuilder {
 
     private BitbucketWebhookConfigurationsBuilder() {
