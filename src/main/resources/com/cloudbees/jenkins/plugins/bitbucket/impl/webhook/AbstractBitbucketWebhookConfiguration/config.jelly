@@ -39,6 +39,10 @@ THE SOFTWARE.
         </f:entry>
     </f:optionalBlock>
 
+    <f:entry title="${%Skip certificate verification}" field="skipCertVerification">
+        <f:checkbox default="false" />
+    </f:entry>
+
     <f:optionalBlock title="${%Enable cache}" field="enableCache" inline="true">
         <f:entry title="${%How long to cache webhook requests, in minutes}" field="webhooksCacheDuration">
             <f:number default="180" />

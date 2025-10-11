@@ -169,6 +169,7 @@ public class CloudWebhookManager implements BitbucketWebhookManager {
         hook.setActive(true);
         hook.setDescription("Jenkins hook");
         hook.setUrl(callbackURL);
+        hook.setSkipCertVerification(configuration.isSkipCertVerification());
         if (configuration.isEnableHookSignature()) {
             String signatureCredentialsId = configuration.getHookSignatureCredentialsId();
             StringCredentials signatureSecret = BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), BitbucketCloudEndpoint.SERVER_URL, signatureCredentialsId, StringCredentials.class);
@@ -200,6 +201,12 @@ public class CloudWebhookManager implements BitbucketWebhookManager {
         if (!current.isActive()) {
             current.setActive(true);
             logger.info(() -> "Re-activate webhook " + current.getUuid());
+            update = true;
+        }
+
+        if (current.isSkipCertVerification() != expected.isSkipCertVerification()) {
+            current.setSkipCertVerification(expected.isSkipCertVerification());
+            logger.info(() -> "Update skipCertVerification to " + expected.isSkipCertVerification());
             update = true;
         }
 
