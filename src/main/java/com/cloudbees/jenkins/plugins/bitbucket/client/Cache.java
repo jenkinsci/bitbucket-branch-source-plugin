@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -72,6 +73,10 @@ public class Cache<K, V> {
 
     public void evictAll() {
         entries.clear();
+    }
+
+    public void evict(@NonNull String key) {
+        entries.remove(key);
     }
 
     public int size() {
@@ -179,4 +184,5 @@ public class Cache<K, V> {
             }
         }
     }
+
 }

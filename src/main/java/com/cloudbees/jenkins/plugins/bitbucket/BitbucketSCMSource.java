@@ -752,7 +752,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     private void setPrimaryCloneLinks(List<BitbucketHref> links) {
         links.forEach(link -> {
-            if (Strings.CI.startsWith(link.getName(), "http")) {
+            if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
                 // Remove the username from URL because it will be set into the GIT_URL variable
                 // credentials used to git clone or push/pull operation could be different than this (for example SSH)
                 // and will run into a failure

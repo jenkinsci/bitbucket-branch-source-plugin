@@ -40,10 +40,10 @@ public class BitbucketCloudPage<T> {
     private final List<T> values;
 
     public BitbucketCloudPage(@JsonProperty("pagelen") int pageLength,
-                       @JsonProperty("page") int page,
-                       @JsonProperty("size") int size,
-                       @Nullable @JsonProperty("next") String next,
-                       @NonNull @JsonProperty("values") List<T> values) {
+                              @JsonProperty("page") int page,
+                              @JsonProperty("size") int size,
+                              @Nullable @JsonProperty("next") String next,
+                              @NonNull @JsonProperty("values") List<T> values) {
         this.pageLength = pageLength;
         this.page = page;
         this.size = size;
