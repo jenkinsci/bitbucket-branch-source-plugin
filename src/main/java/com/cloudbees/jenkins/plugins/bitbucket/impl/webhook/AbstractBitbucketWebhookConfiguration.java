@@ -85,6 +85,11 @@ public abstract class AbstractBitbucketWebhookConfiguration implements Bitbucket
      */
     private String endpointJenkinsRootURL;
 
+    /**
+     * Allow send webhook to untrusted or self-signed certificates Jenkins host.
+     */
+    private boolean skipCertVerification = false;
+
     private boolean enableCache = false;
 
     /**
@@ -168,6 +173,15 @@ public abstract class AbstractBitbucketWebhookConfiguration implements Bitbucket
     @DataBoundSetter
     public void setWebhooksCacheDuration(Integer webhooksCacheDuration) {
         this.webhooksCacheDuration = webhooksCacheDuration == null || webhooksCacheDuration < 0 ? Integer.valueOf(180) : webhooksCacheDuration;
+    }
+
+    public boolean isSkipCertVerification() {
+        return skipCertVerification;
+    }
+
+    @DataBoundSetter
+    public void setSkipCertVerification(boolean skipCertVerification) {
+        this.skipCertVerification = skipCertVerification;
     }
 
     public abstract static class AbstractBitbucketWebhookDescriptorImpl extends BitbucketWebhookDescriptor {

@@ -40,6 +40,7 @@ public class BitbucketServerWebhook implements BitbucketWebHook {
     private String url;
     private List<String> events = new ArrayList<>();
     private boolean active;
+    private boolean sslVerificationRequired = true;
     @JsonProperty("configuration")
     private Map<String, String> configuration = new HashMap<>();
 
@@ -95,6 +96,14 @@ public class BitbucketServerWebhook implements BitbucketWebHook {
 
     public void setSecret(String secret) {
         configuration.put("secret", secret);
+    }
+
+    public boolean isSslVerificationRequired() {
+        return sslVerificationRequired;
+    }
+
+    public void setSslVerificationRequired(boolean sslVerificationRequired) {
+        this.sslVerificationRequired = sslVerificationRequired;
     }
 
 }

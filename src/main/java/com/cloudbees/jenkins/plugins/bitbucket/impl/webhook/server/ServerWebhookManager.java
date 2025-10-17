@@ -168,6 +168,7 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
         hook.setDescription("Jenkins hook");
         hook.setEvents(NATIVE_SERVER_EVENTS);
         hook.setUrl(callbackURL);
+        hook.setSslVerificationRequired(!configuration.isSkipCertVerification());
         if (configuration.isEnableHookSignature()) {
             String signatureCredentialsId = configuration.getHookSignatureCredentialsId();
             StringCredentials signatureSecret = BitbucketCredentialsUtils.lookupCredentials(Jenkins.get(), serverURL, signatureCredentialsId, StringCredentials.class);
@@ -199,6 +200,12 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
         if (!current.isActive()) {
             current.setActive(true);
             logger.info(() -> "Re-activate webhook " + current.getUuid());
+            update = true;
+        }
+
+        if (current.isSslVerificationRequired() != expected.isSslVerificationRequired()) {
+            current.setSslVerificationRequired(expected.isSslVerificationRequired());
+            logger.info(() -> "Update webhook sslVerificationRequired " + expected.isSslVerificationRequired());
             update = true;
         }
 
