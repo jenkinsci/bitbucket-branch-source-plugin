@@ -28,12 +28,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
-import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.client.Cache;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerPage;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
@@ -55,17 +55,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import jenkins.scm.api.trait.SCMSourceTrait;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.apache.commons.lang3.StringUtils.upperCase;
 
 @Extension
-public class ServerWebhookManager implements BitbucketWebhookManager {
+public class ServerWebhookManager extends AbstractWebhookManager<ServerWebhookConfiguration> {
     private static final String WEBHOOK_API = "/rest/api/1.0/projects/{owner}/repos/{repo}/webhooks{/id}{?start,limit}";
     private static final Logger logger = Logger.getLogger(ServerWebhookManager.class.getName());
     private static final Cache<String, List<BitbucketWebHook>> cachedRepositoryWebhooks = new Cache<>(3, HOURS);
@@ -92,19 +89,7 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
             HookEventType.SERVER_PULL_REQUEST_FROM_REF_UPDATED.getKey()
     ));
 
-    private ServerWebhookConfiguration configuration;
     private String serverURL;
-    private String callbackURL;
-
-    @Override
-    public Collection<Class<? extends SCMSourceTrait>> supportedTraits() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public void apply(SCMSourceTrait configurationTrait) {
-        // nothing to configure
-    }
 
     @Override
     public void setCallbackURL(@NonNull String callbackURL, @NonNull BitbucketEndpoint endpoint) {
@@ -118,8 +103,8 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
 
     @Override
     public void apply(BitbucketWebhookConfiguration configuration) {
-        this.configuration = (ServerWebhookConfiguration) configuration;
-        if (this.configuration.isEnableCache()) {
+        super.apply(configuration);
+        if (super.configuration.isEnableCache()) {
             cachedRepositoryWebhooks.setExpireDuration(this.configuration.getWebhooksCacheDuration(), MINUTES);
         }
     }
@@ -127,7 +112,7 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
     @Override
     @NonNull
     public Collection<BitbucketWebHook> read(@NonNull BitbucketAuthenticatedClient client) throws IOException {
-        String endpointJenkinsRootURL = ObjectUtils.firstNonNull(configuration.getEndpointJenkinsRootURL(), BitbucketWebhookConfiguration.getDefaultJenkinsRootURL());
+        String endpointJenkinsRootURL = getEndpointJenkinsRootURL();
 
         String url = UriTemplate.fromTemplate(WEBHOOK_API)
                 .set("owner", client.getRepositoryOwner())
@@ -144,9 +129,9 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
                     .filter(hook -> hook.getUrl().startsWith(endpointJenkinsRootURL))
                     .toList();
         };
-        if (configuration.isEnableCache()) {
+        if (isCacheEnabled(client)) {
             try {
-                String cacheKey = upperCase(client.getRepositoryOwner()) + "::" + ObjectUtils.firstNonNull(client.getRepositoryName(), "<anonymous>");
+                String cacheKey = buildCacheKey(client);
                 return cachedRepositoryWebhooks.get(cacheKey, request);
             } catch (ExecutionException e) {
                 BitbucketRequestException bre = BitbucketApiUtils.unwrap(e);
@@ -187,6 +172,10 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
                 .set("repo", client.getRepositoryName())
                 .expand();
         client.post(url, JsonParser.toString(payload));
+        if (isCacheEnabled(client)) {
+            String cacheKey = buildCacheKey(client);
+            cachedRepositoryWebhooks.evict(cacheKey );
+        }
     }
 
     private boolean shouldUpdate(@NonNull BitbucketServerWebhook current, @NonNull BitbucketServerWebhook expected) {
@@ -235,6 +224,10 @@ public class ServerWebhookManager implements BitbucketWebhookManager {
                 .set("id", payload.getUuid())
                 .expand();
         client.put(url, JsonParser.toString(payload));
+        if (isCacheEnabled(client)) {
+            String cacheKey = buildCacheKey(client);
+            cachedRepositoryWebhooks.evict(cacheKey );
+        }
     }
 
     @Override
