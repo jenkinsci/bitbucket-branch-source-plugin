@@ -103,6 +103,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
 
     // event logs with the name of the processor
     private static final Logger LOGGER = Logger.getLogger(ServerPushWebhookProcessor.class.getName());
+    private static final String NULL_HASH = "0000000000000000000000000000000000000000";
 
     private final BitbucketServerRepository repository;
     private final BitbucketServerCommit refCommit;
@@ -160,7 +161,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
                         break;
                     }
                     case "DELETE": {
-                        tagHash = change.getFromHash();
+                        tagHash = !NULL_HASH.equals(change.getFromHash()) ? change.getFromHash() : change.getToHash();
                         break;
                     }
                     default:
