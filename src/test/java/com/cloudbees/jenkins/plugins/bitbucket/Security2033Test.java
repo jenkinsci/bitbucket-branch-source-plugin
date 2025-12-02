@@ -40,6 +40,7 @@ import jenkins.model.Jenkins;
 import org.htmlunit.Page;
 import org.htmlunit.WebResponse;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
@@ -61,6 +62,12 @@ class Security2033Test {
     private JenkinsRule j;
 
     private WorkflowMultiBranchProject pr;
+
+    @BeforeAll
+    static void enableManagePermission() {
+        // TODO remove when baseline contains https://github.com/jenkinsci/jenkins/pull/23873
+        Jenkins.MANAGE.setEnabled(true);
+    }
 
     @BeforeEach
     void setup(JenkinsRule rule) throws Exception {
@@ -151,7 +158,7 @@ class Security2033Test {
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
             assertThatThrownBy(() -> descriptor.doShowStats())
                 .isInstanceOf(AccessDeniedException3.class)
-                .hasMessage(NOT_AUTHORIZED_USER + " is missing the Overall/Administer permission");
+                .hasMessage(NOT_AUTHORIZED_USER + " is missing the Overall/Manage permission");
         }
     }
 
@@ -162,7 +169,7 @@ class Security2033Test {
         try (ACLContext aclContext = ACL.as(User.getOrCreateByIdOrFullName(NOT_AUTHORIZED_USER))) {
             assertThatThrownBy(() -> descriptor.doClear())
                 .isInstanceOf(AccessDeniedException3.class)
-                .hasMessage(NOT_AUTHORIZED_USER + " is missing the Overall/Administer permission");
+                .hasMessage(NOT_AUTHORIZED_USER + " is missing the Overall/Manage permission");
         }
     }
 

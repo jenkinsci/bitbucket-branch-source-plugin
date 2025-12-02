@@ -74,6 +74,12 @@ class BitbucketEndpointConfigurationTest {
     private static JenkinsRule r;
 
     @BeforeAll
+    static void enableManagePermission() {
+        // TODO remove when baseline contains https://github.com/jenkinsci/jenkins/pull/23873
+        Jenkins.MANAGE.setEnabled(true);
+    }
+
+    @BeforeAll
     static void init(JenkinsRule rule) {
         r = rule;
         BitbucketPlugin.aliases();
@@ -131,7 +137,7 @@ class BitbucketEndpointConfigurationTest {
             assertThatThrownBy(() ->
                     instance.setEndpoints(List.of(buildCloudEndpoint(true, "first"), buildCloudEndpoint(true, "second"), buildCloudEndpoint(true, "third")))
                 )
-                .hasMessage(hudson.security.Messages.AccessDeniedException2_MissingPermission("anonymous", "Overall/Administer"));
+                .hasMessage(hudson.security.Messages.AccessDeniedException2_MissingPermission("anonymous", "Overall/Manage"));
         } finally {
             r.jenkins.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED);
         }
