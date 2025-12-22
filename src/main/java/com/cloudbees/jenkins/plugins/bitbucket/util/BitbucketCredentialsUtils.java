@@ -94,6 +94,48 @@ public class BitbucketCredentialsUtils {
         }
     }
 
+    /**
+     * Matcher that excludes AWS credentials from Bitbucket credentials list.
+     * This improves performance when there are many AWS credentials in the system.
+     */
+    @SuppressWarnings("serial")
+    private static class AwsCredentialsExclusionMatcher implements CredentialsMatcher {
+        private static final Logger logger = Logger.getLogger(AwsCredentialsExclusionMatcher.class.getName());
+
+        @Override
+        public boolean matches(Credentials item) {
+            if (item == null) {
+                return false;
+            }
+            try {
+                String className = item.getClass().getName().toLowerCase();
+                String descriptorId = "";
+                try {
+                    if (item.getDescriptor() != null) {
+                        descriptorId = item.getDescriptor().getId().toLowerCase();
+                    }
+                } catch (AssertionError | NullPointerException e) {
+                    // Some credentials may not have a descriptor (e.g., AmazonECSRegistryCredential)
+                    // In this case, we'll only check the class name
+                    logger.fine(() -> "Credential " + className + " has no descriptor, checking class name only");
+                }
+
+                // Exclude AWS credentials to improve performance
+                if (className.contains("aws") || className.contains("amazon") ||
+                    descriptorId.contains("aws") || descriptorId.contains("amazon")) {
+                    logger.fine(() -> "Excluding AWS credential: " + className);
+                    return false;
+                }
+                return true;
+            } catch (Exception e) {
+                // If any error occurs, allow the credential to pass through
+                // This prevents breaking the credentials list loading
+                logger.warning(() -> "Error checking credential: " + e.getMessage());
+                return true;
+            }
+        }
+    }
+
     private BitbucketCredentialsUtils() {
         throw new IllegalAccessError("Utility class");
     }
@@ -190,12 +232,18 @@ public class BitbucketCredentialsUtils {
 
         List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
         CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
+        // Exclude AWS credentials to improve performance when there are many AWS credentials
+        // Apply AWS exclusion filter FIRST, then apply Bitbucket-specific matcher
+        CredentialsMatcher combinedMatcher = CredentialsMatchers.allOf(
+                new AwsCredentialsExclusionMatcher(),
+                matcher
+        );
         result.includeMatchingAs(
                 authentication,
                 context,
                 StandardCredentials.class,
                 domainRequirements,
-                matcher);
+                combinedMatcher);
         if (credentialsId != null) {
             result.includeCurrentValue(credentialsId);
         }
@@ -209,6 +257,12 @@ public class BitbucketCredentialsUtils {
         List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
         Authentication authentication = ACL.SYSTEM2;
         CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
+        // Exclude AWS credentials to improve performance when there are many AWS credentials
+        // Apply AWS exclusion filter FIRST, then apply Bitbucket-specific matcher
+        CredentialsMatcher combinedMatcher = CredentialsMatchers.allOf(
+                new AwsCredentialsExclusionMatcher(),
+                matcher
+        );
 
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeMatchingAs(
@@ -216,7 +270,7 @@ public class BitbucketCredentialsUtils {
                 context,
                 StandardCredentials.class,
                 domainRequirements,
-                matcher);
+                combinedMatcher);
         if (credentialsId != null) {
             result.includeCurrentValue(credentialsId);
         }
