@@ -160,6 +160,20 @@ As the `Checkout Credential` configuration was removed in commit (link:https://g
 
 image::images/screenshot-7.png[]
 
+=== Configuration best practices
+
+Bitbucket searches for all credentials that implement StandardCredentials (the most generic) and determines which ones fit one of the types described below, also based on the server type (endpoint) selected.
+Some credential implementations require a remote call to a vault (such as AWS, Azure, etc.), which takes time. When many of these credentials are present, the Jenkins UI configuration page may time out.
+To avoid this type of issue, the best practice is to register all Bitbucket credentials in a specific credential domain.
+
+image::images/screenshot-25.png[]
+
+And configure a specification to restrict credentials using for example a hostname specification as in the image:
+
+image::images/screenshot-26.png[]
+
+It works because whenever this plugin lists the credentials available in the system, it automatically adds a specification based on the URL of the selected Bitbucket endpoint.
+
 === Username/Password (Bitbucket Data Center only)
 
 The plugin can use a personal username and password to login (if SSO and MFA in not enabled).
@@ -207,8 +221,9 @@ First, create a new _app password_ in Bitbucket as instructed in the https://sup
 
 Then create a new _Username with password credentials_ in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created app password in the _Password_ field.
 
- IMPORTANT: App passwords do not support email address as a username for authentication. Using the email address will raise an authentication error in scanning/checkout process.
- The app passoword authentication has been deprecated by Atlassian and starting from September 9th, 2025 will not longer available for creation. https://www.atlassian.com/blog/bitbucket/bitbucket-cloud-transitions-to-api-tokens-enhancing-security-with-app-password-deprecation[Read here] for more informations.
+IMPORTANT: App passwords do not support email address as a username for authentication. Using the email address will raise an authentication error in scanning/checkout process.
+
+The app passoword authentication has been deprecated by Atlassian and starting from September 9th, 2025 will not longer available for creation. https://www.atlassian.com/blog/bitbucket/bitbucket-cloud-transitions-to-api-tokens-enhancing-security-with-app-password-deprecation[Read here] for more informations.
 
 === User API Token (Bitbucket Cloud only)
 
@@ -222,7 +237,7 @@ image::images/screenshot-22.png[]
 
 Then create a new _Username with password credentials_ in Jenkins, enter the Atlassian Account email (not the username) in the _Username_ field and the created API token in the _Password_ field.
 
- IMPORTANT: API token requires the email address as a username to authenticate using the BitbucketAPIs. Using the username will raise an authentication error in scanning/checkout process. API token without scope does not work.
+IMPORTANT: API token requires the email address as a username to authenticate using the BitbucketAPIs. Using the username will raise an authentication error in scanning/checkout process. API token without scope does not work.
 
 === OAuth credentials (Bitbucket Cloud only)
 
