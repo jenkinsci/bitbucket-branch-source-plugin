@@ -82,7 +82,7 @@ public class CloudWebhookConfiguration extends AbstractBitbucketWebhookConfigura
 
         @Override
         public String getDisplayName() {
-            return "Native Cloud";
+            return Messages.CloudWebhookImplementation_displayName();
         }
 
         @Override

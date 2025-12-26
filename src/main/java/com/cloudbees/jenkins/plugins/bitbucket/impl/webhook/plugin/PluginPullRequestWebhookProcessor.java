@@ -51,6 +51,7 @@ public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor 
             HookEventType.PULL_REQUEST_MERGED.getKey(), // needed to remove job
             HookEventType.PULL_REQUEST_UPDATED.getKey()); // needed to update git content and trigger build job
 
+    @Deprecated
     @Override
     public boolean canHandle(@NonNull Map<String, String> headers, @NonNull MultiValuedMap<String, String> parameters) {
         return headers.containsKey(EVENT_TYPE_HEADER)
@@ -59,8 +60,11 @@ public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor 
                 && parameters.containsKey(SERVER_URL_PARAMETER);
     }
 
+    @Deprecated
     @Override
     public void process(@NonNull String hookEventType, @NonNull String payload, @NonNull Map<String, Object> context, @NonNull BitbucketEndpoint endpoint) {
+        logger.warning("Plugin webhook is deprecated, it has been replaced by the bitbucket-webhooks-plugin, documentation available at https://github.com/jenkinsci/bitbucket-webhooks-plugin.");
+
         HookEventType hookEvent = HookEventType.fromString(hookEventType);
         BitbucketPullRequestEvent pull = BitbucketServerWebhookPayload.pullRequestEventFromPayload(payload);
         if (pull != null) {
@@ -82,6 +86,7 @@ public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor 
         }
     }
 
+    @Deprecated
     @Override
     public void verifyPayload(Map<String, String> headers, String body, BitbucketEndpoint endpoint) {
         // not supported

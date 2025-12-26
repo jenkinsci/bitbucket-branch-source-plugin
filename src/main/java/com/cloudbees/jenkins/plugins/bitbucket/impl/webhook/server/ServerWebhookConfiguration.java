@@ -85,7 +85,7 @@ public class ServerWebhookConfiguration extends AbstractBitbucketWebhookConfigur
 
         @Override
         public String getDisplayName() {
-            return "Native Data Center";
+            return Messages.ServerWebhookImplementation_displayName();
         }
 
         @Override

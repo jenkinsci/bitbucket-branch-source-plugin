@@ -78,6 +78,7 @@ public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration
      */
     private String endpointJenkinsRootURL;
 
+    @Deprecated
     @DataBoundConstructor
     public PluginWebhookConfiguration(boolean manageHooks, @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
@@ -89,6 +90,7 @@ public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration
      *
      * @return {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
+    @Deprecated
     @Override
     public final boolean isManageHooks() {
         return manageHooks;
@@ -101,17 +103,20 @@ public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration
      * @return the {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management
      * of hooks.
      */
+    @Deprecated
     @Override
     @CheckForNull
     public final String getCredentialsId() {
         return credentialsId;
     }
 
+    @Deprecated
     @Override
     public String getEndpointJenkinsRootURL() {
         return endpointJenkinsRootURL;
     }
 
+    @Deprecated
     @DataBoundSetter
     public void setEndpointJenkinsRootURL(@CheckForNull String endpointJenkinsRootURL) {
         String url = fixEmptyAndTrim(endpointJenkinsRootURL);
@@ -120,29 +125,33 @@ public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration
         }
     }
 
+    @Deprecated
     @Override
     public String getDisplayName() {
         return Messages.PluginWebhookImplementation_displayName();
     }
 
+    @Deprecated
     @NonNull
     @Override
     public String getId() {
         return "PLUGIN";
     }
 
+    @Deprecated
     @Override
     public Class<? extends BitbucketWebhookManager> getManager() {
         return PluginWebhookManager.class;
     }
 
+    @Deprecated
     @Symbol("pluginWebhook")
     @Extension
     public static class DescriptorImpl extends BitbucketWebhookDescriptor {
 
         @Override
         public String getDisplayName() {
-            return "Post Webhooks for Bitbucket";
+            return Messages.PluginWebhookImplementation_displayName();
         }
 
         @Override
