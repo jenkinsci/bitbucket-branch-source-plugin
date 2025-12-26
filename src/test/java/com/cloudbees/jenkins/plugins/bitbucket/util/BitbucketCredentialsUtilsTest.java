@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
-import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -35,6 +34,7 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
@@ -80,7 +80,7 @@ class BitbucketCredentialsUtilsTest {
     @Test
     @Issue("JENKINS-75225")
     void matches_returns_false_when_getting_password_takes_longer() throws Exception {
-        StandardUsernamePasswordCredentials remoteCredentials = new TakeLongCredentials();
+        StandardUsernamePasswordCredentials remoteCredentials = new TakeLongCredentials("remote-credentials");
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         store.addCredentials(Domain.global(), remoteCredentials);
@@ -90,6 +90,31 @@ class BitbucketCredentialsUtilsTest {
             .isNotEmpty()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
             .containsOnly(new ListBoxModel.Option(null, "id"));
+    }
+
+    @Test
+    @Issue("JENKINS-76330")
+    void matches_returns_false_when_blacklisted() throws Exception {
+        List<StandardUsernamePasswordCredentials> remoteCredentials = List.of(new TakeLongCredentials("1"),
+                new TakeLongCredentials("2"),
+                new TakeLongCredentials("3"),
+                new TakeLongCredentials("4"));
+
+        TakeLongCredentials.resetCallsCounter();
+        CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
+        for (StandardUsernamePasswordCredentials c : remoteCredentials) {
+            store.addCredentials(Domain.global(), c);
+        }
+
+        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, BitbucketCloudEndpoint.SERVER_URL, null);
+        assertThat(result)
+            .isNotEmpty()
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
+            .containsOnly(new ListBoxModel.Option(null, "id"));
+
+        // assert that the number of calls to TakeLongCredentials#getPassword
+        // were actually 2 and no more even though 4 TakeLongCredentials were processed
+        assertThat(TakeLongCredentials.getCallsCounter()).isEqualTo(2);
     }
 
     @SuppressWarnings("serial")
@@ -131,10 +156,26 @@ class BitbucketCredentialsUtilsTest {
 
     @SuppressWarnings("serial")
     private static class TakeLongCredentials implements StandardUsernamePasswordCredentials {
+        private static int countCalls = 0;
+
+        static void resetCallsCounter() {
+            countCalls = 0;
+        }
+
+        static int getCallsCounter() {
+            return countCalls;
+        }
+
+        private String id;
+
+        public TakeLongCredentials(@NonNull String id) {
+            this.id = id;
+        }
 
         @NonNull
         @Override
         public Secret getPassword() {
+            countCalls += 1;
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -167,7 +208,7 @@ class BitbucketCredentialsUtilsTest {
 
         @Override
         public String getId() {
-            return "remote-credentials";
+            return id;
         }
     }
 }

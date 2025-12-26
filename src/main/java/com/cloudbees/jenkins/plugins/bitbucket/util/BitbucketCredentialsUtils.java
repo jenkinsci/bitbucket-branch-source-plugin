@@ -53,6 +53,8 @@ import hudson.util.ListBoxModel;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
@@ -60,7 +62,10 @@ import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.util.SystemProperties;
 import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.springframework.security.core.Authentication;
 
 /**
@@ -69,10 +74,15 @@ import org.springframework.security.core.Authentication;
 public class BitbucketCredentialsUtils {
     @SuppressWarnings("serial")
     private static class TimeBoxedCredentialsMatcher implements CredentialsMatcher {
+        static final String TIMEOUT_CREDENTILS_RESOLUTION_PROPERTY_NAME = "bitbucket.credentials.resolutionTimeout";
+
         private static final Logger logger = Logger.getLogger(TimeBoxedCredentialsMatcher.class.getName());
+        private static final Map<Class<?>, Integer> blacklist = new ConcurrentHashMap<>();
         private CredentialsMatcher delegate;
+        private Integer resolutionTimout;
 
         public TimeBoxedCredentialsMatcher(CredentialsMatcher matcher) {
+            resolutionTimout = SystemProperties.getInteger(TIMEOUT_CREDENTILS_RESOLUTION_PROPERTY_NAME, 250);
             this.delegate = matcher;
         }
 
@@ -80,10 +90,26 @@ public class BitbucketCredentialsUtils {
         public boolean matches(Credentials item) {
             TimeLimiter timeLimiter = SimpleTimeLimiter.create(Executors.newSingleThreadExecutor());
 
+            Class<? extends Credentials> credentialClass = item.getClass();
+            if (blacklist.containsKey(credentialClass) && blacklist.get(credentialClass) > 1) {
+                logger.fine(() -> "Credentials " + credentialClass + " discarded becuase it is blacklisted");
+                // JENKINS-76330
+                return false;
+            }
+
             try {
                 // JENKINS-75225
-                return timeLimiter.callWithTimeout(() -> delegate.matches(item), Duration.ofMillis(200));
+                return timeLimiter.callWithTimeout(() -> delegate.matches(item), Duration.ofMillis(resolutionTimout));
             } catch (TimeoutException e) {
+                blacklist.compute(credentialClass, (k, v) -> {
+                    // JENKINS-76330
+                    if (v == null) {
+                        return 1;
+                    } else {
+                        logger.warning(() -> "Credentials of type " + credentialClass + " will be added to the blacklist because exeed the resolution time of the secret twice");
+                        return v + 1;
+                    }
+                });
                 // takes long maybe credentials are not stored in Jenkins and requires some remote call than will fail
                 logger.fine(() -> "Credentials " + item.getDescriptor() + " takes too long to get password, maybe is performing remote call");
                 return false;
@@ -96,6 +122,12 @@ public class BitbucketCredentialsUtils {
 
     private BitbucketCredentialsUtils() {
         throw new IllegalAccessError("Utility class");
+    }
+
+    @Restricted(NoExternalUse.class)
+    // maybe could be exposed in the Manage Jenkins page
+    public static void resetBlacklist() {
+        TimeBoxedCredentialsMatcher.blacklist.clear();
     }
 
     @CheckForNull
