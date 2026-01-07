@@ -33,7 +33,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
@@ -234,20 +233,16 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             if (scanCredentialsId == null) {
                 return null;
             } else {
-                return CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentialsInItem(
+                var c = CredentialsProvider.findCredentialByIdInItem(
+                                scanCredentialsId,
                                 StandardCredentials.class,
                                 context,
                                 context instanceof Queue.Task task
                                         ? task.getDefaultAuthentication2()
                                         : ACL.SYSTEM2,
                                 URIRequirementBuilder.fromUri(serverURL).build()
-                        ),
-                        CredentialsMatchers.allOf(
-                                CredentialsMatchers.withId(scanCredentialsId),
-                                AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL))
-                        )
                 );
+                return AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL)).matches(c) ? c : null;
             }
         }
 
