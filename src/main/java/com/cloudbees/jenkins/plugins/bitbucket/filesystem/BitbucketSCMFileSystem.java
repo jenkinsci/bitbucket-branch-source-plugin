@@ -242,7 +242,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
                                         : ACL.SYSTEM2,
                                 URIRequirementBuilder.fromUri(serverURL).build()
                 );
-                return AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL)).matches(c) ? c : null;
+                return c != null && AuthenticationTokens.matcher(BitbucketAuthenticator.authenticationContext(serverURL)).matches(c) ? c : null;
             }
         }
 
