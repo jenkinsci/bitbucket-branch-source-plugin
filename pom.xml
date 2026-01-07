@@ -69,9 +69,16 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>5543.vfd758c7c868d</version>
+                <version>5804.v80587a_38d937</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <!-- TODO until in BOM -->
+            <dependency>
+                <groupId>org.jenkins-ci.plugins</groupId>
+                <artifactId>credentials</artifactId>
+                <!-- TODO https://github.com/jenkinsci/credentials-plugin/pull/1003 -->
+                <version>1469.vb_13b_4cfb_391d</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
