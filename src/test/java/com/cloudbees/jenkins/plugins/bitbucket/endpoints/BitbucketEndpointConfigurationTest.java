@@ -660,7 +660,7 @@ class BitbucketEndpointConfigurationTest {
                 assertThat(endpoint.getRepositoriesCacheDuration()).isEqualTo(180);
                 assertThat(endpoint.getWebhook())
                     .isInstanceOfSatisfying(CloudWebhookConfiguration.class, webhook -> {
-                        assertThat(webhook.getDisplayName()).isEqualTo("Native Cloud Implementation");
+                        assertThat(webhook.getDisplayName()).isEqualTo("Native Cloud");
                         assertThat(webhook.getEndpointJenkinsRootURL()).isNull();
                         assertThat(webhook.isManageHooks()).isFalse();
                         assertThat(webhook.getCredentialsId()).isNull();
@@ -678,7 +678,7 @@ class BitbucketEndpointConfigurationTest {
                 assertThat(endpoint.getDisplayName()).isEqualTo("server");
                 assertThat(endpoint.getWebhook())
                     .isInstanceOfSatisfying(ServerWebhookConfiguration.class, webhook -> {
-                        assertThat(webhook.getDisplayName()).isEqualTo("Native Server Implementation");
+                        assertThat(webhook.getDisplayName()).isEqualTo("Native Data Center");
                         assertThat(webhook.getEndpointJenkinsRootURL()).isEqualTo("http://host.docker.internal:8090/jenkins/");
                         assertThat(webhook.isManageHooks()).isTrue();
                         assertThat(webhook.getCredentialsId()).isEqualTo("admin.basic.credentials");
