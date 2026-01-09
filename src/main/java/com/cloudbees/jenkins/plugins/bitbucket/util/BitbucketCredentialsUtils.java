@@ -141,14 +141,13 @@ public class BitbucketCredentialsUtils {
                     : ACL.SYSTEM2;
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
 
-            return CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentialsInItem(
+            return CredentialsProvider.findCredentialByIdInItem(
+                            credentialsId,
                             type,
                             item,
                             authentication,
                             domainRequirements
-                    ),
-                    CredentialsMatchers.withId(credentialsId));
+                    );
         }
         return null;
     }
@@ -161,13 +160,12 @@ public class BitbucketCredentialsUtils {
         if (StringUtils.isNotBlank(credentialsId)) {
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
 
-            return CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentialsInItemGroup(
+            return CredentialsProvider.findCredentialByIdInItemGroup(
+                            credentialsId,
                             type,
                             itemGroup,
                             null,
-                            domainRequirements),
-                    CredentialsMatchers.withId(credentialsId));
+                            domainRequirements);
         }
         return null;
     }
@@ -188,13 +186,12 @@ public class BitbucketCredentialsUtils {
                     : ACL.SYSTEM2;
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
 
-            StandardCertificateCredentials certificateCredentials = CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentialsInItem(
+            StandardCertificateCredentials certificateCredentials = CredentialsProvider.findCredentialByIdInItem(
+                            credentialsId,
                             StandardCertificateCredentials.class,
                             context,
                             authentication,
-                            domainRequirements),
-                    CredentialsMatchers.withId(credentialsId));
+                            domainRequirements);
             if (certificateCredentials != null) {
                 return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
             }
