@@ -28,14 +28,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import hudson.util.Secret;
 
-// Although the CredentialsMatcher documentation says that the best practice
-// is to implement CredentialsMatcher.CQL too, this class does not implement
-// CredentialsMatcher.CQL, for the following reasons:
-//
-// * CQL supports neither method calls like StringUtils.isNotBlank(username)
-//   nor any regular-expression matching that could be used instead.
-// * There don't seem to be any public credential-provider plugins that
-//   would benefit from CQL.
 public class BitbucketUserAPITokenCredentialMatcher implements CredentialsMatcher {
     private static final long serialVersionUID = -9196480589659636909L;
 

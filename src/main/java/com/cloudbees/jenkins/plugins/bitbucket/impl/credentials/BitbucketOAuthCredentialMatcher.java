@@ -29,16 +29,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import hudson.util.Secret;
 
-/*
- * Although the CredentialsMatcher documentation says that the best practice
- * is to implement CredentialsMatcher.CQL too, this class does not implement
- * CredentialsMatcher.CQL, for the following reasons:
- *
- * - CQL supports neither method calls like username.contains(".")
- *   nor any regular-expression matching that could be used instead;
- * - there don't seem to be any public credential-provider plugins that
- *    would benefit from CQL.
- */
 public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
     private static final long serialVersionUID = 6458784517693211197L;
 
