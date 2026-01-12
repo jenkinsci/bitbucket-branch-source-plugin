@@ -132,6 +132,7 @@ public class BitbucketServerEndpointConfigurator extends DataBoundConfigurator<B
         } else {
             // old default was plugin
             webhook = new PluginWebhookConfiguration(manageHooks, credentialsId);
+            logger.warning("Plugin webhook is deprecated, it has been replaced by the bitbucket-webhooks-plugin, documentation available at https://github.com/jenkinsci/bitbucket-webhooks-plugin.");
         }
         return webhook;
     }
