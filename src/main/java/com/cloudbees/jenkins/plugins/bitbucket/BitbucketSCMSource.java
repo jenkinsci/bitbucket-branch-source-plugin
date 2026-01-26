@@ -341,6 +341,7 @@ public class BitbucketSCMSource extends SCMSource {
     protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer,
                             @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
+        Logger.getLogger("JENKINS-76351").warning("Received event " + event + " to source " + repository);
         try (BitbucketSCMSourceRequest request = new BitbucketSCMSourceContext(criteria, observer)
                 .withTraits(traits)
                 .newRequest(this, listener)) {

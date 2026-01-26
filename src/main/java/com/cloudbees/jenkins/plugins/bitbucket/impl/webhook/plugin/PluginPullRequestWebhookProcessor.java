@@ -34,6 +34,7 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.kohsuke.accmod.Restricted;
@@ -81,6 +82,7 @@ public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor 
                     eventType = SCMEvent.Type.UPDATED;
                     break;
             }
+            Logger.getLogger("JENKINS-76351").warning("Event of type " + eventType + " processed, fire event");
             // assume updated as a catch-all type
             notifyEvent(new PluginPREvent(eventType, pull, getOrigin(context), hookEvent), BitbucketSCMSource.getEventDelaySeconds());
         }
