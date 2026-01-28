@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -54,6 +55,7 @@ import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_R
 final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests {
     private final HookEventType hookEvent;
 
+    @Deprecated
     PluginPREvent(Type type, BitbucketPullRequestEvent payload,
                  String origin,
                  HookEventType hookEvent) {
@@ -61,33 +63,40 @@ final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent
         this.hookEvent = hookEvent;
     }
 
+    @Deprecated
     @Override
     protected BitbucketRepository getRepository() {
         return getPayload().getRepository();
     }
 
+    @Deprecated
     @NonNull
     @Override
     public String getSourceName() {
         return getRepository().getRepositoryName();
     }
 
+    @Deprecated
     @NonNull
     @Override
     @SuppressFBWarnings(value = "SBSC_USE_STRINGBUFFER_CONCATENATION", justification = "false positive, the scope of branchName variable is inside the for cycle, no string contatenation happens into a loop")
     public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
         if (!(source instanceof BitbucketSCMSource)) {
+            Logger.getLogger("JENKINS-76351").warning("Skip source because it's not of type bitbucket");
             return Collections.emptyMap();
         }
         BitbucketSCMSource src = (BitbucketSCMSource) source;
         if (!isServerURLMatch(src.getServerUrl())) {
+            Logger.getLogger("JENKINS-76351").warning("Skip source because source server URL " + src.getServerUrl() + " does not match");
             return Collections.emptyMap();
         }
         BitbucketRepository repository = getRepository();
         if (!src.getRepoOwner().equalsIgnoreCase(repository.getOwnerName())) {
+            Logger.getLogger("JENKINS-76351").warning("Skip source because source owner " + src.getRepoOwner() + " does not match");
             return Collections.emptyMap();
         }
         if (!src.getRepository().equalsIgnoreCase(repository.getRepositoryName())) {
+            Logger.getLogger("JENKINS-76351").warning("Skip source because source repository " + src.getRepository() + " does not match");
             return Collections.emptyMap();
         }
 
@@ -95,6 +104,7 @@ final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent
                 .withTraits(src.getTraits());
         if (!ctx.wantPRs()) {
             // doesn't want PRs, let the push event handle origin branches
+            Logger.getLogger("JENKINS-76351").warning("Skip because source does not PRs");
             return Collections.emptyMap();
         }
         BitbucketPullRequest pull = getPayload().getPullRequest();
@@ -133,11 +143,13 @@ final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent
                     new AbstractGitSCMSource.SCMRevisionImpl(head, pullHash)
                 );
                 result.put(head, revision);
+                Logger.getLogger("JENKINS-76351").warning("Add event for head" + head + " and revision " + revision);
             }
         }
         return result;
     }
 
+    @Deprecated
     @Override
     public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
         if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
