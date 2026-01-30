@@ -71,6 +71,7 @@ public class PluginWebhookManager implements BitbucketWebhookManager {
             "PULL_REQUEST_OPENED",
             "PULL_REQUEST_REOPENED",
             "PULL_REQUEST_UPDATED",
+            "PULL_REQUEST_RESCOPED",
             "REPOSITORY_MIRROR_SYNCHRONIZED", // not supported by the hookprocessor
             "TAG_CREATED"));
 
