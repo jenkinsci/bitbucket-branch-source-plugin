@@ -34,6 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.PluginWrapper;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.Secret;
@@ -78,6 +79,16 @@ public abstract class AbstractWebhookProcessor implements BitbucketWebhookProces
     protected static final String EVENT_TYPE_HEADER = "X-Event-Key";
     protected static final String SERVER_URL_PARAMETER = "server_url";
 
+
+    @Override
+    public boolean canHandle(Map<String, String> headers, MultiValuedMap<String, String> parameters) {
+        PluginWrapper replacementPlugin = Jenkins.get().getPluginManager().getPlugin("bitbucket-webhooks");
+        if (replacementPlugin != null && replacementPlugin.isActive()) {
+            logger.warning("bitbucket-webhooks plugin found, skipping this deprecated implementation.");
+            return false;
+        }
+        return true;
+    }
 
     /**
      * To be called by implementations once the owner and the repository have been extracted from the payload.

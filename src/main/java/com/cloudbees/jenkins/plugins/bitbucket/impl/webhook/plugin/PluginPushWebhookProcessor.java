@@ -53,7 +53,8 @@ public class PluginPushWebhookProcessor extends AbstractWebhookProcessor {
 
     @Override
     public boolean canHandle(Map<String, String> headers, MultiValuedMap<String, String> parameters) {
-        return headers.containsKey(EVENT_TYPE_HEADER)
+        return super.canHandle(headers, parameters)
+                && headers.containsKey(EVENT_TYPE_HEADER)
                 && headers.containsKey("X-Bitbucket-Type")
                 && supportedEvents.contains(headers.get(EVENT_TYPE_HEADER))
                 && parameters.containsKey(SERVER_URL_PARAMETER);

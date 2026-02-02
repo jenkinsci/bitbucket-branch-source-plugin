@@ -83,8 +83,9 @@ class PluginPullRequestWebhookProcessorTest {
         assertThat(sut.reindexOnEmptyChanges()).isFalse();
     }
 
+    @WithJenkins
     @Test
-    void test_canHandle_only_pass_specific_cloud_hook() throws Exception {
+    void test_canHandle_only_pass_specific_cloud_hook(JenkinsRule rule) throws Exception {
         MultiValuedMap<String, String> parameters = new ArrayListValuedHashMap<>();
         parameters.put("server_url", SERVER_URL);
 
