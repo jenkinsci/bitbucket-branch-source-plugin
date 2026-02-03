@@ -60,6 +60,7 @@ import static org.mockito.Mockito.mock;
 class PluginPushWebhookProcessorTest {
 
     private static final String SERVER_URL = "http://localhost:7990";
+
     private PluginPushWebhookProcessor sut;
     private PluginPushEvent scmEvent;
 
@@ -87,8 +88,9 @@ class PluginPushWebhookProcessorTest {
         assertThat(sut.reindexOnEmptyChanges()).isFalse();
     }
 
+    @WithJenkins
     @Test
-    void test_canHandle_only_pass_specific_native_hook() throws Exception {
+    void test_canHandle_only_pass_specific_native_hook(JenkinsRule rule) throws Exception {
         MultiValuedMap<String, String> parameters = new ArrayListValuedHashMap<>();
         parameters.put("server_url", SERVER_URL);
 

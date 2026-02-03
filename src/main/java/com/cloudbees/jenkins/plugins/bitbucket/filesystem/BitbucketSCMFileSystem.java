@@ -233,7 +233,7 @@ public class BitbucketSCMFileSystem extends SCMFileSystem {
             if (scanCredentialsId == null) {
                 return null;
             } else {
-                var c = CredentialsProvider.findCredentialByIdInItem(
+                StandardCredentials c = CredentialsProvider.findCredentialByIdInItem(
                                 scanCredentialsId,
                                 StandardCredentials.class,
                                 context,
