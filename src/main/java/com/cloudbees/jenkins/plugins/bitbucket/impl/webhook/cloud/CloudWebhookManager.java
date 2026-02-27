@@ -98,8 +98,6 @@ public class CloudWebhookManager extends AbstractWebhookManager<CloudWebhookConf
     @Override
     @NonNull
     public Collection<BitbucketWebHook> read(@NonNull BitbucketAuthenticatedClient client) throws IOException {
-        String endpointJenkinsRootURL = getEndpointJenkinsRootURL();
-
         String url = UriTemplate.fromTemplate(WEBHOOK_URL)
                 .set("owner", client.getRepositoryOwner())
                 .set("repo", client.getRepositoryName())
@@ -112,13 +110,13 @@ public class CloudWebhookManager extends AbstractWebhookManager<CloudWebhookConf
             TypeReference<BitbucketCloudPage<BitbucketCloudWebhook>> type = new TypeReference<BitbucketCloudPage<BitbucketCloudWebhook>>(){};
             BitbucketCloudPage<BitbucketCloudWebhook> page = JsonParser.toJava(client.get(url), type);
             resources.addAll(page.getValues().stream()
-                    .filter(hook -> hook.getUrl().startsWith(endpointJenkinsRootURL))
+                    .filter(hook -> isValidWebhook(hook.getUrl()))
                     .toList());
             while (!page.isLastPage()){
                 String response = client.get(page.getNext());
                 page = JsonParser.toJava(response, type);
                 resources.addAll(page.getValues().stream()
-                        .filter(hook -> hook.getUrl().startsWith(endpointJenkinsRootURL))
+                        .filter(hook -> isValidWebhook(hook.getUrl()))
                         .toList());
             }
             return resources;

@@ -24,19 +24,24 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudPage;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudWebhook;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.jvnet.hudson.test.Issue;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,13 +57,39 @@ class CloudWebhookManagerTest {
     @BeforeEach
     void setup() {
         cfg = new CloudWebhookConfiguration(true, "credentialsId");
-        cfg.setEndpointJenkinsRootURL("http://localhost::8090/jenkins");
+        cfg.setEndpointJenkinsRootURL("http://localhost:8090/jenkins");
 
         when(client.getRepositoryOwner()).thenReturn("amuniz");
         when(client.getRepositoryName()).thenReturn("test-repos");
 
         sut = new CloudWebhookManager();
-        sut.clearCaches();
+        CloudWebhookManager.clearCaches();
+    }
+
+    @Issue("JENKINS-76377")
+    @Test
+    void test_retrieve_proper_webhooks() throws Exception {
+        sut.apply(cfg);
+
+        BitbucketCloudWebhook bbWebhook = buildWebhook();
+        bbWebhook.setUrl(cfg.getEndpointJenkinsRootURL() + "bitbucket-scmsource-hook/notify");
+        BitbucketCloudWebhook genericWebhook = buildWebhook();
+        genericWebhook.setUrl(cfg.getEndpointJenkinsRootURL() + "generic-webhook-trigger/invoke?token=secret");
+
+        BitbucketCloudPage<BitbucketCloudWebhook> response = new BitbucketCloudPage<BitbucketCloudWebhook>(0, 100, 0, null, List.of(bbWebhook, genericWebhook));
+        when(client.get(anyString())).thenReturn(JsonParser.toString(response));
+
+        Collection<BitbucketWebHook> webhooks = sut.read(client);
+        assertThat(webhooks).hasSize(1).doesNotContain(genericWebhook);
+    }
+
+    private BitbucketCloudWebhook buildWebhook() {
+        BitbucketCloudWebhook webhoook = new BitbucketCloudWebhook();
+        webhoook.setActive(true);
+        webhoook.setDescription("description");
+        webhoook.setUrl(cfg.getEndpointJenkinsRootURL() + "bitbucket-scmsource-hook/notify");
+        webhoook.setUuid(UUID.randomUUID().toString());
+        return webhoook;
     }
 
     @Test
@@ -67,12 +98,16 @@ class CloudWebhookManagerTest {
         cfg.setWebhooksCacheDuration(1);
         sut.apply(cfg);
 
-        when(client.get(anyString())).thenReturn(JsonParser.toString(new BitbucketCloudPage<BitbucketCloudWebhook>(0, 0, 0, null, Collections.emptyList())));
+        when(client.get(anyString())).thenReturn(JsonParser.toString(buildResponse()));
 
         sut.read(client);
         sut.read(client);
 
         verify(client).get("/2.0/repositories/amuniz/test-repos/hooks?pagelen=100");
+    }
+
+    private BitbucketCloudPage<BitbucketCloudWebhook> buildResponse() {
+        return new BitbucketCloudPage<BitbucketCloudWebhook>(0, 100, 0, null, Collections.emptyList());
     }
 
     @Test
@@ -81,14 +116,14 @@ class CloudWebhookManagerTest {
         cfg.setWebhooksCacheDuration(1);
         sut.apply(cfg);
 
-        when(client.get(anyString())).thenReturn(JsonParser.toString(new BitbucketCloudPage<BitbucketCloudWebhook>(0, 0, 0, null, Collections.emptyList())));
+        when(client.get(anyString())).thenReturn(JsonParser.toString(buildResponse()));
 
         sut.read(client);
         sut.register(client);
         sut.read(client);
 
         verify(client, times(2)).get("/2.0/repositories/amuniz/test-repos/hooks?pagelen=100");
-        verify(client).post(eq("/2.0/repositories/amuniz/test-repos/hooks"), anyString());
+        verify(client).post(startsWith("/2.0/repositories/amuniz/test-repos/hooks"), anyString());
     }
 
     @Test
@@ -97,15 +132,13 @@ class CloudWebhookManagerTest {
         cfg.setWebhooksCacheDuration(1);
         sut.apply(cfg);
 
-        BitbucketCloudWebhook payload = new BitbucketCloudWebhook();
-        payload.setUrl(cfg.getEndpointJenkinsRootURL());
-        when(client.get(anyString())).thenReturn(JsonParser.toString(new BitbucketCloudPage<BitbucketCloudWebhook>(0, 0, 0, null, List.of(payload))));
+        when(client.get(anyString())).thenReturn(JsonParser.toString(new BitbucketCloudPage<BitbucketCloudWebhook>(0, 100, 0, null, List.of(buildWebhook()))));
 
         sut.read(client);
         sut.register(client);
         sut.read(client);
 
         verify(client, times(2)).get("/2.0/repositories/amuniz/test-repos/hooks?pagelen=100");
-        verify(client).put(eq("/2.0/repositories/amuniz/test-repos/hooks"), anyString());
+        verify(client).put(startsWith("/2.0/repositories/amuniz/test-repos/hooks"), anyString());
     }
 }

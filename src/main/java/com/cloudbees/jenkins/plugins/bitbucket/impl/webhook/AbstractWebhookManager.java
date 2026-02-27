@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
+import com.cloudbees.jenkins.plugins.bitbucket.hooks.BitbucketSCMSourcePushHookReceiver;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.apache.commons.lang3.ObjectUtils;
@@ -65,6 +66,11 @@ public abstract class AbstractWebhookManager<T extends AbstractBitbucketWebhookC
 
     @Nullable
     protected String getEndpointJenkinsRootURL() {
-        return ObjectUtils.getFirstNonNull(() -> configuration.getEndpointJenkinsRootURL(), () -> BitbucketWebhookConfiguration.getDefaultJenkinsRootURL());
+        return ObjectUtils.getFirstNonNull(() -> configuration.getEndpointJenkinsRootURL(), BitbucketWebhookConfiguration::getDefaultJenkinsRootURL);
+    }
+
+    protected boolean isValidWebhook(String webhookCallbackURL) {
+        String jenkinsRootURL = getEndpointJenkinsRootURL();
+        return webhookCallbackURL.startsWith(jenkinsRootURL + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
     }
 }

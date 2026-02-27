@@ -48,7 +48,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndp
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequestCanMerge;
@@ -556,7 +555,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             .set("repo", repositoryName)
             .set("filterText", branchName);
 
-        BitbucketServerBranch br = getResource(template, BitbucketServerBranches.class,
+        BitbucketServerBranch br = getPagedRequest(template, BitbucketServerBranch.class,
             branch -> branchName.equals(branch.getName()));
         if(br != null) {
             br.setCommitClosure(new CommitClosure(br.getRawNode()));
@@ -736,9 +735,34 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     }
 
-    private <V> V getResource(UriTemplate template, Class<? extends BitbucketServerPage<V>> clazz, Predicate<V> filter) throws IOException {
+    private <V> V getPagedRequest(UriTemplate template, Class<V> resultType, Predicate<V> filter) throws IOException {
         String url = null;
+        ParameterizedType parameterizedType = new ParameterizedType() {
+
+            @Override
+            public java.lang.reflect.Type getRawType() {
+                return BitbucketServerPage.class;
+            }
+
+            @Override
+            public java.lang.reflect.Type getOwnerType() {
+                return null;
+            }
+
+            @Override
+            public java.lang.reflect.Type[] getActualTypeArguments() {
+                return new java.lang.reflect.Type[] { resultType };
+            }
+        };
+
         try {
+            TypeReference<BitbucketServerPage<V>> type = new TypeReference<BitbucketServerPage<V>>(){
+                @Override
+                public java.lang.reflect.Type getType() {
+                    return parameterizedType;
+                }
+            };
+
             BitbucketServerPage<V> page;
             Integer pageNumber = 0;
             Integer limit = DEFAULT_PAGE_LIMIT;
@@ -748,7 +772,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                     .set("limit", limit) //
                     .expand();
                 String response = getRequest(url);
-                page = JsonParser.toJava(response, clazz);
+                page = JsonParser.toJava(response, type);
 
                 for (V item : page.getValues()) {
                     if (filter.test(item)) {

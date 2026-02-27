@@ -24,6 +24,9 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 
 /**
@@ -37,54 +40,44 @@ public class BitbucketServerPage<V> {
     private Integer limit;
     private Integer start;
     private Integer nextPageStart;
-    @JsonProperty("isLastPage")
     private Boolean lastPage;
+
+    public BitbucketServerPage(@JsonProperty("start") int start,
+                               @JsonProperty("limit") int limit,
+                               @JsonProperty("size") int size,
+                               @Nullable @JsonProperty("nextPageStart") Integer nextPageStart,
+                               @Nullable @JsonProperty("isLastPage") Boolean lastPage,
+                               @NonNull @JsonProperty("values") List<V> values) {
+        this.start = start;
+        this.limit = limit;
+        this.size = size;
+        this.nextPageStart = nextPageStart;
+        this.lastPage = lastPage;
+        this.values = ImmutableList.copyOf(values);
+    }
 
     public List<V> getValues() {
         return values;
-    }
-
-    public void setValues(List<V> values) {
-        this.values = values;
     }
 
     public Integer getSize() {
         return size;
     }
 
-    public void setSize(Integer size) {
-        this.size = size;
-    }
-
     public Integer getLimit() {
         return limit;
-    }
-
-    public void setLimit(Integer limit) {
-        this.limit = limit;
     }
 
     public Integer getStart() {
         return start;
     }
 
-    public void setStart(Integer start) {
-        this.start = start;
-    }
-
     public Integer getNextPageStart() {
         return nextPageStart;
-    }
-
-    public void setNextPageStart(Integer nextPageStart) {
-        this.nextPageStart = nextPageStart;
     }
 
     public boolean isLastPage() {
         return lastPage != null && lastPage;
     }
 
-    public void setLastPage(Boolean lastPage) {
-        this.lastPage = lastPage;
-    }
 }
