@@ -112,8 +112,6 @@ public class ServerWebhookManager extends AbstractWebhookManager<ServerWebhookCo
     @Override
     @NonNull
     public Collection<BitbucketWebHook> read(@NonNull BitbucketAuthenticatedClient client) throws IOException {
-        String endpointJenkinsRootURL = getEndpointJenkinsRootURL();
-
         String url = UriTemplate.fromTemplate(WEBHOOK_API)
                 .set("owner", client.getRepositoryOwner())
                 .set("repo", client.getRepositoryName())
@@ -126,7 +124,7 @@ public class ServerWebhookManager extends AbstractWebhookManager<ServerWebhookCo
             return JsonParser.toJava(client.get(url), type)
                     .getValues().stream()
                     .map(BitbucketWebHook.class::cast)
-                    .filter(hook -> hook.getUrl().startsWith(endpointJenkinsRootURL))
+                    .filter(hook -> isValidWebhook(hook.getUrl()))
                     .toList();
         };
         if (isCacheEnabled(client)) {
