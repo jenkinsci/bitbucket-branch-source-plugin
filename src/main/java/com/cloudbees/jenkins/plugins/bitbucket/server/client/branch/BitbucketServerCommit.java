@@ -109,6 +109,11 @@ public class BitbucketServerCommit implements BitbucketCommit {
         this.hash = hash;
     }
 
+    @JsonProperty("hash")
+    public void setAlternateHash(String hash) {
+        setHash(hash);
+    }
+
     @Deprecated(since = "936.1.0", forRemoval = true)
     @Override
     public String getDate() {

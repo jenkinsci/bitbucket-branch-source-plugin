@@ -23,12 +23,16 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
+<<<<<<< HEAD
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
+=======
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+>>>>>>> a8b31af (Migrate to Jackson3)
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,6 +41,11 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.util.StdDateFormat;
 
 /**
  * Jackson based JSON parser
@@ -76,8 +85,13 @@ public final class JsonParser {
     private static JsonMapper createMapper(){
         return JsonMapper.builder()
                 .defaultDateFormat(new StdDateFormat())
+<<<<<<< HEAD
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .defaultPropertyInclusion(JsonInclude.Value.ALL_NON_NULL)
+=======
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) // Jackson 3 fail on unknown primitives by default
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(Include.NON_NULL).withValueInclusion(Include.NON_NULL))
+>>>>>>> a8b31af (Migrate to Jackson3)
                 .build();
     }
 }

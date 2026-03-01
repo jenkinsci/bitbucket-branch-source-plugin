@@ -38,7 +38,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.damnhandy.uri.template.UriTemplate;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Objects;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -58,6 +57,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Strings;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import tools.jackson.core.type.TypeReference;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
