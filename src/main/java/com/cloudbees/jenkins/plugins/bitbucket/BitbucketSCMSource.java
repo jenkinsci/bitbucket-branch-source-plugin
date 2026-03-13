@@ -409,6 +409,10 @@ public class BitbucketSCMSource extends SCMSource {
         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getPRStrategies();
         for (final BitbucketPullRequest pull : request.getPullRequests()) {
             String originalBranchName = pull.getSource().getBranch().getName();
+            if (request.isIgnoreDraftPRs() && pull.isDraft()) {
+                request.listener().getLogger().printf("Ignoring PR-%s (draft pull request)%n", pull.getId());
+                continue;
+            }
             request.listener().getLogger().printf(
                     "Checking PR-%s from %s and %s %s%n",
                     pull.getId(),

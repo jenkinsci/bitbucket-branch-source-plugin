@@ -215,6 +215,10 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     private final boolean skipPublicPRs;
     /**
+     * {@code true} if draft pull requests should be ignored.
+     */
+    private final boolean ignoreDraftPRs;
+    /**
      * The {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
     @NonNull
@@ -294,6 +298,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         fetchOriginPRs = context.wantOriginPRs();
         fetchForkPRs = context.wantForkPRs();
         skipPublicPRs = context.skipPublicPRs();
+        ignoreDraftPRs = context.ignoreDraftPRs();
         originPRStrategies = fetchOriginPRs && !context.originPRStrategies().isEmpty()
                 ? Collections.unmodifiableSet(EnumSet.copyOf(context.originPRStrategies()))
                 : Collections.<ChangeRequestCheckoutStrategy>emptySet();
@@ -385,6 +390,15 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     public final boolean isSkipPublicPRs() {
         return skipPublicPRs;
+    }
+
+    /**
+     * Returns {@code true} if draft pull requests should be ignored.
+     *
+     * @return {@code true} if draft pull requests should be ignored.
+     */
+    public final boolean isIgnoreDraftPRs() {
+        return ignoreDraftPRs;
     }
 
     /**

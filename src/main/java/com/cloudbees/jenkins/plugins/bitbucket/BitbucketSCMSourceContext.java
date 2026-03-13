@@ -61,6 +61,10 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     private boolean skipPublicPRs;
     /**
+     * {@code true} if draft pull requests should be ignored.
+     */
+    private boolean ignoreDraftPRs;
+    /**
      * Set of {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
     @NonNull
@@ -164,6 +168,15 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final boolean skipPublicPRs() {
         return skipPublicPRs;
+    }
+
+    /**
+     * Returns {@code true} if draft pull requests should be ignored.
+     *
+     * @return {@code true} if draft pull requests should be ignored.
+     */
+    public final boolean ignoreDraftPRs() {
+        return ignoreDraftPRs;
     }
 
     /**
@@ -296,6 +309,17 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     public final BitbucketSCMSourceContext skipPublicPRs(boolean skipPublicPRs) {
         this.skipPublicPRs = skipPublicPRs;
+        return this;
+    }
+
+    /**
+     * Controls the ignoring of draft pull requests.
+     *
+     * @param ignoreDraftPRs {@code true} if draft pull requests should be ignored.
+     * @return {@code this} for method chaining.
+     */
+    public final BitbucketSCMSourceContext ignoreDraftPRs(boolean ignoreDraftPRs) {
+        this.ignoreDraftPRs = ignoreDraftPRs;
         return this;
     }
 
