@@ -176,16 +176,19 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudPullRequest> getPullRequests() throws IOException {
+    public List<BitbucketCloudPullRequest> getPullRequests(boolean skipDraft) throws IOException {
         // we can not use the default max pagelen also if documented
         // https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests#get
         // so because with values greater than 50 the API returns HTTP 400
         int pageLen = 50;
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{?page,pagelen}")
+        UriTemplate template = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{?page,pagelen,q}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
-                .set("pagelen", pageLen)
-                .expand();
+                .set("pagelen", pageLen);
+        if (skipDraft) {
+            template.set("q", "draft=false");
+        }
+        String url = template.expand();
 
         List<BitbucketCloudPullRequest> pullRequests = getPagedRequest(url, BitbucketCloudPullRequest.class);
         // PRs with missing destination branch are invalid and should be ignored.

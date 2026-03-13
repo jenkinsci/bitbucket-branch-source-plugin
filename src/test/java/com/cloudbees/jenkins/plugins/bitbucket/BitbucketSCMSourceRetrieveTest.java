@@ -76,6 +76,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 
 /**
  * Tests different scenarios of the
@@ -213,7 +214,7 @@ class BitbucketSCMSourceRetrieveTest {
         // see BitbucketServerAPIClient.setupPullRequest()
         verify(apiClient).getPullRequestById(PR_ID);
         // The event is a HasPullRequests, so this call should be skipped in favor of getting PRs from the event itself
-        verify(apiClient, never()).getPullRequests();
+        verify(apiClient, never()).getPullRequests(anyBoolean());
         // Fetch tags trait was not enabled on the BitbucketSCMSource
         verify(apiClient, never()).getTags();
     }

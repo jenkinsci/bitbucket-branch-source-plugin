@@ -107,7 +107,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private static final String API_BRANCHES_FILTERED_PATH = API_REPOSITORY_PATH + "/branches{?filterText,start,limit}";
     private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit}";
     private static final String API_TAG_PATH = API_REPOSITORY_PATH + "/tags/{tagName}";
-    private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state}";
+    private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit,at,direction,state,draft}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
     private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
     private static final String API_PULL_REQUEST_CHANGES_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/changes{?start,limit}";
@@ -196,11 +196,14 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @NonNull
     @Override
-    public List<BitbucketServerPullRequest> getPullRequests() throws IOException {
+    public List<BitbucketServerPullRequest> getPullRequests(boolean skipDraft) throws IOException {
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + API_PULL_REQUESTS_PATH)
                 .set("owner", getOwner())
                 .set("repo", repositoryName);
+        if (skipDraft) {
+            template.set("draft", false);
+        }
         return getPullRequests(template);
     }
 

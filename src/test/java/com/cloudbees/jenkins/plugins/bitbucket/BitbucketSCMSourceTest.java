@@ -26,13 +26,17 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory.IAuditable;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketClientMockUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.SkipDraftPullRequestFilterTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -49,13 +53,18 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.apache.hc.core5.http.HttpRequest;
 import org.assertj.core.api.ThrowingConsumer;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -272,6 +281,68 @@ class BitbucketSCMSourceTest {
         }
         verify(c, never()).setCredentials(any(StandardUsernameCredentials.class));
         verify(c).addCredentials(eq("https://bitbucket.org/amuniz/test-repos.git"), any(StandardUsernameCredentials.class));
+    }
+
+    @AfterEach
+    void tearDown() {
+        BitbucketMockApiFactory.clear();
+    }
+
+    @Test
+    void withoutIgnoreDraftTrait_allPRsAreDiscovered() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repos");
+        instance.setTraits(List.of(new OriginPullRequestDiscoveryTrait(1)));
+
+        Set<SCMHead> heads = instance.fetch(BitbucketClientMockUtils.getTaskListenerMock());
+
+        assertThat(heads).extracting(SCMHead::getName)
+            .contains("PR-10", "PR-11", "PR-12");
+    }
+
+    @Test
+    void withoutIgnoreDraftTrait_apiRequestDoesNotIncludeDraftFilter() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repos");
+        instance.setTraits(List.of(new OriginPullRequestDiscoveryTrait(1)));
+
+        CompletableFuture<HttpRequest> prRequest = ((IAuditable) client).getAudit()
+            .waitRequest(req -> req.getRequestUri().contains("pullrequests"));
+        instance.fetch(BitbucketClientMockUtils.getTaskListenerMock());
+
+        assertThat(prRequest.getNow(null)).isNotNull()
+            .satisfies(req -> assertThat(req.getRequestUri()).doesNotContain("draft"));
+    }
+
+    @Test
+    void withIgnoreDraftTrait_draftPRsAreExcluded() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repos");
+        instance.setTraits(List.of(new OriginPullRequestDiscoveryTrait(1), new SkipDraftPullRequestFilterTrait()));
+
+        Set<SCMHead> heads = instance.fetch(BitbucketClientMockUtils.getTaskListenerMock());
+
+        assertThat(heads).extracting(SCMHead::getName)
+            .contains("PR-10", "PR-12")
+            .doesNotContain("PR-11");
+    }
+
+    @Test
+    void withIgnoreDraftTrait_apiRequestIncludesDraftFalseFilter() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repos");
+        instance.setTraits(List.of(new OriginPullRequestDiscoveryTrait(1), new SkipDraftPullRequestFilterTrait()));
+
+        CompletableFuture<HttpRequest> prRequest = ((IAuditable) client).getAudit()
+            .waitRequest(req -> req.getRequestUri().contains("pullrequests"));
+        instance.fetch(BitbucketClientMockUtils.getTaskListenerMock());
+
+        assertThat(prRequest.getNow(null)).isNotNull()
+            .satisfies(req -> assertThat(req.getRequestUri()).contains("draft%3Dfalse"));
     }
 
     private ThrowingConsumer<SCMSourceTrait> webhookTrait(WebhookRegistration registeredOn) {

@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
@@ -285,5 +286,51 @@ class BitbucketServerAPIClientTest {
 
         assertThatThrownBy(() -> new BitbucketServerAPIClient("http://localhost:7990/bitbucket", "owner", "test-repos", mock(BitbucketOAuthAuthenticator.class), false))
             .isInstanceOf(BitbucketException.class);
+    }
+
+    @Test
+    void getPullRequests_withoutDraftFilter_doesNotIncludeDraftQueryParam() throws Exception {
+        String serverURL = "https://acme.bitbucket.org";
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+        client.getPullRequests(false);
+
+        HttpRequest request = BitbucketTestUtil.extractRequest(client);
+        assertThat(request)
+            .isInstanceOf(HttpGet.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(HttpGet.class))
+            .satisfies(get -> assertThat(get.getUri().getQuery()).doesNotContain("draft"));
+    }
+
+    @Test
+    void getPullRequests_withDraftFilter_includesDraftFalseQueryParam() throws Exception {
+        String serverURL = "https://acme.bitbucket.org";
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+        client.getPullRequests(true);
+
+        HttpRequest request = BitbucketTestUtil.extractRequest(client);
+        assertThat(request)
+            .isInstanceOf(HttpGet.class)
+            .asInstanceOf(InstanceOfAssertFactories.type(HttpGet.class))
+            .satisfies(get -> assertThat(get.getUri().getQuery()).contains("draft=false"));
+    }
+
+    @Test
+    void getPullRequests_withDraftFilter_returnsOnlyNonDraftPRs() throws Exception {
+        String serverURL = "https://acme.bitbucket.org";
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+        List<? extends BitbucketPullRequest> pullRequests = client.getPullRequests(true);
+
+        assertThat(pullRequests).extracting(BitbucketPullRequest::isDraft)
+            .containsOnly(false);
+    }
+
+    @Test
+    void getPullRequests_withoutDraftFilter_returnsDraftAndNonDraftPRs() throws Exception {
+        String serverURL = "https://acme.bitbucket.org";
+        BitbucketApi client = BitbucketIntegrationClientFactory.getClient(serverURL, "amuniz", "test-repos");
+        List<? extends BitbucketPullRequest> pullRequests = client.getPullRequests(false);
+
+        assertThat(pullRequests).extracting(BitbucketPullRequest::isDraft)
+            .contains(true, false);
     }
 }

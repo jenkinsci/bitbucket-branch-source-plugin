@@ -62,14 +62,16 @@ public interface BitbucketApi extends AutoCloseable {
     String getRepositoryName();
 
     /**
-     * Returns the pull requests in the repository.
+     * Returns the pull requests in the repository, optionally filtering out draft pull requests via the API.
      *
+     * @param skipDraft {@code true} to request that draft pull requests are excluded from the results via the API,
+     *                  {@code false} to return all open pull requests.
      * @return the list of pull requests in the repository.
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    List<? extends BitbucketPullRequest> getPullRequests() throws IOException, InterruptedException;
+    List<? extends BitbucketPullRequest> getPullRequests(boolean skipDraft) throws IOException, InterruptedException;
 
     /**
      * Returns a specific pull request.

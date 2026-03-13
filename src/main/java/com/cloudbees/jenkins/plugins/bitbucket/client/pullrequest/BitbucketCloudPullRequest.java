@@ -44,6 +44,8 @@ public class BitbucketCloudPullRequest implements BitbucketPullRequest {
     @JsonProperty("participants")
     private List<BitbucketReviewer> reviewers;
 
+    private boolean draft;
+
     @Override
     public BitbucketCloudPullRequestRepository getSource() {
         return source;
@@ -117,6 +119,15 @@ public class BitbucketCloudPullRequest implements BitbucketPullRequest {
 
     public void setReviewers(List<BitbucketReviewer> reviewers) {
         this.reviewers = reviewers;
+    }
+
+    @Override
+    public boolean isDraft() {
+        return draft;
+    }
+
+    public void setDraft(boolean draft) {
+        this.draft = draft;
     }
 
     public static class Links {

@@ -211,9 +211,13 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     private final boolean fetchForkPRs;
     /**
-     * {@code true} if all pull requests from public repositories should be ignored.
+     * {@code true} if all pull requests from public repositories should be skipped.
      */
     private final boolean skipPublicPRs;
+    /**
+     * {@code true} if draft pull requests should be skipped.
+     */
+    private final boolean skipDraftPRs;
     /**
      * The {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
@@ -294,6 +298,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         fetchOriginPRs = context.wantOriginPRs();
         fetchForkPRs = context.wantForkPRs();
         skipPublicPRs = context.skipPublicPRs();
+        skipDraftPRs = context.skipDraftPRs();
         originPRStrategies = fetchOriginPRs && !context.originPRStrategies().isEmpty()
                 ? Collections.unmodifiableSet(EnumSet.copyOf(context.originPRStrategies()))
                 : Collections.<ChangeRequestCheckoutStrategy>emptySet();
@@ -385,6 +390,15 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     public final boolean isSkipPublicPRs() {
         return skipPublicPRs;
+    }
+
+    /**
+     * Returns {@code true} if draft pull requests should be skipped.
+     *
+     * @return {@code true} if draft pull requests should be skipped.
+     */
+    public final boolean isSkipDraftPRs() {
+        return skipDraftPRs;
     }
 
     /**
@@ -506,7 +520,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     @NonNull
     public final Iterable<BitbucketPullRequest> getPullRequests() throws IOException, InterruptedException {
         if (pullRequests == null) {
-            pullRequests = (Iterable<BitbucketPullRequest>) getBitbucketApiClient().getPullRequests();
+            pullRequests = (Iterable<BitbucketPullRequest>) getBitbucketApiClient().getPullRequests(skipDraftPRs);
         }
         return Util.fixNull(pullRequests);
     }

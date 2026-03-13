@@ -52,6 +52,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -76,7 +77,7 @@ public class BitbucketClientMockUtils {
         withMockGitRepos(client);
 
         if (includePullRequests) {
-            when(client.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
+            when(client.getPullRequests(anyBoolean())).thenReturn(Arrays.asList(getPullRequest()));
             when(client.resolveSourceFullHash(any(BitbucketCloudPullRequest.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
 
