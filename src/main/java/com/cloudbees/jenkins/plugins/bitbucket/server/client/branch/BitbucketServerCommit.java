@@ -61,7 +61,7 @@ public class BitbucketServerCommit implements BitbucketCommit {
 
     @JsonCreator
     public BitbucketServerCommit(@NonNull @JsonProperty("message") String message,
-                                 @NonNull @JsonProperty("id") String hash,
+                                 @NonNull @JsonProperty("hash") String hash,
                                  @Nullable @JsonProperty("committer") BitbucketServerAuthor committer,
                                  @NonNull @JsonProperty("committerTimestamp") long committerDateMillis,
                                  @Nullable @JsonProperty("author") BitbucketServerAuthor author,
@@ -107,11 +107,6 @@ public class BitbucketServerCommit implements BitbucketCommit {
 
     public void setHash(String hash) {
         this.hash = hash;
-    }
-
-    @JsonProperty("hash")
-    public void setAlternateHash(String hash) {
-        setHash(hash);
     }
 
     @Deprecated(since = "936.1.0", forRemoval = true)
