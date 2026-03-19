@@ -37,5 +37,5 @@ THE SOFTWARE.
         <f:textbox field="serverURL"/>
     </f:invisibleEntry>
 
-    <f:dropdownDescriptorSelector field="webhook" title="${%Webhook implementation}" descriptors="${descriptor.webhookDescriptors}" />
+    <f:dropdownDescriptorSelector field="webhook" title="${%Webhook management}" descriptors="${descriptor.webhookDescriptors}" />
 </j:jelly>
