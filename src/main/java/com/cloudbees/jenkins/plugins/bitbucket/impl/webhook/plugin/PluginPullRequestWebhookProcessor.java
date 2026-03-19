@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -43,7 +42,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Deprecated(since = "937.0.0")
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
-public class PluginPullRequestWebhookProcessor extends AbstractWebhookProcessor {
+public class PluginPullRequestWebhookProcessor extends AbstractPluginWebhookProcessor {
 
     private static final List<String> supportedEvents = List.of(
             HookEventType.PULL_REQUEST_CREATED.getKey(), // needed to create job
