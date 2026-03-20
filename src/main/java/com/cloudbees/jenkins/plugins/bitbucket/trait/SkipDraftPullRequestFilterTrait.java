@@ -31,17 +31,15 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.trait.Discovery;
 import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A {@link SCMSourceTrait} that ignores draft pull requests.
  */
-public class IgnoreDraftPullRequestFilterTrait extends SCMSourceTrait {
+public class SkipDraftPullRequestFilterTrait extends SCMSourceTrait {
     /**
      * Constructor.
      */
-    @DataBoundConstructor
-    public IgnoreDraftPullRequestFilterTrait() {
+    public SkipDraftPullRequestFilterTrait() {
     }
 
     /**
@@ -49,7 +47,7 @@ public class IgnoreDraftPullRequestFilterTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((BitbucketSCMSourceContext) context).ignoreDraftPRs(true);
+        ((BitbucketSCMSourceContext) context).skipDraftPrs(true);
     }
 
     /**

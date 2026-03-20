@@ -30,13 +30,13 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-class IgnoreDraftPullRequestFilterTraitTest {
+class SkipDraftPullRequestFilterTraitTest {
     @Test
     void given__instance__when__decoratingContext__then__filterApplied() throws Exception {
-        IgnoreDraftPullRequestFilterTrait instance = new IgnoreDraftPullRequestFilterTrait();
+        SkipDraftPullRequestFilterTrait instance = new SkipDraftPullRequestFilterTrait();
         BitbucketSCMSourceContext probe = new BitbucketSCMSourceContext(null, SCMHeadObserver.none());
-        assumeThat(probe.ignoreDraftPRs()).isFalse();
+        assumeThat(probe.skipDraftPrs()).isFalse();
         instance.decorateContext(probe);
-        assertThat(probe.ignoreDraftPRs()).isTrue();
+        assertThat(probe.skipDraftPrs()).isTrue();
     }
 }

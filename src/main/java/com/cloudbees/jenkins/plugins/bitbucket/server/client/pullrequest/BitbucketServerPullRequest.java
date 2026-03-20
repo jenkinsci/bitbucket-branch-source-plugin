@@ -60,7 +60,6 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     private Boolean canMerge;
 
-    @JsonProperty("draft")
     private boolean draft;
 
     @JsonProperty

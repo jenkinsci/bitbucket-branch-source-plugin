@@ -44,7 +44,6 @@ public class BitbucketCloudPullRequest implements BitbucketPullRequest {
     @JsonProperty("participants")
     private List<BitbucketReviewer> reviewers;
 
-    @JsonProperty("draft")
     private boolean draft;
 
     @Override

@@ -37,6 +37,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranc
 import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketClientMockUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.SkipDraftPullRequestFilterTrait;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Items;
 import hudson.model.TaskListener;
@@ -72,7 +73,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests that the {@link com.cloudbees.jenkins.plugins.bitbucket.trait.IgnoreDraftPullRequestFilterTrait}
+ * Tests that the {@link SkipDraftPullRequestFilterTrait}
  * correctly filters draft pull requests during source retrieval.
  */
 @WithJenkins
