@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerWebhookPayload;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -45,7 +44,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Deprecated(since = "937.0.0")
 @Restricted(NoExternalUse.class)
 @RestrictedSince("933.3.0")
-public class PluginPushWebhookProcessor extends AbstractWebhookProcessor {
+public class PluginPushWebhookProcessor extends AbstractPluginWebhookProcessor {
 
     private static final Logger logger = Logger.getLogger(PluginPushWebhookProcessor.class.getName());
     private static final List<String> supportedEvents = List.of(

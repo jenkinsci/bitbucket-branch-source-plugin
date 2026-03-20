@@ -33,5 +33,5 @@ THE SOFTWARE.
     <f:entry title="${%Server Version}" field="serverVersion">
         <f:select />
     </f:entry>
-    <f:dropdownDescriptorSelector field="webhook" title="${%Webhook implementation}" descriptors="${descriptor.webhookDescriptors}" />
+    <f:dropdownDescriptorSelector field="webhook" title="${%Webhook management}" descriptors="${descriptor.webhookDescriptors}" />
 </j:jelly>
