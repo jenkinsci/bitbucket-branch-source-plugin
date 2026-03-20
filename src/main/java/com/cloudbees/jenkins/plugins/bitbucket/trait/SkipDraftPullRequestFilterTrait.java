@@ -53,7 +53,7 @@ public class SkipDraftPullRequestFilterTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
-    @Symbol("bitbucketIgnoreDraftPullRequestFilter")
+    @Symbol("bitbucketSkipDraftPullRequestFilter")
     @Extension
     @Discovery
     public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
@@ -63,7 +63,7 @@ public class SkipDraftPullRequestFilterTrait extends SCMSourceTrait {
         @NonNull
         @Override
         public String getDisplayName() {
-            return Messages.IgnoreDraftPullRequestFilterTrait_displayName();
+            return Messages.SkipDraftPullRequestFilterTrait_displayName();
         }
     }
 

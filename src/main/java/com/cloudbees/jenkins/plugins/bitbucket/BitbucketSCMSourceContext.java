@@ -57,11 +57,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
      */
     private boolean wantForkPRs;
     /**
-     * {@code true} if all pull requests from public repositories should be ignored.
+     * {@code true} if all pull requests from public repositories should be skipped.
      */
     private boolean skipPublicPRs;
     /**
-     * {@code true} if draft pull requests should be ignored.
+     * {@code true} if draft pull requests should be skipped.
      */
     private boolean skipDraftPRs;
     /**
@@ -313,7 +313,7 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     }
 
     /**
-     * Controls the ignoring of draft pull requests.
+     * Controls the skipping of draft pull requests.
      *
      * @param skipDraftPRs {@code true} if draft pull requests should be skipped.
      * @return {@code this} for method chaining.

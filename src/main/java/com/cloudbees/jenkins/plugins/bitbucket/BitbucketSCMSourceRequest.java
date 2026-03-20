@@ -211,11 +211,11 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     private final boolean fetchForkPRs;
     /**
-     * {@code true} if all pull requests from public repositories should be ignored.
+     * {@code true} if all pull requests from public repositories should be skipped.
      */
     private final boolean skipPublicPRs;
     /**
-     * {@code true} if draft pull requests should be ignored.
+     * {@code true} if draft pull requests should be skipped.
      */
     private final boolean skipDraftPRs;
     /**
@@ -393,9 +393,9 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns {@code true} if draft pull requests should be ignored.
+     * Returns {@code true} if draft pull requests should be skipped.
      *
-     * @return {@code true} if draft pull requests should be ignored.
+     * @return {@code true} if draft pull requests should be skipped.
      */
     public final boolean isSkipDraftPRs() {
         return skipDraftPRs;

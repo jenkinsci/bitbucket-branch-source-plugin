@@ -410,7 +410,7 @@ public class BitbucketSCMSource extends SCMSource {
         for (final BitbucketPullRequest pull : request.getPullRequests()) {
             String originalBranchName = pull.getSource().getBranch().getName();
             if (request.isSkipDraftPRs() && pull.isDraft()) {
-                request.listener().getLogger().printf("Ignoring PR-%s (draft pull request)%n", pull.getId());
+                request.listener().getLogger().printf("Skipping PR-%s (draft pull request)%n", pull.getId());
                 continue;
             }
             request.listener().getLogger().printf(
