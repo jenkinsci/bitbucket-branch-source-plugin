@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2026, Brevium, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,58 +21,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.plugins.bitbucket.api;
+package com.cloudbees.jenkins.plugins.bitbucket.trait;
 
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.Messages;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.List;
+import hudson.Extension;
+import jenkins.scm.api.trait.SCMSourceContext;
+import jenkins.scm.api.trait.SCMSourceTrait;
+import jenkins.scm.impl.trait.Discovery;
+import org.jenkinsci.Symbol;
 
 /**
- * Represents a pull request in Bitbucket.
- * Only the source repository is necessary, the destination repo is inferred.
+ * A {@link SCMSourceTrait} that ignores draft pull requests.
  */
-public interface BitbucketPullRequest {
-
+public class SkipDraftPullRequestFilterTrait extends SCMSourceTrait {
     /**
-     * @return the source repository of this pull request
+     * Constructor.
      */
-    BitbucketPullRequestSource getSource();
-
-    /**
-     * @return the target repository of this pull request
-     */
-    BitbucketPullRequestDestination getDestination();
-
-    /**
-     * @return pull request ID as provided by Bitbucket. It can be used for notifications.
-     */
-    @NonNull
-    String getId();
-
-    String getTitle();
-
-    String getLink();
-
-    /**
-     * Despite the name, this is a <em>display name</em> or <em>nickname</em> for the author, not a stable <em>username</em> for login.
-     */
-    String getAuthorLogin();
-
-    /**
-     * Not set in Cloud.
-     */
-    String getAuthorEmail();
-
-    /**
-     * Username or account identifier of the author.
-     */
-    String getAuthorIdentifier();
-
-    List<BitbucketReviewer> getReviewers();
-
-    /**
-     * @return {@code true} if this pull request is a draft (work in progress).
-     */
-    default boolean isDraft() {
-        return false;
+    public SkipDraftPullRequestFilterTrait() {
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void decorateContext(SCMSourceContext<?, ?> context) {
+        ((BitbucketSCMSourceContext) context).skipDraftPrs(true);
+    }
+
+    /**
+     * Our descriptor.
+     */
+    @Symbol("bitbucketSkipDraftPullRequestFilter")
+    @Extension
+    @Discovery
+    public static class DescriptorImpl extends BitbucketSCMSourceTraitDescriptor {
+        /**
+         * {@inheritDoc}
+         */
+        @NonNull
+        @Override
+        public String getDisplayName() {
+            return Messages.SkipDraftPullRequestFilterTrait_displayName();
+        }
+    }
+
 }
