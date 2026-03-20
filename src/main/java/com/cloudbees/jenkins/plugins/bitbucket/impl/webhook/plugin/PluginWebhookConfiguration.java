@@ -35,6 +35,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.PluginWrapper;
 import hudson.Util;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -148,6 +149,10 @@ public class PluginWebhookConfiguration implements BitbucketWebhookConfiguration
 
         @Override
         public boolean isApplicable(@NonNull EndpointType type) {
+            PluginWrapper replacementPlugin = Jenkins.get().getPluginManager().getPlugin("bitbucket-webhooks");
+            if (replacementPlugin != null && replacementPlugin.isActive()) {
+                return false;
+            }
             return type == EndpointType.SERVER;
         }
 
