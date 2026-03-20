@@ -23,16 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * A Href for something on bitbucket.
@@ -71,20 +69,18 @@ public class BitbucketHref {
         this.href = href;
     }
 
-    public static class Deserializer extends JsonDeserializer<List<BitbucketHref>> {
+    public static class Deserializer extends ValueDeserializer<List<BitbucketHref>> {
 
         @Override
-        public List<BitbucketHref> deserialize(JsonParser p, DeserializationContext ctx)
-                throws IOException {
+        public List<BitbucketHref> deserialize(JsonParser p, DeserializationContext ctx) {
             List<BitbucketHref> result = new ArrayList<>();
-            ObjectCodec codec = p.getCodec();
-            JsonNode node = codec.readTree(p);
+            JsonNode node = ctx.readTree(p);
             if (node.isArray()) {
                 for (JsonNode n : node) {
-                    result.add(codec.treeToValue(n, BitbucketHref.class));
+                    result.add(ctx.readTreeAsValue(n, BitbucketHref.class));
                 }
             } else {
-                result.add(codec.treeToValue(node, BitbucketHref.class));
+                result.add(ctx.readTreeAsValue(node, BitbucketHref.class));
             }
             return result;
         }

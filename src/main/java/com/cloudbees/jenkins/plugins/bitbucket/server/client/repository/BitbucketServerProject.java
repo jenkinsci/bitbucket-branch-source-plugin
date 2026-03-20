@@ -26,9 +26,9 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 public class BitbucketServerProject implements BitbucketTeam {
 
