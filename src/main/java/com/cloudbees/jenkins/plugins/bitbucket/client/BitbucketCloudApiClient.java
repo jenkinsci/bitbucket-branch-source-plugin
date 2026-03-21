@@ -177,14 +177,10 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @NonNull
     @Override
     public List<BitbucketCloudPullRequest> getPullRequests() throws IOException {
-        // we can not use the default max pagelen also if documented
-        // https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests#get
-        // so because with values greater than 50 the API returns HTTP 400
-        int pageLen = 50;
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{?page,pagelen}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
-                .set("pagelen", pageLen)
+                .set("pagelen", MAX_PAGE_LENGTH)
                 .expand();
 
         List<BitbucketCloudPullRequest> pullRequests = getPagedRequest(url, BitbucketCloudPullRequest.class);
