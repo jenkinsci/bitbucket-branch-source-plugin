@@ -96,6 +96,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.StreamSupport;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitTagSCMHead;
@@ -972,8 +973,8 @@ public class BitbucketSCMSource extends SCMSource {
         try {
             // Mirrors are supported only by Bitbucket Server
             BitbucketServerRepository r = (BitbucketServerRepository) bitbucket.getRepository();
-            List<BitbucketMirroredRepositoryDescriptor> mirrors = bitbucket.getMirrors(r.getId());
-            BitbucketMirroredRepositoryDescriptor mirroredRepositoryDescriptor = mirrors.stream()
+            Iterable<BitbucketMirroredRepositoryDescriptor> mirrors = bitbucket.getMirrors(r.getId());
+            BitbucketMirroredRepositoryDescriptor mirroredRepositoryDescriptor = StreamSupport.stream(mirrors.spliterator(), false)
                 .filter(it -> mirrorIdLocal.equals(it.getMirrorServer().getId()))
                 .findFirst()
                 .orElseThrow(() ->
@@ -1087,13 +1088,13 @@ public class BitbucketSCMSource extends SCMSource {
             BitbucketSupplier<ListBoxModel> listBoxModelSupplier = bitbucket -> {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
-                List<? extends BitbucketRepository> repositories =
+                Iterable<? extends BitbucketRepository> repositories =
                     bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
-                if (repositories.isEmpty()) {
-                    throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
-                }
                 for (BitbucketRepository repo : repositories) {
                     result.add(repo.getRepositoryName());
+                }
+                if (result.isEmpty()) {
+                    throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }
                 return result;
             };

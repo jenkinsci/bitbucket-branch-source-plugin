@@ -196,7 +196,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @NonNull
     @Override
-    public List<BitbucketServerPullRequest> getPullRequests() throws IOException {
+    public Iterable<BitbucketServerPullRequest> getPullRequests() throws IOException {
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + API_PULL_REQUESTS_PATH)
                 .set("owner", getOwner())
@@ -205,7 +205,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     @NonNull
-    public List<BitbucketServerPullRequest> getOutgoingOpenPullRequests(String fromRef) throws IOException {
+    public Iterable<BitbucketServerPullRequest> getOutgoingOpenPullRequests(String fromRef) throws IOException {
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + API_PULL_REQUESTS_PATH)
                 .set("owner", getOwner())
@@ -217,7 +217,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     @NonNull
-    public List<BitbucketServerPullRequest> getIncomingOpenPullRequests(String toRef) throws IOException {
+    public Iterable<BitbucketServerPullRequest> getIncomingOpenPullRequests(String toRef) throws IOException {
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + API_PULL_REQUESTS_PATH)
                 .set("owner", getOwner())
@@ -228,7 +228,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return getPullRequests(template);
     }
 
-    private List<BitbucketServerPullRequest> getPullRequests(UriTemplate template) throws IOException {
+    private Iterable<BitbucketServerPullRequest> getPullRequests(UriTemplate template) throws IOException {
         List<BitbucketServerPullRequest> pullRequests = getPagedRequest(template, BitbucketServerPullRequest.class);
 
         pullRequests.removeIf(this::shouldIgnore);
@@ -386,7 +386,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      * @throws IOException          if there was a network communications error.
      */
     @NonNull
-    public List<BitbucketMirrorServer> getMirrors() throws IOException {
+    public Iterable<BitbucketMirrorServer> getMirrors() throws IOException {
         UriTemplate uriTemplate = UriTemplate
                 .fromTemplate(this.baseURL + API_MIRRORS_PATH);
         return getPagedRequest(uriTemplate, BitbucketMirrorServer.class);
@@ -399,7 +399,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      * @throws IOException          if there was a network communications error.
      */
     @NonNull
-    public List<BitbucketMirroredRepositoryDescriptor> getMirrors(@NonNull Long repositoryId) throws IOException {
+    public Iterable<BitbucketMirroredRepositoryDescriptor> getMirrors(@NonNull Long repositoryId) throws IOException {
         UriTemplate uriTemplate = UriTemplate
                 .fromTemplate(this.baseURL + API_MIRRORS_FOR_REPO_PATH)
                 .set("id", repositoryId);
@@ -511,7 +511,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @Override
     @NonNull
-    public List<BitbucketServerBranch> getTags() throws IOException {
+    public Iterable<BitbucketServerBranch> getTags() throws IOException {
         return getServerBranches(API_TAGS_PATH);
     }
 
@@ -528,11 +528,11 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @Override
     @NonNull
-    public List<BitbucketServerBranch> getBranches() throws IOException {
+    public Iterable<BitbucketServerBranch> getBranches() throws IOException {
         return getServerBranches(API_BRANCHES_PATH);
     }
 
-    private List<BitbucketServerBranch> getServerBranches(String apiPath) throws IOException {
+    private Iterable<BitbucketServerBranch> getServerBranches(String apiPath) throws IOException {
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + apiPath)
                 .set("owner", getOwner())
@@ -644,7 +644,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @NonNull
     @Override
-    public List<BitbucketServerRepository> getRepositories(@CheckForNull UserRoleInRepository role)
+    public Iterable<BitbucketServerRepository> getRepositories(@CheckForNull UserRoleInRepository role)
             throws IOException {
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + API_REPOSITORIES_PATH)
@@ -664,7 +664,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     /** {@inheritDoc} */
     @NonNull
     @Override
-    public List<BitbucketServerRepository> getRepositories() throws IOException {
+    public Iterable<BitbucketServerRepository> getRepositories() throws IOException {
         return getRepositories(null);
     }
 
@@ -949,7 +949,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
 
     @NonNull
     @Override
-    public List<BitbucketServerCommit> getCommits(String fromCommit, String toCommit) throws IOException {
+    public Iterable<BitbucketServerCommit> getCommits(String fromCommit, String toCommit) throws IOException {
         UriTemplate uriTemplate = UriTemplate.fromTemplate(this.baseURL + API_COMMITS_PATH)
                 .set("owner", getOwner())
                 .set("repo", repositoryName)

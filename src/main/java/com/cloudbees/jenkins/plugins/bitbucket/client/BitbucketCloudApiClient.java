@@ -176,7 +176,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudPullRequest> getPullRequests() throws IOException {
+    public Iterable<BitbucketCloudPullRequest> getPullRequests() throws IOException {
         // we can not use the default max pagelen also if documented
         // https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests#get
         // so because with values greater than 50 the API returns HTTP 400
@@ -364,7 +364,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudBranch> getTags() throws IOException {
+    public Iterable<BitbucketCloudBranch> getTags() throws IOException {
         return getBranchesByRef("/refs/tags");
     }
 
@@ -386,11 +386,11 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudBranch> getBranches() throws IOException {
+    public Iterable<BitbucketCloudBranch> getBranches() throws IOException {
         return getBranchesByRef("/refs/branches");
     }
 
-    public List<BitbucketCloudBranch> getBranchesByRef(String nodePath) throws IOException {
+    public Iterable<BitbucketCloudBranch> getBranchesByRef(String nodePath) throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath + "{?pagelen}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
@@ -603,7 +603,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudRepository> getRepositories(@CheckForNull UserRoleInRepository role) throws IOException {
+    public Iterable<BitbucketCloudRepository> getRepositories(@CheckForNull UserRoleInRepository role) throws IOException {
         StringBuilder cacheKey = new StringBuilder();
         cacheKey.append(owner);
 
@@ -654,7 +654,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     /** {@inheritDoc} */
     @NonNull
     @Override
-    public List<BitbucketCloudRepository> getRepositories() throws IOException {
+    public Iterable<BitbucketCloudRepository> getRepositories() throws IOException {
         return getRepositories(null);
     }
 
@@ -732,7 +732,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
 
     @NonNull
     @Override
-    public List<BitbucketCloudCommit> getCommits(@CheckForNull String fromCommit, @NonNull String toCommit) throws IOException {
+    public Iterable<BitbucketCloudCommit> getCommits(@CheckForNull String fromCommit, @NonNull String toCommit) throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/commits{?include,exclude}")
                 .set("owner", owner)
                 .set("repo", repositoryName)

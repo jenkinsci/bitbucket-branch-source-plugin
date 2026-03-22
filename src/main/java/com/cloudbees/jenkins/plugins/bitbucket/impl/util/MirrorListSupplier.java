@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirrorServer;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
-import java.util.List;
 
 public class MirrorListSupplier implements BitbucketApiUtils.BitbucketSupplier<ListBoxModel> {
 
@@ -39,7 +38,7 @@ public class MirrorListSupplier implements BitbucketApiUtils.BitbucketSupplier<L
         ListBoxModel result = new ListBoxModel(new ListBoxModel.Option("Primary server", ""));
         if (!BitbucketApiUtils.isCloud(client)) {
             BitbucketServerAPIClient bitbucketServerAPIClient = (BitbucketServerAPIClient) client;
-            List<BitbucketMirrorServer> mirrors = bitbucketServerAPIClient.getMirrors();
+            Iterable<BitbucketMirrorServer> mirrors = bitbucketServerAPIClient.getMirrors();
             for (BitbucketMirrorServer mirror : mirrors) {
                 result.add(new ListBoxModel.Option(mirror.getName(), mirror.getId()));
             }

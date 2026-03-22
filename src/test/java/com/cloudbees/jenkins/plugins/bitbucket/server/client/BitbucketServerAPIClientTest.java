@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.StreamSupport;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -162,8 +163,8 @@ class BitbucketServerAPIClientTest {
     @Test
     void filterArchivedRepositories() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "foo", "test-repos");
-        List<? extends BitbucketRepository> repos = client.getRepositories();
-        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).toList();
+        Iterable<? extends BitbucketRepository> repos = client.getRepositories();
+        List<String> names = StreamSupport.stream(repos.spliterator(), false).map(BitbucketRepository::getRepositoryName).toList();
         assertThat(names).doesNotContain("bar-archived");
         assertThat(names).containsOnly("bar-active");
     }
@@ -171,8 +172,8 @@ class BitbucketServerAPIClientTest {
     @Test
     void sortRepositoriesByName() throws Exception {
         BitbucketApi client = BitbucketIntegrationClientFactory.getClient("localhost", "amuniz", "test-repos");
-        List<? extends BitbucketRepository> repos = client.getRepositories();
-        List<String> names = repos.stream().map(BitbucketRepository::getRepositoryName).toList();
+        Iterable<? extends BitbucketRepository> repos = client.getRepositories();
+        List<String> names = StreamSupport.stream(repos.spliterator(), false).map(BitbucketRepository::getRepositoryName).toList();
         assertThat(names).containsOnly("another-repo", "dogs-repo", "test-repos");
     }
 

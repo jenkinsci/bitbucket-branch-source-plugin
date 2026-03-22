@@ -64,12 +64,12 @@ public interface BitbucketApi extends AutoCloseable {
     /**
      * Returns the pull requests in the repository.
      *
-     * @return the list of pull requests in the repository.
+     * @return an iterable of pull requests in the repository.
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    List<? extends BitbucketPullRequest> getPullRequests() throws IOException, InterruptedException;
+    Iterable<? extends BitbucketPullRequest> getPullRequests() throws IOException, InterruptedException;
 
     /**
      * Returns a specific pull request.
@@ -137,7 +137,7 @@ public interface BitbucketApi extends AutoCloseable {
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    List<? extends BitbucketBranch> getBranches() throws IOException, InterruptedException;
+    Iterable<? extends BitbucketBranch> getBranches() throws IOException, InterruptedException;
 
     /**
      * Returns a tag in the repository.
@@ -156,7 +156,7 @@ public interface BitbucketApi extends AutoCloseable {
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    List<? extends BitbucketBranch> getTags() throws IOException, InterruptedException;
+    Iterable<? extends BitbucketBranch> getTags() throws IOException, InterruptedException;
 
     /**
      * Resolve the commit object given its hash.
@@ -281,7 +281,7 @@ public interface BitbucketApi extends AutoCloseable {
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    List<? extends BitbucketRepository> getRepositories(@CheckForNull UserRoleInRepository role)
+    Iterable<? extends BitbucketRepository> getRepositories(@CheckForNull UserRoleInRepository role)
             throws IOException, InterruptedException;
 
     /**
@@ -292,7 +292,7 @@ public interface BitbucketApi extends AutoCloseable {
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    List<? extends BitbucketRepository> getRepositories() throws IOException, InterruptedException;
+    Iterable<? extends BitbucketRepository> getRepositories() throws IOException, InterruptedException;
 
     /**
      * Set the build status for the given commit hash.
@@ -362,7 +362,7 @@ public interface BitbucketApi extends AutoCloseable {
      * @throws IOException if there was a network communications error.
      */
     @NonNull
-    List<? extends BitbucketCommit> getCommits(@CheckForNull String from, @NonNull String to) throws IOException;
+    Iterable<? extends BitbucketCommit> getCommits(@CheckForNull String from, @NonNull String to) throws IOException;
 
     /**
      * Adapt this implementation to the given class.

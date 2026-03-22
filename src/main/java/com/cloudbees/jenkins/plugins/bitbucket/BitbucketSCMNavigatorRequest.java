@@ -67,7 +67,7 @@ public class BitbucketSCMNavigatorRequest extends SCMNavigatorRequest {
         this.observer = observer;
     }
 
-    public void withRepositories(List<? extends BitbucketRepository> repositories) {
+    public void withRepositories(Iterable<? extends BitbucketRepository> repositories) {
         this.repositoryMap.clear();
         for (BitbucketRepository repository : repositories) {
             this.repositoryMap.put(repository.getRepositoryName(), repository);
