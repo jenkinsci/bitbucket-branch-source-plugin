@@ -82,6 +82,14 @@ public interface BitbucketApi extends AutoCloseable {
     BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException;
 
     /**
+     * Returns the pull requests in the repository lazily
+     *
+     * @return the list of pull requests in the repository.
+     */
+    @NonNull
+    Iterable<? extends BitbucketPullRequest> getPullRequestsLazy();
+
+    /**
      * Returns the repository details.
      *
      * @return the repository specified by {@link #getOwner()}/{@link #getRepositoryName()}
@@ -140,6 +148,14 @@ public interface BitbucketApi extends AutoCloseable {
     List<? extends BitbucketBranch> getBranches() throws IOException, InterruptedException;
 
     /**
+     * Returns the branches in the repository lazily.
+     *
+     * @return an interable of branches in the repository.
+     */
+    @NonNull
+    Iterable<? extends BitbucketBranch> getBranchesLazy();
+
+    /**
      * Returns a tag in the repository.
      *
      * @return a tag in the repository.
@@ -157,6 +173,14 @@ public interface BitbucketApi extends AutoCloseable {
      */
     @NonNull
     List<? extends BitbucketBranch> getTags() throws IOException, InterruptedException;
+
+    /**
+     * Returns the tags in the repository lazily
+     *
+     * @return an iterable of tags in the repository.
+     */
+    @NonNull
+    Iterable<? extends BitbucketBranch> getTagsLazy();
 
     /**
      * Resolve the commit object given its hash.

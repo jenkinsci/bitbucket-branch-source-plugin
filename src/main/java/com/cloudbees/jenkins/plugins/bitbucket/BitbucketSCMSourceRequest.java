@@ -529,6 +529,21 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
                 .collect(Collectors.toList()); // NOSONAR
     }
 
+    @NonNull
+    public final Iterable<BitbucketPullRequest> getPullRequestsLazy() {
+        Iterable<BitbucketPullRequest> source;
+        if (pullRequests != null) {
+            source = pullRequests;
+        } else {
+            source = (Iterable<BitbucketPullRequest>) getBitbucketApiClient().getPullRequestsLazy();
+        }
+
+        // Return lazy filtered iterable without materializing the entire list
+        return () -> StreamSupport.stream(Util.fixNull(source).spliterator(), false)
+                .filter(pr -> !skipDraftPRs || (skipDraftPRs && !pr.isDraft()))
+                .iterator();
+    }
+
     /**
      * Retrieves the full details of a pull request.
      * @param id The id of the pull request to retrieve the details about.
@@ -577,6 +592,14 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         return Util.fixNull(branches);
     }
 
+    @NonNull
+    public final Iterable<BitbucketBranch> getBranchesLazy() {
+        if (branches != null) {
+            return branches;
+        }
+        return (Iterable<BitbucketBranch>) getBitbucketApiClient().getBranchesLazy();
+    }
+
     /**
      * Provides the requests with the tag details.
      *
@@ -602,6 +625,15 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         }
         return Util.fixNull(tags);
     }
+
+    @NonNull
+    public final Iterable<BitbucketBranch> getTagsLazy() {
+        if (tags != null) {
+            return tags;
+        }
+        return (Iterable<BitbucketBranch>) getBitbucketApiClient().getTagsLazy();
+    }
+
 
     /**
      * {@inheritDoc}

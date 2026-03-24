@@ -111,16 +111,6 @@ class ScanningFailuresTest {
     }
 
     @Test
-    void getBranchesFailsWithIOException() throws Exception {
-        getBranchesFails(() -> new IOException(message), Result.FAILURE);
-    }
-
-    @Test
-    void getBranchesFailsWithInterruptedException() throws Exception {
-        getBranchesFails(() -> new InterruptedException(message), Result.ABORTED);
-    }
-
-    @Test
     void getBranchesFailsWithRuntimeException() throws Exception {
         getBranchesFails(() -> new RuntimeException(message), Result.FAILURE);
     }
@@ -144,7 +134,7 @@ class ScanningFailuresTest {
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
-        when(api.getBranches()).thenAnswer(new Returns(branchList));
+        when(api.getBranchesLazy()).thenAnswer(new Returns(branchList));
         when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
@@ -179,9 +169,9 @@ class ScanningFailuresTest {
         WorkflowJob master = mp.getItem("main");
         assertThat(master).isNotNull();
 
-        // an error in getBranches()
+        // an error in getBranchesLazy()
 
-        when(api.getBranches()).thenThrow(exception.call());
+        when(api.getBranchesLazy()).thenThrow(exception.call());
 
         if (Result.NOT_BUILT.equals(expectedResult) || Result.ABORTED.equals(expectedResult)) {
             // when not built or aborted the future will never complete and the log may not contain the exception stack trace
@@ -214,7 +204,7 @@ class ScanningFailuresTest {
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
-        when(api.getBranches()).thenAnswer(new Returns(branchList));
+        when(api.getBranchesLazy()).thenAnswer(new Returns(branchList));
         when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
@@ -274,7 +264,7 @@ class ScanningFailuresTest {
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
-        when(api.getBranches()).thenAnswer(new Returns(branchList));
+        when(api.getBranchesLazy()).thenAnswer(new Returns(branchList));
         when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
@@ -338,7 +328,7 @@ class ScanningFailuresTest {
 
         BitbucketBranch branch = Mockito.mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
-        when(api.getBranches()).thenAnswer(new Returns(branchList));
+        when(api.getBranchesLazy()).thenAnswer(new Returns(branchList));
         when(branch.getName()).thenReturn("main");
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
 
@@ -378,7 +368,7 @@ class ScanningFailuresTest {
         assertThat(master.getNextBuildNumber()).isEqualTo(2);
 
         // the branch is actually removed
-        when(api.getBranches()).thenAnswer(new Returns(Collections.emptyList()));
+        when(api.getBranchesLazy()).thenAnswer(new Returns(Collections.emptyList()));
 
         mp.scheduleBuild2(0).getFuture().get();
         assertThat(mp.getIndexing().getResult()).isEqualTo(Result.SUCCESS);

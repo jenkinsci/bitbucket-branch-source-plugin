@@ -71,12 +71,14 @@ public class BitbucketClientMockUtils {
         branches.add(branch2);
         // add branches
         when(client.getBranches()).thenReturn(branches);
+        when(client.getBranchesLazy()).thenReturn(branches);
         when(client.getBranch("branch1")).thenReturn(branch1);
         when(client.getBranch("branch2")).thenReturn(branch2);
         withMockGitRepos(client);
 
         if (includePullRequests) {
             when(client.getPullRequests()).thenReturn(Arrays.asList(getPullRequest()));
+            when(client.getPullRequestsLazy()).thenReturn(Arrays.asList(getPullRequest()));
             when(client.resolveSourceFullHash(any(BitbucketCloudPullRequest.class)))
                     .thenReturn("e851558f77c098d21af6bb8cc54a423f7cf12147");
 
