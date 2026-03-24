@@ -115,7 +115,7 @@ class BitbucketBuildStatusNotificationsJobListenerTest {
         BitbucketApi api = mock(BitbucketApi.class);
         BitbucketBranch branch = mock(BitbucketBranch.class);
         List<? extends BitbucketBranch> branchList = Collections.singletonList(branch);
-        when(api.getBranches()).thenAnswer(new Returns(branchList));
+        when(api.getBranchesLazy()).thenAnswer(new Returns(branchList));
         when(api.getBranch("master")).thenAnswer(new Returns(branch));
         when(branch.getName()).thenReturn(branchName);
         when(branch.getRawNode()).thenReturn(sampleRepo.head());
