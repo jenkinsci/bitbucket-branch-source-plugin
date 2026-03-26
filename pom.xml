@@ -29,7 +29,7 @@
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
         <hpi.bundledArtifacts>scribejava-core,scribejava-java8</hpi.bundledArtifacts>
         <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-        <jenkins.baseline>2.504</jenkins.baseline>
+        <jenkins.baseline>2.516</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
         <hpi.compatibleSinceVersion>937.0.0</hpi.compatibleSinceVersion>
@@ -71,15 +71,9 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>5804.v80587a_38d937</version>
+                <version>6128.v8e4ce4620a_2b_</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
-            <!-- TODO until in BOM -->
-            <dependency>
-                <groupId>org.jenkins-ci.plugins</groupId>
-                <artifactId>credentials</artifactId>
-                <version>1480.v2246fd131e83</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -96,9 +90,14 @@
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>commons-collections4-api</artifactId>
         </dependency>
+        <!-- Needed by scribejava-core -->
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>jackson2-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>jackson3-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
