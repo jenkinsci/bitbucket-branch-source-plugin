@@ -1,0 +1,19 @@
+<com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
+  <id>draft_pr_with_ignore_trait</id>
+  <serverUrl>https://bitbucket.org</serverUrl>
+  <credentialsId>bb-cloud-creds</credentialsId>
+  <repoOwner>cloudbeers</repoOwner>
+  <repository>stunning-adventure</repository>
+  <traits>
+    <com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistrationTrait>
+      <mode>DISABLE</mode>
+    </com.cloudbees.jenkins.plugins.bitbucket.WebhookRegistrationTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait>
+      <strategyId>1</strategyId>
+    </com.cloudbees.jenkins.plugins.bitbucket.BranchDiscoveryTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.OriginPullRequestDiscoveryTrait>
+      <strategyId>1</strategyId>
+    </com.cloudbees.jenkins.plugins.bitbucket.OriginPullRequestDiscoveryTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.trait.IgnoreDraftPullRequestFilterTrait/>
+  </traits>
+</com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
