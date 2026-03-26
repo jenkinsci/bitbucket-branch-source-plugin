@@ -36,6 +36,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
+import com.cloudbees.jenkins.plugins.bitbucket.api.paginated.PageFetcher;
+import com.cloudbees.jenkins.plugins.bitbucket.api.paginated.PaginatedIterable;
+import com.cloudbees.jenkins.plugins.bitbucket.api.paginated.PaginatedList;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.buildstatus.ServerBuildStatusNotifier;
@@ -204,6 +207,19 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         return getPullRequests(template);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public Iterable<BitbucketServerPullRequest> getPullRequestsLazy() {
+        UriTemplate template = UriTemplate
+                .fromTemplate(this.baseURL + API_PULL_REQUESTS_PATH)
+                .set("owner", getOwner())
+                .set("repo", repositoryName);
+        return getPagedRequestLazy(template, BitbucketServerPullRequest.class);
+    }
+
     @NonNull
     public List<BitbucketServerPullRequest> getOutgoingOpenPullRequests(String fromRef) throws IOException {
         UriTemplate template = UriTemplate
@@ -231,7 +247,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     private List<BitbucketServerPullRequest> getPullRequests(UriTemplate template) throws IOException {
         List<BitbucketServerPullRequest> pullRequests = getPagedRequest(template, BitbucketServerPullRequest.class);
 
-        pullRequests.removeIf(this::shouldIgnore);
+        pullRequests.removeIf(BitbucketServerAPIClient::shouldIgnore);
 
         BitbucketServerEndpoint endpoint = BitbucketEndpointProvider
                 .lookupEndpoint(this.baseURL, BitbucketServerEndpoint.class)
@@ -244,7 +260,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         if (endpoint != null) {
             // Get PRs again as revisions could be changed by other events during setupPullRequest
             pullRequests = getPagedRequest(template, BitbucketServerPullRequest.class);
-            pullRequests.removeIf(this::shouldIgnore);
+            pullRequests.removeIf(BitbucketServerAPIClient::shouldIgnore);
         }
 
         return pullRequests;
@@ -276,7 +292,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      * @param pullRequest a {@link BitbucketPullRequest}
      * @return whether the PR should be ignored
      */
-    private boolean shouldIgnore(BitbucketPullRequest pullRequest) {
+    private static boolean shouldIgnore(BitbucketPullRequest pullRequest) {
         return pullRequest.getSource().getRepository() == null
             || pullRequest.getSource().getBranch() == null
             || pullRequest.getDestination().getBranch() == null;
@@ -519,6 +535,15 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      * {@inheritDoc}
      */
     @Override
+    @NonNull
+    public Iterable<BitbucketServerBranch> getTagsLazy() {
+        return getServerBranchesLazy(API_TAGS_PATH);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public BitbucketServerBranch getBranch(@NonNull String branchName) throws IOException {
         return getSingleBranch(branchName);
     }
@@ -530,6 +555,15 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     @NonNull
     public List<BitbucketServerBranch> getBranches() throws IOException {
         return getServerBranches(API_BRANCHES_PATH);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @NonNull
+    public Iterable<BitbucketServerBranch> getBranchesLazy() {
+        return getServerBranchesLazy(API_BRANCHES_PATH);
     }
 
     private List<BitbucketServerBranch> getServerBranches(String apiPath) throws IOException {
@@ -546,6 +580,15 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         }
 
         return branches;
+    }
+
+    private Iterable<BitbucketServerBranch> getServerBranchesLazy(String apiPath) {
+        UriTemplate template = UriTemplate
+                .fromTemplate(this.baseURL + apiPath)
+                .set("owner", getOwner())
+                .set("repo", repositoryName);
+
+        return getPagedRequestLazy(template, BitbucketServerBranch.class);
     }
 
     private BitbucketServerBranch getSingleBranch(String branchName) throws IOException {
@@ -788,6 +831,76 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
         } catch (JacksonException e) {
             throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
+    }
+
+    private <V> Iterable<V> getPagedRequestLazy(UriTemplate template, Class<V> resultType) {
+        ParameterizedType parameterizedType = new ParameterizedType() {
+
+            @Override
+            public java.lang.reflect.Type getRawType() {
+                return BitbucketServerPage.class;
+            }
+
+            @Override
+            public java.lang.reflect.Type getOwnerType() {
+                return null;
+            }
+
+            @Override
+            public java.lang.reflect.Type[] getActualTypeArguments() {
+                return new java.lang.reflect.Type[] { resultType };
+            }
+        };
+
+        TypeReference<BitbucketServerPage<V>> type = new TypeReference<BitbucketServerPage<V>>(){
+            @Override
+            public java.lang.reflect.Type getType() {
+                return parameterizedType;
+            }
+        };
+
+        PaginatedIterable<V> iterable = new PaginatedIterable<>(() -> new PageFetcher<V>() {
+
+            private UriTemplate uriTemplate = template;
+            private Integer pageNumber = 0;
+            private Integer limit = DEFAULT_PAGE_LIMIT;
+
+            public PaginatedList<V> fetchNextPage() {
+                List<V> resources = new ArrayList<>();
+                String url = uriTemplate //
+                        .set("start", pageNumber) //
+                        .set("limit", limit) //
+                        .expand();
+                try {
+                    String response = getRequest(url);
+                    BitbucketServerPage<V> page = JsonParser.toJava(response, type);
+                    resources.addAll(page.getValues());
+
+                    if (resultType == BitbucketServerBranch.class) {
+                        List<BitbucketServerBranch> branches = (List<BitbucketServerBranch>) resources;
+                        for (BitbucketServerBranch branch : branches) {
+                            if (branch != null) {
+                                branch.setCommitClosure(new CommitClosure(branch.getRawNode()));
+                            }
+                        }
+                    } else if (resultType == BitbucketServerPullRequest.class) {
+                        List<BitbucketServerPullRequest> prs = (List<BitbucketServerPullRequest>) resources;
+                        prs.removeIf(BitbucketServerAPIClient::shouldIgnore);
+                        for (BitbucketServerPullRequest pr : prs) {
+                            setupClosureForPRBranch(pr);
+                        }
+                    }
+
+                    limit = page.getLimit();
+                    pageNumber = page.getNextPageStart();
+
+                    return new PaginatedList<>(resources, page.isLastPage());
+                } catch (Exception e) {
+                    throw new IllegalStateException("Error fetching page from: " + url, e);
+                }
+            }
+        });
+        return iterable;
     }
 
     private BufferedImage getImageRequest(String path) throws IOException {
