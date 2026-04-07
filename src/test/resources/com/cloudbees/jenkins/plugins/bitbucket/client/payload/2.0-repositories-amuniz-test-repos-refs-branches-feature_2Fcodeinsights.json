@@ -1,0 +1,113 @@
+{
+    "name": "feature/codeinsights",
+    "target": {
+        "type": "commit",
+        "hash": "a7235e1ff89476eac144d28b1106e8608f364815",
+        "date": "2025-09-07T12:47:33+00:00",
+        "author": {
+            "type": "author",
+            "raw": "Nikolas Falco <amuniz@acme.com>",
+            "user": {
+                "display_name": "Nikolas Falco",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                    },
+                    "avatar": {
+                        "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                    }
+                },
+                "type": "user",
+                "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+                "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+                "nickname": "Nikolas Falco"
+            }
+        },
+        "message": "Add junit report for codeinsights plugin\n",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/a7235e1ff89476eac144d28b1106e8608f364815"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos/commits/a7235e1ff89476eac144d28b1106e8608f364815"
+            },
+            "diff": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/a7235e1ff89476eac144d28b1106e8608f364815"
+            },
+            "approve": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/a7235e1ff89476eac144d28b1106e8608f364815/approve"
+            },
+            "comments": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/a7235e1ff89476eac144d28b1106e8608f364815/comments"
+            },
+            "statuses": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/a7235e1ff89476eac144d28b1106e8608f364815/statuses"
+            },
+            "patch": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/a7235e1ff89476eac144d28b1106e8608f364815"
+            }
+        },
+        "parents": [
+            {
+                "hash": "174561d625c9623b60d8aba09b7f08ddc9df45cd",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/174561d625c9623b60d8aba09b7f08ddc9df45cd"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/amuniz/test-repos/commits/174561d625c9623b60d8aba09b7f08ddc9df45cd"
+                    }
+                },
+                "type": "commit"
+            }
+        ],
+        "repository": {
+            "type": "repository",
+            "full_name": "amuniz/test-repos",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/test-repos"
+                },
+                "avatar": {
+                    "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+                }
+            },
+            "name": "test-repos",
+            "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+        }
+    },
+    "links": {
+        "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches/feature/codeinsights"
+        },
+        "commits": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits/feature/codeinsights"
+        },
+        "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos/branch/feature/codeinsights"
+        },
+        "pullrequest_create": {
+            "href": "https://bitbucket.org/amuniz/test-repos/pull-requests/new?source=feature/codeinsights&t=1"
+        }
+    },
+    "type": "branch",
+    "merge_strategies": [
+        "merge_commit",
+        "squash",
+        "fast_forward",
+        "squash_fast_forward",
+        "rebase_fast_forward",
+        "rebase_merge"
+    ],
+    "sync_strategies": [
+        "merge_commit",
+        "rebase"
+    ],
+    "default_merge_strategy": "merge_commit"
+}
