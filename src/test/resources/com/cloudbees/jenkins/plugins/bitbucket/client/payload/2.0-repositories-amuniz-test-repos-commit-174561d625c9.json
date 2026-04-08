@@ -1,0 +1,97 @@
+{
+    "type": "commit",
+    "hash": "174561d625c9623b60d8aba09b7f08ddc9df45cd",
+    "date": "2025-04-26T09:43:26+00:00",
+    "author": {
+        "type": "author",
+        "raw": "Nikolas Falco <amuniz@acme.com>",
+        "user": {
+            "display_name": "Nikolas Falco",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                },
+                "avatar": {
+                    "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                }
+            },
+            "type": "user",
+            "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+            "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+            "nickname": "Nikolas Falco"
+        }
+    },
+    "message": "Add simple pipeline\n",
+    "summary": {
+        "type": "rendered",
+        "raw": "Add simple pipeline\n",
+        "markup": "markdown",
+        "html": "<p>Add simple pipeline</p>"
+    },
+    "links": {
+        "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/174561d625c9623b60d8aba09b7f08ddc9df45cd"
+        },
+        "html": {
+            "href": "https://bitbucket.org/amuniz/test-repos/commits/174561d625c9623b60d8aba09b7f08ddc9df45cd"
+        },
+        "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/diff/174561d625c9623b60d8aba09b7f08ddc9df45cd"
+        },
+        "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/174561d625c9623b60d8aba09b7f08ddc9df45cd/approve"
+        },
+        "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/174561d625c9623b60d8aba09b7f08ddc9df45cd/comments"
+        },
+        "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/174561d625c9623b60d8aba09b7f08ddc9df45cd/statuses"
+        },
+        "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/patch/174561d625c9623b60d8aba09b7f08ddc9df45cd"
+        }
+    },
+    "parents": [
+        {
+            "hash": "e43fdffe2def75053da30efa8204d0317a0b932a",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commit/e43fdffe2def75053da30efa8204d0317a0b932a"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/amuniz/test-repos/commits/e43fdffe2def75053da30efa8204d0317a0b932a"
+                }
+            },
+            "type": "commit"
+        }
+    ],
+    "rendered": {
+        "message": {
+            "type": "rendered",
+            "raw": "Add simple pipeline\n",
+            "markup": "markdown",
+            "html": "<p>Add simple pipeline</p>"
+        }
+    },
+    "repository": {
+        "type": "repository",
+        "full_name": "amuniz/test-repos",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos"
+            },
+            "html": {
+                "href": "https://bitbucket.org/amuniz/test-repos"
+            },
+            "avatar": {
+                "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+            }
+        },
+        "name": "test-repos",
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+    },
+    "participants": []
+}

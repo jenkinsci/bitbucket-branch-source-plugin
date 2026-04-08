@@ -157,16 +157,16 @@
       "type": "commit"
     }
   }, {
-    "name": "main",
+    "name": "master",
     "links": {
       "commits": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits/main"
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/commits/master"
       },
       "self": {
-        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches/main"
+        "href": "https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/refs/branches/master"
       },
       "html": {
-        "href": "https://bitbucket.org/amuniz/test-repos/branch/main"
+        "href": "https://bitbucket.org/amuniz/test-repos/branch/master"
       }
     },
     "default_merge_strategy": "merge_commit",
