@@ -68,4 +68,11 @@ public interface BitbucketPullRequest {
     String getAuthorIdentifier();
 
     List<BitbucketReviewer> getReviewers();
+
+    /**
+     * @return {@code true} if this pull request is a draft (work in progress).
+     */
+    default boolean isDraft() {
+        return false;
+    }
 }

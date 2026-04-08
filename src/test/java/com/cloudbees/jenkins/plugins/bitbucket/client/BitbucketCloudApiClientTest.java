@@ -89,7 +89,7 @@ class BitbucketCloudApiClientTest {
         BitbucketBuildStatus status = new BitbucketBuildStatus();
         status.setName(RandomStringUtils.secure().nextAlphanumeric(300));
         status.setState(Status.INPROGRESS);
-        status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d3");
+        status.setHash("046d9a3c1532acf4cf08fe93235c00e4d673c1d2");
         status.setKey("PRJ/REPO");
 
         client.postBuildStatus(status);
