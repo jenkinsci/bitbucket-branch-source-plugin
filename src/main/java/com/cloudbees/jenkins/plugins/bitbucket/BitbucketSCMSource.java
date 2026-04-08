@@ -402,6 +402,9 @@ public class BitbucketSCMSource extends SCMSource {
                 return;
             }
         }
+        if (request.isSkipDraftPRs()) {
+            request.listener().getLogger().printf("Skipping draft pull requests%n");
+        }
 
         request.listener().getLogger().printf("Looking up %s for pull requests%n", fullName);
         final Set<String> livePRs = new HashSet<>();

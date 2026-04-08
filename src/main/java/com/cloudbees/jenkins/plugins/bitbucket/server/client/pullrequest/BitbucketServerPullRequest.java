@@ -60,6 +60,8 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     private Boolean canMerge;
 
+    private boolean draft;
+
     @JsonProperty
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
     private Map<String, List<BitbucketHref>> links;
@@ -154,6 +156,15 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     public void setCanMerge(Boolean canMerge) {
         this.canMerge = canMerge;
+    }
+
+    @Override
+    public boolean isDraft() {
+        return draft;
+    }
+
+    public void setDraft(boolean draft) {
+        this.draft = draft;
     }
 
     @JsonIgnore
