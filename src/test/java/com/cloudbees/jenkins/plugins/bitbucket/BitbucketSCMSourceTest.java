@@ -31,8 +31,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketClientMockUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ShowBitbucketAvatarTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.SkipDraftPullRequestFilterTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -49,7 +52,9 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.assertj.core.api.ThrowingConsumer;
@@ -272,6 +277,34 @@ class BitbucketSCMSourceTest {
         }
         verify(c, never()).setCredentials(any(StandardUsernameCredentials.class));
         verify(c).addCredentials(eq("https://bitbucket.org/amuniz/test-repos.git"), any(StandardUsernameCredentials.class));
+    }
+
+    @Test
+    void test_draft_PRs_are_excluded_when_trait_is_configured() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repos");
+        instance.setTraits(List.of(new OriginPullRequestDiscoveryTrait(2), new SkipDraftPullRequestFilterTrait()));
+
+        Set<SCMHead> heads = instance.fetch(BitbucketClientMockUtils.getTaskListenerMock());
+
+        assertThat(heads).extracting(SCMHead::getName)
+            .contains("PR-1", "PR-8", "PR-9") // PRs from forks are excluded
+            .doesNotContain("PR-11");
+    }
+
+    @Test
+    void test_draft_PRs_are_included_when_trait_is_not_configured() throws Exception {
+        BitbucketApi client = BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketSCMSource instance = new BitbucketSCMSource("amuniz", "test-repos");
+        instance.setTraits(List.of(new OriginPullRequestDiscoveryTrait(2)));
+
+        Set<SCMHead> heads = instance.fetch(BitbucketClientMockUtils.getTaskListenerMock());
+
+        assertThat(heads).extracting(SCMHead::getName)
+            .hasSize(4)
+            .contains("PR-11");
     }
 
     private ThrowingConsumer<SCMSourceTrait> webhookTrait(WebhookRegistration registeredOn) {

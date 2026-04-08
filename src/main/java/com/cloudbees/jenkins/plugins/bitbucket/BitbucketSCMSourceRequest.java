@@ -43,6 +43,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import jenkins.scm.api.SCMFile.Type;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -211,9 +213,13 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     private final boolean fetchForkPRs;
     /**
-     * {@code true} if all pull requests from public repositories should be ignored.
+     * {@code true} if all pull requests from public repositories should be skipped.
      */
     private final boolean skipPublicPRs;
+    /**
+     * {@code true} if draft pull requests should be skipped.
+     */
+    private final boolean skipDraftPRs;
     /**
      * The {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
@@ -294,6 +300,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         fetchOriginPRs = context.wantOriginPRs();
         fetchForkPRs = context.wantForkPRs();
         skipPublicPRs = context.skipPublicPRs();
+        skipDraftPRs = context.skipDraftPRs();
         originPRStrategies = fetchOriginPRs && !context.originPRStrategies().isEmpty()
                 ? Collections.unmodifiableSet(EnumSet.copyOf(context.originPRStrategies()))
                 : Collections.<ChangeRequestCheckoutStrategy>emptySet();
@@ -385,6 +392,15 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      */
     public final boolean isSkipPublicPRs() {
         return skipPublicPRs;
+    }
+
+    /**
+     * Returns {@code true} if draft pull requests should be skipped.
+     *
+     * @return {@code true} if draft pull requests should be skipped.
+     */
+    public final boolean isSkipDraftPRs() {
+        return skipDraftPRs;
     }
 
     /**
@@ -508,7 +524,9 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         if (pullRequests == null) {
             pullRequests = (Iterable<BitbucketPullRequest>) getBitbucketApiClient().getPullRequests();
         }
-        return Util.fixNull(pullRequests);
+        return StreamSupport.stream(Util.fixNull(pullRequests).spliterator(), false)
+                .filter(pr -> !skipDraftPRs || (skipDraftPRs && !pr.isDraft()))
+                .collect(Collectors.toList()); // NOSONAR
     }
 
     /**
