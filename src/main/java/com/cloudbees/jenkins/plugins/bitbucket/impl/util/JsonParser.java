@@ -23,7 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.util;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,6 +43,9 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  */
 @Restricted(NoExternalUse.class)
 public final class JsonParser {
+
+    private JsonParser() {
+    }
 
     private static final JsonMapper mapper = createMapper();
 
@@ -74,7 +77,7 @@ public final class JsonParser {
         return JsonMapper.builder()
                 .defaultDateFormat(new StdDateFormat())
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .serializationInclusion(Include.NON_NULL)
+                .defaultPropertyInclusion(JsonInclude.Value.ALL_NON_NULL)
                 .build();
     }
 }
