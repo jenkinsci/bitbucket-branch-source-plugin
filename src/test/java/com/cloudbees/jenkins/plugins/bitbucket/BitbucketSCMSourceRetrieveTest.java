@@ -155,7 +155,7 @@ class BitbucketSCMSourceRetrieveTest {
 
         List<BitbucketCloudBranch> branches =
             Collections.singletonList(new BitbucketCloudBranch(BRANCH_NAME, COMMIT_HASH, 0));
-        when(client.getBranches()).thenReturn(branches);
+        when(client.getBranchesLazy()).thenReturn(branches);
 
         verifyExpectedClientApiCalls(instance, client);
     }
@@ -176,7 +176,7 @@ class BitbucketSCMSourceRetrieveTest {
 
         List<BitbucketServerBranch> branches =
             Collections.singletonList(new BitbucketServerBranch(BRANCH_NAME, COMMIT_HASH));
-        when(client.getBranches()).thenReturn(branches);
+        when(client.getBranchesLazy()).thenReturn(branches);
         when(client.getRepository()).thenReturn(repository);
 
         verifyExpectedClientApiCalls(instance, client);

@@ -410,7 +410,7 @@ public class BitbucketSCMSource extends SCMSource {
         final Set<String> livePRs = new HashSet<>();
         int count = 0;
         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getPRStrategies();
-        for (final BitbucketPullRequest pull : request.getPullRequests()) {
+        for (final BitbucketPullRequest pull : request.getPullRequestsLazy()) {
             String originalBranchName = pull.getSource().getBranch().getName();
             request.listener().getLogger().printf(
                     "Checking PR-%s from %s and %s %s%n",
@@ -514,7 +514,7 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().println("Looking up " + fullName + " for branches");
 
         int count = 0;
-        for (final BitbucketBranch branch : request.getBranches()) {
+        for (final BitbucketBranch branch : request.getBranchesLazy()) {
             request.listener().getLogger().println("Checking branch " + branch.getName() + " from " + fullName);
             count++;
             BranchSCMHead head = new BranchSCMHead(branch.getName());
@@ -532,7 +532,7 @@ public class BitbucketSCMSource extends SCMSource {
         request.listener().getLogger().println("Looking up " + fullName + " for tags");
 
         int count = 0;
-        for (final BitbucketBranch tag : request.getTags()) {
+        for (final BitbucketBranch tag : request.getTagsLazy()) {
             request.listener().getLogger().println("Checking tag " + tag.getName() + " from " + fullName);
             count++;
             BitbucketTagSCMHead head = new BitbucketTagSCMHead(tag.getName(), tag.getDateMillis());

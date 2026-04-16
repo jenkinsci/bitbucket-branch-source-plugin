@@ -35,6 +35,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.paginated.PageFetcher;
+import com.cloudbees.jenkins.plugins.bitbucket.api.paginated.PaginatedIterable;
+import com.cloudbees.jenkins.plugins.bitbucket.api.paginated.PaginatedList;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
@@ -189,7 +192,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
 
         List<BitbucketCloudPullRequest> pullRequests = getPagedRequest(url, BitbucketCloudPullRequest.class);
         // PRs with missing destination branch are invalid and should be ignored.
-        pullRequests.removeIf(this::shouldIgnore);
+        pullRequests.removeIf(BitbucketCloudApiClient::shouldIgnore);
 
         for (BitbucketCloudPullRequest pullRequest : pullRequests) {
             setupClosureForPRBranch(pullRequest);
@@ -199,12 +202,31 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public Iterable<BitbucketCloudPullRequest> getPullRequestsLazy() {
+        // we can not use the default max pagelen also if documented
+        // https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests#get
+        // so because with values greater than 50 the API returns HTTP 400
+        int pageLen = 50;
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{?page,pagelen}")
+                .set("owner", owner)
+                .set("repo", repositoryName)
+                .set("pagelen", pageLen)
+                .expand();
+
+        return getPagedRequestLazy(url, BitbucketCloudPullRequest.class);
+    }
+
+    /**
      * PRs with missing source / destination branch are invalid and should be ignored.
      *
      * @param pr a {@link BitbucketPullRequest}
      * @return whether the PR should be ignored
      */
-    private boolean shouldIgnore(BitbucketPullRequest pr) {
+    private static boolean shouldIgnore(BitbucketPullRequest pr) {
         return pr.getSource().getRepository() == null
             || pr.getSource().getCommit() == null
             || pr.getDestination().getBranch() == null
@@ -371,6 +393,15 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     /**
      * {@inheritDoc}
      */
+    @NonNull
+    @Override
+    public Iterable<BitbucketCloudBranch> getTagsLazy() {
+        return getBranchesByRefLazy("/refs/tags");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BitbucketCloudBranch getBranch(@NonNull String branchName) throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/branches/{name}")
@@ -390,6 +421,15 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         return getBranchesByRef("/refs/branches");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public Iterable<BitbucketCloudBranch> getBranchesLazy() {
+        return getBranchesByRefLazy("/refs/branches");
+    }
+
     public List<BitbucketCloudBranch> getBranchesByRef(String nodePath) throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath + "{?pagelen}")
                 .set("owner", owner)
@@ -399,6 +439,15 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         return getPagedRequest(url, BitbucketCloudBranch.class).stream()
                 .filter(BitbucketCloudBranch::isActive) // Filter the inactive branches out
                 .toList();
+    }
+
+    private Iterable<BitbucketCloudBranch> getBranchesByRefLazy(String nodePath) {
+        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath + "{?pagelen}")
+                .set("owner", owner)
+                .set("repo", repositoryName)
+                .set("pagelen", MAX_PAGE_LENGTH)
+                .expand();
+        return getPagedRequestLazy(url, BitbucketCloudBranch.class);
     }
 
     /**
@@ -809,6 +858,67 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
         return resources;
+    }
+
+    private <V> PaginatedIterable<V> getPagedRequestLazy(String url, Class<V> resultType) {
+        ParameterizedType parameterizedType = new ParameterizedType() {
+
+            @Override
+            public Type getRawType() {
+                return BitbucketCloudPage.class;
+            }
+
+            @Override
+            public Type getOwnerType() {
+                return null;
+            }
+
+            @Override
+            public Type[] getActualTypeArguments() {
+                return new Type[] { resultType };
+            }
+        };
+        TypeReference<BitbucketCloudPage<V>> type = new TypeReference<BitbucketCloudPage<V>>(){
+            @Override
+            public Type getType() {
+                return parameterizedType;
+            }
+        };
+
+        PaginatedIterable<V> iterable = new PaginatedIterable<>(() -> new PageFetcher<V>() {
+
+            private String nextUrl = url;
+
+            public PaginatedList<V> fetchNextPage() {
+                try {
+                    if (nextUrl == null) {
+                        return new PaginatedList<>(Collections.emptyList(), true);
+                    }
+
+                    List<V> resources = new ArrayList<>();
+                    String response = getRequest(this.nextUrl);
+                    BitbucketCloudPage<V> page = JsonParser.toJava(response, type);
+
+                    resources.addAll(page.getValues());
+                    this.nextUrl = page.getNext();
+
+                    // Special handling for PRs see getPullRequests();
+                    if (resultType == BitbucketCloudPullRequest.class) {
+                        List<BitbucketCloudPullRequest> prs = (List<BitbucketCloudPullRequest>) resources;
+                        prs.removeIf(BitbucketCloudApiClient::shouldIgnore);
+                        for (BitbucketCloudPullRequest pr : prs) {
+                            setupClosureForPRBranch(pr);
+                        }
+                    }
+
+                    return new PaginatedList<>(resources, page.isLastPage());
+                } catch (Exception e) {
+                    throw new IllegalStateException("Error fetching page from: " + this.nextUrl, e);
+                }
+            }
+        });
+
+        return iterable;
     }
 
     private <V> V getRequestAs(String url, Class<V> resultType) throws IOException {
