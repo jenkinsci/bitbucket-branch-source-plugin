@@ -55,9 +55,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -89,6 +86,9 @@ import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Bitbucket API client.
@@ -931,7 +931,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             String response = getRequest(url);
             JsonNode typeNode = JsonParser.toJson(response).path("type");
             if (!typeNode.isMissingNode() && !typeNode.isNull()) {
-                String responseType = typeNode.asText();
+                String responseType = typeNode.asString();
                 if ("FILE".equals(responseType)) {
                     type = Type.REGULAR_FILE;
                     // type = Type.LINK; does not matter if getFileContent on the linked file/directory returns the content
