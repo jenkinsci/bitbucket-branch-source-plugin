@@ -368,8 +368,14 @@ public class BitbucketSCMSource extends SCMSource {
                 retrieveBranches(request);
             }
             if (request.isFetchTags() && !request.isComplete()) {
-                // Search tags
-                retrieveTags(request);
+                // Skip fetching all tags when the event is not tag-related
+                // (e.g., PR events, branch push events). Tags are only fetched
+                // during a full scan (event == null) or when the event produces
+                // tag-type SCM heads.
+                if (event == null || containsTagHeads(event, this)) {
+                    // Search tags
+                    retrieveTags(request);
+                }
             }
         }
     }
@@ -542,6 +548,19 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         request.listener().getLogger().format("%n  %d tags were processed%n", count);
+    }
+
+    /**
+     * Checks if the given event produces any tag-related SCM heads for this source.
+     */
+    private static boolean containsTagHeads(@NonNull SCMHeadEvent<?> event, @NonNull BitbucketSCMSource source) {
+        Map<SCMHead, SCMRevision> heads = event.heads(source);
+        for (SCMHead head : heads.keySet()) {
+            if (head instanceof BitbucketTagSCMHead || head instanceof GitTagSCMHead) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
