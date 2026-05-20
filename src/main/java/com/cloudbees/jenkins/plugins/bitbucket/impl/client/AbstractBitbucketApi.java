@@ -171,7 +171,7 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
                 .useSystemProperties()
                 .setConnectionManager(getConnectionManager())
                 .setConnectionManagerShared(true)
-                .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
+                .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.MINUTES.toMillis(1)))
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofSeconds(2))
