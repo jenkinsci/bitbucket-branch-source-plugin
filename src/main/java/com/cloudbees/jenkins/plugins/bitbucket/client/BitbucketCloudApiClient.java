@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
@@ -350,7 +351,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      * {@inheritDoc}
      */
     @Override
-    public BitbucketCloudBranch getTag(@NonNull String tagName) throws IOException {
+    public BitbucketBranch getTag(@NonNull String tagName) throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/refs/tags/{name}")
             .set("owner", owner)
             .set("repo", repositoryName)
@@ -364,7 +365,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudBranch> getTags() throws IOException {
+    public List<BitbucketBranch> getTags() throws IOException {
         return getBranchesByRef("/refs/tags");
     }
 
@@ -386,11 +387,11 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
      */
     @NonNull
     @Override
-    public List<BitbucketCloudBranch> getBranches() throws IOException {
+    public List<BitbucketBranch> getBranches() throws IOException {
         return getBranchesByRef("/refs/branches");
     }
 
-    public List<BitbucketCloudBranch> getBranchesByRef(String nodePath) throws IOException {
+    public List<BitbucketBranch> getBranchesByRef(String nodePath) throws IOException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + nodePath + "{?pagelen}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
@@ -398,6 +399,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                 .expand();
         return getPagedRequest(url, BitbucketCloudBranch.class).stream()
                 .filter(BitbucketCloudBranch::isActive) // Filter the inactive branches out
+                .map(BitbucketBranch.class::cast)
                 .toList();
     }
 

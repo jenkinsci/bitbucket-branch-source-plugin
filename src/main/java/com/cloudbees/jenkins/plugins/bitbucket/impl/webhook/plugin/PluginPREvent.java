@@ -27,10 +27,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -51,7 +53,7 @@ import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_R
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_MERGED;
 
 @Deprecated(since = "937.0.0")
-final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests {
+final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests, HasTags {
     private final HookEventType hookEvent;
 
     PluginPREvent(Type type, BitbucketPullRequestEvent payload,
@@ -141,8 +143,13 @@ final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent
     @Override
     public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
         if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
         return Collections.singleton(getPayload().getPullRequest());
+    }
+
+    @Override
+    public Iterable<BitbucketBranch> getTags(BitbucketSCMSource src) {
+        return Collections.emptySet();
     }
 }

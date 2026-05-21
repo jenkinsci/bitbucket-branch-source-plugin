@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticatedClient;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMirrorServer;
@@ -491,7 +492,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      * {@inheritDoc}
      */
     @Override
-    public BitbucketServerBranch getTag(@NonNull String tagName) throws IOException {
+    public BitbucketBranch getTag(@NonNull String tagName) throws IOException {
         String url = UriTemplate.fromTemplate(this.baseURL + API_TAG_PATH)
             .set("owner", getOwner())
             .set("repo", repositoryName)
@@ -511,7 +512,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @Override
     @NonNull
-    public List<BitbucketServerBranch> getTags() throws IOException {
+    public List<BitbucketBranch> getTags() throws IOException {
         return getServerBranches(API_TAGS_PATH);
     }
 
@@ -519,7 +520,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      * {@inheritDoc}
      */
     @Override
-    public BitbucketServerBranch getBranch(@NonNull String branchName) throws IOException {
+    public BitbucketBranch getBranch(@NonNull String branchName) throws IOException {
         return getSingleBranch(branchName);
     }
 
@@ -528,11 +529,11 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @Override
     @NonNull
-    public List<BitbucketServerBranch> getBranches() throws IOException {
+    public List<BitbucketBranch> getBranches() throws IOException {
         return getServerBranches(API_BRANCHES_PATH);
     }
 
-    private List<BitbucketServerBranch> getServerBranches(String apiPath) throws IOException {
+    private List<BitbucketBranch> getServerBranches(String apiPath) throws IOException {
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + apiPath)
                 .set("owner", getOwner())
@@ -545,7 +546,9 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             }
         }
 
-        return branches;
+        return branches.stream()
+                .map(BitbucketBranch.class::cast)
+                .toList();
     }
 
     private BitbucketServerBranch getSingleBranch(String branchName) throws IOException {
