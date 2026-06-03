@@ -29,12 +29,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketReviewer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 public class BitbucketServerPullRequest implements BitbucketPullRequest {
 

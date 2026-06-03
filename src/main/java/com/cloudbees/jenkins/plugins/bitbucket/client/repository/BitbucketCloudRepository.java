@@ -28,12 +28,12 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketProject;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 public class BitbucketCloudRepository implements BitbucketRepository {
 
