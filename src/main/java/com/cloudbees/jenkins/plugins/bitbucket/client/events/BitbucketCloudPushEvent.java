@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class BitbucketCloudPushEvent implements BitbucketPushEvent {
 
@@ -156,6 +157,9 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
     public static class TargetImpl implements Target {
         private String hash;
         private Date date;
+        private String type;
+        private String message;
+        private String authorRaw;
 
         @Override
         public String getHash() {
@@ -173,6 +177,32 @@ public class BitbucketCloudPushEvent implements BitbucketPushEvent {
 
         public void setDate(Date date) {
             this.date = (date != null ? (Date) date.clone() : null);
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String getAuthor() {
+            return authorRaw;
+        }
+
+        @JsonProperty("author")
+        private void unpackNested(Map<String, Object> author) {
+            authorRaw = (String) author.get("raw");
         }
     }
 

@@ -27,9 +27,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerPullRequestEvent;
 import com.google.common.base.Ascii;
@@ -44,7 +46,7 @@ import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 
-final class ServerHeadEvent extends AbstractNativeServerSCMHeadEvent<NativeServerPullRequestEvent> implements HasPullRequests {
+final class ServerHeadEvent extends AbstractNativeServerSCMHeadEvent<NativeServerPullRequestEvent> implements HasPullRequests, HasTags {
     ServerHeadEvent(String serverUrl, Type type, NativeServerPullRequestEvent payload, String origin) {
         super(serverUrl, type, payload, origin);
     }
@@ -118,4 +120,10 @@ final class ServerHeadEvent extends AbstractNativeServerSCMHeadEvent<NativeServe
         }
         return Collections.singleton(getPayload().getPullRequest());
     }
+
+    @Override
+    public Iterable<BitbucketBranch> getTags(BitbucketSCMSource src) {
+        return Collections.emptySet();
+    }
+
 }

@@ -129,6 +129,7 @@ class BitbucketCloudPushEventTest {
         assertThat(change.getNew().getDate()).isEqualTo(date);
         assertThat(change.getNew().getTarget()).isNotNull();
         assertThat(change.getNew().getTarget().getHash()).isEqualTo("fee1dcdb330d1318502f303ccd4792531c28dc8e");
+        assertThat(change.getNew().getTarget().getAuthor()).isEqualTo("Nikolas Falco <nikolas.falco@acme.com>");
     }
 
     @Test

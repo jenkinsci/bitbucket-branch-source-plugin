@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
@@ -63,7 +64,7 @@ class ServerPushWebhookProcessorTest {
     private static final String SERVER_URL = "http://localhost:7990";
     private static final String MIRROR_ID = "ABCD-1234-EFGH-5678";
     private ServerPushWebhookProcessor sut;
-    private SCMHeadEvent<?> scmEvent;
+    private ServerPushEvent scmEvent;
     private BitbucketEndpoint endpoint;
 
     @SuppressWarnings("unused")
@@ -79,7 +80,8 @@ class ServerPushWebhookProcessorTest {
         sut = new ServerPushWebhookProcessor() {
             @Override
             public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-                ServerPushWebhookProcessorTest.this.scmEvent = event;
+                assertThat(event).isInstanceOf(ServerPushEvent.class);
+                ServerPushWebhookProcessorTest.this.scmEvent = (ServerPushEvent) event;
             }
         };
         endpoint = mock(BitbucketEndpoint.class);
@@ -174,6 +176,17 @@ class ServerPushWebhookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1537538991000L));
+
+        Iterable<BitbucketBranch> tags = scmEvent.getTags(scmSource);
+        assertThat(tags).isNotEmpty()
+            .hasSize(1)
+            .first()
+            .satisfies(tag -> {
+                assertThat(tag.getName()).isEqualTo("simple-tag");
+                assertThat(tag.getRawNode()).isEqualTo("fb522a6f08c7c7df337312e4e65ec1b57710672e");
+                assertThat(tag.getAuthor()).isEqualTo("Antonio Muniz <amuniz@example.com>");
+                assertThat(tag.getDateMillis()).isEqualTo(1537538991000L);
+            });
     }
 
     @Test

@@ -32,10 +32,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -69,7 +72,7 @@ import org.apache.commons.lang3.Strings;
 
 import static java.util.Objects.requireNonNull;
 
-final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<NativeServerChange>> implements HasPullRequests {
+final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<NativeServerChange>> implements HasPullRequests, HasTags {
 
     private static final class CacheKey {
         @NonNull
@@ -276,7 +279,6 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
     }
 
     private Map<String, BitbucketServerPullRequest> getPullRequests(BitbucketSCMSource src, NativeServerChange change) {
-
         Map<String, BitbucketServerPullRequest> pullRequests;
         final CacheKey cacheKey = new CacheKey(src, change);
         synchronized (cachedPullRequests) {
@@ -337,6 +339,57 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
     @Override
     protected boolean eventMatchesRepo(BitbucketSCMSource source) {
         return Strings.CI.equals(source.getMirrorId(), this.mirrorId) && super.eventMatchesRepo(source);
+    }
+
+    @Override
+    public Iterable<BitbucketBranch> getTags(BitbucketSCMSource src) {
+        List<BitbucketBranch> tags = new ArrayList<>();
+        for (final NativeServerChange change : getPayload()) {
+            String refType = change.getRef().getType();
+
+            if ("TAG".equals(refType)) {
+                String tagName = change.getRef().getDisplayId();
+                String tagHash;
+                switch (change.getType()) {
+                case "ADD": {
+                    tagHash = change.getToHash();
+                    break;
+                }
+                case "DELETE": {
+                    tagHash = !NULL_HASH.equals(change.getFromHash()) ? change.getFromHash() : change.getToHash();
+                    break;
+                }
+                default:
+                    throw new UnsupportedOperationException("Tag event of type " + change.getType()
+                        + " is not supported.\nPlease fill an issue at https://issues.jenkins.io to the bitbucket-branch-source-plugin component.");
+                }
+                BitbucketServerBranch tagHead = new BitbucketServerBranch(tagName, tagHash);
+                if (refCommit != null) {
+                    // the annotated tag hash it's an alias of a real commit and it's the refCommit (new head commit)
+                    // it's not needed check if refCommit and tagCommit are equals
+                    long tagTimestamp = Optional.ofNullable(refCommit.getCommitterDate())
+                            .map(Date::getTime)
+                            .orElse(0L);
+                    tagHead.setTimestamp(tagTimestamp);
+                    tagHead.setAuthor(refCommit.getAuthor());
+                } else {
+                    try (BitbucketApi client = getClient(src)) {
+                        BitbucketCommit tag = client.resolveCommit(tagHash);
+                        if (tag != null) {
+                            long tagTimestamp = Optional.ofNullable(tag.getCommitterDate())
+                                    .map(Date::getTime)
+                                    .orElse(0L);
+                            tagHead.setTimestamp(tagTimestamp);
+                            tagHead.setAuthor(tag.getAuthor());
+                        }
+                    } catch (IOException e) {
+                        LOGGER.log(Level.SEVERE, "Fail to retrive the timestamp for tag event {0}", tagName);
+                    }
+                }
+                tags.add(tagHead);
+            }
+        }
+        return tags;
     }
 
 }
