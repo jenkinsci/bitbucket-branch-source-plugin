@@ -31,6 +31,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerRefsChangedEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import hudson.scm.SCM;
 import java.io.IOException;
@@ -246,6 +248,24 @@ class ServerPushWebhookProcessorTest {
         sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("emptyPayload.json"), Collections.emptyMap(), endpoint);
         ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNull();
+    }
+
+    @Test
+    @Issue("JENKINS-76457")
+    void test_push_payload_datacenter_v10() throws Exception {
+        NativeServerRefsChangedEvent payload = JsonParser.toJava(loadResource("pushPayload_v10.json"), NativeServerRefsChangedEvent.class);
+        assertThat(payload).isNotNull();
+        assertThat(payload.getToCommit().getCommitterDate()).isNotNull();
+        assertThat(payload.getToCommit().getAuthorDate()).isNotNull();
+    }
+
+    @Test
+    @Issue("JENKINS-76457")
+    void test_push_payload_datacenter_v9() throws Exception {
+        NativeServerRefsChangedEvent payload = JsonParser.toJava(loadResource("pushPayload.json"), NativeServerRefsChangedEvent.class);
+        assertThat(payload).isNotNull();
+        assertThat(payload.getToCommit().getCommitterDate()).isNotNull();
+        assertThat(payload.getToCommit().getAuthorDate()).isNotNull();
     }
 
     private String loadResource(String resource) throws IOException {
