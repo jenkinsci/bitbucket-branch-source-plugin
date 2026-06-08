@@ -63,27 +63,25 @@ public class BitbucketServerCommit implements BitbucketCommit {
     public BitbucketServerCommit(@NonNull @JsonProperty("message") String message,
                                  @NonNull @JsonProperty("id") String hash,
                                  @Nullable @JsonProperty("committer") BitbucketServerAuthor committer,
-                                 @NonNull @JsonProperty("committerTimestamp") long committerDateMillis,
+                                 @NonNull @JsonProperty("committerTimestamp") Date committerDate,
                                  @Nullable @JsonProperty("author") BitbucketServerAuthor author,
-                                 @NonNull @JsonProperty("authorTimestamp") long authorDateMillis,
+                                 @NonNull @JsonProperty("authorTimestamp") Date authorDate,
                                  @Nullable @JsonProperty("parents") List<Parent> parents) {
         // date it is not in the payload
-        this(message, hash, committerDateMillis, author != null ? MessageFormat.format(GIT_COMMIT_AUTHOR, author.getName(), author.getEmail()) : null);
+        this(message, hash, committerDate, author != null ? MessageFormat.format(GIT_COMMIT_AUTHOR, author.getName(), author.getEmail()) : null);
         if (committer != null) {
             this.committer = MessageFormat.format(GIT_COMMIT_AUTHOR, committer.getName(), committer.getEmail());
         }
-        if (authorDateMillis > 0) {
-            this.authorDate = new Date(authorDateMillis);
-        }
+        this.authorDate = authorDate;
         if (parents != null) {
             this.parents = parents.stream().map(Parent::getHash).toList();
         }
     }
 
-    public BitbucketServerCommit(String message, String hash, long dateMillis, String author) {
+    public BitbucketServerCommit(String message, String hash, Date date, String author) {
         this.message = message;
         this.hash = hash;
-        this.committerDate = new Date(dateMillis);
+        this.committerDate = date;
         this.author = author;
     }
 

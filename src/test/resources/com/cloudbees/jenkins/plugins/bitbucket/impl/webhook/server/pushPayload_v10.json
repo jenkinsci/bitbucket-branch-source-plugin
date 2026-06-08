@@ -1,0 +1,195 @@
+{
+    "date": "2026-06-05T13:54:44+0000",
+    "actor": {
+        "emailAddress": "admin@example.com",
+        "displayName": "Administrator",
+        "name": "admin",
+        "active": true,
+        "links": {
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/users/admin"
+                }
+            ]
+        },
+        "id": 2,
+        "type": "NORMAL",
+        "slug": "admin"
+    },
+    "toCommit": {
+        "committer": {
+            "emailAddress": "amuniz@example.com",
+            "name": "Antonio Muniz"
+        },
+        "committerTimestamp": "2018-09-21T14:09:51.000Z",
+        "author": {
+            "emailAddress": "amuniz@example.com",
+            "name": "Antonio Muniz"
+        },
+        "authorTimestamp": "2018-09-21T14:09:51.000Z",
+        "id": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+        "displayId": "fb522a6f08c",
+        "message": "Suppress echo command part",
+        "parents": [
+            {
+                "committer": {
+                    "emailAddress": "amuniz@example.com",
+                    "name": "Antonio Muniz"
+                },
+                "committerTimestamp": "2018-09-21T14:09:20.000Z",
+                "author": {
+                    "emailAddress": "amuniz@example.com",
+                    "name": "Antonio Muniz"
+                },
+                "authorTimestamp": "2018-09-21T14:09:20.000Z",
+                "id": "ae995d7a37069d0988462a9c92828971e8a42b5d",
+                "displayId": "ae995d7a370",
+                "message": "Support also windows environments",
+                "parents": [
+                    {
+                        "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+                        "displayId": "bf4f4ce8a3a"
+                    }
+                ]
+            }
+        ]
+    },
+    "eventKey": "repo:refs_changed",
+    "changes": [
+        {
+            "ref": {
+                "id": "refs/heads/feature/BB-1",
+                "displayId": "feature/BB-1",
+                "type": "BRANCH"
+            },
+            "fromHash": "0000000000000000000000000000000000000000",
+            "toHash": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+            "refId": "refs/heads/feature/BB-1",
+            "type": "ADD"
+        }
+    ],
+    "commits": [
+        {
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": "2018-09-21T14:09:51.000Z",
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": "2018-09-21T14:09:51.000Z",
+            "id": "fb522a6f08c7c7df337312e4e65ec1b57710672e",
+            "displayId": "fb522a6f08c",
+            "message": "Suppress echo command part",
+            "parents": [
+                {
+                    "id": "ae995d7a37069d0988462a9c92828971e8a42b5d",
+                    "displayId": "ae995d7a370"
+                }
+            ]
+        },
+        {
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": "2018-09-21T14:09:20.000Z",
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": "2018-09-21T14:09:20.000Z",
+            "id": "ae995d7a37069d0988462a9c92828971e8a42b5d",
+            "displayId": "ae995d7a370",
+            "message": "Support also windows environments",
+            "parents": [
+                {
+                    "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+                    "displayId": "bf4f4ce8a3a"
+                }
+            ]
+        },
+        {
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": "2018-09-21T14:07:25.000Z",
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": "2018-09-21T14:07:25.000Z",
+            "id": "bf4f4ce8a3a8d5c7dbfe7d609973a81a6c6664cf",
+            "displayId": "bf4f4ce8a3a",
+            "message": "Add sample script hello world",
+            "parents": [
+                {
+                    "id": "8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1",
+                    "displayId": "8d0fa145bde"
+                }
+            ]
+        },
+        {
+            "committer": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "committerTimestamp": "2018-09-21T14:04:55.000Z",
+            "author": {
+                "emailAddress": "amuniz@example.com",
+                "name": "Antonio Muniz"
+            },
+            "authorTimestamp": "2018-09-21T14:04:55.000Z",
+            "id": "8d0fa145bde5151f1d103ab1c3dc1033e6ec4ac1",
+            "displayId": "8d0fa145bde",
+            "message": "Initial commit",
+            "parents": []
+        }
+    ],
+    "repository": {
+        "archived": false,
+        "public": false,
+        "hierarchyId": "12cb3c28a34e6d0a78c6",
+        "name": "test-repos",
+        "forkable": true,
+        "project": {
+            "public": false,
+            "name": "amuniz",
+            "links": {
+                "self": [
+                    {
+                        "href": "http://localhost:7990/bitbucket/projects/AMUNIZ"
+                    }
+                ]
+            },
+            "id": 2,
+            "type": "NORMAL",
+            "key": "AMUNIZ"
+        },
+        "links": {
+            "clone": [
+                {
+                    "name": "http",
+                    "href": "http://localhost:7990/bitbucket/scm/amuniz/test-repos.git"
+                },
+                {
+                    "name": "ssh",
+                    "href": "ssh://git@localhost:7999/amuniz/test-repos.git"
+                }
+            ],
+            "self": [
+                {
+                    "href": "http://localhost:7990/bitbucket/projects/AMUNIZ/repos/test-repos/browse"
+                }
+            ]
+        },
+        "id": 2,
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "slug": "test-repos",
+        "statusMessage": "Available"
+    }
+}
