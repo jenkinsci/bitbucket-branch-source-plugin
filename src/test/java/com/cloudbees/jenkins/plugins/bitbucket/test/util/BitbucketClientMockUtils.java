@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.test.util;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCloudWorkspace;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
@@ -66,7 +67,7 @@ public class BitbucketClientMockUtils {
         BitbucketCloudBranch branch2 = getBranch("branch2", "707c59ce8292c927dddb6807fcf9c3c5e7c9b00f");
 
         // mock branch list
-        List<BitbucketCloudBranch> branches = new ArrayList<>();
+        List<BitbucketBranch> branches = new ArrayList<>();
         branches.add(branch1);
         branches.add(branch2);
         // add branches

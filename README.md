@@ -81,8 +81,10 @@ Support to run Server under Windows has been dismissed since version 7.14+
 ### Run inside docker
 
 1. run `docker pull nolddor/atlassian-sdk:17-jdk`
-2. run `docker run -it -p 7990:7990 -p 7999:7999 -v %USER%\.m2:/root/.m2 nolddor/atlassian-sdk:17-jdk`
+2. run `docker run -it -p 7990:7990 -p 7999:7999 -v %USER%\.m2:/root/.m2 nolddor/atlassian-sdk:21-jdk`
 3. Inside the container:
-   - install git with `apk add git`
-   - install git support for http with `apk add git-daemon`
-   - run `/opt/atlassian-plugin-sdk/bin/atlas-run-standalone --product bitbucket --version 9.6.5 --data-version 9.6.5 "-Dfeature.public.access=true"`
+   - install a compatible version of git 2.49 ~ 2.51 (not supported for Alpine image 2.33)
+     - download git binary apk with `wget http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/git-2.49.1-r0.apk`
+     - download git git binary support for http `wget http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/git-daemon-2.49.1-r0.apk`
+   - install with `apk add --allow-untrusted git-2.49.1-r0.apk git-daemon-2.49.1-r0.apk`
+   - run `/opt/atlassian-plugin-sdk/bin/atlas-run-standalone --product bitbucket --version 10.3.0 --data-version 10.3.0 "-Dfeature.public.access=true"`

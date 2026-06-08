@@ -71,7 +71,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>6269.v7a_159d68a_366</version>
+                <version>6509.v993a_c958a_e35</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -173,7 +173,7 @@
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
             <artifactId>json-unit-assertj</artifactId>
-            <version>5.1.1</version>
+            <version>5.1.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>

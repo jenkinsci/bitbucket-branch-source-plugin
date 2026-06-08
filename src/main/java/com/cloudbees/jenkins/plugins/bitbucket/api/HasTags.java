@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2026, Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,39 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-import java.util.Date;
-import java.util.List;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 
-/**
- * Represents a push event coming from Bitbucket (webhooks).
- */
-public interface BitbucketPushEvent {
-    /**
-     * @return the destination repository that the push points to.
-     */
-    BitbucketRepository getRepository();
+public interface HasTags {
 
-    List<? extends Change> getChanges();
+    Iterable<BitbucketBranch> getTags(BitbucketSCMSource src);
 
-    interface Change {
-        Reference getNew();
-        Reference getOld();
-        boolean isCreated();
-        boolean isClosed();
-    }
-
-    interface Reference {
-        Date getDate();
-        String getType();
-        String getName();
-        Target getTarget();
-    }
-
-    interface Target {
-        String getHash();
-        Date getDate();
-        default String getAuthor() {
-            return "";
-        }
-    }
 }

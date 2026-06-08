@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
@@ -121,6 +122,15 @@ class CloudPushWebhookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1738608795000L)); // verify is using last commit date
+
+        Iterable<BitbucketBranch> tags = scmEvent.getTags(scmSource);
+        assertThat(tags)
+            .element(0)
+            .satisfies(tag -> {
+                assertThat(tag.getAuthor()).isEqualTo("Nikolas Falco <email@domain.com>");
+                assertThat(tag.getName()).isEqualTo("simple-tag");
+                assertThat(tag.getDateMillis()).isEqualTo(1738608795000L);
+            });
     }
 
     @Test
@@ -138,6 +148,15 @@ class CloudPushWebhookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new BitbucketTagSCMHead("test-tag", 1738608816000L));
+
+        Iterable<BitbucketBranch> tags = scmEvent.getTags(scmSource);
+        assertThat(tags)
+            .element(0)
+            .satisfies(tag -> {
+                assertThat(tag.getAuthor()).isEqualTo("Nikolas Falco <email@domain.com>");
+                assertThat(tag.getName()).isEqualTo("test-tag");
+                assertThat(tag.getDateMillis()).isEqualTo(1738608816000L);
+            });
     }
 
     @Test

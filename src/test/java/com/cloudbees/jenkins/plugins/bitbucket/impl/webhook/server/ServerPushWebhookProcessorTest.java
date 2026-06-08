@@ -26,10 +26,13 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.server;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerRefsChangedEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import hudson.scm.SCM;
 import java.io.IOException;
@@ -63,7 +66,7 @@ class ServerPushWebhookProcessorTest {
     private static final String SERVER_URL = "http://localhost:7990";
     private static final String MIRROR_ID = "ABCD-1234-EFGH-5678";
     private ServerPushWebhookProcessor sut;
-    private SCMHeadEvent<?> scmEvent;
+    private ServerPushEvent scmEvent;
     private BitbucketEndpoint endpoint;
 
     @SuppressWarnings("unused")
@@ -79,7 +82,8 @@ class ServerPushWebhookProcessorTest {
         sut = new ServerPushWebhookProcessor() {
             @Override
             public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
-                ServerPushWebhookProcessorTest.this.scmEvent = event;
+                assertThat(event).isInstanceOf(ServerPushEvent.class);
+                ServerPushWebhookProcessorTest.this.scmEvent = (ServerPushEvent) event;
             }
         };
         endpoint = mock(BitbucketEndpoint.class);
@@ -174,6 +178,17 @@ class ServerPushWebhookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1537538991000L));
+
+        Iterable<BitbucketBranch> tags = scmEvent.getTags(scmSource);
+        assertThat(tags).isNotEmpty()
+            .hasSize(1)
+            .first()
+            .satisfies(tag -> {
+                assertThat(tag.getName()).isEqualTo("simple-tag");
+                assertThat(tag.getRawNode()).isEqualTo("fb522a6f08c7c7df337312e4e65ec1b57710672e");
+                assertThat(tag.getAuthor()).isEqualTo("Antonio Muniz <amuniz@example.com>");
+                assertThat(tag.getDateMillis()).isEqualTo(1537538991000L);
+            });
     }
 
     @Test
@@ -233,6 +248,24 @@ class ServerPushWebhookProcessorTest {
         sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("emptyPayload.json"), Collections.emptyMap(), endpoint);
         ServerPushEvent event = (ServerPushEvent) scmEvent;
         assertThat(event).isNull();
+    }
+
+    @Test
+    @Issue("JENKINS-76457")
+    void test_push_payload_datacenter_v10() throws Exception {
+        NativeServerRefsChangedEvent payload = JsonParser.toJava(loadResource("pushPayload_v10.json"), NativeServerRefsChangedEvent.class);
+        assertThat(payload).isNotNull();
+        assertThat(payload.getToCommit().getCommitterDate()).isNotNull();
+        assertThat(payload.getToCommit().getAuthorDate()).isNotNull();
+    }
+
+    @Test
+    @Issue("JENKINS-76457")
+    void test_push_payload_datacenter_v9() throws Exception {
+        NativeServerRefsChangedEvent payload = JsonParser.toJava(loadResource("pushPayload.json"), NativeServerRefsChangedEvent.class);
+        assertThat(payload).isNotNull();
+        assertThat(payload.getToCommit().getCommitterDate()).isNotNull();
+        assertThat(payload.getToCommit().getAuthorDate()).isNotNull();
     }
 
     private String loadResource(String resource) throws IOException {

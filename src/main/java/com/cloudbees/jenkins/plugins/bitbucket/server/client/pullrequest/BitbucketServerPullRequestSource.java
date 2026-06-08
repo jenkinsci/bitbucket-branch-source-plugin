@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketSer
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Date;
 
 public class BitbucketServerPullRequestSource implements BitbucketPullRequestSource {
 
@@ -72,7 +73,7 @@ public class BitbucketServerPullRequestSource implements BitbucketPullRequestSou
     @Override
     public BitbucketCommit getCommit() {
         if (branch != null && commit == null) {
-            commit = new BitbucketServerCommit(branch.getMessage(), latestCommit, branch.getDateMillis(), branch.getAuthor());
+            commit = new BitbucketServerCommit(branch.getMessage(), latestCommit, branch.getDateMillis() > 0 ? new Date(branch.getDateMillis()) : null, branch.getAuthor());
         }
         return commit;
     }

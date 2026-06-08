@@ -38,6 +38,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
@@ -358,7 +359,11 @@ public class BitbucketSCMSource extends SCMSource {
             if (request.isFetchPRs() && event instanceof HasPullRequests hasPrEvent) {
                 request.setPullRequests(getBitbucketPullRequestsFromEvent(hasPrEvent, listener));
             }
-            // now server the request
+            if (request.isFetchTags() && event instanceof HasTags hasTagEvent) {
+                request.setTags(getBitbucketTagsFromEvent(hasTagEvent, listener));
+            }
+
+            // now serve the request
             if (request.isFetchPRs() && !request.isComplete()) {
                 // Search pull requests
                 retrievePullRequests(request);
@@ -372,6 +377,18 @@ public class BitbucketSCMSource extends SCMSource {
                 retrieveTags(request);
             }
         }
+    }
+
+    private Iterable<BitbucketBranch> getBitbucketTagsFromEvent(@NonNull HasTags incomingTagEvent, @NonNull TaskListener listener) throws IOException, InterruptedException {
+        Collection<BitbucketBranch> initializedTags = new HashSet<>();
+        try (BitbucketApi bitBucket = buildBitbucketClient()) {
+            Iterable<BitbucketBranch> tags = incomingTagEvent.getTags(BitbucketSCMSource.this);
+            for (BitbucketBranch tag : tags) {
+                initializedTags.add(bitBucket.getTag(tag.getName()));
+                listener.getLogger().format("Initialized Tag: %s%n", tag.getName());
+            }
+        }
+        return initializedTags;
     }
 
     private Iterable<BitbucketPullRequest> getBitbucketPullRequestsFromEvent(@NonNull HasPullRequests incomingPrEvent,
@@ -525,7 +542,6 @@ public class BitbucketSCMSource extends SCMSource {
         }
         request.listener().getLogger().format("%n  %d branches were processed%n", count);
     }
-
 
     private void retrieveTags(final BitbucketSCMSourceRequest request) throws IOException, InterruptedException {
         String fullName = repoOwner + "/" + repository;
