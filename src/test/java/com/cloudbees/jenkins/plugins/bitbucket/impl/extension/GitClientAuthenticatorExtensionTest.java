@@ -23,12 +23,21 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.extension;
 
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import java.util.List;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class GitClientAuthenticatorExtensionTest {
 
@@ -46,5 +55,28 @@ class GitClientAuthenticatorExtensionTest {
         extension = new GitClientAuthenticatorExtension("url", new UsernamePasswordCredentialsImpl(null, null, null, null, null));
         assertThat(extension.hashCode()).isNotZero();
         assertThat(extension).isNotEqualTo(new GitClientAuthenticatorExtension("url", new UsernamePasswordCredentialsImpl(null, "some-id", null, null, null)));
+    }
+
+    @Issue("JENKINS-76486")
+    @Test
+    void decoratesAllRemotesUsingTheTranslatedCredential() throws Exception {
+        StandardUsernameCredentials credentials = mock(StandardUsernameCredentials.class);
+        GitClientAuthenticatorExtension extension =
+                new GitClientAuthenticatorExtension("https://bitbucket.org/fork/repository.git", credentials);
+        UserRemoteConfig origin = new UserRemoteConfig(
+                "https://bitbucket.org/fork/repository.git", "origin", null, null);
+        UserRemoteConfig upstream = new UserRemoteConfig(
+                "https://bitbucket.org/upstream/repository.git", "upstream", null, null);
+        UserRemoteConfig other = new UserRemoteConfig(
+                "https://example.com/other/repository.git", "other", null, "other-credential");
+        GitSCM scm = mock(GitSCM.class);
+        GitClient git = mock(GitClient.class);
+        when(scm.getUserRemoteConfigs()).thenReturn(List.of(origin, upstream, other));
+
+        assertThat(extension.decorate(scm, git)).isSameAs(git);
+
+        verify(git).addCredentials(origin.getUrl(), credentials);
+        verify(git).addCredentials(upstream.getUrl(), credentials);
+        verify(git, never()).addCredentials(other.getUrl(), credentials);
     }
 }

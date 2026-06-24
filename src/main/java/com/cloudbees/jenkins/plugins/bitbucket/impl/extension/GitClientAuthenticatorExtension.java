@@ -34,6 +34,7 @@ import hudson.Extension;
 import hudson.model.Item;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.security.ACL;
@@ -84,7 +85,21 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
             if (url == null) {
                 git.setCredentials(credentials);
             } else {
+                // Keep registering the primary URL directly for compatibility with SCMs whose
+                // primary URL is not represented in getUserRemoteConfigs().
                 git.addCredentials(url, credentials);
+
+                // GitSCM initially registers the raw Jenkins credential for each remote. A
+                // Bitbucket authenticator can translate that credential for Git operations (for
+                // example, an API token needs a different username on Bitbucket Cloud), so apply
+                // the translated credential to every remote configured with the same credential
+                // ID. Remotes with a different credential ID must retain their own credentials.
+                for (UserRemoteConfig remote : scm.getUserRemoteConfigs()) {
+                    if (Objects.equals(credentialsId, remote.getCredentialsId())
+                            && !Objects.equals(url, remote.getUrl())) {
+                        git.addCredentials(remote.getUrl(), credentials);
+                    }
+                }
             }
         }
         return git;
