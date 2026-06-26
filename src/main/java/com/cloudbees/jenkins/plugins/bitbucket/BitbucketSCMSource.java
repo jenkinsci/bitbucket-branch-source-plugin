@@ -745,12 +745,14 @@ public class BitbucketSCMSource extends SCMSource {
                 .withTraits(traits);
 
         // checkoutURL must be calculated after set withCloneLinks and credentials
-        String checkoutURL = scmBuilder.remote();
+        List<String> checkoutURLs = new ArrayList<>();
+        checkoutURLs.add(scmBuilder.remote());
+        scmBuilder.additionalRemoteNames().forEach(remoteName -> checkoutURLs.add(scmBuilder.additionalRemote(remoteName)));
         String scmOwner = Optional.ofNullable(getOwner())
                 .map(SCMSourceOwner::getFullName)
                 .orElse(null);
         return scmBuilder
-                .withExtension(new GitClientAuthenticatorExtension(checkoutURL, serverUrl, scmOwner, sshTrait != null ? null : checkoutCredentialsId))
+                .withExtension(new GitClientAuthenticatorExtension(checkoutURLs, serverUrl, scmOwner, sshTrait != null ? null : checkoutCredentialsId))
                 .build();
     }
 
