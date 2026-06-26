@@ -129,4 +129,27 @@ class GitClientAuthenticatorExtensionTest {
         verify(git).addCredentials(upstream.getUrl(), credentials);
         verify(git, never()).addCredentials(null, credentials);
     }
+
+    @Issue("JENKINS-76486")
+    @Test
+    void decorateHandlesAuthenticatedMirrorUrls() throws Exception {
+        StandardUsernameCredentials credentials = mock(StandardUsernameCredentials.class);
+        GitClientAuthenticatorExtension extension =
+                new GitClientAuthenticatorExtension(
+                        "https://mirror-user:mirror-token@mirror.example.com/project/repository.git", credentials);
+        UserRemoteConfig origin = new UserRemoteConfig(
+                "https://mirror.example.com/project/repository.git", "origin", null, null);
+        UserRemoteConfig upstream = new UserRemoteConfig(
+                "https://upstream-user:upstream-token@mirror.example.com/project/upstream.git", "upstream", null, null);
+        GitSCM scm = mock(GitSCM.class);
+        GitClient git = mock(GitClient.class);
+        when(scm.getUserRemoteConfigs()).thenReturn(List.of(origin, upstream));
+
+        assertThat(extension.decorate(scm, git)).isSameAs(git);
+
+        verify(git).addCredentials("https://mirror-user:mirror-token@mirror.example.com/project/repository.git", credentials);
+        verify(git).addCredentials("https://mirror.example.com/project/repository.git", credentials);
+        verify(git).addCredentials("https://upstream-user:upstream-token@mirror.example.com/project/upstream.git", credentials);
+        verify(git).addCredentials("https://mirror.example.com/project/upstream.git", credentials);
+    }
 }

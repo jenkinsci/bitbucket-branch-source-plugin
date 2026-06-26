@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.extension;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
@@ -89,6 +90,10 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
                 // Keep registering the primary URL directly for compatibility with SCMs whose
                 // primary URL is not represented in getUserRemoteConfigs().
                 git.addCredentials(url, credentials);
+                String normalizedUrl = URLUtils.removeAuthority(url);
+                if (!Objects.equals(url, normalizedUrl)) {
+                    git.addCredentials(normalizedUrl, credentials);
+                }
 
                 // GitSCM initially registers the raw Jenkins credential for each remote. A
                 // Bitbucket authenticator can translate that credential for Git operations (for
@@ -102,10 +107,14 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
                             continue;
                         }
                         String remoteUrl = remote.getUrl();
+                        String normalizedRemoteUrl = URLUtils.removeAuthority(remoteUrl);
                         if (remoteUrl != null
-                                && !Objects.equals(url, remoteUrl)
+                                && !Objects.equals(normalizedUrl, normalizedRemoteUrl)
                                 && Objects.equals(credentialsId, remote.getCredentialsId())) {
                             git.addCredentials(remoteUrl, credentials);
+                            if (!Objects.equals(remoteUrl, normalizedRemoteUrl)) {
+                                git.addCredentials(normalizedRemoteUrl, credentials);
+                            }
                         }
                     }
                 }

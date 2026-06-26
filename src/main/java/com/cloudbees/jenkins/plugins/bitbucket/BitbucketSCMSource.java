@@ -770,6 +770,11 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     private void setPrimaryCloneLinks(List<BitbucketHref> links) {
+        stripAuthenticationFromHttpCloneLinks(links);
+        primaryCloneLinks = links;
+    }
+
+    private void stripAuthenticationFromHttpCloneLinks(List<BitbucketHref> links) {
         links.forEach(link -> {
             if (StringUtils.startsWithIgnoreCase(link.getName(), "http")) {
                 // Remove the username from URL because it will be set into the GIT_URL variable
@@ -779,7 +784,6 @@ public class BitbucketSCMSource extends SCMSource {
                 link.setHref(URLUtils.removeAuthority(link.getHref()));
             }
         });
-        primaryCloneLinks = links;
     }
 
     @NonNull
@@ -1022,6 +1026,7 @@ public class BitbucketSCMSource extends SCMSource {
             if (mirroredRepositoryCloneLinks == null) {
                 throw new IllegalStateException("There is no mirrored repository clone links for mirror id " + mirrorIdLocal);
             }
+            stripAuthenticationFromHttpCloneLinks(mirroredRepositoryCloneLinks);
             mirrorCloneLinks = mirroredRepositoryCloneLinks;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE,
