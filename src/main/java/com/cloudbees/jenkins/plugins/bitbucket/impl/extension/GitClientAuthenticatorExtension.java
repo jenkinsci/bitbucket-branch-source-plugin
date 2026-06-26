@@ -39,6 +39,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import java.util.List;
 import java.util.Objects;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
@@ -94,10 +95,18 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
                 // example, an API token needs a different username on Bitbucket Cloud), so apply
                 // the translated credential to every remote configured with the same credential
                 // ID. Remotes with a different credential ID must retain their own credentials.
-                for (UserRemoteConfig remote : scm.getUserRemoteConfigs()) {
-                    if (Objects.equals(credentialsId, remote.getCredentialsId())
-                            && !Objects.equals(url, remote.getUrl())) {
-                        git.addCredentials(remote.getUrl(), credentials);
+                List<UserRemoteConfig> remotes = scm != null ? scm.getUserRemoteConfigs() : null;
+                if (remotes != null) {
+                    for (UserRemoteConfig remote : remotes) {
+                        if (remote == null) {
+                            continue;
+                        }
+                        String remoteUrl = remote.getUrl();
+                        if (remoteUrl != null
+                                && !Objects.equals(url, remoteUrl)
+                                && Objects.equals(credentialsId, remote.getCredentialsId())) {
+                            git.addCredentials(remoteUrl, credentials);
+                        }
                     }
                 }
             }

@@ -28,11 +28,13 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import java.util.Arrays;
 import java.util.List;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -78,5 +80,53 @@ class GitClientAuthenticatorExtensionTest {
         verify(git).addCredentials(origin.getUrl(), credentials);
         verify(git).addCredentials(upstream.getUrl(), credentials);
         verify(git, never()).addCredentials(other.getUrl(), credentials);
+    }
+
+    @Issue("JENKINS-76486")
+    @Test
+    void decorateIgnoresMissingScmRemoteConfiguration() throws Exception {
+        StandardUsernameCredentials credentials = mock(StandardUsernameCredentials.class);
+        GitClientAuthenticatorExtension extension =
+                new GitClientAuthenticatorExtension("https://bitbucket.org/fork/repository.git", credentials);
+        GitClient git = mock(GitClient.class);
+
+        assertThatCode(() -> extension.decorate(null, git)).doesNotThrowAnyException();
+
+        verify(git).addCredentials("https://bitbucket.org/fork/repository.git", credentials);
+    }
+
+    @Issue("JENKINS-76486")
+    @Test
+    void decorateIgnoresMissingRemoteList() throws Exception {
+        StandardUsernameCredentials credentials = mock(StandardUsernameCredentials.class);
+        GitClientAuthenticatorExtension extension =
+                new GitClientAuthenticatorExtension("https://bitbucket.org/fork/repository.git", credentials);
+        GitSCM scm = mock(GitSCM.class);
+        GitClient git = mock(GitClient.class);
+        when(scm.getUserRemoteConfigs()).thenReturn(null);
+
+        assertThatCode(() -> extension.decorate(scm, git)).doesNotThrowAnyException();
+
+        verify(git).addCredentials("https://bitbucket.org/fork/repository.git", credentials);
+    }
+
+    @Issue("JENKINS-76486")
+    @Test
+    void decorateIgnoresNullRemoteEntriesAndUrls() throws Exception {
+        StandardUsernameCredentials credentials = mock(StandardUsernameCredentials.class);
+        GitClientAuthenticatorExtension extension =
+                new GitClientAuthenticatorExtension("https://bitbucket.org/fork/repository.git", credentials);
+        UserRemoteConfig nullUrl = new UserRemoteConfig(null, "null-url", null, null);
+        UserRemoteConfig upstream = new UserRemoteConfig(
+                "https://bitbucket.org/upstream/repository.git", "upstream", null, null);
+        GitSCM scm = mock(GitSCM.class);
+        GitClient git = mock(GitClient.class);
+        when(scm.getUserRemoteConfigs()).thenReturn(Arrays.asList(null, nullUrl, upstream));
+
+        assertThat(extension.decorate(scm, git)).isSameAs(git);
+
+        verify(git).addCredentials("https://bitbucket.org/fork/repository.git", credentials);
+        verify(git).addCredentials(upstream.getUrl(), credentials);
+        verify(git, never()).addCredentials(null, credentials);
     }
 }
