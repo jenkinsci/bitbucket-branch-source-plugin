@@ -241,16 +241,36 @@ IMPORTANT: API token requires the email address as a username to authenticate us
 
 === OAuth credentials (Bitbucket Cloud only)
 
-The plugin can make use of OAuth credentials instead of the standard username/password.
+The plugin can make use of OAuth credentials instead of the standard username/password or deprecated app passwords.
+OAuth credentials are a good option for Bitbucket Cloud because the client ID and client secret are stored in Jenkins Credentials, the plugin requests short-lived bearer tokens from Bitbucket, and HTTPS checkout uses the generated token without exposing the consumer secret to builds.
 
-First create a new _OAuth consumer_ in Bitbucket as instructed in the https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html[Bitbucket OAuth Documentation].
-Don't forget to check _This is a private consumer_ and at least allow _read_ access for repositories and pull requests. If you want the plugin to install the webhooks, also allow _read_ and _write_ access for webhooks.
+First create a new _OAuth consumer_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/[Bitbucket OAuth Documentation].
+Create the consumer in the workspace Jenkins needs to access, check _This is a private consumer_, and keep the generated key and secret private.
+Bitbucket requires a callback URL for OAuth consumers; this plugin uses the client credentials grant and does not receive browser redirects, so use a stable Jenkins URL such as the Jenkins root URL.
+
+At least allow _read_ access for repositories and pull requests. If you want the plugin to install the webhooks, also allow _read_ and _write_ access for webhooks.
 
 image::images/screenshot-10.png[]
 
-Then create new _Username with password credentials_ in Jenkins, enter the Bitbucket OAuth consumer key in the _Username_ field and the Bitbucket OAuth consumer secret in the _Password_ field.
+Then create new _Username with password credentials_ in Jenkins:
+
+* Set the _Username_ field to the Bitbucket OAuth consumer key.
+* Set the _Password_ field to the Bitbucket OAuth consumer secret.
+* Use a clear ID and description, for example `bitbucket-cloud-oauth`.
+* Prefer storing the credential in a Bitbucket-specific credential domain to keep credential lookup fast and avoid selecting unrelated credentials.
 
 image::images/screenshot-11.png[]
+
+Select this credential in the _Credentials_ field of the Bitbucket Branch Source configuration for both _Multibranch Pipeline_ jobs and _Bitbucket Team/Project_ organization folders.
+If automatic webhook management is configured at the endpoint level, update the webhook credentials there as well; otherwise, keep manual webhooks configured as described above.
+
+After changing an existing job or organization folder to OAuth credentials, validate the configuration before removing the legacy credential:
+
+* Run _Scan Repository Now_ or _Scan Organization Now_ and confirm repository indexing completes.
+* Confirm branches and pull requests are discovered according to the configured behaviours.
+* Run a build and confirm HTTPS SCM checkout succeeds.
+* Create or update a pull request and confirm the webhook triggers the expected indexing or build.
+* Open repository browsing links from Jenkins and confirm they still point to the expected Bitbucket Cloud repository.
 
 image::images/screenshot-12.png[]
 

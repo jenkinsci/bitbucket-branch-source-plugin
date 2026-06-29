@@ -50,10 +50,20 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
         String username = credentials.getUsername();
         String password = Secret.toString(credentials.getPassword());
 
-        boolean isEMail = username.contains(".") && username.contains("@");
-        boolean validConsumerLength = (password.length() == CLIENT_OLD_SECRET_LENGTH && username.length() == CLIENT_OLD_KEY_LENGTH)
-                || (password.length() == CLIENT_SECRET_LENGTH && username.length() == CLIENT_KEY_LENGTH);
+        return !isEmail(username) && isSupportedOAuthConsumer(username, password);
+    }
 
-        return !isEMail && validConsumerLength;
+    private boolean isEmail(String username) {
+        return username.contains(".") && username.contains("@");
+    }
+
+    private boolean isSupportedOAuthConsumer(String key, String secret) {
+        // Bitbucket Cloud has issued OAuth consumers in both legacy and current lengths.
+        return hasLengthPair(key, secret, CLIENT_OLD_KEY_LENGTH, CLIENT_OLD_SECRET_LENGTH)
+                || hasLengthPair(key, secret, CLIENT_KEY_LENGTH, CLIENT_SECRET_LENGTH);
+    }
+
+    private boolean hasLengthPair(String key, String secret, int expectedKeyLength, int expectedSecretLength) {
+        return key.length() == expectedKeyLength && secret.length() == expectedSecretLength;
     }
 }
