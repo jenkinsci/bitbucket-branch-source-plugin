@@ -24,11 +24,13 @@
 
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 
 /**
@@ -55,6 +57,10 @@ public class BitbucketUsernamePasswordAuthenticatorSource extends Authentication
         return new BitbucketUsernamePasswordAuthenticator(standardUsernamePasswordCredentials);
     }
 
+    @Override
+    protected boolean isFit(AuthenticationTokenContext<? super BitbucketUsernamePasswordAuthenticator> ctx) {
+        return ctx.mustHave(BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE, BitbucketAuthenticator.BITBUCKET_INSTANCE_TYPE_SERVER);
+    }
 
     /**
      * {@inheritDoc}

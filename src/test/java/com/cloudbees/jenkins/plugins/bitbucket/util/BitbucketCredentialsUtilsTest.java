@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.util;
 
-import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -46,6 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithJenkins
 class BitbucketCredentialsUtilsTest {
 
+    private static final String SERVER_URL = "http://localhost";
     private static JenkinsRule j;
 
     @BeforeAll
@@ -70,7 +70,7 @@ class BitbucketCredentialsUtilsTest {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         store.addCredentials(Domain.global(), exceptionCredentials);
 
-        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, BitbucketCloudEndpoint.SERVER_URL, null);
+        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
         assertThat(result)
             .isNotEmpty()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
@@ -85,7 +85,7 @@ class BitbucketCredentialsUtilsTest {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         store.addCredentials(Domain.global(), remoteCredentials);
 
-        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, BitbucketCloudEndpoint.SERVER_URL, null);
+        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
         assertThat(result)
             .isNotEmpty()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
@@ -106,7 +106,7 @@ class BitbucketCredentialsUtilsTest {
             store.addCredentials(Domain.global(), c);
         }
 
-        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, BitbucketCloudEndpoint.SERVER_URL, null);
+        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
         assertThat(result)
             .isNotEmpty()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
