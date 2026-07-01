@@ -1069,7 +1069,7 @@ public class BitbucketSCMSource extends SCMSource {
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
                                                    @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
+            return BitbucketCredentialsUtils.checkCredentialsId(context, serverURL, value);
         }
 
         public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {

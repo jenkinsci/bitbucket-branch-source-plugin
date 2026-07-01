@@ -215,15 +215,7 @@ image::images/screenshot-17.png[]
 
 Bitbucket https://community.atlassian.com/t5/Bitbucket-articles/Announcement-Bitbucket-Cloud-account-password-usage-for-Git-over/ba-p/1948231[deprecated usage of Atlassian account password] for Bitbucket API and Git over HTTPS starting from March 1st, 2022.
 
-The plugin can make use of an app password instead of the standard username/password.
-
-First, create a new _app password_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/[Bitbucket App Passwords Documentation]. At least allow _read_ access for repositories and pull requests. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
-
-Then create a new _Username with password credentials_ in Jenkins, enter the Bitbucket username (not the email) in the _Username_ field and the created app password in the _Password_ field.
-
-IMPORTANT: App passwords do not support email address as a username for authentication. Using the email address will raise an authentication error in scanning/checkout process.
-
-The app passoword authentication has been deprecated by Atlassian and starting from September 9th, 2025 will not longer available for creation. https://www.atlassian.com/blog/bitbucket/bitbucket-cloud-transitions-to-api-tokens-enhancing-security-with-app-password-deprecation[Read here] for more informations.
+The app passoword authentication has been removed by Atlassian and no more available.
 
 === User API Token (Bitbucket Cloud only)
 

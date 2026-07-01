@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticatorSource;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUserAPITokenAuthenticatorSource;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticatorSource;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -173,6 +174,7 @@ public class BitbucketCredentialsUtils {
     public static FormValidation checkCredentialsId(@CheckForNull SCMSourceOwner context,
                                                     @CheckForNull String serverURL,
                                                     @CheckForNull String credentialsId) {
+        FormValidation result = FormValidation.ok();
         if (StringUtils.isNotBlank(credentialsId)) {
             serverURL = BitbucketEndpointProvider.lookupEndpoint(serverURL)
                     .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
@@ -193,12 +195,27 @@ public class BitbucketCredentialsUtils {
                             authentication,
                             domainRequirements);
             if (certificateCredentials != null) {
-                return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
+                result = FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
+            } else if (BitbucketApiUtils.isCloud(serverURL)) {
+                StandardCredentials credentials = CredentialsProvider.findCredentialByIdInItem(
+                        credentialsId,
+                        StandardCredentials.class,
+                        context,
+                        authentication,
+                        domainRequirements);
+                if (credentials == null) {
+                    result = FormValidation.error("Credentials " + credentialsId + " not found.");
+                } else {
+                    CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
+                    if (!matcher.matches(credentials)) {
+                        result = FormValidation.error("Invalid credentials for " + serverURL);
+                    }
+                }
             }
-            return FormValidation.ok();
         } else {
-            return FormValidation.warning("Credentials are required for build notifications");
+            result = FormValidation.warning("Credentials are required for build notifications");
         }
+        return result;
     }
 
     public static ListBoxModel listCredentials(@NonNull Item context,

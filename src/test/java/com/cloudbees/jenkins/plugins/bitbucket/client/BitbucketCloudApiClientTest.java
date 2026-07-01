@@ -136,11 +136,12 @@ class BitbucketCloudApiClientTest {
 
     @Test
     void test_supported_auth() throws Exception {
-        try (BitbucketApi client = new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketUsernamePasswordAuthenticator.class))) {}
         try (BitbucketApi client = new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketOAuthAuthenticator.class))) {}
         try (BitbucketApi client = new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketAccessTokenAuthenticator.class))) {}
 
         assertThatThrownBy(() -> new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketClientCertificateAuthenticator.class)))
+            .isInstanceOf(BitbucketException.class);
+        assertThatThrownBy(() -> new BitbucketCloudApiClient(false, 0, 0, null, null, null, mock(BitbucketUsernamePasswordAuthenticator.class)))
             .isInstanceOf(BitbucketException.class);
     }
 }
