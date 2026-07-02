@@ -127,6 +127,7 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
+import jenkins.util.SystemProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.lib.Constants;
@@ -152,6 +153,16 @@ public class BitbucketSCMSource extends SCMSource {
     private static final Logger LOGGER = Logger.getLogger(BitbucketSCMSource.class.getName());
     private static final String CLOUD_REPO_TEMPLATE = "{/owner,repo}";
     private static final String SERVER_REPO_TEMPLATE = "/projects{/owner}/repos{/repo}";
+
+    /**
+     * Escape hatch for large installations: when set to {@code true}, do not eagerly fetch the
+     * primary clone links from the Bitbucket API on {@link #afterSave()} and on every branch
+     * indexing. Clone links are then resolved lazily (and cached) when a build actually needs
+     * them, see {@code initCloneLinks()}. This avoids one {@code getRepository()} REST call per
+     * source per indexing, which is subject to API rate limits on installations with many
+     * Bitbucket sources.
+     */
+    static final String SKIP_PRIMARY_CLONE_LINKS_PROPERTY_NAME = "bitbucket.scmsource.skipPrimaryCloneLinks";
 
     /** How long to delay events received from Bitbucket in order to allow the API caches to sync. */
     private static /*mostly final*/ int eventDelaySeconds =
@@ -331,6 +342,9 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     private void gatherPrimaryCloneLinks(@NonNull BitbucketApi apiClient) throws IOException {
+        if (SystemProperties.getBoolean(SKIP_PRIMARY_CLONE_LINKS_PROPERTY_NAME, false)) {
+            return;
+        }
         BitbucketRepository r = apiClient.getRepository();
         Map<String, List<BitbucketHref>> links = r.getLinks();
         if (links != null && links.containsKey("clone")) {
