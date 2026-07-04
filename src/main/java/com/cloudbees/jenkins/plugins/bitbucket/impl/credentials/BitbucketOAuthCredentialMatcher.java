@@ -27,24 +27,33 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import hudson.util.Secret;
 
 public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
     private static final long serialVersionUID = 6458784517693211197L;
 
     private static final int CLIENT_OLD_KEY_LENGTH = 18;
+    private static final int CLIENT_OLD_SECRET_LENGTH = 32;
     private static final int CLIENT_KEY_LENGTH = 32;
+    private static final int CLIENT_SECRET_LENGTH = 76;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean matches(Credentials item) {
-        if (!(item instanceof StandardUsernamePasswordCredentials credentials)) {
+        if (!(item instanceof StandardUsernamePasswordCredentials)) { // safety check
             return false;
         }
+
+        StandardUsernamePasswordCredentials credentials = ((StandardUsernamePasswordCredentials) item);
         String username = credentials.getUsername();
-        boolean isEmail = username.contains(".") && username.contains("@");
-        boolean validKeyLength = username.length() == CLIENT_OLD_KEY_LENGTH || username.length() == CLIENT_KEY_LENGTH;
-        return !isEmail && validKeyLength;
+        String password = Secret.toString(credentials.getPassword());
+
+        boolean isEMail = username.contains(".") && username.contains("@");
+        boolean validConsumerLength = (password.length() == CLIENT_OLD_SECRET_LENGTH && username.length() == CLIENT_OLD_KEY_LENGTH)
+                || (password.length() == CLIENT_SECRET_LENGTH && username.length() == CLIENT_KEY_LENGTH);
+
+        return !isEMail && validConsumerLength;
     }
 }

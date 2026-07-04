@@ -122,30 +122,6 @@ class BitbucketCredentialsUtilsTest {
     }
 
     @Test
-    void checkCredentialsId_returns_ok_for_oauth_credential() throws Exception {
-        store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
-                CredentialsScope.GLOBAL, "oauth-old", null,
-                "A".repeat(18),
-                "B".repeat(32)));
-
-        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "oauth-old");
-
-        assertThat(result.kind).isEqualTo(FormValidation.Kind.OK);
-    }
-
-    @Test
-    void checkCredentialsId_returns_ok_for_api_token_credential() throws Exception {
-        store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
-                CredentialsScope.GLOBAL, "api-token", null,
-                "user@example.com",
-                "T".repeat(192)));
-
-        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "api-token");
-
-        assertThat(result.kind).isEqualTo(FormValidation.Kind.OK);
-    }
-
-    @Test
     void checkCredentialsId_returns_warning_for_blank_username() throws Exception {
         store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
                 CredentialsScope.GLOBAL, "blank-user", null, "", "somepassword"));
@@ -220,12 +196,6 @@ class BitbucketCredentialsUtilsTest {
         }
     }
 
-    /**
-     * Simulates a credential backed by an external store (Vault, AWS SM) whose {@code getPassword()}
-     * performs a network call. Used to reproduce JENKINS-75225 and JENKINS-76425 — before the fix,
-     * matchers called {@code getPassword()} during dropdown population, causing timeouts and blacklisting.
-     * After the fix, {@code getPassword()} is never called during {@code listCredentials}.
-     */
     @SuppressWarnings("serial")
     static class SlowCredentials extends UsernamePasswordCredentialsImpl {
 

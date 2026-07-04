@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.util;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -38,7 +37,6 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.ExtensionList;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Queue;
@@ -47,19 +45,25 @@ import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
-import java.util.ArrayList;
 import java.util.List;
-import jenkins.authentication.tokens.api.AuthenticationTokenContext;
-import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.springframework.security.core.Authentication;
 
 /**
  * Utility class for common code accessing credentials.
  */
 public class BitbucketCredentialsUtils {
+
+    // Used only for dropdown population — never calls getPassword(), avoiding network calls
+    // to external stores (Vault, AWS SM) and the thread explosion they cause (JENKINS-76425).
+    // The real matchers (which do call getPassword()) are still used at authenticator-selection
+    // time via AuthenticationTokens.matcher(), so routing behaviour is unchanged.
+    private static final CredentialsMatcher LISTING_MATCHER = CredentialsMatchers.anyOf(
+            CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class),
+            CredentialsMatchers.instanceOf(StringCredentials.class));
 
     private BitbucketCredentialsUtils() {
         throw new IllegalAccessError("Utility class");
@@ -187,13 +191,12 @@ public class BitbucketCredentialsUtils {
                 .getServerURL();
 
         List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
-        CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
         result.includeMatchingAs(
                 authentication,
                 context,
                 StandardCredentials.class,
                 domainRequirements,
-                matcher);
+                LISTING_MATCHER);
         if (credentialsId != null) {
             result.includeCurrentValue(credentialsId);
         }
@@ -206,7 +209,6 @@ public class BitbucketCredentialsUtils {
 
         List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
         Authentication authentication = ACL.SYSTEM2;
-        CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
 
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeMatchingAs(
@@ -214,23 +216,11 @@ public class BitbucketCredentialsUtils {
                 context,
                 StandardCredentials.class,
                 domainRequirements,
-                matcher);
+                LISTING_MATCHER);
         if (credentialsId != null) {
             result.includeCurrentValue(credentialsId);
         }
         return result;
     }
 
-    // copy of AuthenticationTokens#matcher
-    private static <T> CredentialsMatcher matcher(AuthenticationTokenContext<T> context) {
-        List<CredentialsMatcher> matchers = new ArrayList<>();
-        for (AuthenticationTokenSource<?, ?> source : ExtensionList.lookup(AuthenticationTokenSource.class)) {
-            if (source.fits(context)) {
-                matchers.add(source.matcher());
-            }
-        }
-        return matchers.isEmpty()
-                ? CredentialsMatchers.never()
-                : CredentialsMatchers.anyOf(matchers.toArray(new CredentialsMatcher[matchers.size()]));
-    }
 }
