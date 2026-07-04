@@ -23,31 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.util.Secret;
-import java.time.Duration;
-import java.util.concurrent.Executors;
 
 final class BitbucketAuthenticatorUtils {
 
     private BitbucketAuthenticatorUtils() {
-    }
-
-    public static String getPassword(@NonNull UsernamePasswordCredentials credentials) throws InterruptedException {
-        TimeLimiter timeLimiter = SimpleTimeLimiter.create(Executors.newSingleThreadExecutor());
-
-        try {
-            // JENKINS-75225
-            return timeLimiter.callWithTimeout(() -> Secret.toString(credentials.getPassword()), Duration.ofMillis(100));
-        } catch (InterruptedException e) {
-            // takes long maybe credentials are not stored in Jenkins and requires some rest call than will fail
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @SuppressWarnings("unchecked")

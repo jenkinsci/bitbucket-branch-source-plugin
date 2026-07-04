@@ -23,18 +23,19 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.util;
 
-import com.cloudbees.plugins.credentials.CredentialsDescriptor;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -45,170 +46,202 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithJenkins
 class BitbucketCredentialsUtilsTest {
 
+    private static final String CLOUD_URL = "https://bitbucket.org";
     private static final String SERVER_URL = "http://localhost";
-    private static JenkinsRule j;
 
-    @BeforeAll
-    static void init(JenkinsRule rule) throws Exception {
+    private JenkinsRule j;
+    private CredentialsStore store;
+
+    @BeforeEach
+    void init(JenkinsRule rule) throws Exception {
         j = rule;
-
-        StandardUsernamePasswordCredentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "id", "description", "username", "password");
-
-        CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
-        store.addCredentials(Domain.global(), credentials);
+        store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
+        store.addCredentials(Domain.global(),
+                new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "id", "description", "username", "password"));
     }
 
-    /**
-     * Some plugins do remote work when getPassword is called and aren't expecting to just be randomly looked up
-     * One example is GitHubAppCredentials
-     */
     @Test
     @Issue("JENKINS-63401")
-    void matches_returns_false_when_exception_getting_password() throws Exception {
-        StandardUsernamePasswordCredentials exceptionCredentials = new ExceptionalCredentials();
+    void credentials_whose_getPassword_throws_are_included_in_dropdown() throws Exception {
+        // Given a credential store with one normal credential and one whose getPassword() throws
+        store.addCredentials(Domain.global(), new ExceptionalCredentials());
 
-        CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
-        store.addCredentials(Domain.global(), exceptionCredentials);
-
+        // When listing credentials
         ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
+
+        // Then both credentials appear
         assertThat(result)
-            .isNotEmpty()
-            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
-            .containsOnly(new ListBoxModel.Option(null, "id"));
+                .extracting(o -> o.value)
+                .contains("id", "exception-credentials");
     }
 
     @Test
     @Issue("JENKINS-75225")
-    void matches_returns_false_when_getting_password_takes_longer() throws Exception {
-        StandardUsernamePasswordCredentials remoteCredentials = new TakeLongCredentials("remote-credentials");
+    void credentials_with_slow_getPassword_are_included_in_dropdown() throws Exception {
+        // Given a credential store with one normal credential and one whose getPassword() sleeps 1s
+        store.addCredentials(Domain.global(), new SlowCredentials("slow-credentials"));
 
-        CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
-        store.addCredentials(Domain.global(), remoteCredentials);
-
+        // When listing credentials
         ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
+
+        // Then both credentials appear
         assertThat(result)
-            .isNotEmpty()
-            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
-            .containsOnly(new ListBoxModel.Option(null, "id"));
+                .extracting(o -> o.value)
+                .contains("id", "slow-credentials");
     }
 
     @Test
-    @Issue("JENKINS-76330")
-    void matches_returns_false_when_blacklisted() throws Exception {
-        List<StandardUsernamePasswordCredentials> remoteCredentials = List.of(new TakeLongCredentials("1"),
-                new TakeLongCredentials("2"),
-                new TakeLongCredentials("3"),
-                new TakeLongCredentials("4"));
-
-        TakeLongCredentials.resetCallsCounter();
-        CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
-        for (StandardUsernamePasswordCredentials c : remoteCredentials) {
-            store.addCredentials(Domain.global(), c);
+    @Issue("JENKINS-76425")
+    void blacklisted_credentials_are_still_included_on_subsequent_calls() throws Exception {
+        // Given 4 slow credentials of the same class (before fix: 2 timeouts → entire class blacklisted)
+        List<String> slowIds = List.of("slow-1", "slow-2", "slow-3", "slow-4");
+        for (String id : slowIds) {
+            store.addCredentials(Domain.global(), new SlowCredentials(id));
         }
 
-        ListBoxModel result = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
-        assertThat(result)
-            .isNotEmpty()
-            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("name")
-            .containsOnly(new ListBoxModel.Option(null, "id"));
+        // When listCredentials is called twice
+        ListBoxModel first = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
+        ListBoxModel second = BitbucketCredentialsUtils.listCredentials(j.jenkins, SERVER_URL, null);
 
-        // assert that the number of calls to TakeLongCredentials#getPassword
-        // were actually 2 and no more even though 4 TakeLongCredentials were processed
-        assertThat(TakeLongCredentials.getCallsCounter()).isEqualTo(2);
+        // Then all slow credentials appear in both calls
+        for (ListBoxModel result : List.of(first, second)) {
+            assertThat(result)
+                    .extracting(o -> o.value)
+                    .contains("slow-1", "slow-2", "slow-3", "slow-4");
+        }
+    }
+
+    @Test
+    void checkCredentialsId_returns_ok_for_username_password_credential() throws Exception {
+        // Given a normal username/password credential in the store (id="id", user="username", pass="password")
+        // When checkCredentialsId is called for a Cloud URL
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "id");
+
+        // Then result is ok
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.OK);
+    }
+
+    @Test
+    void checkCredentialsId_returns_ok_for_oauth_credential() throws Exception {
+        store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, "oauth-old", null,
+                "A".repeat(18),
+                "B".repeat(32)));
+
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "oauth-old");
+
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.OK);
+    }
+
+    @Test
+    void checkCredentialsId_returns_ok_for_api_token_credential() throws Exception {
+        store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, "api-token", null,
+                "user@example.com",
+                "T".repeat(192)));
+
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "api-token");
+
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.OK);
+    }
+
+    @Test
+    void checkCredentialsId_returns_warning_for_blank_username() throws Exception {
+        store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, "blank-user", null, "", "somepassword"));
+
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "blank-user");
+
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.WARNING);
+    }
+
+    @Test
+    void checkCredentialsId_returns_warning_for_blank_password() throws Exception {
+        store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, "blank-pass", null, "someuser", ""));
+
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "blank-pass");
+
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.WARNING);
+    }
+
+    @Test
+    void checkCredentialsId_returns_warning_not_exception_when_getPassword_throws() throws Exception {
+        // Given a credential whose getPassword() throws (e.g. Vault backend offline)
+        store.addCredentials(Domain.global(), new ExceptionalCredentials());
+
+        // When checkCredentialsId is called for that credential
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "exception-credentials");
+
+        // Then a warning is returned rather than the exception propagating to an HTTP 500
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.WARNING);
+    }
+
+    @Test
+    void checkCredentialsId_returns_error_when_credential_not_found() throws Exception {
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "nonexistent-id");
+
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.ERROR);
+    }
+
+    @Test
+    void checkCredentialsId_server_endpoint_validation_is_skipped() throws Exception {
+        // Server validation is intentionally skipped (same as master). Nonexistent credential and blank
+        // password both return ok() for Server URLs. Validation for Server is a separate future improvement.
+        BitbucketEndpointConfiguration.get().addEndpoint(new BitbucketServerEndpoint("test", SERVER_URL));
+
+        assertThat(BitbucketCredentialsUtils.checkCredentialsId(null, SERVER_URL, "nonexistent-id").kind)
+                .isEqualTo(FormValidation.Kind.OK);
+
+        store.addCredentials(Domain.global(), new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, "server-blank-pass", null, "svc-account", ""));
+        assertThat(BitbucketCredentialsUtils.checkCredentialsId(null, SERVER_URL, "server-blank-pass").kind)
+                .isEqualTo(FormValidation.Kind.OK);
+    }
+
+    @Test
+    void checkCredentialsId_returns_warning_when_blank_id_provided() {
+        FormValidation result = BitbucketCredentialsUtils.checkCredentialsId(null, CLOUD_URL, "");
+
+        assertThat(result.kind).isEqualTo(FormValidation.Kind.WARNING);
     }
 
     @SuppressWarnings("serial")
-    private static class ExceptionalCredentials implements StandardUsernamePasswordCredentials {
+    private static class ExceptionalCredentials extends UsernamePasswordCredentialsImpl {
+
+        ExceptionalCredentials() throws hudson.model.Descriptor.FormException {
+            super(CredentialsScope.GLOBAL, "exception-credentials", "throws on getPassword", "dummy-username", "placeholder");
+        }
 
         @NonNull
         @Override
         public Secret getPassword() {
             throw new IllegalArgumentException("Failed authentication");
         }
-
-        @NonNull
-        @Override
-        public String getUsername() {
-            return "dummy-username";
-        }
-
-        @Override
-        public CredentialsScope getScope() {
-            return null;
-        }
-
-        @NonNull
-        @Override
-        public CredentialsDescriptor getDescriptor() {
-            return null;
-        }
-
-        @Override
-        public String getDescription() {
-            return null;
-        }
-
-        @Override
-        public String getId() {
-            return "exception-credentials";
-        }
     }
 
+    /**
+     * Simulates a credential backed by an external store (Vault, AWS SM) whose {@code getPassword()}
+     * performs a network call. Used to reproduce JENKINS-75225 and JENKINS-76425 — before the fix,
+     * matchers called {@code getPassword()} during dropdown population, causing timeouts and blacklisting.
+     * After the fix, {@code getPassword()} is never called during {@code listCredentials}.
+     */
     @SuppressWarnings("serial")
-    private static class TakeLongCredentials implements StandardUsernamePasswordCredentials {
-        private static int countCalls = 0;
+    static class SlowCredentials extends UsernamePasswordCredentialsImpl {
 
-        static void resetCallsCounter() {
-            countCalls = 0;
-        }
-
-        static int getCallsCounter() {
-            return countCalls;
-        }
-
-        private String id;
-
-        public TakeLongCredentials(@NonNull String id) {
-            this.id = id;
+        SlowCredentials(@NonNull String id) throws hudson.model.Descriptor.FormException {
+            super(CredentialsScope.GLOBAL, id, "sleeps on getPassword", "dummy-username", "placeholder");
         }
 
         @NonNull
         @Override
         public Secret getPassword() {
-            countCalls += 1;
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                Thread.currentThread().interrupt();
             }
             return Secret.fromString("password");
-        }
-
-        @NonNull
-        @Override
-        public String getUsername() {
-            return "dummy-username";
-        }
-
-        @Override
-        public CredentialsScope getScope() {
-            return null;
-        }
-
-        @NonNull
-        @Override
-        public CredentialsDescriptor getDescriptor() {
-            return null;
-        }
-
-        @Override
-        public String getDescription() {
-            return null;
-        }
-
-        @Override
-        public String getId() {
-            return id;
         }
     }
 }

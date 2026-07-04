@@ -26,29 +26,19 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import hudson.util.Secret;
 
 public class BitbucketUserAPITokenCredentialMatcher implements CredentialsMatcher {
     private static final long serialVersionUID = -9196480589659636909L;
-
-    private static final int API_ACCESS_TOKEN_LENGTH = 192;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean matches(Credentials item) {
-        if (!(item instanceof StandardUsernamePasswordCredentials)) { // safety check
+        if (!(item instanceof StandardUsernamePasswordCredentials credential)) {
             return false;
         }
-
-        StandardUsernamePasswordCredentials credential = ((StandardUsernamePasswordCredentials) item);
         String username = credential.getUsername();
-        String password = Secret.toString(credential.getPassword());
-
-        boolean isEMail = username.contains(".") && username.contains("@");
-        boolean validSecretLength = password.length() == API_ACCESS_TOKEN_LENGTH;
-
-        return isEMail && validSecretLength;
+        return username.contains(".") && username.contains("@");
     }
 }
