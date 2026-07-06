@@ -113,6 +113,18 @@ class BitbucketSCMSourceTest {
     }
 
     @Test
+    void legacyIdPreserved() {
+        // Deserialize a config.xml written by an older plugin release that still carries an explicit,
+        // non-UUID <id>. A reported symptom is that after upgrade such an <id> ends up null/blank in
+        // memory
+        BitbucketSCMSource instance = load(testName);
+        assertThat(instance.getId()).isEqualTo("legacy-source-id-1");
+        assertThat(instance.hasId()).isTrue();
+        assertThat(instance.getRepoOwner()).isEqualTo("test-owner");
+        assertThat(instance.getRepository()).isEqualTo("test-repo");
+    }
+
+    @Test
     void test_that_clone_url_does_not_contains_username() {
         BranchSCMHead head = new BranchSCMHead("master");
         BitbucketCloudPullRequestCommit commit = new BitbucketCloudPullRequestCommit();

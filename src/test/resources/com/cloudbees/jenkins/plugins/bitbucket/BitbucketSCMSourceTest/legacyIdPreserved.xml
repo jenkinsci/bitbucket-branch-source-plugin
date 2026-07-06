@@ -1,0 +1,13 @@
+<com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource plugin="cloudbees-bitbucket-branch-source@888.v8e6d479a_1730">
+  <id>legacy-source-id-1</id>
+  <serverUrl>https://bitbucket.example.com</serverUrl>
+  <credentialsId>the-credential</credentialsId>
+  <repoOwner>test-owner</repoOwner>
+  <repository>test-repo</repository>
+  <traits>
+    <com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait>
+      <mode>ITEM</mode>
+    </com.cloudbees.jenkins.plugins.bitbucket.trait.WebhookRegistrationTrait>
+    <com.cloudbees.jenkins.plugins.bitbucket.trait.PublicRepoPullRequestFilterTrait/>
+  </traits>
+</com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource>
