@@ -223,7 +223,7 @@ Bitbucket https://www.atlassian.com/blog/bitbucket/bitbucket-cloud-transitions-t
 
 The plugin can make use of an user API token with scopes instead of the app password.
 
-First, create a new _User API token_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/[Bitbucket API Token Documentation]. At least allow _read_ access for project, repositories and pull requests. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
+First, create a new _User API token_ in Bitbucket as instructed in the https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/[Bitbucket API Token Documentation]. At least allow _read_ access for workspace, project, repositories and pull requests. Also, you may need to allow _read_ and _write_ access for webhooks depending on your pipeline's triggers.
 
 image::images/screenshot-22.png[]
 
