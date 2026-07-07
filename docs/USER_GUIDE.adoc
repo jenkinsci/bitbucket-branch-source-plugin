@@ -120,6 +120,8 @@ Any incoming webhook payloads from that given endpoint will be validated against
 
 image::images/screenshot-20.png[]
 
+NOTE: Once the secret is configured in Bitbucket Cloud, its value is hidden; automatic updates of the secret could not be supported. Any updates is the user's responsibility and must be done through the Bitbucket Cloud repository configuration page. 
+
 === Enable webhooks cache
 
 If your organisation has a large number of repositories (over 500), you may easily reach the API rate limit.

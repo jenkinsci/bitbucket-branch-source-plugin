@@ -24,17 +24,22 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.repository;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class BitbucketCloudWebhook implements BitbucketWebHook {
 
     private String uuid;
     private String description;
     private String url;
-    private String secret;
+    private String secret; // filled only on create, absent on details
+    @JsonProperty("secret_set")
+    private boolean hasSecret;
     private boolean active;
     @JsonProperty("skip_cert_verification")
     private boolean skipCertVerification;
@@ -102,4 +107,9 @@ public class BitbucketCloudWebhook implements BitbucketWebHook {
         this.skipCertVerification = skipCertVerification;
     }
 
+    @JsonIgnore
+    @Override
+    public boolean hasSecret(@CheckForNull String secret) {
+        return StringUtils.isNotEmpty(secret) && hasSecret;
+    }
 }
