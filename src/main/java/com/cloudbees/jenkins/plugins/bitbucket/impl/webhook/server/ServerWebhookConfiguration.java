@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.RelativePath;
 import hudson.util.ListBoxModel;
 import java.util.List;
 import jenkins.model.Jenkins;
@@ -115,8 +116,7 @@ public class ServerWebhookConfiguration extends AbstractBitbucketWebhookConfigur
          */
         @RequirePOST
         public ListBoxModel doFillHookSignatureCredentialsIdItems(@QueryParameter(fixEmpty = true) String hookSignatureCredentialsId,
-                                                                  @QueryParameter(value = "serverURL", fixEmpty = true) String serverURL) {
-            // TODO how to get serverURL valued in the BitbucketWebhookConfiguration that holds this configuration ??
+                                                                  @RelativePath("..") @QueryParameter(value = "serverURL", fixEmpty = true) String serverURL) {
             return super.getHookSignatureCredentialsIdItems(hookSignatureCredentialsId, serverURL);
         }
     }
