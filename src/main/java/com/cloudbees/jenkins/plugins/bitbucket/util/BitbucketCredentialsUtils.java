@@ -195,12 +195,15 @@ public class BitbucketCredentialsUtils {
         return result;
     }
 
-    public static ListBoxModel listCredentials(@NonNull Item context,
+    public static ListBoxModel listCredentials(@CheckForNull Item context,
                                                @CheckForNull String serverURL,
                                                @CheckForNull String credentialsId) {
         StandardListBoxModel result = new StandardListBoxModel();
+        if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+            return result;
+        }
         result.includeEmptyValue();
-        if (!context.hasPermission(CredentialsProvider.VIEW)) {
+        if (context != null && !context.hasPermission(CredentialsProvider.VIEW)) {
             return result;
         }
         Authentication authentication = context instanceof Queue.Task task
