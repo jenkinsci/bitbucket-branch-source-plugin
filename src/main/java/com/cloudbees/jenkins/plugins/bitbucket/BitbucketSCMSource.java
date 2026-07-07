@@ -1109,7 +1109,7 @@ public class BitbucketSCMSource extends SCMSource {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
                 List<? extends BitbucketRepository> repositories =
-                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
+                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.MEMBER);
                 if (repositories.isEmpty()) {
                     throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }
