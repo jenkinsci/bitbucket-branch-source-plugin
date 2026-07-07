@@ -680,6 +680,40 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
+    @CheckForNull
+    @Override
+    protected SCMRevision retrieve(@NonNull String thingName, @NonNull TaskListener listener, @CheckForNull Item context)
+            throws IOException, InterruptedException {
+        try (BitbucketApi client = buildBitbucketClient()) {
+            // Try to resolve as a branch first
+            BitbucketBranch branch = client.getBranch(thingName);
+            if (branch != null) {
+                BitbucketCommit revision = findCommit(branch, listener);
+                if (revision != null) {
+                    return new BitbucketGitSCMRevision(new BranchSCMHead(thingName), revision);
+                }
+            }
+
+            // Try to resolve as a tag
+            BitbucketBranch tag = client.getTag(thingName);
+            if (tag != null) {
+                BitbucketCommit revision = findCommit(tag, listener);
+                if (revision != null) {
+                    BitbucketTagSCMHead tagHead = new BitbucketTagSCMHead(thingName, tag.getDateMillis());
+                    return new BitbucketTagSCMRevision(tagHead, revision);
+                }
+            }
+
+            // Try to resolve as a commit hash
+            BitbucketCommit commit = client.resolveCommit(thingName);
+            if (commit != null) {
+                return new BitbucketGitSCMRevision(new BranchSCMHead(thingName), commit);
+            }
+
+            return null;
+        }
+    }
+
     private BitbucketCommit findCommit(@NonNull BitbucketBranch branch, TaskListener listener) {
         String revision = branch.getRawNode();
         if (revision == null) {
@@ -1097,6 +1131,12 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
+            if (context == null) {
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+                    return new ListBoxModel();
+                }
+                return BitbucketCredentialsUtils.listCredentials(Jenkins.get(), serverUrl, null);
+            }
             return BitbucketCredentialsUtils.listCredentials(context, serverUrl, null);
         }
 
