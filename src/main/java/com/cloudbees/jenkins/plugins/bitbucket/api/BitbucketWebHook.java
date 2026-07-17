@@ -23,9 +23,11 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a webhook in Bitbucket.
@@ -67,6 +69,15 @@ public interface BitbucketWebHook {
     @Nullable
     default String getSecret() {
         return null;
+    }
+
+    /**
+     * Returns if the given secret has been already setup for this webhook.
+     *
+     * @return {@code true} if the secret has already set, {@code false} otherwise.
+     */
+    default boolean hasSecret(@CheckForNull String secret) {
+        return Objects.equals(secret, getSecret());
     }
 
 }

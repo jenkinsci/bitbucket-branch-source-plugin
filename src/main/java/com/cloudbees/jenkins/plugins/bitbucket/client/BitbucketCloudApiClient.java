@@ -52,7 +52,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUserAPITokenAuthenticator;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
 import com.damnhandy.uri.template.UriTemplate;
@@ -161,8 +160,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     static boolean isSupportedCloudAuthenticator(BitbucketAuthenticator authenticator) {
         return authenticator instanceof BitbucketAccessTokenAuthenticator
                 || authenticator instanceof BitbucketOAuthAuthenticator
-                || authenticator instanceof BitbucketUserAPITokenAuthenticator // API access token
-                || authenticator instanceof BitbucketUsernamePasswordAuthenticator; // app password
+                || authenticator instanceof BitbucketUserAPITokenAuthenticator; // API access token
     }
 
     /**

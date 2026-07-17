@@ -24,7 +24,7 @@
     </licenses>
 
     <properties>
-        <revision>937.3.3</revision>
+        <revision>937.3.7</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
         <hpi.bundledArtifacts>scribejava-core,scribejava-java8</hpi.bundledArtifacts>

@@ -404,7 +404,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         public static FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
                                                           @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverURL,
                                                           @QueryParameter String value) {
-            return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
+            return BitbucketCredentialsUtils.checkCredentialsId(context, serverURL, value);
         }
 
         @RequirePOST

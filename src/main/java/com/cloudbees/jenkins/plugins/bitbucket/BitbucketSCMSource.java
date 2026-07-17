@@ -745,12 +745,14 @@ public class BitbucketSCMSource extends SCMSource {
                 .withTraits(traits);
 
         // checkoutURL must be calculated after set withCloneLinks and credentials
-        String checkoutURL = scmBuilder.remote();
+        List<String> checkoutURLs = new ArrayList<>();
+        checkoutURLs.add(scmBuilder.remote());
+        scmBuilder.additionalRemoteNames().forEach(remoteName -> checkoutURLs.add(scmBuilder.additionalRemote(remoteName)));
         String scmOwner = Optional.ofNullable(getOwner())
                 .map(SCMSourceOwner::getFullName)
                 .orElse(null);
         return scmBuilder
-                .withExtension(new GitClientAuthenticatorExtension(checkoutURL, serverUrl, scmOwner, sshTrait != null ? null : checkoutCredentialsId))
+                .withExtension(new GitClientAuthenticatorExtension(checkoutURLs, serverUrl, scmOwner, sshTrait != null ? null : checkoutCredentialsId))
                 .build();
     }
 
@@ -1067,7 +1069,7 @@ public class BitbucketSCMSource extends SCMSource {
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
                                                    @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
+            return BitbucketCredentialsUtils.checkCredentialsId(context, serverURL, value);
         }
 
         public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
@@ -1107,7 +1109,7 @@ public class BitbucketSCMSource extends SCMSource {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
                 List<? extends BitbucketRepository> repositories =
-                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
+                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.MEMBER);
                 if (repositories.isEmpty()) {
                     throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }

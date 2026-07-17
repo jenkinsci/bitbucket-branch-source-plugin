@@ -39,7 +39,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.AbstractWebhookManag
 import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Objects;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.Secret;
@@ -200,7 +199,7 @@ public class CloudWebhookManager extends AbstractWebhookManager<CloudWebhookConf
             update = true;
         }
 
-        if (!Objects.equal(current.getSecret(), expected.getSecret())) {
+        if (!current.hasSecret(expected.getSecret())) {
             current.setSecret(expected.getSecret());
             logger.info(() -> "Update webhook " + current.getUuid() + " signature secret");
             update = true;
