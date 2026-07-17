@@ -33,6 +33,9 @@ THE SOFTWARE.
         <f:validateButton title="${%Clear caches}" method="clear" />
         <f:validateButton title="${%Show statistics}" method="showStats" />
     </f:optionalBlock>
+    <f:entry title="${%Rate limit fallback credentials}" field="rateLimitCredentialsIdsText">
+        <f:textarea />
+    </f:entry>
     <f:invisibleEntry>
         <f:textbox field="serverURL"/>
     </f:invisibleEntry>

@@ -33,6 +33,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketAuthenticatorPool;
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -258,10 +259,27 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
 
         // some request could have different host than serverURL, for example avatar images or mirror clone URL
         // for all these host authentication will be not applied
-        if (authenticator != null && targetHost.equals(requestHost)) {
-            authenticator.configureRequest(request);
+        int remainingAttempts = authenticator instanceof BitbucketAuthenticatorPool pool ? pool.size() : 1;
+        while (true) {
+            if (authenticator != null && targetHost.equals(requestHost)) {
+                authenticator.configureRequest(request);
+            }
+            ClassicHttpResponse response = getClient().executeOpen(requestHost, request, context);
+            if (!(authenticator instanceof BitbucketAuthenticatorPool pool)) {
+                return response;
+            }
+            if (response.getCode() == HttpStatus.SC_TOO_MANY_REQUESTS && --remainingAttempts > 0 && pool.advance()) {
+                logger.info(() -> "Bitbucket Cloud rate limit exceeded; retrying with credential " + pool.getId());
+                EntityUtils.consumeQuietly(response.getEntity());
+                response.close();
+                continue;
+            }
+            Header nearLimit = response.getFirstHeader("X-RateLimit-NearLimit");
+            if (nearLimit != null && Boolean.parseBoolean(nearLimit.getValue()) && pool.advance()) {
+                logger.fine(() -> "Bitbucket Cloud rate limit is near; next request will use credential " + pool.getId());
+            }
+            return response;
         }
-        return getClient().executeOpen(requestHost, request, context);
     }
 
     private String doRequest(HttpUriRequest request) throws IOException {
