@@ -47,6 +47,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepos
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.buildstatus.CloudBuildStatusNotifier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ExponentialBackoffRetryStrategy;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
@@ -89,6 +90,7 @@ import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class BitbucketCloudApiClient extends AbstractBitbucketApi implements BitbucketApi {
 
@@ -142,13 +144,22 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             cachedTeam.setExpireDuration(teamCacheDuration, MINUTES);
             cachedRepositories.setExpireDuration(repositoriesCacheDuration, MINUTES);
         }
-        this.client = super.setupClientBuilder().build();
+        var builder = super.setupClientBuilder();
+        if (authenticator instanceof BitbucketAuthenticatorPool) {
+            builder.setRetryStrategy(new ExponentialBackoffRetryStrategy(2, SECONDS.toMillis(5), HOURS.toMillis(1), false));
+        }
+        this.client = builder.build();
     }
 
     @Override
     protected boolean isSupportedAuthenticator(@CheckForNull BitbucketAuthenticator authenticator) {
         return authenticator == null
-                || authenticator instanceof BitbucketAccessTokenAuthenticator
+                || isSupportedCloudAuthenticator(authenticator)
+                || authenticator instanceof BitbucketAuthenticatorPool;
+    }
+
+    static boolean isSupportedCloudAuthenticator(BitbucketAuthenticator authenticator) {
+        return authenticator instanceof BitbucketAccessTokenAuthenticator
                 || authenticator instanceof BitbucketOAuthAuthenticator
                 || authenticator instanceof BitbucketUserAPITokenAuthenticator // API access token
                 || authenticator instanceof BitbucketUsernamePasswordAuthenticator; // app password

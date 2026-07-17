@@ -95,7 +95,8 @@ class BitbucketCloudEndpointTest {
                 .literal("/pullrequests")
                 .query("page", "pagelen")
                 .build();
-        String urlTemplate = V2_API_BASE_URL + "/" + owner + "/" + repositoryName + "/pullrequests?page=%d&pagelen=50";
+        String urlTemplate = V2_API_BASE_URL + "/" + owner + "/" + repositoryName
+                + "/pullrequests?page=%d&pagelen=50";
         int page = 1;
         String url = String.format(urlTemplate, page);
         String betterUrl = template
@@ -106,5 +107,15 @@ class BitbucketCloudEndpointTest {
                 .set("pagelen", 50)
                 .expand();
         assertThat(url).isEqualTo(betterUrl);
+    }
+
+    @Test
+    void parsesOrderedFallbackCredentialIds() {
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint();
+
+        endpoint.setRateLimitCredentialsIdsText("fallback-1\nfallback-2, fallback-1\r\n");
+
+        assertThat(endpoint.getRateLimitCredentialsIds()).containsExactly("fallback-1", "fallback-2");
+        assertThat(endpoint.getRateLimitCredentialsIdsText()).isEqualTo("fallback-1\nfallback-2");
     }
 }
