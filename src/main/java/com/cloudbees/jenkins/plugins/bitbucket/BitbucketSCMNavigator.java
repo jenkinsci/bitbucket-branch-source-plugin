@@ -415,10 +415,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         @RequirePOST
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
-                                                @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverUrl,
+                                                @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverURL,
                                                 @QueryParameter String credentialsId,
                                                 @QueryParameter String repoOwner) throws FormFillFailure {
-            return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, null, MirrorListSupplier.INSTANCE);
+            return getFromBitbucket(context, serverURL, credentialsId, repoOwner, null, MirrorListSupplier.INSTANCE);
         }
 
         public List<NamedArrayList<? extends SCMTraitDescriptor<?>>> getTraitsDescriptorLists() {

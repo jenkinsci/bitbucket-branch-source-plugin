@@ -34,11 +34,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.util.FormFillFailure;
 import hudson.util.ListBoxModel;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -73,11 +75,11 @@ public class BitbucketApiUtils {
         }
     }
 
-    public static ListBoxModel getFromBitbucket(SCMSourceOwner context,
-                                                String serverURL,
-                                                String credentialsId,
-                                                String repoOwner,
-                                                String repository,
+    public static ListBoxModel getFromBitbucket(@CheckForNull SCMSourceOwner context,
+                                                @CheckForNull String serverURL,
+                                                @CheckForNull String credentialsId,
+                                                @CheckForNull String repoOwner,
+                                                @CheckForNull String repository,
                                                 BitbucketSupplier<ListBoxModel> listBoxModelSupplier) throws FormFillFailure {
         repoOwner = Util.fixEmptyAndTrim(repoOwner);
         if (repoOwner == null) {
@@ -108,6 +110,8 @@ public class BitbucketApiUtils {
             return listBoxModelSupplier.get(bitbucket);
         } catch (FormFillFailure e) {
             throw e;
+        } catch (FileNotFoundException e) {
+            throw FormFillFailure.error(e.getMessage());
         } catch (InterruptedException | IOException e) { // NOSONAR
             BitbucketRequestException bbe = BitbucketApiUtils.unwrap(e);
             if (bbe != null && bbe.getHttpCode() == 401) {
