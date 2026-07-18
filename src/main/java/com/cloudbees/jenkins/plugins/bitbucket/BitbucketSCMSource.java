@@ -75,7 +75,6 @@ import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
-import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -1106,11 +1105,14 @@ public class BitbucketSCMSource extends SCMSource {
             return BitbucketCredentialsUtils.checkCredentialsId(context, serverURL, value);
         }
 
-        public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
+        public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context,
+                                                      @QueryParameter(fixEmpty = true) String value) {
             if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE)
                 || context != null && !context.hasPermission(Item.EXTENDED_READ)) {
-                return FormValidation.error(
-                    "Unauthorized to validate Server URL"); // not supposed to be seeing this form
+                return FormValidation.error("Unauthorized to validate Server URL"); // not supposed to be seeing this form
+            }
+            if (value == null) {
+                return FormValidation.error("Server is required");
             }
             if (!BitbucketEndpointProvider.lookupEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
@@ -1122,29 +1124,27 @@ public class BitbucketSCMSource extends SCMSource {
             return !BitbucketEndpointProvider.all().isEmpty();
         }
 
+        @RequirePOST
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
-            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
-            if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
+            if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE)
+                    || context != null && !context.hasPermission(Item.CONFIGURE)) {
                 return new ListBoxModel();
             }
             return BitbucketEndpointProvider.listEndpoints();
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
-            if (context == null) {
-                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
-                    return new ListBoxModel();
-                }
-                return BitbucketCredentialsUtils.listCredentials(Jenkins.get(), serverUrl, null);
-            }
-            return BitbucketCredentialsUtils.listCredentials(context, serverUrl, null);
+        @RequirePOST
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
+                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
+            return BitbucketCredentialsUtils.listCredentials(context, serverURL, null);
         }
 
         @RequirePOST
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
-                                                  @QueryParameter String serverUrl,
-                                                  @QueryParameter String credentialsId,
-                                                  @QueryParameter String repoOwner) throws IOException {
+                                                  @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
+                                                  @QueryParameter(fixEmpty = true) String credentialsId,
+                                                  @QueryParameter(fixEmpty = true) String repoOwner) throws IOException {
+
             BitbucketSupplier<ListBoxModel> listBoxModelSupplier = bitbucket -> {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
@@ -1158,17 +1158,18 @@ public class BitbucketSCMSource extends SCMSource {
                 }
                 return result;
             };
-            return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, null, listBoxModelSupplier);
+            return getFromBitbucket(context, serverURL, credentialsId, repoOwner, null, listBoxModelSupplier);
         }
 
+        @RequirePOST
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
-                                                @QueryParameter String serverUrl,
-                                                @QueryParameter String credentialsId,
-                                                @QueryParameter String repoOwner,
-                                                @QueryParameter String repository)
+                                                @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
+                                                @QueryParameter(fixEmpty = true) String credentialsId,
+                                                @QueryParameter(fixEmpty = true) String repoOwner,
+                                                @QueryParameter(fixEmpty = true) String repository)
             throws FormFillFailure {
 
-            return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, repository, MirrorListSupplier.INSTANCE);
+            return getFromBitbucket(context, serverURL, credentialsId, repoOwner, repository, MirrorListSupplier.INSTANCE);
         }
 
         @NonNull
