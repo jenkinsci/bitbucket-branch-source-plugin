@@ -47,6 +47,10 @@ public final class BitbucketAuthenticatorPool implements BitbucketAuthenticator 
             throw new IllegalArgumentException("At least one authenticator is required");
         }
         this.authenticators = new ArrayList<>(unique.values());
+        Class<?> authenticatorType = this.authenticators.get(0).getClass();
+        if (this.authenticators.stream().anyMatch(authenticator -> authenticator.getClass() != authenticatorType)) {
+            throw new IllegalArgumentException("All authenticators must have the same type");
+        }
     }
 
     public int size() {
@@ -72,7 +76,10 @@ public final class BitbucketAuthenticatorPool implements BitbucketAuthenticator 
 
     @Override
     public void configureBuilder(HttpClientBuilder builder) {
-        authenticators.forEach(authenticator -> authenticator.configureBuilder(builder));
+        // Pool members are required to have the same type, so their builder setup is
+        // equivalent. Applying every setup can corrupt mutually exclusive settings
+        // such as client certificates.
+        current().configureBuilder(builder);
     }
 
     @Override

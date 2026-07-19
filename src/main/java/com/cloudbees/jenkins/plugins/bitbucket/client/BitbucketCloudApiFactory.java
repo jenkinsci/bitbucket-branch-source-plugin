@@ -62,19 +62,19 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
             repositoriesCacheDuration = endpoint.getRepositoriesCacheDuration();
         }
         BitbucketAuthenticator effectiveAuthenticator = authenticator;
-        if (endpoint != null && !endpoint.getRateLimitCredentialsIds().isEmpty()) {
+        if (endpoint != null && endpoint.getRateLimitCredentialsId() != null) {
             List<BitbucketAuthenticator> authenticators = new ArrayList<>();
             if (authenticator != null) {
                 authenticators.add(authenticator);
             }
-            for (String credentialsId : endpoint.getRateLimitCredentialsIds()) {
-                StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(
-                        Jenkins.get(), BitbucketCloudEndpoint.SERVER_URL, credentialsId, StandardCredentials.class);
-                BitbucketAuthenticator fallback = credentials == null ? null : AuthenticationTokens.convert(
-                        BitbucketAuthenticator.authenticationContext(BitbucketCloudEndpoint.SERVER_URL), credentials);
-                if (fallback != null && BitbucketCloudApiClient.isSupportedCloudAuthenticator(fallback)) {
-                    authenticators.add(fallback);
-                }
+            StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(
+                    Jenkins.get(), BitbucketCloudEndpoint.SERVER_URL, endpoint.getRateLimitCredentialsId(),
+                    StandardCredentials.class);
+            BitbucketAuthenticator fallback = credentials == null ? null : AuthenticationTokens.convert(
+                    BitbucketAuthenticator.authenticationContext(BitbucketCloudEndpoint.SERVER_URL), credentials);
+            if (fallback != null && BitbucketCloudApiClient.isSupportedCloudAuthenticator(fallback)
+                    && authenticator != null && fallback.getClass() == authenticator.getClass()) {
+                authenticators.add(fallback);
             }
             if (!authenticators.isEmpty()) {
                 effectiveAuthenticator = new BitbucketAuthenticatorPool(authenticators);

@@ -110,12 +110,11 @@ class BitbucketCloudEndpointTest {
     }
 
     @Test
-    void parsesOrderedFallbackCredentialIds() {
+    void keepsOnlyFirstFallbackCredentialId() {
         BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint();
 
         endpoint.setRateLimitCredentialsIdsText("fallback-1\nfallback-2, fallback-1\r\n");
 
-        assertThat(endpoint.getRateLimitCredentialsIds()).containsExactly("fallback-1", "fallback-2");
-        assertThat(endpoint.getRateLimitCredentialsIdsText()).isEqualTo("fallback-1\nfallback-2");
+        assertThat(endpoint.getRateLimitCredentialsId()).isEqualTo("fallback-1");
     }
 }

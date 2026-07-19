@@ -168,11 +168,14 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
                 .setConnectionRequestTimeout(connectionRequestTimeout, TimeUnit.SECONDS)
                 .build();
 
+        ExponentialBackoffRetryStrategy retryStrategy = authenticator instanceof BitbucketAuthenticatorPool
+                ? new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1), false)
+                : new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1));
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
                 .useSystemProperties()
                 .setConnectionManager(getConnectionManager())
                 .setConnectionManagerShared(true)
-                .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
+                .setRetryStrategy(retryStrategy)
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofSeconds(2))

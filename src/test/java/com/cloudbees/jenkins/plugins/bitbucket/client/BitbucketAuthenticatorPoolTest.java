@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpHost;
@@ -38,10 +39,12 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -91,6 +94,32 @@ class BitbucketAuthenticatorPoolTest {
         assertThat(pool.size()).isOne();
         assertThat(pool.advance()).isFalse();
     }
+
+    @Test
+    void rejectsMixedAuthenticatorTypes() {
+        BitbucketAuthenticator first = authenticator("first");
+        BitbucketAuthenticator second = mock(OtherAuthenticator.class);
+        when(second.getId()).thenReturn("second");
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> new BitbucketAuthenticatorPool(List.of(first, second)))
+                .withMessage("All authenticators must have the same type");
+    }
+
+    @Test
+    void configuresBuilderOnlyOnce() {
+        BitbucketAuthenticator primary = authenticator("primary");
+        BitbucketAuthenticator fallback = authenticator("fallback");
+        BitbucketAuthenticatorPool pool = new BitbucketAuthenticatorPool(List.of(primary, fallback));
+        HttpClientBuilder builder = HttpClientBuilder.create();
+
+        pool.configureBuilder(builder);
+
+        verify(primary).configureBuilder(builder);
+        verify(fallback, never()).configureBuilder(builder);
+    }
+
+    private abstract static class OtherAuthenticator implements BitbucketAuthenticator {}
 
     private static BitbucketAuthenticator authenticator(String id) {
         BitbucketAuthenticator authenticator = mock(BitbucketAuthenticator.class);

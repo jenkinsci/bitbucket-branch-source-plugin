@@ -35,6 +35,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,6 +45,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.verb.POST;
 
@@ -131,6 +133,15 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
                 : Collections.unmodifiableList(rateLimitCredentialsIds);
     }
 
+    public String getRateLimitCredentialsId() {
+        return getRateLimitCredentialsIds().stream().findFirst().orElse(null);
+    }
+
+    @DataBoundSetter
+    public void setRateLimitCredentialsId(String credentialsId) {
+        setRateLimitCredentialsIdsText(credentialsId);
+    }
+
     public String getRateLimitCredentialsIdsText() {
         return String.join("\n", getRateLimitCredentialsIds());
     }
@@ -202,6 +213,14 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
                 builder.append(stat).append("<br>");
             }
             return FormValidation.okWithMarkup(builder.toString());
+        }
+
+        public ListBoxModel doFillRateLimitCredentialsIdItems(
+                @QueryParameter String rateLimitCredentialsId) {
+            Jenkins jenkins = Jenkins.get();
+            jenkins.checkPermission(Jenkins.MANAGE);
+            return com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils.listCredentials(
+                    jenkins, SERVER_URL, rateLimitCredentialsId);
         }
 
         @POST
