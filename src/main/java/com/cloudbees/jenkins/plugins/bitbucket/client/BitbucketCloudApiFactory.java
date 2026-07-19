@@ -76,7 +76,7 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
                     && authenticator != null && fallback.getClass() == authenticator.getClass()) {
                 authenticators.add(fallback);
             }
-            if (!authenticators.isEmpty()) {
+            if (authenticators.size() > 1) {
                 effectiveAuthenticator = new BitbucketAuthenticatorPool(authenticators);
             }
         }

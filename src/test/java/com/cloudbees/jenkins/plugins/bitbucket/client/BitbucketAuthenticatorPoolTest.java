@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -117,6 +118,21 @@ class BitbucketAuthenticatorPoolTest {
 
         verify(primary).configureBuilder(builder);
         verify(fallback, never()).configureBuilder(builder);
+    }
+
+    @Test
+    void doesNotApplyBackoffAfterFallbackIsExhausted() throws Exception {
+        BitbucketAuthenticatorPool pool = new BitbucketAuthenticatorPool(
+                List.of(authenticator("primary"), authenticator("fallback")));
+        ClassicHttpResponse limited = response(HttpStatus.SC_TOO_MANY_REQUESTS);
+        CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+        when(httpClient.executeOpen(any(HttpHost.class), any(ClassicHttpRequest.class), nullable(HttpContext.class)))
+                .thenReturn(limited);
+
+        assertThat(new TestClient(pool, httpClient).execute()).isSameAs(limited);
+
+        verify(httpClient, times(2))
+                .executeOpen(any(HttpHost.class), any(ClassicHttpRequest.class), nullable(HttpContext.class));
     }
 
     private abstract static class OtherAuthenticator implements BitbucketAuthenticator {}

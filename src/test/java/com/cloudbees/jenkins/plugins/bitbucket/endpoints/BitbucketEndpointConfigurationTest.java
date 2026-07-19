@@ -591,9 +591,11 @@ class BitbucketEndpointConfigurationTest {
     @Test
     void given__instanceWithConfig__when__configRoundtrip__then__configRetained() throws Exception {
         BitbucketEndpointConfiguration instance = BitbucketEndpointConfiguration.get();
+        BitbucketCloudEndpoint cloudEndpoint = buildCloudEndpoint(true, "first");
+        cloudEndpoint.setRateLimitCredentialsId("third");
         instance.setEndpoints(
                 List.of(
-                        buildCloudEndpoint(true, "first"),
+                        cloudEndpoint,
                         new BitbucketServerEndpoint("Example Inc", "https://bitbucket.example.com/", new ServerWebhookConfiguration(true, "second")),
                         new BitbucketServerEndpoint("Example Org", "http://example.org:8080/bitbucket/")
                 ));
@@ -616,6 +618,7 @@ class BitbucketEndpointConfigurationTest {
         assertThat(endpoint1.getServerURL()).isEqualTo("https://bitbucket.org");
         assertThat(endpoint1.isManageHooks()).isTrue();
         assertThat(endpoint1.getCredentialsId()).isEqualTo("first");
+        assertThat(endpoint1.getRateLimitCredentialsId()).isEqualTo("third");
 
         BitbucketServerEndpoint endpoint2 = (BitbucketServerEndpoint) instance.getEndpoints().get(1);
         assertThat(endpoint2.getDisplayName()).isEqualTo("Example Inc");
