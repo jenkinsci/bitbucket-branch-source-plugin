@@ -137,13 +137,13 @@ The Bitbucket Cloud endpoint can cache workspace and repository API responses.
 Enable the cache and choose suitable cache durations to reduce repeated API calls during indexing.
 
 You can also configure _Rate limit fallback credentials_ on the Bitbucket Cloud endpoint in
-_Manage Jenkins_ » _System_. Enter one Jenkins credential ID per line in failover order. The
-credential selected by a job remains the primary credential. When Bitbucket Cloud returns HTTP
-429, the current request is retried with the next configured credential. When Bitbucket sends
-`X-RateLimit-NearLimit: true`, the next request starts with the next credential instead.
+_Manage Jenkins_ » _System_. Select one fallback credential. The credential selected by a job
+remains the primary credential. When Bitbucket Cloud returns HTTP 429, the current request is
+retried with the fallback credential. When Bitbucket sends `X-RateLimit-NearLimit: true`, the next
+request starts with the fallback credential instead.
 
 Fallback credentials must be valid Bitbucket Cloud API credentials visible from the Jenkins
-system context. Duplicate IDs and the job's primary credential are ignored. Atlassian applies a
+system context and must use the same authentication method as the primary credential. Atlassian applies a
 separate rate-limit allowance to each access token, so dedicated tokens can prevent unrelated
 automation from consuming the plugin's API allowance. See the
 https://support.atlassian.com/bitbucket-cloud/kb/bitbucket-cloud-rate-limit-troubleshooting/[Bitbucket Cloud rate-limit troubleshooting guide].
