@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfig
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticatorSource;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUserAPITokenAuthenticatorSource;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticatorSource;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -53,8 +54,7 @@ import hudson.util.ListBoxModel;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
@@ -64,8 +64,6 @@ import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.util.SystemProperties;
 import org.apache.commons.lang3.StringUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.springframework.security.core.Authentication;
 
 /**
@@ -77,57 +75,37 @@ public class BitbucketCredentialsUtils {
         static final String TIMEOUT_CREDENTILS_RESOLUTION_PROPERTY_NAME = "bitbucket.credentials.resolutionTimeout";
 
         private static final Logger logger = Logger.getLogger(TimeBoxedCredentialsMatcher.class.getName());
-        private static final Map<Class<?>, Integer> blacklist = new ConcurrentHashMap<>();
         private CredentialsMatcher delegate;
         private Integer resolutionTimout;
 
         public TimeBoxedCredentialsMatcher(CredentialsMatcher matcher) {
-            resolutionTimout = SystemProperties.getInteger(TIMEOUT_CREDENTILS_RESOLUTION_PROPERTY_NAME, 250);
+            resolutionTimout = SystemProperties.getInteger(TIMEOUT_CREDENTILS_RESOLUTION_PROPERTY_NAME, 5000);
             this.delegate = matcher;
         }
 
         @Override
         public boolean matches(Credentials item) {
-            TimeLimiter timeLimiter = SimpleTimeLimiter.create(Executors.newSingleThreadExecutor());
-
-            Class<? extends Credentials> credentialClass = item.getClass();
-            if (blacklist.containsKey(credentialClass) && blacklist.get(credentialClass) > 1) {
-                logger.fine(() -> "Credentials " + credentialClass + " discarded becuase it is blacklisted");
-                // JENKINS-76330
-                return false;
-            }
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            TimeLimiter timeLimiter = SimpleTimeLimiter.create(executorService);
 
             try {
                 // JENKINS-75225
                 return timeLimiter.callWithTimeout(() -> delegate.matches(item), Duration.ofMillis(resolutionTimout));
             } catch (TimeoutException e) {
-                blacklist.compute(credentialClass, (k, v) -> {
-                    // JENKINS-76330
-                    if (v == null) {
-                        return 1;
-                    } else {
-                        logger.warning(() -> "Credentials of type " + credentialClass + " will be added to the blacklist because exeed the resolution time of the secret twice");
-                        return v + 1;
-                    }
-                });
                 // takes long maybe credentials are not stored in Jenkins and requires some remote call than will fail
                 logger.fine(() -> "Credentials " + item.getDescriptor() + " takes too long to get password, maybe is performing remote call");
                 return false;
             } catch (Exception e) {
                 // JENKINS-75184
                 return false;
+            } finally {
+                executorService.shutdown();
             }
         }
     }
 
     private BitbucketCredentialsUtils() {
         throw new IllegalAccessError("Utility class");
-    }
-
-    @Restricted(NoExternalUse.class)
-    // maybe could be exposed in the Manage Jenkins page
-    public static void resetBlacklist() {
-        TimeBoxedCredentialsMatcher.blacklist.clear();
     }
 
     @CheckForNull
@@ -173,6 +151,7 @@ public class BitbucketCredentialsUtils {
     public static FormValidation checkCredentialsId(@CheckForNull SCMSourceOwner context,
                                                     @CheckForNull String serverURL,
                                                     @CheckForNull String credentialsId) {
+        FormValidation result = FormValidation.ok();
         if (StringUtils.isNotBlank(credentialsId)) {
             serverURL = BitbucketEndpointProvider.lookupEndpoint(serverURL)
                     .orElse(BitbucketEndpointConfiguration.get().getDefaultEndpoint())
@@ -193,20 +172,38 @@ public class BitbucketCredentialsUtils {
                             authentication,
                             domainRequirements);
             if (certificateCredentials != null) {
-                return FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
+                result = FormValidation.warning("A certificate was selected. You will likely need to configure Checkout over SSH.");
+            } else if (BitbucketApiUtils.isCloud(serverURL)) {
+                StandardCredentials credentials = CredentialsProvider.findCredentialByIdInItem(
+                        credentialsId,
+                        StandardCredentials.class,
+                        context,
+                        authentication,
+                        domainRequirements);
+                if (credentials == null) {
+                    result = FormValidation.error("Credentials " + credentialsId + " not found.");
+                } else {
+                    CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
+                    if (!matcher.matches(credentials)) {
+                        result = FormValidation.error("Selected credentials does not match any criteria for the selected Bitbucket instance: " + serverURL);
+                    }
+                }
             }
-            return FormValidation.ok();
         } else {
-            return FormValidation.warning("Credentials are required for build notifications");
+            result = FormValidation.warning("Credentials are required for build notifications");
         }
+        return result;
     }
 
-    public static ListBoxModel listCredentials(@NonNull Item context,
+    public static ListBoxModel listCredentials(@CheckForNull Item context,
                                                @CheckForNull String serverURL,
                                                @CheckForNull String credentialsId) {
         StandardListBoxModel result = new StandardListBoxModel();
+        if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+            return result;
+        }
         result.includeEmptyValue();
-        if (!context.hasPermission(CredentialsProvider.VIEW)) {
+        if (context != null && !context.hasPermission(CredentialsProvider.VIEW)) {
             return result;
         }
         Authentication authentication = context instanceof Queue.Task task
@@ -218,13 +215,12 @@ public class BitbucketCredentialsUtils {
                 .getServerURL();
 
         List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
-        CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
         result.includeMatchingAs(
                 authentication,
                 context,
                 StandardCredentials.class,
                 domainRequirements,
-                matcher);
+                CredentialsMatchers.always());
         if (credentialsId != null) {
             result.includeCurrentValue(credentialsId);
         }
@@ -237,7 +233,6 @@ public class BitbucketCredentialsUtils {
 
         List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(serverURL).build();
         Authentication authentication = ACL.SYSTEM2;
-        CredentialsMatcher matcher = /*AuthenticationTokens.*/matcher(BitbucketAuthenticator.authenticationContext(serverURL));
 
         StandardListBoxModel result = new StandardListBoxModel();
         result.includeMatchingAs(
@@ -245,7 +240,7 @@ public class BitbucketCredentialsUtils {
                 context,
                 StandardCredentials.class,
                 domainRequirements,
-                matcher);
+                CredentialsMatchers.always());
         if (credentialsId != null) {
             result.includeCurrentValue(credentialsId);
         }

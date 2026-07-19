@@ -404,7 +404,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         public static FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
                                                           @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverURL,
                                                           @QueryParameter String value) {
-            return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
+            return BitbucketCredentialsUtils.checkCredentialsId(context, serverURL, value);
         }
 
         @RequirePOST
@@ -415,10 +415,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
         @RequirePOST
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
-                                                @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverUrl,
+                                                @QueryParameter(fixEmpty = true, value = "serverUrl", required = true) String serverURL,
                                                 @QueryParameter String credentialsId,
                                                 @QueryParameter String repoOwner) throws FormFillFailure {
-            return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, null, MirrorListSupplier.INSTANCE);
+            return getFromBitbucket(context, serverURL, credentialsId, repoOwner, null, MirrorListSupplier.INSTANCE);
         }
 
         public List<NamedArrayList<? extends SCMTraitDescriptor<?>>> getTraitsDescriptorLists() {

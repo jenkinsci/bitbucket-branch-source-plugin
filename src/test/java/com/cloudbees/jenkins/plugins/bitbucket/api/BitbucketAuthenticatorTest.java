@@ -118,7 +118,7 @@ class BitbucketAuthenticatorTest {
     void given_UsernamePasswordCredentials_returns_BitbucketUsernamePasswordAuthenticator() {
         // use cases: real username/password or an app password
         List<Credentials> list = List.of(credentials);
-        AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext(null);
+        AuthenticationTokenContext<?> ctx = BitbucketAuthenticator.authenticationContext("http://localhost");
         Credentials c = CredentialsMatchers.firstOrNull(list, AuthenticationTokens.matcher(ctx));
         assertThat(c).isNotNull();
         BitbucketAuthenticator a = (BitbucketAuthenticator) AuthenticationTokens.convert(ctx, c);
