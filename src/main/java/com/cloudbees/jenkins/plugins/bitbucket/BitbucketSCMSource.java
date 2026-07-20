@@ -872,6 +872,7 @@ public class BitbucketSCMSource extends SCMSource {
 
     @CheckForNull
     /* package */ BitbucketAuthenticator authenticator() {
+        // TODO cycle all credentials configured in the trait and wrap into a pool authentication
         return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerUrl()), credentials());
     }
 
