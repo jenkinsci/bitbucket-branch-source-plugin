@@ -36,9 +36,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManag
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.ExtensionList;
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -247,25 +249,19 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
     @NonNull
     protected abstract CloseableHttpClient getClient();
 
+    @Nullable
     protected ClassicHttpResponse executeMethod(HttpUriRequest request) throws IOException {
         HttpHost targetHost = getHost();
         HttpHost requestHost;
         try {
             requestHost = HttpHost.create(request.getUri());
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
 
-        // some request could have different host than serverURL, for example avatar images or mirror clone URL
-        // for all these host authentication will be not applied
-        if (authenticator != null && targetHost.equals(requestHost)) {
-            authenticator.configureRequest(request);
-        }
-        return getClient().executeOpen(requestHost, request, context);
-    }
-
-    private String doRequest(HttpUriRequest request) throws IOException {
-        try (ClassicHttpResponse response =  executeMethod(request)) {
+            // some request could have different host than serverURL, for example avatar images or mirror clone URL
+            // for all these host authentication will be not applied
+            if (authenticator != null && targetHost.equals(requestHost)) {
+                authenticator.configureRequest(request);
+            }
+            ClassicHttpResponse response = getClient().executeOpen(requestHost, request, context);
             int statusCode = response.getCode();
             if (statusCode == HttpStatus.SC_NOT_FOUND) {
                 String errorMessage = getResponseContent(response);
@@ -274,17 +270,33 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
             if (statusCode == HttpStatus.SC_NO_CONTENT) {
                 EntityUtils.consumeQuietly(response.getEntity());
                 // 204, no content
-                return "";
+                return null;
             }
-            String content = getResponseContent(response);
+            if (statusCode == HttpStatus.SC_TOO_MANY_REQUESTS) {
+                // TODO check header (delegate to helper/authenticator?)
+                // TODO if so call autheticator.markExpired (must be added to API interface if BitbucketAuthenticator (make sense for other authenticators??), use instanceof with a implementation here is not cool)
+                // TODO move autheticator to the next one available
+                response.close();
+                // retry
+                return executeMethod(request);
+            }
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+                String content = getResponseContent(response);
                 throw buildResponseException(response, content);
             }
-            return content;
+            return response;
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
         } catch (FileNotFoundException | BitbucketRequestException e) {
             throw e;
         } catch (IOException e) {
             throw new IOException("Communication error, requested URL: " + request, e);
+        }
+    }
+
+    private String doRequest(HttpUriRequest request) throws IOException {
+        try (ClassicHttpResponse response =  executeMethod(request)) {
+            return response == null ? "" : getResponseContent(response);
         }
     }
 
@@ -294,16 +306,7 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
     protected InputStream getRequestAsInputStream(String path) throws IOException {
         HttpGet httpget = new HttpGet(path);
         ClassicHttpResponse response =  executeMethod(httpget);
-        int statusCode = response.getCode();
-        if (statusCode == HttpStatus.SC_NOT_FOUND) {
-            String errorMessage = getResponseContent(response);
-            throw new FileNotFoundException("Resource " + path + " not found: " + errorMessage);
-        }
-        if (statusCode != HttpStatus.SC_OK) {
-            String content = getResponseContent(response);
-            throw buildResponseException(response, content);
-        }
-        return new ClosingConnectionInputStream(response);
+        return response == null ? new ByteArrayInputStream("".getBytes()) : new ClosingConnectionInputStream(response);
     }
 
     protected int headRequestStatus(String path) throws IOException {
