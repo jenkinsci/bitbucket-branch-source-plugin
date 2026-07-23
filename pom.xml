@@ -32,6 +32,7 @@
         <jenkins.baseline>2.541</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
+        <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
         <hpi.compatibleSinceVersion>937.0.0</hpi.compatibleSinceVersion>
         <tagNameFormat>@{project.version}</tagNameFormat>
     </properties>
