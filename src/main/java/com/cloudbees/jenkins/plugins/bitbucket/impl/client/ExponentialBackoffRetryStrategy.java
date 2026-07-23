@@ -77,6 +77,7 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
     private final long backOffRate;
     private final long initialExpiryInMillis;
     private final long maxExpiryInMillis;
+    private final boolean retryTooManyRequests;
     /**
      * Derived {@code IOExceptions} which shall not be retried
      */
@@ -103,9 +104,18 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
             final long backOffRate,
             final long initialExpiryInMillis,
             final long maxExpiryInMillis) {
+        this(backOffRate, initialExpiryInMillis, maxExpiryInMillis, true);
+    }
+
+    public ExponentialBackoffRetryStrategy(
+            final long backOffRate,
+            final long initialExpiryInMillis,
+            final long maxExpiryInMillis,
+            final boolean retryTooManyRequests) {
         this.backOffRate = Args.notNegative(backOffRate, "BackOffRate");
         this.initialExpiryInMillis = Args.notNegative(initialExpiryInMillis, "InitialExpiryInMillis");
         this.maxExpiryInMillis = Args.notNegative(maxExpiryInMillis, "MaxExpiryInMillis");
+        this.retryTooManyRequests = retryTooManyRequests;
         this.nonRetriableIOExceptionClasses = Set.of(
                 InterruptedIOException.class,
                 UnknownHostException.class,
@@ -122,7 +132,7 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
     public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
         int statusCode = response.getCode();
         return getRetryInterval(executionCount) < maxExpiryInMillis
-                && (statusCode == HttpStatus.SC_TOO_MANY_REQUESTS
+                && ((retryTooManyRequests && statusCode == HttpStatus.SC_TOO_MANY_REQUESTS)
                 || statusCode == HttpStatus.SC_SERVICE_UNAVAILABLE);
     }
 

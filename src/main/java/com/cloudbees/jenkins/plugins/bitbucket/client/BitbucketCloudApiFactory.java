@@ -28,10 +28,16 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
+import java.util.ArrayList;
+import java.util.List;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.model.Jenkins;
 
 @Extension
 public class BitbucketCloudApiFactory extends BitbucketApiFactory {
@@ -55,8 +61,27 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
             teamCacheDuration = endpoint.getTeamCacheDuration();
             repositoriesCacheDuration = endpoint.getRepositoriesCacheDuration();
         }
+        BitbucketAuthenticator effectiveAuthenticator = authenticator;
+        if (endpoint != null && endpoint.getRateLimitCredentialsId() != null) {
+            List<BitbucketAuthenticator> authenticators = new ArrayList<>();
+            if (authenticator != null) {
+                authenticators.add(authenticator);
+            }
+            StandardCredentials credentials = BitbucketCredentialsUtils.lookupCredentials(
+                    Jenkins.get(), BitbucketCloudEndpoint.SERVER_URL, endpoint.getRateLimitCredentialsId(),
+                    StandardCredentials.class);
+            BitbucketAuthenticator fallback = credentials == null ? null : AuthenticationTokens.convert(
+                    BitbucketAuthenticator.authenticationContext(BitbucketCloudEndpoint.SERVER_URL), credentials);
+            if (fallback != null && BitbucketCloudApiClient.isSupportedCloudAuthenticator(fallback)
+                    && authenticator != null && fallback.getClass() == authenticator.getClass()) {
+                authenticators.add(fallback);
+            }
+            if (authenticators.size() > 1) {
+                effectiveAuthenticator = new BitbucketAuthenticatorPool(authenticators);
+            }
+        }
         return new BitbucketCloudApiClient(
                 enableCache, teamCacheDuration, repositoriesCacheDuration,
-                owner, projectKey, repository, authenticator);
+                owner, projectKey, repository, effectiveAuthenticator);
     }
 }

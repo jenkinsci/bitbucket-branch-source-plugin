@@ -35,12 +35,17 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.verb.POST;
 
@@ -70,6 +75,9 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
      * How long, in minutes, to cache the repositories response.
      */
     private final int repositoriesCacheDuration;
+
+    /** Ordered credentials used after the job's primary credential is rate limited. */
+    private List<String> rateLimitCredentialsIds = new ArrayList<>();
 
     /**
      * Default constructor.
@@ -117,6 +125,38 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
 
     public int getRepositoriesCacheDuration() {
         return repositoriesCacheDuration;
+    }
+
+    public List<String> getRateLimitCredentialsIds() {
+        return rateLimitCredentialsIds == null
+                ? Collections.emptyList()
+                : Collections.unmodifiableList(rateLimitCredentialsIds);
+    }
+
+    public String getRateLimitCredentialsId() {
+        return getRateLimitCredentialsIds().stream().findFirst().orElse(null);
+    }
+
+    @DataBoundSetter
+    public void setRateLimitCredentialsId(String credentialsId) {
+        setRateLimitCredentialsIdsText(credentialsId);
+    }
+
+    public String getRateLimitCredentialsIdsText() {
+        return String.join("\n", getRateLimitCredentialsIds());
+    }
+
+    @DataBoundSetter
+    public void setRateLimitCredentialsIdsText(String value) {
+        rateLimitCredentialsIds = new ArrayList<>();
+        if (value != null) {
+            for (String id : value.split("[,\\r\\n]+")) {
+                String trimmedId = id.trim();
+                if (!trimmedId.isEmpty() && !rateLimitCredentialsIds.contains(trimmedId)) {
+                    rateLimitCredentialsIds.add(trimmedId);
+                }
+            }
+        }
     }
 
     /**
@@ -173,6 +213,14 @@ public class BitbucketCloudEndpoint extends AbstractBitbucketEndpoint {
                 builder.append(stat).append("<br>");
             }
             return FormValidation.okWithMarkup(builder.toString());
+        }
+
+        public ListBoxModel doFillRateLimitCredentialsIdItems(
+                @QueryParameter String rateLimitCredentialsId) {
+            Jenkins jenkins = Jenkins.get();
+            jenkins.checkPermission(Jenkins.MANAGE);
+            return com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils.listCredentials(
+                    jenkins, SERVER_URL, rateLimitCredentialsId);
         }
 
         @POST

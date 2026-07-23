@@ -147,7 +147,12 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @Override
     protected boolean isSupportedAuthenticator(@CheckForNull BitbucketAuthenticator authenticator) {
         return authenticator == null
-                || authenticator instanceof BitbucketAccessTokenAuthenticator
+                || isSupportedCloudAuthenticator(authenticator)
+                || authenticator instanceof BitbucketAuthenticatorPool;
+    }
+
+    static boolean isSupportedCloudAuthenticator(BitbucketAuthenticator authenticator) {
+        return authenticator instanceof BitbucketAccessTokenAuthenticator
                 || authenticator instanceof BitbucketOAuthAuthenticator
                 || authenticator instanceof BitbucketUserAPITokenAuthenticator; // API access token
     }
