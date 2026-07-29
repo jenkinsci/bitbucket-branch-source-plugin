@@ -26,11 +26,13 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.hc.core5.http.HttpRequest;
 
 // TODO verify what is the best between BitbucketAuthenticator or an helper class in the API client,
@@ -43,12 +45,13 @@ public class BitbucketCredentialsPoolAuthenticator implements BitbucketAuthentic
      */
     private static final Map<String, Date> rateLimitCache = new ConcurrentHashMap<>();
 
-    // TODO all Bitbucket authenticator must implements equals and hashcode (based on getId())
-    private Set<BitbucketAuthenticator> authenticators;
+    private final List<BitbucketAuthenticator> authenticators;
     private BitbucketAuthenticator current;
+    private int nextIds;
 
-    public BitbucketCredentialsPoolAuthenticator(Set<BitbucketAuthenticator> autheticators) {
-        this.authenticators = new LinkedHashSet<>(autheticators);
+    public BitbucketCredentialsPoolAuthenticator(List<BitbucketAuthenticator> autheticators) {
+        this.authenticators = new ArrayList<>(autheticators);
+        this.nextIds = 0;
     }
 
     @Override
@@ -58,30 +61,44 @@ public class BitbucketCredentialsPoolAuthenticator implements BitbucketAuthentic
 
     @Override
     public String getId() {
-        return "pool";
+        return current().getId();
     }
 
     private BitbucketAuthenticator current() {
-        if (current == null) {
-            // TODO take first one?? or call next and implement an markExpired(Date) method to explicit expire current authenticator?? in the last case here call next() would be enough
-            current = authenticators.iterator().next(); 
-        } else {
-            // TODO should check if current has been expired since last return it and delegate the API client handle HTTP 429 ?
+        if (current == null || rateLimitCache.containsKey(current.getId())) {
+            current = next(); 
         }
         return current;
     }
 
-/*
-    public synchronized markExpired() {
+    private BitbucketAuthenticator next() {
+        if (rateLimitCache.size() == authenticators.size()) {
+            // all credentials are expired
+            throw new IllegalStateException("All credentials reach the rate API limit.");
+        }
+        BitbucketAuthenticator next = authenticators.get(nextIds % authenticators.size());
+        while (rateLimitCache.containsKey(next.getId()) && rateLimitCache.size() < authenticators.size()) {
+            nextIds += 1;
+            next = authenticators.get(nextIds % authenticators.size());
+        }
+        current = next;
+        return next;
     }
-*/
 
-    public synchronized BitbucketAuthenticator next() {
-        // TODO add current id (if not already exists) to the expiry cache with current Date (or move to markExpired(Date date) method??
-        // TODO remove from cache all authenticators id older than 1 hour (check bitbucket documentation to know the rate limit restore window)
-        // TODO take next authenticator not present in the expiry cache -> not expired
-        // TODO set it as current and return
-        // TODO if all expired throw exception
-        return null;
+    public synchronized void markExpired() {
+        Date now = new Date();
+
+        // bitbucket cloud rolling windows is 1 hour per 1000 calls
+        // https://support.atlassian.com/bitbucket-cloud/kb/bitbucket-cloud-rate-limit-troubleshooting/
+        rateLimitCache.putIfAbsent(current().getId(), now);
+
+        // remove from cache all credentials out from the rolling window
+        for (Entry<String, Date> entry : rateLimitCache.entrySet()) {
+            if (DateUtils.addHours(entry.getValue(), 1).before(now)) {
+                // rolling windows passed, reset credentials limit
+                rateLimitCache.remove(entry.getKey());
+            }
+        }
+        next();
     }
 }

@@ -34,6 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketCredentialsPoolAuthenticator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -173,11 +174,13 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
                 .useSystemProperties()
                 .setConnectionManager(getConnectionManager())
                 .setConnectionManagerShared(true)
-                .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofSeconds(2))
                 .disableCookieManagement();
+        if (authenticator instanceof BitbucketCredentialsPoolAuthenticator) { // TODO find a better way
+            httpClientBuilder.setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)));
+        }
 
         if (authenticator != null) {
             authenticator.configureBuilder(httpClientBuilder);
@@ -273,9 +276,11 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
                 return null;
             }
             if (statusCode == HttpStatus.SC_TOO_MANY_REQUESTS) {
-                // TODO check header (delegate to helper/authenticator?)
-                // TODO if so call autheticator.markExpired (must be added to API interface if BitbucketAuthenticator (make sense for other authenticators??), use instanceof with a implementation here is not cool)
-                // TODO move autheticator to the next one available
+                // If an API call returns the header X-RateLimit-NearLimit, the value of this will be true once the remaining requests fall below 20%.
+                // does not make sense expire credentials that does not yet reach the limit
+                if (authenticator instanceof BitbucketCredentialsPoolAuthenticator pool) {
+                    pool.markExpired();
+                }
                 response.close();
                 // retry
                 return executeMethod(request);

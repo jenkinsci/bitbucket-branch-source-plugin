@@ -98,6 +98,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitTagSCMHead;
@@ -174,7 +175,7 @@ public class BitbucketSCMSource extends SCMSource {
     private String credentialsId;
 
     @CheckForNull
-    private List<CredentialsRef> credentials;
+    private List<String> credentials;
 
     /**
      * Bitbucket mirror id
@@ -1110,20 +1111,19 @@ public class BitbucketSCMSource extends SCMSource {
     }
 
     public List<CredentialsRef> getCredentials() {
-//        return Util.fixNull(credentials)
-//                .stream()
-//                .map(CredentialsRef::new)
-//                .collect(Collectors.toList());
-        return credentials;
+        return Util.fixNull(credentials)
+                .stream()
+                .map(CredentialsRef::new)
+                .collect(Collectors.toList());
     }
 
     @DataBoundSetter
     public void setCredentials(@CheckForNull List<CredentialsRef> credentials) {
-//        this.credentials = Util.fixNull(credentials)
-//                .stream()
-//                .map(CredentialsRef::getCredentialId)
-//                .collect(Collectors.toList());
-        this.credentials = Util.fixNull(credentials);
+        this.credentials = Util.fixNull(credentials)
+                .stream()
+                .map(CredentialsRef::getCredentialsId)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     @Symbol("bitbucket")

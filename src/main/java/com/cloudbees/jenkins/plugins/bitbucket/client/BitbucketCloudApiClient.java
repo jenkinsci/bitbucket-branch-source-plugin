@@ -130,9 +130,14 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         cachedCommits.evictAll();
     }
 
-    public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
-            String owner, String projectKey, String repositoryName, BitbucketAuthenticator authenticator) {
-        super(authenticator);
+    public BitbucketCloudApiClient(boolean enableCache,
+                                   int teamCacheDuration,
+                                   int repositoriesCacheDuration,
+                                   String owner,
+                                   String projectKey,
+                                   String repositoryName,
+                                   List<String> credentials) {
+        super(credentials);
         this.owner = owner;
         this.projectKey = projectKey;
         this.repositoryName = repositoryName;

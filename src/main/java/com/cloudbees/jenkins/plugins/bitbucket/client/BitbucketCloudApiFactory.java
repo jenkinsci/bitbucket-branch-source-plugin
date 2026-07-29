@@ -25,13 +25,13 @@ package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
+import java.util.List;
 
 @Extension
 public class BitbucketCloudApiFactory extends BitbucketApiFactory {
@@ -42,8 +42,11 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
 
     @NonNull
     @Override
-    protected BitbucketApi create(@Nullable String serverUrl, @Nullable BitbucketAuthenticator authenticator,
-                                  @NonNull String owner, @CheckForNull String projectKey, @CheckForNull String repository) {
+    protected BitbucketApi create(@Nullable String serverUrl,
+                                  @Nullable List<String> credentials,
+                                  @NonNull String owner,
+                                  @CheckForNull String projectKey,
+                                  @CheckForNull String repository) {
         BitbucketCloudEndpoint endpoint = BitbucketEndpointProvider
                 .lookupEndpoint(BitbucketCloudEndpoint.SERVER_URL, BitbucketCloudEndpoint.class)
                 .orElse(null);
@@ -57,6 +60,6 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
         }
         return new BitbucketCloudApiClient(
                 enableCache, teamCacheDuration, repositoriesCacheDuration,
-                owner, projectKey, repository, authenticator);
+                owner, projectKey, repository, credentials);
     }
 }
