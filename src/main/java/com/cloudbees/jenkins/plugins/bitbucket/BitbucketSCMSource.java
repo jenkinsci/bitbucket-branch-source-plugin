@@ -48,6 +48,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarM
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.scm.CredentialsRef;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils.BitbucketSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.DateUtils;
@@ -171,6 +172,9 @@ public class BitbucketSCMSource extends SCMSource {
      */
     @CheckForNull
     private String credentialsId;
+
+    @CheckForNull
+    private List<CredentialsRef> credentials;
 
     /**
      * Bitbucket mirror id
@@ -1103,6 +1107,23 @@ public class BitbucketSCMSource extends SCMSource {
     @Deprecated(since = "936.0.0", forRemoval = true)
     public boolean isCloud() {
         return BitbucketApiUtils.isCloud(serverUrl);
+    }
+
+    public List<CredentialsRef> getCredentials() {
+//        return Util.fixNull(credentials)
+//                .stream()
+//                .map(CredentialsRef::new)
+//                .collect(Collectors.toList());
+        return credentials;
+    }
+
+    @DataBoundSetter
+    public void setCredentials(@CheckForNull List<CredentialsRef> credentials) {
+//        this.credentials = Util.fixNull(credentials)
+//                .stream()
+//                .map(CredentialsRef::getCredentialId)
+//                .collect(Collectors.toList());
+        this.credentials = Util.fixNull(credentials);
     }
 
     @Symbol("bitbucket")
