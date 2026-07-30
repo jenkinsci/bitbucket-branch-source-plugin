@@ -77,6 +77,7 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
     private final long backOffRate;
     private final long initialExpiryInMillis;
     private final long maxExpiryInMillis;
+    private final int maxRetries;
     /**
      * Derived {@code IOExceptions} which shall not be retried
      */
@@ -103,9 +104,28 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
             final long backOffRate,
             final long initialExpiryInMillis,
             final long maxExpiryInMillis) {
+        this(backOffRate, initialExpiryInMillis, maxExpiryInMillis, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Creates a retry strategy with both a maximum delay and an explicit retry
+     * count. A delay ceiling alone can keep an interactive Jenkins request
+     * alive for many minutes while exponential delays accumulate.
+     *
+     * @param backOffRate multiplier applied after each failed attempt
+     * @param initialExpiryInMillis delay before the first retry
+     * @param maxExpiryInMillis maximum delay for one retry
+     * @param maxRetries maximum number of retries after the initial request
+     */
+    public ExponentialBackoffRetryStrategy(
+            final long backOffRate,
+            final long initialExpiryInMillis,
+            final long maxExpiryInMillis,
+            final int maxRetries) {
         this.backOffRate = Args.notNegative(backOffRate, "BackOffRate");
         this.initialExpiryInMillis = Args.notNegative(initialExpiryInMillis, "InitialExpiryInMillis");
         this.maxExpiryInMillis = Args.notNegative(maxExpiryInMillis, "MaxExpiryInMillis");
+        this.maxRetries = Args.notNegative(maxRetries, "MaxRetries");
         this.nonRetriableIOExceptionClasses = Set.of(
                 InterruptedIOException.class,
                 UnknownHostException.class,
@@ -121,7 +141,8 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
     @Override
     public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
         int statusCode = response.getCode();
-        return getRetryInterval(executionCount) < maxExpiryInMillis
+        return executionCount <= maxRetries
+                && getRetryInterval(executionCount) < maxExpiryInMillis
                 && (statusCode == HttpStatus.SC_TOO_MANY_REQUESTS
                 || statusCode == HttpStatus.SC_SERVICE_UNAVAILABLE);
     }
@@ -137,6 +158,9 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
 
     @Override
     public boolean retryRequest(HttpRequest request, IOException exception, int execCount, HttpContext context) {
+        if (execCount > maxRetries) {
+            return false;
+        }
         if (this.nonRetriableIOExceptionClasses.contains(exception.getClass())) {
             return false;
         } else {

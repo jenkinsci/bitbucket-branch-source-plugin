@@ -604,6 +604,18 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @NonNull
     @Override
     public List<BitbucketCloudRepository> getRepositories(@CheckForNull UserRoleInRepository role) throws IOException {
+        return getRepositories(role, false);
+    }
+
+    @NonNull
+    @Override
+    public List<BitbucketCloudRepository> getRepositoriesForForm(@CheckForNull UserRoleInRepository role)
+            throws IOException {
+        return getRepositories(role, true);
+    }
+
+    private List<BitbucketCloudRepository> getRepositories(
+            @CheckForNull UserRoleInRepository role, boolean interactive) throws IOException {
         StringBuilder cacheKey = new StringBuilder();
         cacheKey.append(owner);
 
@@ -631,12 +643,19 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         String url = template.expand();
 
         ICheckedCallable<List<BitbucketCloudRepository>, IOException> request = () -> {
-            List<BitbucketCloudRepository> repositories = getPagedRequest(url, BitbucketCloudRepository.class);
+            List<BitbucketCloudRepository> repositories =
+                    getPagedRequest(url, BitbucketCloudRepository.class, interactive);
             repositories.sort(Comparator.comparing(BitbucketCloudRepository::getRepositoryName));
             return repositories;
         };
         if (enableCache) {
             try {
+                if (interactive) {
+                    // Configuration pages can issue concurrent requests. Cache
+                    // a failed lookup so the form does not repeatedly consume
+                    // Bitbucket quota while it is already rate limited.
+                    return cachedRepositories.get(cacheKey.toString(), request, 10, MINUTES);
+                }
                 return cachedRepositories.get(cacheKey.toString(), request);
             } catch (ExecutionException e) {
                 BitbucketRequestException bre = BitbucketApiUtils.unwrap(e);
@@ -769,8 +788,12 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     }
 */
     private <V> List<V> getPagedRequest(String url, Class<V> resultType) throws IOException {
+        return getPagedRequest(url, resultType, false);
+    }
+
+    private <V> List<V> getPagedRequest(String url, Class<V> resultType, boolean interactive) throws IOException {
         List<V> resources = new ArrayList<>();
-        String response = getRequest(url);
+        String response = interactive ? getInteractiveRequest(url) : getRequest(url);
 
         ParameterizedType parameterizedType = new ParameterizedType() {
 
@@ -801,7 +824,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             BitbucketCloudPage<V> page = JsonParser.toJava(response, type);
             resources.addAll(page.getValues());
             while (!page.isLastPage()){
-                response = getRequest(page.getNext());
+                response = interactive ? getInteractiveRequest(page.getNext()) : getRequest(page.getNext());
                 page = JsonParser.toJava(response, type);
                 resources.addAll(page.getValues());
             }

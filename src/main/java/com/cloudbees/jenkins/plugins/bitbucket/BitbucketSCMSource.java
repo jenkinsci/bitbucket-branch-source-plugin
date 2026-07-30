@@ -36,12 +36,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketProject;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointProvider;
-import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
@@ -1147,9 +1145,12 @@ public class BitbucketSCMSource extends SCMSource {
 
             BitbucketSupplier<ListBoxModel> listBoxModelSupplier = bitbucket -> {
                 ListBoxModel result = new ListBoxModel();
-                BitbucketTeam team = bitbucket.getTeam();
-                List<? extends BitbucketRepository> repositories =
-                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.MEMBER);
+                // The repositories endpoint works for both workspaces and
+                // personal owners without first resolving the owner type.
+                // Avoiding that probe removes a second remote request from an
+                // interactive form fill, which is especially important while
+                // Bitbucket is rate limiting the controller.
+                List<? extends BitbucketRepository> repositories = bitbucket.getRepositoriesForForm(null);
                 if (repositories.isEmpty()) {
                     throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }

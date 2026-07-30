@@ -53,18 +53,48 @@ public class Cache<K, V> {
     }
 
     public synchronized <E extends Exception> V get(final K key, final ICheckedCallable<V, E> request) throws ExecutionException {
+        return get(key, request, 0, NANOSECONDS);
+    }
+
+    /**
+     * Returns a cached value, loading it when necessary, and optionally caches
+     * a failed load for a shorter period.
+     *
+     * <p>Failure caching prevents callers waiting for the same key from
+     * executing the same failing remote request one after another. A zero
+     * failure duration retains the original behavior.
+     *
+     * @param key cache key
+     * @param request value loader
+     * @param failureDuration duration for which a loader failure is cached
+     * @param failureUnit unit for {@code failureDuration}
+     * @return the cached or loaded value
+     * @throws ExecutionException if the loader failed, including a cached failure
+     */
+    public synchronized <E extends Exception> V get(
+            final K key,
+            final ICheckedCallable<V, E> request,
+            final int failureDuration,
+            final TimeUnit failureUnit) throws ExecutionException {
         if (isExpired(key)) {
             doRemove(key);
         }
 
         if (entries.containsKey(key)) {
-            return entries.get(key).value;
+            Entry<V> entry = entries.get(key);
+            if (entry.failure != null) {
+                throw new ExecutionException("Cached failure loading value for key: " + key, entry.failure);
+            }
+            return entry.value;
         }
 
         V result;
         try {
             result = request.call();
         } catch (final Exception e) {
+            if (failureDuration > 0 && !(e instanceof InterruptedException)) {
+                entries.put(key, Entry.failure(e, failureUnit.toNanos(failureDuration)));
+            }
             throw new ExecutionException("Cannot load value for key: " + key, e);
         }
 
@@ -103,7 +133,11 @@ public class Cache<K, V> {
 
     private boolean isExpired(final K key) {
         final Entry<V> entry = entries.get(key);
-        return entry != null && System.nanoTime() - entry.nanos > expireAfterNanos;
+        if (entry == null) {
+            return false;
+        }
+        long expiration = entry.failure == null ? expireAfterNanos : entry.expireAfterNanos;
+        return System.nanoTime() - entry.nanos > expiration;
     }
 
     private void doRemove(final K key) {
@@ -111,7 +145,7 @@ public class Cache<K, V> {
     }
 
     private V doPut(final K key, final V value) {
-        entries.put(key, new Entry<>(value));
+        entries.put(key, Entry.value(value));
         return value;
     }
 
@@ -133,11 +167,25 @@ public class Cache<K, V> {
     private static class Entry<V> {
         private final V value;
 
+        private final Exception failure;
+
         private final long nanos;
 
-        public Entry(final V value) {
+        private final long expireAfterNanos;
+
+        private Entry(final V value, final Exception failure, final long expireAfterNanos) {
             this.value = value;
+            this.failure = failure;
+            this.expireAfterNanos = expireAfterNanos;
             nanos = System.nanoTime();
+        }
+
+        private static <V> Entry<V> value(final V value) {
+            return new Entry<>(value, null, 0);
+        }
+
+        private static <V> Entry<V> failure(final Exception failure, final long expireAfterNanos) {
+            return new Entry<>(null, failure, expireAfterNanos);
         }
     }
 
