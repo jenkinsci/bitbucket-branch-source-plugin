@@ -131,6 +131,8 @@ class CloudPushWebhookProcessorTest {
                 assertThat(tag.getName()).isEqualTo("simple-tag");
                 assertThat(tag.getDateMillis()).isEqualTo(1738608795000L);
             });
+        assertThat(scmEvent.getBranches(scmSource)).isEmpty();
+        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     @Test
@@ -157,6 +159,9 @@ class CloudPushWebhookProcessorTest {
                 assertThat(tag.getName()).isEqualTo("test-tag");
                 assertThat(tag.getDateMillis()).isEqualTo(1738608816000L);
             });
+
+        assertThat(scmEvent.getBranches(scmSource)).isEmpty();
+        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     @Test
@@ -178,6 +183,13 @@ class CloudPushWebhookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new SCMRevisionImpl(new BranchSCMHead("feature/issue-819"), "5ecffa3874e96920f24a2b3c0d0038e47d5cd1a4"));
+
+        assertThat(scmEvent.getTags(scmSource)).isEmpty();
+        assertThat(scmEvent.getBranches(scmSource))
+            .hasSize(1)
+            .extracting(BitbucketBranch::getName)
+            .contains("feature/issue-819");
+        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     private String loadResource(String resource) throws IOException {

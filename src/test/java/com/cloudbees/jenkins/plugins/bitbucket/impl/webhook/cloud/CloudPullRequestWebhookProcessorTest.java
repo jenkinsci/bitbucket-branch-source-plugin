@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMNavigator;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
@@ -126,6 +127,35 @@ class CloudPullRequestWebhookProcessorTest {
         assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
         assertThat(scmEvent.getType()).isEqualTo(Type.REMOVED);
         assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
+
+        assertThat(scmEvent.getBranches(mock(BitbucketSCMSource.class)))
+            .hasSize(2)
+            .extracting(BitbucketBranch::getName)
+            .contains("feature/test", "master");
+        assertThat(scmEvent.getPullRequests(mock(BitbucketSCMSource.class))).isEmpty();
+        assertThat(scmEvent.getTags(mock(BitbucketSCMSource.class))).isEmpty();
+    }
+
+    @Test
+    void test_pullrequest_updated() throws Exception {
+        sut.process(HookEventType.PULL_REQUEST_UPDATED.getKey(), loadResource("pullrequest_updated.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
+
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.UPDATED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
+
+        assertThat(scmEvent.getBranches(mock(BitbucketSCMSource.class)))
+            .hasSize(2)
+            .extracting(BitbucketBranch::getName)
+            .contains("release/release-1", "master");
+        assertThat(scmEvent.getPullRequests(mock(BitbucketSCMSource.class))).hasSize(1)
+            .element(0)
+            .satisfies(pr -> {
+                assertThat(pr.getId()).isEqualTo("1");
+                assertThat(pr.getTitle()).isEqualTo("Release/release 1");
+            });
+        assertThat(scmEvent.getTags(mock(BitbucketSCMSource.class))).isEmpty();
     }
 
     @Test
@@ -148,6 +178,13 @@ class CloudPullRequestWebhookProcessorTest {
         // workspace/owner is case insensitive
         scmNavigator = new BitbucketSCMNavigator("AMUNIZ");
         assertThat(scmEvent.isMatch(scmNavigator)).isTrue();
+
+        assertThat(scmEvent.getBranches(mock(BitbucketSCMSource.class)))
+            .hasSize(2)
+            .extracting(BitbucketBranch::getName)
+            .contains("feature/test", "master");
+        assertThat(scmEvent.getPullRequests(mock(BitbucketSCMSource.class))).hasSize(1);
+        assertThat(scmEvent.getTags(mock(BitbucketSCMSource.class))).isEmpty();
     }
 
     @WithJenkins
@@ -170,6 +207,11 @@ class CloudPullRequestWebhookProcessorTest {
         scmSource.setTraits(List.of(new OriginPullRequestDiscoveryTrait(1)));
         assertThat(scmEvent.isMatch(scmSource)).isTrue();
 
+        assertThat(scmEvent.getBranches(scmSource))
+            .hasSize(2)
+            .extracting(BitbucketBranch::getName)
+            .contains("feature/test", "master");
+        assertThat(scmEvent.getTags(scmSource)).isEmpty();
         assertThat(scmEvent.getPullRequests(scmSource))
             .isNotEmpty()
             .hasSize(1);
@@ -183,6 +225,12 @@ class CloudPullRequestWebhookProcessorTest {
         BitbucketSCMSource scmSource = new BitbucketSCMSource("aMUNIZ", "test-repos");
         scmSource.setTraits(List.of(new OriginPullRequestDiscoveryTrait(2)));
         assertThat(scmEvent.isMatch(scmSource)).isTrue();
+
+        assertThat(scmEvent.getBranches(scmSource))
+            .hasSize(2)
+            .extracting(BitbucketBranch::getName)
+            .contains("feature/test", "master");
+        assertThat(scmEvent.getTags(scmSource)).isEmpty();
         assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
