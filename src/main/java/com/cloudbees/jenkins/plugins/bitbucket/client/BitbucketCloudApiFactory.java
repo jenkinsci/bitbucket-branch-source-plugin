@@ -58,6 +58,7 @@ public class BitbucketCloudApiFactory extends BitbucketApiFactory {
             teamCacheDuration = endpoint.getTeamCacheDuration();
             repositoriesCacheDuration = endpoint.getRepositoriesCacheDuration();
         }
+        // TODO build the authenticator
         return new BitbucketCloudApiClient(
                 enableCache, teamCacheDuration, repositoriesCacheDuration,
                 owner, projectKey, repository, credentials);

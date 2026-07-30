@@ -136,8 +136,8 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
                                    String owner,
                                    String projectKey,
                                    String repositoryName,
-                                   List<String> credentials) {
-        super(credentials);
+                                   BitbucketAuthenticator authenticator) {
+        super(authenticator);
         this.owner = owner;
         this.projectKey = projectKey;
         this.repositoryName = repositoryName;
