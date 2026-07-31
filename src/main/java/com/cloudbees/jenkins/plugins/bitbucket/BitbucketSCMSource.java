@@ -36,6 +36,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketProject;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
@@ -352,24 +354,25 @@ public class BitbucketSCMSource extends SCMSource {
             }
             gatherPrimaryCloneLinks(buildBitbucketClient());
 
-            // populate the request with its data sources
-            if (request.isFetchPRs() && event instanceof HasPullRequests hasPrEvent) {
-                request.setPullRequests(getBitbucketPullRequestsFromEvent(hasPrEvent, listener));
-            }
-            if (request.isFetchTags() && event instanceof HasTags hasTagEvent) {
-                request.setTags(getBitbucketTagsFromEvent(hasTagEvent, listener));
-            }
-
             // now serve the request
             if (request.isFetchPRs() && !request.isComplete()) {
+                if (event instanceof HasPullRequests prEvent) {
+                    request.setPullRequests(getBitbucketPullRequestsFromEvent(prEvent, listener));
+                }
                 // Search pull requests
                 retrievePullRequests(request);
             }
             if (request.isFetchBranches() && !request.isComplete()) {
+                if (event instanceof HasBranches branchEvent) {
+                    request.setBranches(getBitbucketBranchesFromEvent(branchEvent, listener));
+                }
                 // Search branches
                 retrieveBranches(request);
             }
             if (request.isFetchTags() && !request.isComplete()) {
+                if (event instanceof HasTags tagEvent) {
+                    request.setTags(getBitbucketTagsFromEvent(tagEvent, listener));
+                }
                 // Search tags
                 retrieveTags(request);
             }
@@ -401,6 +404,21 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         return initializedPRs;
+    }
+
+    private Iterable<BitbucketBranch> getBitbucketBranchesFromEvent(@NonNull HasBranches incomingEvent,
+                                                                    @NonNull TaskListener listener) throws IOException, InterruptedException {
+        Collection<BitbucketBranch> initializedBranches = new HashSet<>();
+        try (BitbucketApi bitBucket = buildBitbucketClient()) {
+            Iterable<BitbucketBranch> branches = incomingEvent.getBranches(BitbucketSCMSource.this);
+            for (BitbucketBranch branch : branches) {
+                // ensure that the PR is properly initialised via /changes API
+                // see BitbucketServerAPIClient.setupPullRequest()
+                initializedBranches.add(bitBucket.getBranch(branch.getName()));
+                listener.getLogger().format("Initialized branch: %s%n", branch.getName());
+            }
+        }
+        return initializedBranches;
     }
 
     private void retrievePullRequests(final BitbucketSCMSourceRequest request) throws IOException, InterruptedException {
