@@ -34,7 +34,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.client.ClosingConnectionInputStream;
-import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketCredentialsPoolAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketMultiCredentialsAuthenticator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -178,7 +178,7 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofSeconds(2))
                 .disableCookieManagement();
-        if (authenticator instanceof BitbucketCredentialsPoolAuthenticator) { // TODO find a better way
+        if (authenticator instanceof BitbucketMultiCredentialsAuthenticator) { // TODO find a better way
             httpClientBuilder.setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)));
         }
 
@@ -278,7 +278,7 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
             if (statusCode == HttpStatus.SC_TOO_MANY_REQUESTS) {
                 // If an API call returns the header X-RateLimit-NearLimit, the value of this will be true once the remaining requests fall below 20%.
                 // does not make sense expire credentials that does not yet reach the limit
-                if (authenticator instanceof BitbucketCredentialsPoolAuthenticator pool) {
+                if (authenticator instanceof BitbucketMultiCredentialsAuthenticator pool) {
                     pool.markExpired();
                 }
                 response.close();

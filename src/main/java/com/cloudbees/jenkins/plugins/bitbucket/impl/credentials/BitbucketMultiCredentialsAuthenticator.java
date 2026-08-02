@@ -26,6 +26,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.impl.credentials;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +39,7 @@ import org.apache.hc.core5.http.HttpRequest;
 // TODO verify what is the best between BitbucketAuthenticator or an helper class in the API client,
 // BitbucketAuthenticator is transparent to the API Client and user and could build it outside.
 // helper class could also handle the header instead hardcode in the client logic and simplify the setupClientBuilder() method that does not have to hardcode this class for avoid register a retryStrategy ? 
-public class BitbucketCredentialsPoolAuthenticator implements BitbucketAuthenticator {
+public class BitbucketMultiCredentialsAuthenticator implements BitbucketAuthenticator {
 
     /**
      * Cache of timestamps of when credentials reach the rate limit.
@@ -49,9 +50,21 @@ public class BitbucketCredentialsPoolAuthenticator implements BitbucketAuthentic
     private BitbucketAuthenticator current;
     private int nextIds;
 
-    public BitbucketCredentialsPoolAuthenticator(List<BitbucketAuthenticator> autheticators) {
+    public BitbucketMultiCredentialsAuthenticator(@NonNull List<BitbucketAuthenticator> autheticators) {
+        verify(autheticators);
         this.authenticators = new ArrayList<>(autheticators);
         this.nextIds = 0;
+    }
+
+    private void verify(List<BitbucketAuthenticator> autheticators) {
+        Class<? extends BitbucketAuthenticator> template = null;
+        for (BitbucketAuthenticator auth : autheticators) {
+            if (template == null) {
+                template = auth.getClass();
+            } else if (!auth.getClass().equals(template)) {
+                throw new IllegalArgumentException("Alternative credentials must be of the same type");
+            }
+        }
     }
 
     @Override
@@ -72,14 +85,16 @@ public class BitbucketCredentialsPoolAuthenticator implements BitbucketAuthentic
     }
 
     private BitbucketAuthenticator next() {
-        if (rateLimitCache.size() == authenticators.size()) {
+        BitbucketAuthenticator next = authenticators.get(nextIds % authenticators.size());
+        int remaining = authenticators.size();
+        while (rateLimitCache.containsKey(next.getId()) && remaining > 0) {
+            nextIds += 1;
+            remaining -= 1;
+            next = authenticators.get(nextIds % authenticators.size());
+        }
+        if (remaining == 0) {
             // all credentials are expired
             throw new IllegalStateException("All credentials reach the rate API limit.");
-        }
-        BitbucketAuthenticator next = authenticators.get(nextIds % authenticators.size());
-        while (rateLimitCache.containsKey(next.getId()) && rateLimitCache.size() < authenticators.size()) {
-            nextIds += 1;
-            next = authenticators.get(nextIds % authenticators.size());
         }
         current = next;
         return next;

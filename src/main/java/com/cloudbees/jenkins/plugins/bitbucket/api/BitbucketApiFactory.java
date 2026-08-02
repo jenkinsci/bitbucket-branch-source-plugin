@@ -31,7 +31,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import java.net.URL;
-import java.util.List;
 
 /**
  * Factory for creating {@link BitbucketApi} instances to connect to a given server {@link URL}.
@@ -60,23 +59,14 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
      * @return the {@link BitbucketApi}.
      */
     @NonNull
-    protected BitbucketApi create(@Nullable String serverURL,
-                                  @Nullable BitbucketAuthenticator authenticator,
-                                  @NonNull String owner,
-                                  @CheckForNull String projectKey,
-                                  @CheckForNull String repository) {
-        return create(serverURL, authenticator != null ? List.of(authenticator.getId()) : null, owner, projectKey, repository);
-    }
-
-    @NonNull
     protected abstract BitbucketApi create(@Nullable String serverURL,
-                                           @Nullable List<String> credentials,
+                                           @Nullable BitbucketAuthenticator authenticator,
                                            @NonNull String owner,
                                            @CheckForNull String projectKey,
                                            @CheckForNull String repository);
 
     @NonNull
-    @Deprecated(forRemoval = true)
+    @Deprecated
     protected BitbucketApi create(@Nullable String serverURL,
                                            @Nullable StandardUsernamePasswordCredentials credentials,
                                            @NonNull String owner,
@@ -103,30 +93,9 @@ public abstract class BitbucketApiFactory implements ExtensionPoint {
                                            @NonNull String owner,
                                            @CheckForNull String projectKey,
                                            @CheckForNull String repository) {
-        return newInstance(serverURL, authenticator != null ? List.of(authenticator.getId()) : null, owner, projectKey, repository);
-    }
-
-    /**
-     * Creates a {@link BitbucketApi} for the specified URL with the supplied credentials, owner and (optional)
-     * repository.
-     *
-     * @param serverURL   the server URL.
-     * @param credentials for the authentication.
-     * @param owner       the owner name.
-     * @param projectKey  the (optional) project key.
-     * @param repository  the (optional) repository name.
-     * @return the {@link BitbucketApi}.
-     * @throws IllegalArgumentException if the supplied URL is not supported.
-     */
-    @NonNull
-    public static BitbucketApi newInstance(@Nullable String serverURL,
-                                           @Nullable List<String> credentials,
-                                           @NonNull String owner,
-                                           @CheckForNull String projectKey,
-                                           @CheckForNull String repository) {
         for (BitbucketApiFactory factory : ExtensionList.lookup(BitbucketApiFactory.class)) {
             if (factory.isMatch(serverURL)) {
-                return factory.create(serverURL, credentials, owner, projectKey, repository);
+                return factory.create(serverURL, authenticator, owner, projectKey, repository);
             }
         }
         throw new IllegalArgumentException("Unsupported Bitbucket server URL: " + serverURL);

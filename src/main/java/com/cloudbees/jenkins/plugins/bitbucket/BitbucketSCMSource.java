@@ -45,6 +45,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketRepoAvatarMetadataAction;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketMultiCredentialsAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.BitbucketEnvVarExtension;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.extension.GitClientAuthenticatorExtension;
@@ -129,6 +130,7 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.lib.Constants;
@@ -877,8 +879,18 @@ public class BitbucketSCMSource extends SCMSource {
 
     @CheckForNull
     /* package */ BitbucketAuthenticator authenticator() {
-        // TODO cycle all credentials configured in the trait and wrap into a pool authentication
-        return AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerUrl()), credentials());
+        BitbucketAuthenticator main = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerUrl()), credentials());
+        if (CollectionUtils.isNotEmpty(this.credentials)) {
+            List<BitbucketAuthenticator> alternatives = new ArrayList<>();
+            alternatives.add(main);
+            for (String credentialsId : this.credentials) {
+                BitbucketAuthenticator a = AuthenticationTokens.convert(BitbucketAuthenticator.authenticationContext(getServerUrl()), credentials());
+                alternatives.add(a);
+            }
+            return new BitbucketMultiCredentialsAuthenticator(alternatives);
+        } else {
+            return main;
+        }
     }
 
     @NonNull
