@@ -234,6 +234,7 @@ class BitbucketSCMSourceTest {
         store.addCredentials(Domain.global(), userCredentials);
 
         BitbucketSCMSource instance = new BitbucketSCMSource("testing", "test-repo");
+        instance.setServerUrl("http://localhost:9000");
         instance.setCredentialsId(userCredentials.getId());
         BitbucketMockApiFactory.add(instance.getServerUrl(), BitbucketIntegrationClientFactory.getApiMockClient(instance.getServerUrl()));
         BranchSCMHead head = new BranchSCMHead("master");

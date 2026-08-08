@@ -36,6 +36,7 @@ import hudson.util.Secret;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +79,10 @@ class AbstractWebhookConfigurationDescriptorTest {
         SystemCredentialsProvider.getInstance()
             .setDomainCredentialsMap(Map.of(
                     new Domain("cloud", "bb cloud", List.of(new HostnameSpecification("bitbucket.org", ""))),
-                    List.of(new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass")))
+                    List.of(
+                            new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user@acme.com", StringUtils.repeat("0", 192)), // API Token
+                            new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "dummy", "dummy", "user", "pass") // deprecated app password
+                    ))
             );
         ListBoxModel result = new CloudWebhookConfiguration.DescriptorImpl()
                 .doFillCredentialsIdItems(null);

@@ -38,9 +38,13 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import org.apache.commons.collections4.CollectionUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -48,23 +52,28 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
 
     @Deprecated
     private transient StandardUsernameCredentials credentials;
-    private final String url;
+    private final Set<String> URLs;
     private final String serverURL;
     private final String scmOwner;
     private final String credentialsId;
 
     @Deprecated(since = "936.0.0", forRemoval = true)
     public GitClientAuthenticatorExtension(String url, StandardUsernameCredentials credentials) {
-        this.url = url;
+        this.URLs = url != null ? Set.of(url) : null;
         this.credentialsId = credentials != null ? credentials.getId() : null;
         this.credentials = credentials;
         this.serverURL = null;
         this.scmOwner = null;
     }
 
-    @DataBoundConstructor
+    @Deprecated(since = "937.3.3", forRemoval = true)
     public GitClientAuthenticatorExtension(@NonNull String url, @NonNull String serverURL, @CheckForNull String scmOwner, @Nullable String credentialsId) {
-        this.url = url;
+        this(Set.of(url), serverURL, scmOwner, credentialsId);
+    }
+
+    @DataBoundConstructor
+    public GitClientAuthenticatorExtension(@NonNull Collection<String> URLs, @NonNull String serverURL, @CheckForNull String scmOwner, @Nullable String credentialsId) {
+        this.URLs = new HashSet<>(URLs);
         this.serverURL = serverURL;
         this.scmOwner = scmOwner;
         this.credentialsId = credentialsId;
@@ -81,10 +90,12 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
             credentials = authenticator.getCredentialsForSCM();
         }
         if (credentials != null) {
-            if (url == null) {
+            if (CollectionUtils.isEmpty(URLs)) {
                 git.setCredentials(credentials);
             } else {
-                git.addCredentials(url, credentials);
+                for (String url : URLs) {
+                    git.addCredentials(url, credentials);
+                }
             }
         }
         return git;
@@ -118,8 +129,8 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
         return credentials;
     }
 
-    public String getUrl() {
-        return url;
+    public Collection<String> getURLs() {
+        return URLs;
     }
 
     public String getServerURL() {
@@ -136,7 +147,7 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
 
     @Override
     public int hashCode() {
-        return Objects.hash(url, serverURL, scmOwner, credentialsId);
+        return Objects.hash(URLs, serverURL, scmOwner, credentialsId);
     }
 
     @Override
@@ -154,7 +165,7 @@ public class GitClientAuthenticatorExtension extends GitSCMExtension {
         return Objects.equals(credentialsId, other.credentialsId)
                 && Objects.equals(serverURL, other.serverURL)
                 && Objects.equals(scmOwner, other.scmOwner)
-                && Objects.equals(url, other.url);
+                && Objects.equals(URLs, other.URLs);
     }
 
     @Extension

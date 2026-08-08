@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>6.2189.v695a_c41f5249</version>
+        <version>6.2211.v27f680c93c53</version>
         <relativePath />
     </parent>
 
@@ -24,7 +24,7 @@
     </licenses>
 
     <properties>
-        <revision>937.3.2</revision>
+        <revision>937.3.7</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
         <hpi.bundledArtifacts>scribejava-core,scribejava-java8</hpi.bundledArtifacts>
@@ -32,6 +32,7 @@
         <jenkins.baseline>2.541</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
+        <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
         <hpi.compatibleSinceVersion>937.0.0</hpi.compatibleSinceVersion>
         <tagNameFormat>@{project.version}</tagNameFormat>
     </properties>
@@ -71,7 +72,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>6509.v993a_c958a_e35</version>
+                <version>6715.v52b_c00222d1e</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>

@@ -32,8 +32,10 @@ import hudson.util.Secret;
 public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
     private static final long serialVersionUID = 6458784517693211197L;
 
-    private static final int CLIENT_KEY_LENGTH = 18;
-    private static final int CLIENT_SECRET_LENGTH = 32;
+    private static final int CLIENT_OLD_KEY_LENGTH = 18;
+    private static final int CLIENT_OLD_SECRET_LENGTH = 32;
+    private static final int CLIENT_KEY_LENGTH = 32;
+    private static final int CLIENT_SECRET_LENGTH = 76;
 
     /**
      * {@inheritDoc}
@@ -49,9 +51,9 @@ public class BitbucketOAuthCredentialMatcher implements CredentialsMatcher {
         String password = Secret.toString(credentials.getPassword());
 
         boolean isEMail = username.contains(".") && username.contains("@");
-        boolean validSecretLength = password.length() == CLIENT_SECRET_LENGTH;
-        boolean validKeyLength = username.length() == CLIENT_KEY_LENGTH;
+        boolean validConsumerLength = (password.length() == CLIENT_OLD_SECRET_LENGTH && username.length() == CLIENT_OLD_KEY_LENGTH)
+                || (password.length() == CLIENT_SECRET_LENGTH && username.length() == CLIENT_KEY_LENGTH);
 
-        return !isEMail && validKeyLength && validSecretLength;
+        return !isEMail && validConsumerLength;
     }
 }

@@ -37,6 +37,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
@@ -75,7 +76,6 @@ import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
-import hudson.security.AccessControlled;
 import hudson.util.FormFillFailure;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -355,24 +355,25 @@ public class BitbucketSCMSource extends SCMSource {
             }
             gatherPrimaryCloneLinks(buildBitbucketClient());
 
-            // populate the request with its data sources
-            if (request.isFetchPRs() && event instanceof HasPullRequests hasPrEvent) {
-                request.setPullRequests(getBitbucketPullRequestsFromEvent(hasPrEvent, listener));
-            }
-            if (request.isFetchTags() && event instanceof HasTags hasTagEvent) {
-                request.setTags(getBitbucketTagsFromEvent(hasTagEvent, listener));
-            }
-
             // now serve the request
             if (request.isFetchPRs() && !request.isComplete()) {
+                if (event instanceof HasPullRequests prEvent) {
+                    request.setPullRequests(getBitbucketPullRequestsFromEvent(prEvent, listener));
+                }
                 // Search pull requests
                 retrievePullRequests(request);
             }
             if (request.isFetchBranches() && !request.isComplete()) {
+                if (event instanceof HasBranches branchEvent) {
+                    request.setBranches(getBitbucketBranchesFromEvent(branchEvent, listener));
+                }
                 // Search branches
                 retrieveBranches(request);
             }
             if (request.isFetchTags() && !request.isComplete()) {
+                if (event instanceof HasTags tagEvent) {
+                    request.setTags(getBitbucketTagsFromEvent(tagEvent, listener));
+                }
                 // Search tags
                 retrieveTags(request);
             }
@@ -404,6 +405,21 @@ public class BitbucketSCMSource extends SCMSource {
             }
         }
         return initializedPRs;
+    }
+
+    private Iterable<BitbucketBranch> getBitbucketBranchesFromEvent(@NonNull HasBranches incomingEvent,
+                                                                    @NonNull TaskListener listener) throws IOException, InterruptedException {
+        Collection<BitbucketBranch> initializedBranches = new HashSet<>();
+        try (BitbucketApi bitBucket = buildBitbucketClient()) {
+            Iterable<BitbucketBranch> branches = incomingEvent.getBranches(BitbucketSCMSource.this);
+            for (BitbucketBranch branch : branches) {
+                // ensure that the PR is properly initialised via /changes API
+                // see BitbucketServerAPIClient.setupPullRequest()
+                initializedBranches.add(bitBucket.getBranch(branch.getName()));
+                listener.getLogger().format("Initialized branch: %s%n", branch.getName());
+            }
+        }
+        return initializedBranches;
     }
 
     private void retrievePullRequests(final BitbucketSCMSourceRequest request) throws IOException, InterruptedException {
@@ -680,6 +696,40 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
+    @CheckForNull
+    @Override
+    protected SCMRevision retrieve(@NonNull String thingName, @NonNull TaskListener listener, @CheckForNull Item context)
+            throws IOException, InterruptedException {
+        try (BitbucketApi client = buildBitbucketClient()) {
+            // Try to resolve as a branch first
+            BitbucketBranch branch = client.getBranch(thingName);
+            if (branch != null) {
+                BitbucketCommit revision = findCommit(branch, listener);
+                if (revision != null) {
+                    return new BitbucketGitSCMRevision(new BranchSCMHead(thingName), revision);
+                }
+            }
+
+            // Try to resolve as a tag
+            BitbucketBranch tag = client.getTag(thingName);
+            if (tag != null) {
+                BitbucketCommit revision = findCommit(tag, listener);
+                if (revision != null) {
+                    BitbucketTagSCMHead tagHead = new BitbucketTagSCMHead(thingName, tag.getDateMillis());
+                    return new BitbucketTagSCMRevision(tagHead, revision);
+                }
+            }
+
+            // Try to resolve as a commit hash
+            BitbucketCommit commit = client.resolveCommit(thingName);
+            if (commit != null) {
+                return new BitbucketGitSCMRevision(new BranchSCMHead(thingName), commit);
+            }
+
+            return null;
+        }
+    }
+
     private BitbucketCommit findCommit(@NonNull BitbucketBranch branch, TaskListener listener) {
         String revision = branch.getRawNode();
         if (revision == null) {
@@ -745,12 +795,14 @@ public class BitbucketSCMSource extends SCMSource {
                 .withTraits(traits);
 
         // checkoutURL must be calculated after set withCloneLinks and credentials
-        String checkoutURL = scmBuilder.remote();
+        List<String> checkoutURLs = new ArrayList<>();
+        checkoutURLs.add(scmBuilder.remote());
+        scmBuilder.additionalRemoteNames().forEach(remoteName -> checkoutURLs.add(scmBuilder.additionalRemote(remoteName)));
         String scmOwner = Optional.ofNullable(getOwner())
                 .map(SCMSourceOwner::getFullName)
                 .orElse(null);
         return scmBuilder
-                .withExtension(new GitClientAuthenticatorExtension(checkoutURL, serverUrl, scmOwner, sshTrait != null ? null : checkoutCredentialsId))
+                .withExtension(new GitClientAuthenticatorExtension(checkoutURLs, serverUrl, scmOwner, sshTrait != null ? null : checkoutCredentialsId))
                 .build();
     }
 
@@ -1067,14 +1119,17 @@ public class BitbucketSCMSource extends SCMSource {
         public FormValidation doCheckCredentialsId(@CheckForNull @AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String value,
                                                    @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
-            return BitbucketCredentialsUtils.checkCredentialsId(context, value, serverURL);
+            return BitbucketCredentialsUtils.checkCredentialsId(context, serverURL, value);
         }
 
-        public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context, @QueryParameter String value) {
+        public static FormValidation doCheckServerUrl(@AncestorInPath SCMSourceOwner context,
+                                                      @QueryParameter(fixEmpty = true) String value) {
             if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE)
                 || context != null && !context.hasPermission(Item.EXTENDED_READ)) {
-                return FormValidation.error(
-                    "Unauthorized to validate Server URL"); // not supposed to be seeing this form
+                return FormValidation.error("Unauthorized to validate Server URL"); // not supposed to be seeing this form
+            }
+            if (value == null) {
+                return FormValidation.error("Server is required");
             }
             if (!BitbucketEndpointProvider.lookupEndpoint(value).isPresent()) {
                 return FormValidation.error("Unregistered Server: " + value);
@@ -1086,28 +1141,32 @@ public class BitbucketSCMSource extends SCMSource {
             return !BitbucketEndpointProvider.all().isEmpty();
         }
 
+        @RequirePOST
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context) {
-            AccessControlled contextToCheck = context == null ? Jenkins.get() : context;
-            if (!contextToCheck.hasPermission(Item.CONFIGURE)) {
+            if (context == null && !Jenkins.get().hasPermission(Jenkins.MANAGE)
+                    || context != null && !context.hasPermission(Item.CONFIGURE)) {
                 return new ListBoxModel();
             }
             return BitbucketEndpointProvider.listEndpoints();
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverUrl) {
-            return BitbucketCredentialsUtils.listCredentials(context, serverUrl, null);
+        @RequirePOST
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
+                                                     @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL) {
+            return BitbucketCredentialsUtils.listCredentials(context, serverURL, null);
         }
 
         @RequirePOST
         public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
-                                                  @QueryParameter String serverUrl,
-                                                  @QueryParameter String credentialsId,
-                                                  @QueryParameter String repoOwner) throws IOException {
+                                                  @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
+                                                  @QueryParameter(fixEmpty = true) String credentialsId,
+                                                  @QueryParameter(fixEmpty = true) String repoOwner) throws IOException {
+
             BitbucketSupplier<ListBoxModel> listBoxModelSupplier = bitbucket -> {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
                 List<? extends BitbucketRepository> repositories =
-                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.CONTRIBUTOR);
+                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.MEMBER);
                 if (repositories.isEmpty()) {
                     throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }
@@ -1116,17 +1175,18 @@ public class BitbucketSCMSource extends SCMSource {
                 }
                 return result;
             };
-            return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, null, listBoxModelSupplier);
+            return getFromBitbucket(context, serverURL, credentialsId, repoOwner, null, listBoxModelSupplier);
         }
 
+        @RequirePOST
         public ListBoxModel doFillMirrorIdItems(@AncestorInPath SCMSourceOwner context,
-                                                @QueryParameter String serverUrl,
-                                                @QueryParameter String credentialsId,
-                                                @QueryParameter String repoOwner,
-                                                @QueryParameter String repository)
+                                                @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
+                                                @QueryParameter(fixEmpty = true) String credentialsId,
+                                                @QueryParameter(fixEmpty = true) String repoOwner,
+                                                @QueryParameter(fixEmpty = true) String repository)
             throws FormFillFailure {
 
-            return getFromBitbucket(context, serverUrl, credentialsId, repoOwner, repository, MirrorListSupplier.INSTANCE);
+            return getFromBitbucket(context, serverURL, credentialsId, repoOwner, repository, MirrorListSupplier.INSTANCE);
         }
 
         @NonNull
