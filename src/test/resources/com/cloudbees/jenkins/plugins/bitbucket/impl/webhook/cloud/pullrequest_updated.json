@@ -1,0 +1,289 @@
+{
+    "repository": {
+        "type": "repository",
+        "full_name": "nfalco79/test-repos",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos"
+            },
+            "html": {
+                "href": "https://bitbucket.org/nfalco79/test-repos"
+            },
+            "avatar": {
+                "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+            }
+        },
+        "name": "test-repos",
+        "scm": "git",
+        "website": null,
+        "owner": {
+            "display_name": "Nikolas Falco",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+                },
+                "avatar": {
+                    "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+                }
+            },
+            "type": "user",
+            "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+            "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+            "nickname": "Nikolas Falco"
+        },
+        "workspace": {
+            "type": "workspace",
+            "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+            "name": "Nikolas Falco",
+            "slug": "nfalco79",
+            "links": {
+                "avatar": {
+                    "href": "https://bitbucket.org/workspaces/nfalco79/avatar/?ts=1737924067"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/nfalco79/"
+                },
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/nfalco79"
+                }
+            }
+        },
+        "is_private": true,
+        "project": {
+            "type": "project",
+            "key": "PUB",
+            "uuid": "{ef731d07-06e0-46d2-9b56-2674649b0655}",
+            "name": "public",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/workspaces/nfalco79/projects/PUB"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/nfalco79/workspace/projects/PUB"
+                },
+                "avatar": {
+                    "href": "https://bitbucket.org/nfalco79/workspace/projects/PUB/avatar/32?ts=1738923688"
+                }
+            }
+        },
+        "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}",
+        "parent": null
+    },
+    "actor": {
+        "display_name": "Nikolas Falco",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D"
+            },
+            "avatar": {
+                "href": "https://secure.gravatar.com/avatar/9979052fd773fbc9c0d94be07bbc8b5d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNF-3.png"
+            },
+            "html": {
+                "href": "https://bitbucket.org/%7B7d3a178a-a087-4756-b2da-2f9eadf50ba8%7D/"
+            }
+        },
+        "type": "user",
+        "uuid": "{7d3a178a-a087-4756-b2da-2f9eadf50ba8}",
+        "account_id": "557058:270a1f96-cd27-4013-ade6-85df2ab9820c",
+        "nickname": "Nikolas Falco"
+    },
+    "pullrequest": {
+        "comment_count": 0,
+        "task_count": 0,
+        "type": "pullrequest",
+        "id": 1,
+        "title": "Release/release 1",
+        "description": "* Add license\r\n\r\n* [CI] Release version 1.0.0",
+        "rendered": {
+            "title": {
+                "type": "rendered",
+                "raw": "Release/release 1",
+                "markup": "markdown",
+                "html": "<p>Release/release 1</p>"
+            },
+            "description": {
+                "type": "rendered",
+                "raw": "* Add license\r\n\r\n* [CI] Release version 1.0.0",
+                "markup": "markdown",
+                "html": "<ul>\n<li>\n<p>Add license</p>\n</li>\n<li>\n<p>[CI] Release version 1.0.0</p>\n</li>\n</ul>"
+            }
+        },
+        "state": "OPEN",
+        "draft": false,
+        "merge_commit": null,
+        "close_source_branch": true,
+        "closed_by": null,
+        "author": {
+            "display_name": "Former user",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/%7B644c7fc2-b15a-4445-9f89-35390694fac9%7D"
+                },
+                "avatar": {
+                    "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/default/default-avatar.png"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7B644c7fc2-b15a-4445-9f89-35390694fac9%7D/"
+                }
+            },
+            "type": "user",
+            "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}",
+            "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
+            "nickname": "Former user"
+        },
+        "reason": "",
+        "created_on": "2018-09-21T14:57:59.455870+00:00",
+        "updated_on": "2026-07-30T01:35:49.207341+00:00",
+        "destination": {
+            "branch": {
+                "name": "master"
+            },
+            "commit": {
+                "hash": "174561d625c9",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/commit/174561d625c9"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/nfalco79/test-repos/commits/174561d625c9"
+                    }
+                },
+                "type": "commit"
+            },
+            "repository": {
+                "type": "repository",
+                "full_name": "nfalco79/test-repos",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/nfalco79/test-repos"
+                    },
+                    "avatar": {
+                        "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+                    }
+                },
+                "name": "test-repos",
+                "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+            }
+        },
+        "source": {
+            "branch": {
+                "name": "release/release-1",
+                "links": {
+                },
+                "sync_strategies": [
+                    "merge_commit",
+                    "rebase"
+                ]
+            },
+            "commit": {
+                "hash": "f945c96c71d0",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/commit/f945c96c71d0"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/nfalco79/test-repos/commits/f945c96c71d0"
+                    }
+                },
+                "type": "commit"
+            },
+            "repository": {
+                "type": "repository",
+                "full_name": "nfalco79/test-repos",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/nfalco79/test-repos"
+                    },
+                    "avatar": {
+                        "href": "https://bytebucket.org/ravatar/%7B3deb8c29-778a-450c-8f69-3e50a18079df%7D?ts=3693474"
+                    }
+                },
+                "name": "test-repos",
+                "uuid": "{3deb8c29-778a-450c-8f69-3e50a18079df}"
+            }
+        },
+        "reviewers": [
+        ],
+        "participants": [
+            {
+                "type": "participant",
+                "user": {
+                    "display_name": "Former user",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/users/%7B644c7fc2-b15a-4445-9f89-35390694fac9%7D"
+                        },
+                        "avatar": {
+                            "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/default/default-avatar.png"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/%7B644c7fc2-b15a-4445-9f89-35390694fac9%7D/"
+                        }
+                    },
+                    "type": "user",
+                    "uuid": "{644c7fc2-b15a-4445-9f89-35390694fac9}",
+                    "account_id": "557058:ca1cd232-2017-4216-94be-99637899e18d",
+                    "nickname": "Former user"
+                },
+                "role": "PARTICIPANT",
+                "approved": true,
+                "state": "approved",
+                "participated_on": "2022-02-10T16:10:55.478453+00:00"
+            }
+        ],
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1"
+            },
+            "html": {
+                "href": "https://bitbucket.org/nfalco79/test-repos/pull-requests/1"
+            },
+            "commits": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/commits"
+            },
+            "approve": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/approve"
+            },
+            "request-changes": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/request-changes"
+            },
+            "diff": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/diff/nfalco79/test-repos:f945c96c71d0%0D174561d625c9?from_pullrequest_id=1"
+            },
+            "diffstat": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/diffstat/nfalco79/test-repos:f945c96c71d0%0D174561d625c9?from_pullrequest_id=1"
+            },
+            "comments": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/comments"
+            },
+            "activity": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/activity"
+            },
+            "merge": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/merge"
+            },
+            "decline": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/decline"
+            },
+            "statuses": {
+                "href": "https://api.bitbucket.org/2.0/repositories/nfalco79/test-repos/pullrequests/1/statuses"
+            }
+        },
+        "summary": {
+            "type": "rendered",
+            "raw": "* Add license\r\n\r\n* [CI] Release version 1.0.0",
+            "markup": "markdown",
+            "html": "<ul>\n<li>\n<p>Add license</p>\n</li>\n<li>\n<p>[CI] Release version 1.0.0</p>\n</li>\n</ul>"
+        },
+        "queued": false
+    }
+}

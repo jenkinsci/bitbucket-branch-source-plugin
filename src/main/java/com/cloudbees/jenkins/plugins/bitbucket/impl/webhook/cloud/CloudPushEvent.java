@@ -27,10 +27,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent.Reference;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent.Target;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
@@ -47,7 +50,7 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import org.apache.commons.lang3.Strings;
 
-final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> implements HasTags {
+final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> implements HasTags, HasPullRequests, HasBranches {
 
     CloudPushEvent(Type type, BitbucketPushEvent payload, String origin) {
         super(type, payload, origin);
@@ -135,5 +138,38 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> impl
             }
         }
         return tags;
+    }
+
+    @Override
+    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) throws InterruptedException {
+        List<BitbucketBranch> branches = new ArrayList<>();
+        for (BitbucketPushEvent.Change change: getPayload().getChanges()) {
+            if (!change.isClosed()) {
+                // created is true
+                Reference newChange = change.getNew();
+                Target target = newChange.getTarget();
+
+                String eventType = newChange.getType();
+                if ("branch".equals(eventType)) {
+                    // for BB Cloud date is valued only in case of annotated tag
+                    Date commitDate = newChange.getDate() != null ? newChange.getDate() : target.getDate();
+                    if (commitDate == null) {
+                        // fall back to the jenkins time when the request is processed
+                        commitDate = new Date();
+                    }
+                    String hash = target.getHash();
+                    BitbucketCloudBranch.Target commitTarget = new BitbucketCloudBranch.Target(hash, "", commitDate, new BitbucketCloudAuthor(target.getAuthor()));
+                    @SuppressWarnings("deprecation")
+                    BitbucketCloudBranch.Head head = new BitbucketCloudBranch.Head(hash);
+                    branches.add(new BitbucketCloudBranch(newChange.getName(), commitTarget, List.of(head)));
+                }
+            }
+        }
+        return branches;
     }
 }

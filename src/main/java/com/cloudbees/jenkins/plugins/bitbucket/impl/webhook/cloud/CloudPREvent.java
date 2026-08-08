@@ -29,15 +29,21 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMRevision;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestDestination;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestEvent;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
+import com.cloudbees.jenkins.plugins.bitbucket.api.PullRequestBranchType;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +58,7 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_DECLINED;
 import static com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType.PULL_REQUEST_MERGED;
 
-final class CloudPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests, HasTags {
+final class CloudPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests, HasTags, HasBranches {
     private final HookEventType hookEvent;
 
     CloudPREvent(Type type, BitbucketPullRequestEvent payload,
@@ -149,7 +155,30 @@ final class CloudPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent>
 
     @Override
     public Iterable<BitbucketBranch> getTags(BitbucketSCMSource src) {
-        return Collections.emptySet();
+        List<BitbucketBranch> tags = new ArrayList<>();
+        BitbucketPullRequest pr = getPayload().getPullRequest();
+
+        BitbucketPullRequestSource source = pr.getSource();
+        if (source != null && PullRequestBranchType.TAG == source.getBranchType()) {
+            tags.add(source.getBranch());
+        }
+        return tags;
+    }
+
+    @Override
+    public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) throws InterruptedException {
+        List<BitbucketBranch> branches = new ArrayList<>();
+
+        BitbucketPullRequest pr = getPayload().getPullRequest();
+        BitbucketPullRequestSource source = pr.getSource();
+        if (source != null && PullRequestBranchType.BRANCH == source.getBranchType()) {
+            branches.add(source.getBranch());
+        }
+        BitbucketPullRequestDestination destination = pr.getDestination();
+        if (destination != null) {
+            branches.add(destination.getBranch());
+        }
+        return branches;
     }
 
 }
