@@ -101,6 +101,7 @@ import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
+import jenkins.scm.api.SCMEvent.Type;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
@@ -342,9 +343,10 @@ public class BitbucketSCMSource extends SCMSource {
     protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer,
                             @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-        try (BitbucketSCMSourceRequest request = new BitbucketSCMSourceContext(criteria, observer)
-                .withTraits(traits)
-                .newRequest(this, listener)) {
+        try (BitbucketApi client = buildBitbucketClient();
+                BitbucketSCMSourceRequest request = new BitbucketSCMSourceContext(criteria, observer)
+                    .withTraits(traits)
+                    .newRequest(this, listener)) {
             StandardCredentials scanCredentials = credentials();
             if (scanCredentials == null) {
                 listener.getLogger().format("Connecting to %s with no credentials, anonymous access%n", getServerUrl());
@@ -357,22 +359,24 @@ public class BitbucketSCMSource extends SCMSource {
 
             // now serve the request
             if (request.isFetchPRs() && !request.isComplete()) {
-                if (event instanceof HasPullRequests prEvent) {
-                    request.setPullRequests(getBitbucketPullRequestsFromEvent(prEvent, listener));
+                if (event instanceof HasPullRequests) {
+                    // extract PRs from event
+                    request.setPullRequests(getBitbucketPullRequestsFromEvent(client, event, listener));
                 }
                 // Search pull requests
                 retrievePullRequests(request);
             }
             if (request.isFetchBranches() && !request.isComplete()) {
-                if (event instanceof HasBranches branchEvent) {
-                    request.setBranches(getBitbucketBranchesFromEvent(branchEvent, listener));
+                if (event instanceof HasBranches) {
+                    request.setBranches(getBitbucketBranchesFromEvent(client, event, listener));
                 }
                 // Search branches
                 retrieveBranches(request);
             }
             if (request.isFetchTags() && !request.isComplete()) {
-                if (event instanceof HasTags tagEvent) {
-                    request.setTags(getBitbucketTagsFromEvent(tagEvent, listener));
+                if (event instanceof HasTags) {
+                    // extract tags from event
+                    request.setTags(getBitbucketTagsFromEvent(client, event, listener));
                 }
                 // Search tags
                 retrieveTags(request);
@@ -380,42 +384,45 @@ public class BitbucketSCMSource extends SCMSource {
         }
     }
 
-    private Iterable<BitbucketBranch> getBitbucketTagsFromEvent(@NonNull HasTags incomingTagEvent, @NonNull TaskListener listener) throws IOException, InterruptedException {
+    private Iterable<BitbucketBranch> getBitbucketTagsFromEvent(@NonNull BitbucketApi client,
+                                                                @NonNull SCMHeadEvent<?> event,
+                                                                @NonNull TaskListener listener) throws IOException {
         Collection<BitbucketBranch> initializedTags = new HashSet<>();
-        try (BitbucketApi bitBucket = buildBitbucketClient()) {
+        if (event instanceof HasTags incomingTagEvent) {
             Iterable<BitbucketBranch> tags = incomingTagEvent.getTags(BitbucketSCMSource.this);
             for (BitbucketBranch tag : tags) {
-                initializedTags.add(bitBucket.getTag(tag.getName()));
+                initializedTags.add(event.getType() == Type.REMOVED ? tag : client.getTag(tag.getName()));
                 listener.getLogger().format("Initialized Tag: %s%n", tag.getName());
             }
         }
         return initializedTags;
     }
 
-    private Iterable<BitbucketPullRequest> getBitbucketPullRequestsFromEvent(@NonNull HasPullRequests incomingPrEvent,
-                                                                             @NonNull TaskListener listener) throws IOException, InterruptedException {
+    private Iterable<BitbucketPullRequest> getBitbucketPullRequestsFromEvent(@NonNull BitbucketApi client,
+                                                                             @NonNull SCMHeadEvent<?> event,
+                                                                             @NonNull TaskListener listener) throws IOException {
         Collection<BitbucketPullRequest> initializedPRs = new HashSet<>();
-        try (BitbucketApi bitBucket = buildBitbucketClient()) {
-            Iterable<BitbucketPullRequest> pullRequests = incomingPrEvent.getPullRequests(BitbucketSCMSource.this);
+        if (event instanceof HasPullRequests prEvent) {
+            Iterable<BitbucketPullRequest> pullRequests = prEvent.getPullRequests(BitbucketSCMSource.this);
             for (BitbucketPullRequest pr : pullRequests) {
                 // ensure that the PR is properly initialised via /changes API
                 // see BitbucketServerAPIClient.setupPullRequest()
-                initializedPRs.add(bitBucket.getPullRequestById(Integer.parseInt(pr.getId())));
+                // PRs can not be deleted only closed/declined
+                initializedPRs.add(client.getPullRequestById(Integer.parseInt(pr.getId())));
                 listener.getLogger().format("Initialized PR: %s%n", pr.getLink());
             }
         }
         return initializedPRs;
     }
 
-    private Iterable<BitbucketBranch> getBitbucketBranchesFromEvent(@NonNull HasBranches incomingEvent,
-                                                                    @NonNull TaskListener listener) throws IOException, InterruptedException {
+    private Iterable<BitbucketBranch> getBitbucketBranchesFromEvent(@NonNull BitbucketApi client,
+                                                                    @NonNull SCMHeadEvent<?> event,
+                                                                    @NonNull TaskListener listener) throws IOException {
         Collection<BitbucketBranch> initializedBranches = new HashSet<>();
-        try (BitbucketApi bitBucket = buildBitbucketClient()) {
-            Iterable<BitbucketBranch> branches = incomingEvent.getBranches(BitbucketSCMSource.this);
+        if (event instanceof HasBranches branchEvent) {
+            Iterable<BitbucketBranch> branches = branchEvent.getBranches(BitbucketSCMSource.this);
             for (BitbucketBranch branch : branches) {
-                // ensure that the PR is properly initialised via /changes API
-                // see BitbucketServerAPIClient.setupPullRequest()
-                initializedBranches.add(bitBucket.getBranch(branch.getName()));
+                initializedBranches.add(event.getType() == Type.REMOVED ? branch : client.getBranch(branch.getName()));
                 listener.getLogger().format("Initialized branch: %s%n", branch.getName());
             }
         }

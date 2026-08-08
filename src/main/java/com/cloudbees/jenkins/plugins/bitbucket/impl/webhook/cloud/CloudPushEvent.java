@@ -35,7 +35,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
-import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudAuthor;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
@@ -81,28 +80,23 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> impl
 
         Map<SCMHead, SCMRevision> result = new HashMap<>();
         for (BitbucketPushEvent.Change change: getPayload().getChanges()) {
-            if (change.isClosed()) {
-                result.put(new BranchSCMHead(change.getOld().getName()), null);
-            } else {
-                // created is true
-                Reference newChange = change.getNew();
-                Target target = newChange.getTarget();
+            Reference changeRef = change.isClosed() ? change.getOld(): change.getNew();
+            Target target = changeRef.getTarget();
 
-                SCMHead head = null;
-                String eventType = newChange.getType();
-                if ("tag".equals(eventType)) {
-                    // for BB Cloud date is valued only in case of annotated tag
-                    Date tagDate = newChange.getDate() != null ? newChange.getDate() : target.getDate();
-                    if (tagDate == null) {
-                        // fall back to the jenkins time when the request is processed
-                        tagDate = new Date();
-                    }
-                    head = new BitbucketTagSCMHead(newChange.getName(), tagDate.getTime());
-                } else {
-                    head = new BranchSCMHead(newChange.getName());
+            SCMHead head = null;
+            String eventType = changeRef.getType();
+            if ("tag".equals(eventType)) {
+                // for BB Cloud date is valued only in case of annotated tag
+                Date tagDate = changeRef.getDate() != null ? changeRef.getDate() : target.getDate();
+                if (tagDate == null) {
+                    // fall back to the jenkins time when the request is processed
+                    tagDate = new Date();
                 }
-                result.put(head, new AbstractGitSCMSource.SCMRevisionImpl(head, target.getHash()));
+                head = new BitbucketTagSCMHead(changeRef.getName(), tagDate.getTime());
+            } else {
+                head = new BranchSCMHead(changeRef.getName());
             }
+            result.put(head, new AbstractGitSCMSource.SCMRevisionImpl(head, target.getHash()));
         }
         return result;
     }
@@ -116,58 +110,46 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> impl
     public Iterable<BitbucketBranch> getTags(BitbucketSCMSource src) {
         List<BitbucketBranch> tags = new ArrayList<>();
         for (BitbucketPushEvent.Change change: getPayload().getChanges()) {
-            if (!change.isClosed()) {
-                // created is true
-                Reference newChange = change.getNew();
-                Target target = newChange.getTarget();
+            Reference changeRef = change.isCreated() ? change.getNew() : change.getOld();
+            Target target = changeRef.getTarget();
 
-                String eventType = newChange.getType();
-                if ("tag".equals(eventType)) {
-                    // for BB Cloud date is valued only in case of annotated tag
-                    Date tagDate = newChange.getDate() != null ? newChange.getDate() : target.getDate();
-                    if (tagDate == null) {
-                        // fall back to the jenkins time when the request is processed
-                        tagDate = new Date();
-                    }
-                    String hash = target.getHash();
-                    BitbucketCloudBranch.Target tagTarget = new BitbucketCloudBranch.Target(hash, "", tagDate, new BitbucketCloudAuthor(target.getAuthor()));
-                    @SuppressWarnings("deprecation")
-                    BitbucketCloudBranch.Head head = new BitbucketCloudBranch.Head(hash);
-                    tags.add(new BitbucketCloudBranch(newChange.getName(), tagTarget, List.of(head)));
+            String eventType = changeRef.getType();
+            if ("tag".equals(eventType)) {
+                // for BB Cloud date is valued only in case of annotated tag
+                Date tagDate = changeRef.getDate() != null ? changeRef.getDate() : target.getDate();
+                if (tagDate == null) {
+                    // fall back to the jenkins time when the request is processed
+                    tagDate = new Date();
                 }
+                BitbucketCloudBranch tagRef = new BitbucketCloudBranch(changeRef.getName(), target.getHash(), tagDate.getTime());
+                tagRef.setAuthor(target.getAuthor());
+                tags.add(tagRef);
             }
         }
         return tags;
     }
 
     @Override
-    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) {
         return Collections.emptyList();
     }
 
     @Override
-    public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) throws InterruptedException {
+    public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) {
         List<BitbucketBranch> branches = new ArrayList<>();
         for (BitbucketPushEvent.Change change: getPayload().getChanges()) {
-            if (!change.isClosed()) {
-                // created is true
-                Reference newChange = change.getNew();
-                Target target = newChange.getTarget();
+            Reference changeRef = change.isCreated() ? change.getNew() : change.getOld();
+            Target target = changeRef.getTarget();
 
-                String eventType = newChange.getType();
-                if ("branch".equals(eventType)) {
-                    // for BB Cloud date is valued only in case of annotated tag
-                    Date commitDate = newChange.getDate() != null ? newChange.getDate() : target.getDate();
-                    if (commitDate == null) {
-                        // fall back to the jenkins time when the request is processed
-                        commitDate = new Date();
-                    }
-                    String hash = target.getHash();
-                    BitbucketCloudBranch.Target commitTarget = new BitbucketCloudBranch.Target(hash, "", commitDate, new BitbucketCloudAuthor(target.getAuthor()));
-                    @SuppressWarnings("deprecation")
-                    BitbucketCloudBranch.Head head = new BitbucketCloudBranch.Head(hash);
-                    branches.add(new BitbucketCloudBranch(newChange.getName(), commitTarget, List.of(head)));
+            String eventType = changeRef.getType();
+            if ("branch".equals(eventType)) {
+                // for BB Cloud date is valued only in case of annotated tag
+                Date commitDate = changeRef.getDate() != null ? changeRef.getDate() : target.getDate();
+                if (commitDate == null) {
+                    // fall back to the jenkins time when the request is processed
+                    commitDate = new Date();
                 }
+                branches.add(new BitbucketCloudBranch(changeRef.getName(), target.getHash(), commitDate.getTime()));
             }
         }
         return branches;
