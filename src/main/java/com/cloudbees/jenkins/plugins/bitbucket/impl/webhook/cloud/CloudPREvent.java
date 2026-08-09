@@ -146,7 +146,7 @@ final class CloudPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent>
     }
 
     @Override
-    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) {
         if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
             return Collections.emptySet();
         }
@@ -166,7 +166,7 @@ final class CloudPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent>
     }
 
     @Override
-    public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) throws InterruptedException {
+    public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) {
         List<BitbucketBranch> branches = new ArrayList<>();
 
         BitbucketPullRequest pr = getPayload().getPullRequest();

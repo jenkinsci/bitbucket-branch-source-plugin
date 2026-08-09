@@ -27,6 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 
 public interface HasBranches {
 
-    Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) throws InterruptedException;
+    Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src);
 
 }

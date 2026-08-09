@@ -30,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,8 +49,7 @@ public class BitbucketCloudBranch implements BitbucketBranch {
 
     @JsonCreator
     public BitbucketCloudBranch(@NonNull @JsonProperty("name") String name,
-                                @Nullable @JsonProperty("target") BitbucketCloudBranch.Target target,
-                                @Nullable @JsonProperty("heads") List<Head> heads) { // TODO delete heads arg if possible
+                                @Nullable @JsonProperty("target") BitbucketCloudBranch.Target target) {
         this.name = name;
         if (target != null) {
             this.dateInMillis = target.date.getTime();
