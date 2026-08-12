@@ -183,7 +183,7 @@ class CloudPushWebhookProcessorTest {
             .element(0)
             .satisfies(branch -> {
                 assertThat(branch.getName()).isEqualTo("feature/test");
-                assertThat(branch.getRawNode()).isEqualTo("174561d625c9623b60d8aba09b7f08ddc9df45cd");
+                assertThat(branch.getRawNode()).isNull();
                 assertThat(branch.getDateMillis()).isEqualTo(1745660606000L);
             });
         assertThat(scmEvent.getTags(scmSource)).isEmpty();
@@ -213,6 +213,7 @@ class CloudPushWebhookProcessorTest {
             .satisfies(tag -> {
                 assertThat(tag.getAuthor()).isEqualTo("Nikolas Falco <email@domain.com>");
                 assertThat(tag.getName()).isEqualTo("test");
+                assertThat(tag.getRawNode()).isNull();
             });
         assertThat(scmEvent.getBranches(scmSource)).isEmpty();
         assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();

@@ -121,7 +121,9 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> impl
                     // fall back to the jenkins time when the request is processed
                     tagDate = new Date();
                 }
-                BitbucketCloudBranch tagRef = new BitbucketCloudBranch(changeRef.getName(), target.getHash(), tagDate.getTime());
+                // if it is a deletetion than hash does not exists and should be set to null or the job try to get Jenkinsfile of that branch and the Jenkins job is not deleted
+                String hash = change.isCreated() ? target.getHash() : null;
+                BitbucketCloudBranch tagRef = new BitbucketCloudBranch(changeRef.getName(), hash, tagDate.getTime());
                 tagRef.setAuthor(target.getAuthor());
                 tags.add(tagRef);
             }
@@ -149,7 +151,9 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> impl
                     // fall back to the jenkins time when the request is processed
                     commitDate = new Date();
                 }
-                branches.add(new BitbucketCloudBranch(changeRef.getName(), target.getHash(), commitDate.getTime()));
+                // if it is a deletetion than hash does not exists and should be set to null or the job try to get Jenkinsfile of that branch and the Jenkins job is not deleted
+                String hash = change.isCreated() ? target.getHash() : null;
+                branches.add(new BitbucketCloudBranch(changeRef.getName(), hash, commitDate.getTime()));
             }
         }
         return branches;
