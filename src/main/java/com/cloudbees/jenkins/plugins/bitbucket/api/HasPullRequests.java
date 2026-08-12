@@ -27,6 +27,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 
 public interface HasPullRequests {
 
-    Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException;
+    Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src);
 
 }

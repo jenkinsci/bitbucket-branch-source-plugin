@@ -326,7 +326,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
     }
 
     @Override
-    public Collection<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+    public Collection<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) {
         List<BitbucketPullRequest> prs = new ArrayList<>();
         for (final NativeServerChange change : getPayload()) {
             Map<String, BitbucketServerPullRequest> prsForChange = getPullRequests(src, change);

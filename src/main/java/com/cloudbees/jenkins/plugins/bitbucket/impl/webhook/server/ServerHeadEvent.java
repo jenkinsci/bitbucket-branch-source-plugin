@@ -114,7 +114,7 @@ final class ServerHeadEvent extends AbstractNativeServerSCMHeadEvent<NativeServe
     }
 
     @Override
-    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) {
         if (Type.REMOVED.equals(getType())) {
             return Collections.emptySet();
         }

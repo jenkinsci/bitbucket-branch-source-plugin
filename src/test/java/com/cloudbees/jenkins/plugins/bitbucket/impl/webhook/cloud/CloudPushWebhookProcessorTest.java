@@ -43,6 +43,7 @@ import jenkins.scm.api.SCMEvent.Type;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.mixin.SCMHeadMixin;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -130,6 +131,89 @@ class CloudPushWebhookProcessorTest {
                 assertThat(tag.getAuthor()).isEqualTo("Nikolas Falco <email@domain.com>");
                 assertThat(tag.getName()).isEqualTo("simple-tag");
                 assertThat(tag.getDateMillis()).isEqualTo(1738608795000L);
+            });
+        assertThat(scmEvent.getBranches(scmSource)).isEmpty();
+        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
+    }
+
+    @Test
+    void test_branch_created() throws Exception {
+        sut.process(HookEventType.PUSH.getKey(), loadResource("branch_created.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
+
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.CREATED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("AMUNIZ", "test-repos");
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
+            assertThat(heads.keySet())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BranchSCMHead("feature/test"));
+        Iterable<BitbucketBranch> branches = scmEvent.getBranches(scmSource);
+        assertThat(branches)
+            .element(0)
+            .satisfies(branch -> {
+                assertThat(branch.getName()).isEqualTo("feature/test");
+                assertThat(branch.getRawNode()).isEqualTo("174561d625c9623b60d8aba09b7f08ddc9df45cd");
+                assertThat(branch.getDateMillis()).isEqualTo(1745660606000L);
+            });
+        assertThat(scmEvent.getTags(scmSource)).isEmpty();
+        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
+    }
+
+    @Test
+    void test_branch_deleted() throws Exception {
+        sut.process(HookEventType.PUSH.getKey(), loadResource("branch_deleted.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
+
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.REMOVED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("AMUNIZ", "test-repos");
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
+        assertThat(heads.keySet())
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BranchSCMHead("feature/test"));
+        Iterable<BitbucketBranch> branches = scmEvent.getBranches(scmSource);
+        assertThat(branches)
+            .element(0)
+            .satisfies(branch -> {
+                assertThat(branch.getName()).isEqualTo("feature/test");
+                assertThat(branch.getRawNode()).isNull();
+                assertThat(branch.getDateMillis()).isEqualTo(1745660606000L);
+            });
+        assertThat(scmEvent.getTags(scmSource)).isEmpty();
+        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
+    }
+
+    @Test
+    void test_tag_deleted() throws Exception {
+        sut.process(HookEventType.PUSH.getKey(), loadResource("tag_deleted.json"), Collections.emptyMap(), mock(BitbucketEndpoint.class));
+
+        assertThat(scmEvent).isNotNull();
+        assertThat(scmEvent.getSourceName()).isEqualTo("test-repos");
+        assertThat(scmEvent.getType()).isEqualTo(Type.REMOVED);
+        assertThat(scmEvent.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("AMUNIZ", "test-repos");
+        Map<SCMHead, SCMRevision> heads = scmEvent.heads(scmSource);
+        assertThat(heads.keySet())
+            .first()
+            .isInstanceOf(BitbucketTagSCMHead.class)
+            .extracting(SCMHeadMixin::getName)
+            .isEqualTo("test");
+
+        Iterable<BitbucketBranch> tags = scmEvent.getTags(scmSource);
+        assertThat(tags)
+            .element(0)
+            .satisfies(tag -> {
+                assertThat(tag.getAuthor()).isEqualTo("Nikolas Falco <email@domain.com>");
+                assertThat(tag.getName()).isEqualTo("test");
+                assertThat(tag.getRawNode()).isNull();
             });
         assertThat(scmEvent.getBranches(scmSource)).isEmpty();
         assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();

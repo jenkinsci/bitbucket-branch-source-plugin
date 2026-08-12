@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>6.2189.v695a_c41f5249</version>
+        <version>6.2211.v27f680c93c53</version>
         <relativePath />
     </parent>
 
@@ -24,7 +24,7 @@
     </licenses>
 
     <properties>
-        <revision>937.3.7</revision>
+        <revision>937.3.9</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
         <hpi.bundledArtifacts>scribejava-core,scribejava-java8</hpi.bundledArtifacts>
@@ -72,7 +72,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>6509.v993a_c958a_e35</version>
+                <version>6715.v52b_c00222d1e</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -174,7 +174,7 @@
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
             <artifactId>json-unit-assertj</artifactId>
-            <version>5.1.2</version>
+            <version>6.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -197,7 +197,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-junit-jupiter</artifactId>
-            <version>5.15.0</version>
+            <version>7.0.0</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
