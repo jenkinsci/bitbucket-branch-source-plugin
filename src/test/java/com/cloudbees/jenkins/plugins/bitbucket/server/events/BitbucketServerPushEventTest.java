@@ -64,6 +64,7 @@ class BitbucketServerPushEventTest {
             .isEqualTo("http://local.example.com:7990/bitbucket/projects/PROJECT_1/repos/rep_1/browse");
         assertThat(event.getChanges()).hasSize(1);
     }
+
     @Test
     void legacyPayload() throws Exception {
         BitbucketPushEvent event = BitbucketServerWebhookPayload.pushEventFromPayload(payload);
