@@ -35,6 +35,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
@@ -72,7 +73,10 @@ import org.apache.commons.lang3.Strings;
 
 import static java.util.Objects.requireNonNull;
 
-final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<NativeServerChange>> implements HasPullRequests, HasTags {
+final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<NativeServerChange>> implements HasPullRequests, HasTags, HasBranches {
+
+    private static final String TYPE_TAG = "TAG";
+    private static final String TYPE_BRANCH = "BRANCH";
 
     private static final class CacheKey {
         @NonNull
@@ -147,12 +151,12 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
         for (final NativeServerChange change : getPayload()) {
             String refType = change.getRef().getType();
 
-            if ("BRANCH".equals(refType)) {
+            if (TYPE_BRANCH.equals(refType)) {
                 final BranchSCMHead head = new BranchSCMHead(change.getRef().getDisplayId());
                 final SCMRevision revision = getType() == SCMEvent.Type.REMOVED ? null
                         : new AbstractGitSCMSource.SCMRevisionImpl(head, change.getToHash());
                 result.put(head, revision);
-            } else if ("TAG".equals(refType)) {
+            } else if (TYPE_TAG.equals(refType)) {
                 String tagName = change.getRef().getDisplayId();
                 long tagTimestamp = 0L;
                 try (BitbucketApi client = getClient(src)) {
@@ -231,7 +235,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             ? ctx.originPRStrategies() : ctx.forkPRStrategies();
 
         for (final NativeServerChange change : getPayload()) {
-            if (!"BRANCH".equals(change.getRef().getType())) {
+            if (!TYPE_BRANCH.equals(change.getRef().getType())) {
                 LOGGER.log(Level.INFO, "Received event for unknown ref type {0} of ref {1}",
                     new Object[] { change.getRef().getType(), change.getRef().getDisplayId() });
                 continue;
@@ -347,7 +351,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
         for (final NativeServerChange change : getPayload()) {
             String refType = change.getRef().getType();
 
-            if ("TAG".equals(refType)) {
+            if (TYPE_TAG.equals(refType)) {
                 String tagName = change.getRef().getDisplayId();
                 String tagHash;
                 switch (change.getType()) {
@@ -356,7 +360,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
                     break;
                 }
                 case "DELETE": {
-                    tagHash = !NULL_HASH.equals(change.getFromHash()) ? change.getFromHash() : change.getToHash();
+                    tagHash = null;
                     break;
                 }
                 default:
@@ -372,7 +376,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
                             .orElse(0L);
                     tagHead.setTimestamp(tagTimestamp);
                     tagHead.setAuthor(refCommit.getAuthor());
-                } else {
+                } else if (tagHash != null) {
                     try (BitbucketApi client = getClient(src)) {
                         BitbucketCommit tag = client.resolveCommit(tagHash);
                         if (tag != null) {
@@ -390,6 +394,57 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
             }
         }
         return tags;
+    }
+
+    @Override
+    public Iterable<BitbucketBranch> getBranches(BitbucketSCMSource src) {
+        List<BitbucketBranch> branches = new ArrayList<>();
+        for (final NativeServerChange change : getPayload()) {
+            String refType = change.getRef().getType();
+
+            if (TYPE_BRANCH.equals(refType)) {
+                String name = change.getRef().getDisplayId();
+                String hash;
+                switch (change.getType()) {
+                case "ADD": {
+                    hash = change.getToHash();
+                    break;
+                }
+                case "DELETE": {
+                    hash = null;
+                    break;
+                }
+                default:
+                    throw new UnsupportedOperationException("Tag event of type " + change.getType()
+                        + " is not supported.\nPlease fill an issue at https://issues.jenkins.io to the bitbucket-branch-source-plugin component.");
+                }
+                BitbucketServerBranch head = new BitbucketServerBranch(name, hash);
+                if (refCommit != null) {
+                    // the annotated tag hash it's an alias of a real commit and it's the refCommit (new head commit)
+                    // it's not needed check if refCommit and tagCommit are equals
+                    long tagTimestamp = Optional.ofNullable(refCommit.getCommitterDate())
+                            .map(Date::getTime)
+                            .orElse(0L);
+                    head.setTimestamp(tagTimestamp);
+                    head.setAuthor(refCommit.getAuthor());
+                } else if (hash != null) {
+                    try (BitbucketApi client = getClient(src)) {
+                        BitbucketCommit tag = client.resolveCommit(hash);
+                        if (tag != null) {
+                            long tagTimestamp = Optional.ofNullable(tag.getCommitterDate())
+                                    .map(Date::getTime)
+                                    .orElse(0L);
+                            head.setTimestamp(tagTimestamp);
+                            head.setAuthor(tag.getAuthor());
+                        }
+                    } catch (IOException e) {
+                        LOGGER.log(Level.SEVERE, "Fail to retrive the timestamp for tag event {0}", name);
+                    }
+                }
+                branches.add(head);
+            }
+        }
+        return branches;
     }
 
 }
