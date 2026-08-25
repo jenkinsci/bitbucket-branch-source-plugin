@@ -404,20 +404,7 @@ final class ServerPushEvent extends AbstractNativeServerSCMHeadEvent<Collection<
 
             if (TYPE_BRANCH.equals(refType)) {
                 String name = change.getRef().getDisplayId();
-                String hash;
-                switch (change.getType()) {
-                case "ADD": {
-                    hash = change.getToHash();
-                    break;
-                }
-                case "DELETE": {
-                    hash = null;
-                    break;
-                }
-                default:
-                    throw new UnsupportedOperationException("Tag event of type " + change.getType()
-                        + " is not supported.\nPlease fill an issue at https://issues.jenkins.io to the bitbucket-branch-source-plugin component.");
-                }
+                String hash = "DELETE".equals(change.getType()) ? null : change.getToHash();
                 BitbucketServerBranch head = new BitbucketServerBranch(name, hash);
                 if (refCommit != null) {
                     // the annotated tag hash it's an alias of a real commit and it's the refCommit (new head commit)
