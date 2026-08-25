@@ -189,6 +189,47 @@ class BitbucketSCMSourceRetrieveTest {
     }
 
     @Test
+    void retrieve_fetches_primary_clone_links_by_default() throws Exception {
+        BitbucketSCMSource instance = load("retrieve_prs_test_cloud");
+
+        BitbucketCloudApiClient client = BitbucketClientMockUtils.getAPIClientMock(true, false);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+
+        List<BitbucketBranch> branches = Collections.singletonList(new BitbucketCloudBranch(BRANCH_NAME, COMMIT_HASH, 0));
+        when(client.getBranches()).thenReturn(branches);
+
+        SCMHeadEvent<?> event = new HeadEvent(List.of(pullRequest), List.of(tag));
+        dryRun(instance, event, client);
+
+        verify(client).getRepository();
+    }
+
+    @Test
+    void retrieve_does_not_fetch_primary_clone_links_when_skip_property_is_set() throws Exception {
+        BitbucketSCMSource instance = load("retrieve_prs_test_cloud");
+
+        BitbucketCloudApiClient client = BitbucketClientMockUtils.getAPIClientMock(true, false);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+
+        List<BitbucketBranch> branches = Collections.singletonList(new BitbucketCloudBranch(BRANCH_NAME, COMMIT_HASH, 0));
+        when(client.getBranches()).thenReturn(branches);
+
+        SCMHeadEvent<?> event = new HeadEvent(List.of(pullRequest), List.of(tag));
+        System.setProperty(BitbucketSCMSource.SKIP_PRIMARY_CLONE_LINKS_PROPERTY_NAME, "true");
+        try {
+            dryRun(instance, event, client);
+        } finally {
+            System.clearProperty(BitbucketSCMSource.SKIP_PRIMARY_CLONE_LINKS_PROPERTY_NAME);
+        }
+
+        // heads are still discovered as usual
+        Set<String> heads = headObserver.result().keySet().stream().map(SCMHead::getName).collect(Collectors.toSet());
+        assertThat(heads).containsExactlyInAnyOrder("PR-1", BRANCH_NAME, TAG_NAME);
+        // but the per-source repository lookup used to gather primary clone links is skipped
+        verify(client, never()).getRepository();
+    }
+
+    @Test
     void prEvent_does_not_trigger_tag_API_endpoints_cloud() throws Exception {
         BitbucketSCMSource instance = load("retrieve_prs_test_cloud");
         assertThat(instance.getId()).isEqualTo("retrieve_prs_test_cloud");
