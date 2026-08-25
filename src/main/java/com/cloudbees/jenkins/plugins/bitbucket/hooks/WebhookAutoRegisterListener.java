@@ -36,6 +36,8 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookConfiguration;
 import com.cloudbees.jenkins.plugins.bitbucket.api.webhook.BitbucketWebhookManager;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.DiscardOldBranchTrait;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.DiscardOldTagTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.util.BitbucketCredentialsUtils;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -214,6 +216,12 @@ public class WebhookAutoRegisterListener extends ItemListener {
             if (endpoint == null) {
                 continue;
             }
+            if (keepWebhook(source)) {
+                logger.log(Level.INFO, "Not removing hook for {0}/{1} because of DiscardOldBranch trait, new commit will recrete project without the need trigger a repository scan",
+                        new Object[] { source.getRepoOwner(), source.getRepository() });
+                continue;
+            }
+
             BitbucketApi client = getClientBySource(source, endpoint);
             if (client != null) {
                 try (BitbucketAuthenticatedClient webhookClient = client.adapt(BitbucketAuthenticatedClient.class)) {
@@ -240,6 +248,11 @@ public class WebhookAutoRegisterListener extends ItemListener {
                 }
             }
         }
+    }
+
+    private boolean keepWebhook(BitbucketSCMSource source) {
+        return source.getTraits().stream()
+                .anyMatch(trait -> trait instanceof DiscardOldBranchTrait || trait instanceof DiscardOldTagTrait);
     }
 
     @CheckForNull
