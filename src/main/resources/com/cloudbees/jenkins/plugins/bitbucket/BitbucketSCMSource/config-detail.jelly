@@ -29,6 +29,17 @@ THE SOFTWARE.
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select/>
   </f:entry>
+  <f:advanced title="${%Experimental Features}">
+    <f:entry title="${%Additional Credentials}" field="additionalCredentialsIds">
+      <f:repeatableProperty field="additionalCredentialsIds" honorOrder="true" hasHeader="false">
+        <f:block>
+          <div align="right">
+            <f:repeatableDeleteButton />
+          </div>
+        </f:block>
+      </f:repeatableProperty>
+    </f:entry>
+  </f:advanced>
   <f:entry title="${%Owner}" field="repoOwner">
     <f:textbox/>
   </f:entry>
