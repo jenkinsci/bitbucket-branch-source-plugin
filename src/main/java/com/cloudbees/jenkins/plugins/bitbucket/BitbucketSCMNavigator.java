@@ -33,6 +33,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpointPro
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.avatars.BitbucketTeamAvatarMetadataAction;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.scm.CredentialsRef;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.MirrorListSupplier;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.URLUtils;
@@ -68,6 +69,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
@@ -91,6 +93,7 @@ import jenkins.scm.impl.UncategorizedSCMSourceCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkins.ui.icon.Icon;
 import org.jenkins.ui.icon.IconSet;
@@ -109,6 +112,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
     private String serverUrl;
     @CheckForNull
     private String credentialsId;
+    private List<String> additionalCredentialsIds;
     @CheckForNull
     private String mirrorId;
     @NonNull
@@ -351,6 +355,22 @@ public class BitbucketSCMNavigator extends SCMNavigator {
 
     private boolean showAvatar() {
         return SCMTrait.find(traits, ShowBitbucketAvatarTrait.class) != null;
+    }
+
+    public List<CredentialsRef> getAdditionalCredentialsIds() {
+        return Util.fixNull(additionalCredentialsIds)
+                .stream()
+                .map(CredentialsRef::new)
+                .collect(Collectors.toList()); // NOSONAR
+    }
+
+    @DataBoundSetter
+    public void setAdditionalCredentialsIds(@CheckForNull List<CredentialsRef> additionalCredentialsIds) {
+        this.additionalCredentialsIds = Util.fixNull(additionalCredentialsIds)
+                .stream()
+                .map(CredentialsRef::getCredentialsId)
+                .distinct()
+                .collect(Collectors.toList()); // NOSONAR
     }
 
     @Symbol("bitbucket")
@@ -598,7 +618,7 @@ public class BitbucketSCMNavigator extends SCMNavigator {
         @NonNull
         @Override
         public SCMSource create(@NonNull String projectName) throws IOException, InterruptedException {
-            return new BitbucketSCMSourceBuilder(
+            BitbucketSCMSource scmSource = new BitbucketSCMSourceBuilder(
                     getId() + "::" + projectName,
                     serverUrl,
                     credentialsId,
@@ -607,6 +627,10 @@ public class BitbucketSCMNavigator extends SCMNavigator {
                     mirrorId)
                     .withRequest(request)
                     .build();
+            if (CollectionUtils.isNotEmpty(additionalCredentialsIds)) {
+                scmSource.setAdditionalCredentialsIds(getAdditionalCredentialsIds());
+            }
+            return scmSource;
         }
     }
 }
