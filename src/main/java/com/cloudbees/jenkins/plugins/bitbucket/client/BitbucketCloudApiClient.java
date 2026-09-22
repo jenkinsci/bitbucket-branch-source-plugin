@@ -49,6 +49,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.buildstatus.CloudBuildStatus
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.ICheckedCallable;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketMultiCredentialsAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUserAPITokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -130,8 +131,13 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         cachedCommits.evictAll();
     }
 
-    public BitbucketCloudApiClient(boolean enableCache, int teamCacheDuration, int repositoriesCacheDuration,
-            String owner, String projectKey, String repositoryName, BitbucketAuthenticator authenticator) {
+    public BitbucketCloudApiClient(boolean enableCache,
+                                   int teamCacheDuration,
+                                   int repositoriesCacheDuration,
+                                   String owner,
+                                   String projectKey,
+                                   String repositoryName,
+                                   BitbucketAuthenticator authenticator) {
         super(authenticator);
         this.owner = owner;
         this.projectKey = projectKey;
@@ -148,6 +154,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     protected boolean isSupportedAuthenticator(@CheckForNull BitbucketAuthenticator authenticator) {
         return authenticator == null
                 || authenticator instanceof BitbucketAccessTokenAuthenticator
+                || authenticator instanceof BitbucketMultiCredentialsAuthenticator
                 || authenticator instanceof BitbucketOAuthAuthenticator
                 || authenticator instanceof BitbucketUserAPITokenAuthenticator; // API access token
     }
