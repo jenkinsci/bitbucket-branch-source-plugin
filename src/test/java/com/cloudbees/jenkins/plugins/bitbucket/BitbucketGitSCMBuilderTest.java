@@ -315,7 +315,7 @@ class BitbucketGitSCMBuilderTest {
             .isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch");
 
         GitSCM actual = instance.build();
@@ -324,12 +324,12 @@ class BitbucketGitSCMBuilderTest {
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/test-branch:refs/remotes/origin/test-branch");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/test-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/test-branch");
@@ -435,7 +435,7 @@ class BitbucketGitSCMBuilderTest {
             .isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/test-branch:refs/remotes/@{remote}/test-branch");
 
         GitSCM actual = instance.build();
@@ -444,12 +444,12 @@ class BitbucketGitSCMBuilderTest {
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/test-branch:refs/remotes/origin/test-branch");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/test-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/test-branch");
@@ -1085,7 +1085,7 @@ class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote()).isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1");
 
         GitSCM actual = instance.build();
@@ -1094,12 +1094,12 @@ class BitbucketGitSCMBuilderTest {
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -1143,19 +1143,19 @@ class BitbucketGitSCMBuilderTest {
 
         GitSCM actual = instance.build();
         assertThat(instance.credentialsId()).isNull();
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
 
         assertThat(actual.getGitTool()).isNull();
         assertThat(actual.getUserRemoteConfigs()).hasSize(1);
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isNull();
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -1199,19 +1199,19 @@ class BitbucketGitSCMBuilderTest {
 
         GitSCM actual = instance.build();
         assertThat(instance.credentialsId()).isNull();
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
 
         assertThat(actual.getGitTool()).isNull();
         assertThat(actual.getUserRemoteConfigs()).hasSize(1);
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isNull();
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -1244,7 +1244,7 @@ class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote()).isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1");
 
         SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper(null);
@@ -1252,19 +1252,19 @@ class BitbucketGitSCMBuilderTest {
 
         GitSCM actual = instance.build();
         assertThat(instance.credentialsId()).isNull();
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
 
         assertThat(actual.getGitTool()).isNull();
         assertThat(actual.getUserRemoteConfigs()).hasSize(1);
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isNull();
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -1305,19 +1305,19 @@ class BitbucketGitSCMBuilderTest {
 
         GitSCM actual = instance.build();
         assertThat(instance.credentialsId()).isEqualTo("user-key");
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
 
         assertThat(actual.getGitTool()).isNull();
         assertThat(actual.getUserRemoteConfigs()).hasSize(1);
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -1359,19 +1359,19 @@ class BitbucketGitSCMBuilderTest {
 
         GitSCM actual = instance.build();
         assertThat(instance.credentialsId()).isEqualTo("user-key");
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
 
         assertThat(actual.getGitTool()).isNull();
         assertThat(actual.getUserRemoteConfigs()).hasSize(1);
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -1404,7 +1404,7 @@ class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote()).isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1");
 
         SSHCheckoutTraitWrapper sshTrait = new SSHCheckoutTraitWrapper("user-key");
@@ -1412,19 +1412,19 @@ class BitbucketGitSCMBuilderTest {
 
         GitSCM actual = instance.build();
         assertThat(instance.credentialsId()).isEqualTo("user-key");
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
 
         assertThat(actual.getGitTool()).isNull();
         assertThat(actual.getUserRemoteConfigs()).hasSize(1);
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -1523,7 +1523,7 @@ class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote()).isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1");
 
         GitSCM actual = instance.build();
@@ -1532,12 +1532,12 @@ class BitbucketGitSCMBuilderTest {
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -2397,7 +2397,7 @@ class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote()).isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1");
 
         GitSCM actual = instance.build();
@@ -2406,17 +2406,17 @@ class BitbucketGitSCMBuilderTest {
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         config = actual.getUserRemoteConfigs().get(1);
         assertThat(config.getName()).isEqualTo("upstream");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/test-branch:refs/remotes/upstream/test-branch");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -2425,7 +2425,7 @@ class BitbucketGitSCMBuilderTest {
         origin = actual.getRepositoryByName("upstream");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/test-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/upstream/test-branch");
@@ -2570,7 +2570,7 @@ class BitbucketGitSCMBuilderTest {
         assertThat(instance.remote()).isEqualTo("https://bitbucket.org");
 
         instance.withCloneLinks(buildCloneLinks(), Collections.emptyList());
-        assertThat(instance.remote()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(instance.remote()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(instance.refSpecs()).contains("+refs/heads/qa-branch:refs/remotes/@{remote}/PR-1");
 
         GitSCM actual = instance.build();
@@ -2579,17 +2579,17 @@ class BitbucketGitSCMBuilderTest {
         UserRemoteConfig config = actual.getUserRemoteConfigs().get(0);
         assertThat(config.getName()).isEqualTo("origin");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/qa-branch:refs/remotes/origin/PR-1");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         config = actual.getUserRemoteConfigs().get(1);
         assertThat(config.getName()).isEqualTo("upstream");
         assertThat(config.getRefspec()).isEqualTo("+refs/heads/test-branch:refs/remotes/upstream/test-branch");
-        assertThat(config.getUrl()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(config.getUrl()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(config.getCredentialsId()).isEqualTo("user-key");
         RemoteConfig origin = actual.getRepositoryByName("origin");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/qa/qa-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/qa/qa-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/qa-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/origin/PR-1");
@@ -2598,7 +2598,7 @@ class BitbucketGitSCMBuilderTest {
         origin = actual.getRepositoryByName("upstream");
         assertThat(origin).isNotNull();
         assertThat(origin.getURIs()).hasSize(1);
-        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@bitbucket.org/tester/test-repo.git");
+        assertThat(origin.getURIs().get(0).toString()).isEqualTo("ssh://git@ssh.bitbucket.org/tester/test-repo.git");
         assertThat(origin.getFetchRefSpecs()).hasSize(1);
         assertThat(origin.getFetchRefSpecs().get(0).getSource()).isEqualTo("refs/heads/test-branch");
         assertThat(origin.getFetchRefSpecs().get(0).getDestination()).isEqualTo("refs/remotes/upstream/test-branch");
