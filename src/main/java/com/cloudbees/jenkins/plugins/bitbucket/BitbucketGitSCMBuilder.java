@@ -292,7 +292,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             case HTTP:
                 return "https://bitbucket.org/" + owner + "/" + repository + ".git";
             case SSH:
-                return "ssh://git@bitbucket.org/" + owner + "/" + repository + ".git";
+                return "ssh://git@ssh.bitbucket.org/" + owner + "/" + repository + ".git";
             default:
                 throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
         }
@@ -327,11 +327,16 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     }
 
     private String getCloneLink(List<BitbucketHref> cloneLinks) {
-        return cloneLinks.stream()
-            .filter(link -> protocol.matches(link.getName()))
-            .findAny()
+        String cloneLink = cloneLinks.stream()
+                .filter(link -> protocol.matches(link.getName()))
+                .findAny()
             .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol + ". Did you disabled the protocol on Bitbucket Data Center configuration?"))
             .getHref();
+        if(protocol == BitbucketRepositoryProtocol.SSH
+        && BitbucketApiUtils.isCloud(scmSource.getServerUrl())){
+            return cloneLink.replace("@bitbucket.org/","@ssh.bitbucket.org/");
+        }
+        return cloneLink;
     }
 
     /**
