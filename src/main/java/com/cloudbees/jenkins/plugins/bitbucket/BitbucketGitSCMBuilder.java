@@ -328,17 +328,13 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
     }
 
     private String getCloneLink(List<BitbucketHref> cloneLinks) {
-        String cloneLink = cloneLinks.stream()
+        return cloneLinks.stream()
                 .filter(link -> protocol.matches(link.getName()))
                 .findAny()
-            .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol + ". Did you disabled the protocol on Bitbucket Data Center configuration?"))
-            .getHref();
-        if(protocol == BitbucketRepositoryProtocol.SSH
-        && BitbucketApiUtils.isCloud(scmSource.getServerUrl())){
-            return cloneLink.replace("@bitbucket.org/","@ssh.bitbucket.org/");
-        }
-        return cloneLink;
+                .orElseThrow(() -> new IllegalStateException("Can't find clone link for protocol " + protocol + ". Did you disabled the protocol on Bitbucket Data Center configuration?"))
+                .getHref();
     }
+
 
     /**
      * {@inheritDoc}
