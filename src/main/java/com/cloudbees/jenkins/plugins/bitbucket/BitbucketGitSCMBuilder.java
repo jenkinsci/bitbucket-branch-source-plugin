@@ -286,13 +286,14 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
         }
     }
 
+
     @NonNull
     private String getCloudRepositoryUri(@NonNull String owner, @NonNull String repository) {
         switch (protocol) {
             case HTTP:
                 return "https://bitbucket.org/" + owner + "/" + repository + ".git";
             case SSH:
-                return "ssh://git@ssh.bitbucket.org/" + owner + "/" + repository + ".git";
+                return "ssh://git@bitbucket.org/" + owner + "/" + repository + ".git";
             default:
                 throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
         }
