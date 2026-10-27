@@ -292,7 +292,7 @@ public class BitbucketGitSCMBuilder extends GitSCMBuilder<BitbucketGitSCMBuilder
             case HTTP:
                 return "https://bitbucket.org/" + owner + "/" + repository + ".git";
             case SSH:
-                return "ssh://git@bitbucket.org/" + owner + "/" + repository + ".git";
+                return "ssh://git@ssh.bitbucket.org/" + owner + "/" + repository + ".git";
             default:
                 throw new IllegalArgumentException("Unsupported repository protocol: " + protocol);
         }
