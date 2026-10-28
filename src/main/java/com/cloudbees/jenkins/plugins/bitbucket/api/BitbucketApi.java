@@ -285,6 +285,21 @@ public interface BitbucketApi extends AutoCloseable {
             throws IOException, InterruptedException;
 
     /**
+     * Returns repositories for an interactive Jenkins form fill.
+     * Implementations may apply a shorter timeout than normal SCM operations.
+     *
+     * @param role optional repository role filter
+     * @return the repositories list (it can be empty)
+     * @throws IOException if there was a network communications error
+     * @throws InterruptedException if interrupted while waiting on remote communications
+     */
+    @NonNull
+    default List<? extends BitbucketRepository> getRepositoriesForForm(@CheckForNull UserRoleInRepository role)
+            throws IOException, InterruptedException {
+        return getRepositories(role);
+    }
+
+    /**
      * Returns all the repositories for the current owner (even if it's a regular user or a team).
      *
      * @return all repositories for the current {@link #getOwner()}

@@ -77,6 +77,61 @@ class ExponentialBackOffRetryStrategyTest {
         }
     }
 
+    @Test
+    void retryCountIsBounded(ClientAndServer mockServer) throws Exception {
+        HttpRequest request = request()
+                .withMethod("GET")
+                .withPath("/rest/api/1.0/projects/test/repos/testRepos/tags");
+        mockServer.when(request).respond(response().withStatusCode(429));
+
+        final RetryInterceptor counterInterceptor = new RetryInterceptor();
+        try (BitbucketApi client = new BitbucketServerAPIClient(
+                "http://localhost:" + mockServer.getPort(),
+                "test",
+                "testRepos",
+                null,
+                false) {
+            @Override
+            protected HttpClientBuilder setupClientBuilder() {
+                return super.setupClientBuilder()
+                        .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, 1, 1000, 3))
+                        .addResponseInterceptorFirst(counterInterceptor);
+            }
+        }) {
+            assertThatIOException().isThrownBy(client::getTags);
+        }
+
+        // The interceptor sees the initial response and three retry responses.
+        assertThat(counterInterceptor.getRetry()).isEqualTo(4);
+    }
+
+    @Test
+    void retriesCanBeDisabled(ClientAndServer mockServer) throws Exception {
+        HttpRequest request = request()
+                .withMethod("GET")
+                .withPath("/rest/api/1.0/projects/test/repos/testRepos/tags");
+        mockServer.when(request).respond(response().withStatusCode(429));
+
+        final RetryInterceptor counterInterceptor = new RetryInterceptor();
+        try (BitbucketApi client = new BitbucketServerAPIClient(
+                "http://localhost:" + mockServer.getPort(),
+                "test",
+                "testRepos",
+                null,
+                false) {
+            @Override
+            protected HttpClientBuilder setupClientBuilder() {
+                return super.setupClientBuilder()
+                        .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, 1, 1000, 0))
+                        .addResponseInterceptorFirst(counterInterceptor);
+            }
+        }) {
+            assertThatIOException().isThrownBy(client::getTags);
+        }
+
+        assertThat(counterInterceptor.getRetry()).isEqualTo(1);
+    }
+
     private static class RetryInterceptor implements HttpResponseInterceptor {
         private int retry = 0;
 

@@ -85,6 +85,7 @@ import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.TimeValue;
+import org.apache.hc.core5.util.Timeout;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
@@ -171,7 +172,12 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
                 .useSystemProperties()
                 .setConnectionManager(getConnectionManager())
                 .setConnectionManagerShared(true)
-                .setRetryStrategy(new ExponentialBackoffRetryStrategy(2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1)))
+                // Do not retry HTTP 429/503 responses. Retrying a rate-limited
+                // request consumes more quota and blocks interactive Jenkins
+                // form requests without making the response more likely to
+                // succeed. Callers can schedule a later operation as needed.
+                .setRetryStrategy(new ExponentialBackoffRetryStrategy(
+                        2, TimeUnit.SECONDS.toMillis(5), TimeUnit.HOURS.toMillis(1), 0))
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
                 .evictIdleConnections(TimeValue.ofSeconds(2))
@@ -319,6 +325,20 @@ public abstract class AbstractBitbucketApi implements BitbucketApi, AutoCloseabl
     protected String getRequest(String path) throws IOException {
         HttpGet request = new HttpGet(path);
         request.setAbsoluteRequestUri(true);
+        return doRequest(request);
+    }
+
+    /**
+     * Performs a GET with the shorter timeout appropriate for a Jenkins form
+     * fill. Normal SCM operations continue to use {@link #getRequest(String)}
+     * and the regular socket timeout.
+     */
+    protected String getInteractiveRequest(String path) throws IOException {
+        HttpGet request = new HttpGet(path);
+        request.setAbsoluteRequestUri(true);
+        request.setConfig(RequestConfig.custom()
+                .setResponseTimeout(Timeout.ofSeconds(10))
+                .build());
         return doRequest(request);
     }
 
