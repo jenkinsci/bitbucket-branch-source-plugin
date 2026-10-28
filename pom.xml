@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>6.2189.v695a_c41f5249</version>
+        <version>6.2236.v12dd4c483242</version>
         <relativePath />
     </parent>
 
@@ -24,12 +24,12 @@
     </licenses>
 
     <properties>
-        <revision>937.3.7</revision>
+        <revision>937.3.12</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/bitbucket-branch-source-plugin</gitHubRepo>
         <hpi.bundledArtifacts>scribejava-core,scribejava-java8</hpi.bundledArtifacts>
         <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-        <jenkins.baseline>2.541</jenkins.baseline>
+        <jenkins.baseline>2.555</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
         <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
@@ -72,7 +72,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>6509.v993a_c958a_e35</version>
+                <version>7046.v43536164769c</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -174,7 +174,7 @@
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
             <artifactId>json-unit-assertj</artifactId>
-            <version>5.1.2</version>
+            <version>6.2.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -197,7 +197,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-junit-jupiter</artifactId>
-            <version>5.15.0</version>
+            <version>7.0.0</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

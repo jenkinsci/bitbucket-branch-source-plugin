@@ -117,9 +117,6 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
                 @Override
                 public SCMProbeStat stat(@NonNull String path) throws IOException {
                     if (hash == null) {
-                        listener().getLogger() //
-                                .format("Can not resolve path for hash [%s] on repository %s/%s%n", //
-                                        hash, client.getOwner(), client.getRepositoryName());
                         return SCMProbeStat.fromType(Type.NONEXISTENT);
                     }
 

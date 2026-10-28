@@ -1,0 +1,123 @@
+{
+    "date": "2026-08-19T17:27:55+0000",
+    "actor": {
+        "emailAddress": "admin@example.com",
+        "displayName": "Administrator",
+        "name": "admin",
+        "active": true,
+        "links": {"self": [{"href": "http://localhost:7990/bitbucket/users/admin"}]},
+        "id": 2,
+        "type": "NORMAL",
+        "slug": "admin"
+    },
+    "eventKey": "pr:opened",
+    "pullRequest": {
+        "author": {
+            "approved": false,
+            "role": "AUTHOR",
+            "user": {
+                "emailAddress": "admin@example.com",
+                "displayName": "Administrator",
+                "name": "admin",
+                "active": true,
+                "links": {"self": [{"href": "http://localhost:7990/bitbucket/users/admin"}]},
+                "id": 2,
+                "type": "NORMAL",
+                "slug": "admin"
+            },
+            "status": "UNAPPROVED"
+        },
+        "description": "* Provide some change to work diffstats:\n    * add a new\n    * modify a file\n    * rename a file\n* Provide some change to work diffstats:\n    * add a new",
+        "updatedDate": "2026-08-19T17:27:55.266Z",
+        "title": "Feature/diffstat",
+        "version": 0,
+        "reviewers": [],
+        "toRef": {
+            "latestCommit": "174561d625c9623b60d8aba09b7f08ddc9df45cd",
+            "id": "refs/heads/master",
+            "displayId": "master",
+            "type": "BRANCH",
+            "repository": {
+                "archived": false,
+                "public": false,
+                "hierarchyId": "e09ea1ec1e0b9858be28",
+                "name": "test-repos",
+                "forkable": true,
+                "project": {
+                    "public": false,
+                    "name": "AMUNIZ",
+                    "links": {"self": [{"href": "http://localhost:7990/bitbucket/projects/AMUNIZ"}]},
+                    "id": 2,
+                    "type": "NORMAL",
+                    "key": "AMUNIZ"
+                },
+                "links": {
+                    "clone": [
+                        {
+                            "name": "http",
+                            "href": "http://localhost:7990/bitbucket/scm/amuniz/test-repos.git"
+                        },
+                        {
+                            "name": "ssh",
+                            "href": "ssh://git@localhost:7999/amuniz/test-repos.git"
+                        }
+                    ],
+                    "self": [{"href": "http://localhost:7990/bitbucket/projects/AMUNIZ/repos/test-repos/browse"}]
+                },
+                "id": 2,
+                "scmId": "git",
+                "state": "AVAILABLE",
+                "slug": "test-repos",
+                "statusMessage": "Available"
+            }
+        },
+        "createdDate": "2026-08-19T17:27:55.266Z",
+        "draft": false,
+        "closed": false,
+        "fromRef": {
+            "latestCommit": "251fce291f086cdde68ae2a896148abb5b58033e",
+            "id": "refs/heads/feature/diffstat",
+            "displayId": "feature/diffstat",
+            "type": "BRANCH",
+            "repository": {
+                "archived": false,
+                "public": false,
+                "hierarchyId": "e09ea1ec1e0b9858be28",
+                "name": "test-repos",
+                "forkable": true,
+                "project": {
+                    "public": false,
+                    "name": "AMUNIZ",
+                    "links": {"self": [{"href": "http://localhost:7990/bitbucket/projects/AMUNIZ"}]},
+                    "id": 2,
+                    "type": "NORMAL",
+                    "key": "AMUNIZ"
+                },
+                "links": {
+                    "clone": [
+                        {
+                            "name": "http",
+                            "href": "http://localhost:7990/bitbucket/scm/amuniz/test-repos.git"
+                        },
+                        {
+                            "name": "ssh",
+                            "href": "ssh://git@localhost:7999/amuniz/test-repos.git"
+                        }
+                    ],
+                    "self": [{"href": "http://localhost:7990/bitbucket/projects/AMUNIZ/repos/test-repos/browse"}]
+                },
+                "id": 2,
+                "scmId": "git",
+                "state": "AVAILABLE",
+                "slug": "test-repos",
+                "statusMessage": "Available"
+            }
+        },
+        "links": {"self": [{"href": "http://localhost:7990/bitbucket/projects/AMUNIZ/repos/test-repos/pull-requests/1"}]},
+        "id": 1,
+        "state": "OPEN",
+        "locked": false,
+        "open": true,
+        "participants": []
+    }
+}

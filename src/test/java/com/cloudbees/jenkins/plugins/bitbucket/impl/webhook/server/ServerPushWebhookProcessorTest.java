@@ -32,6 +32,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.JsonParser;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.events.NativeServerRefsChangedEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
 import hudson.scm.SCM;
@@ -210,6 +211,16 @@ class ServerPushWebhookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new BitbucketTagSCMHead("simple-tag", 1537538991000L));
+
+        Iterable<BitbucketBranch> tags = scmEvent.getTags(scmSource);
+        assertThat(tags).isNotEmpty()
+            .hasSize(1)
+            .first()
+            .satisfies(tag -> {
+                assertThat(tag.getName()).isEqualTo("simple-tag");
+                assertThat(tag.getRawNode()).isNull(); // JENKINS-76514
+                assertThat(tag.getAuthor()).isNull(); // JENKINS-76514
+            });
     }
 
     @Test
@@ -240,6 +251,25 @@ class ServerPushWebhookProcessorTest {
             .first()
             .usingRecursiveComparison()
             .isEqualTo(new AbstractGitSCMSource.SCMRevisionImpl(new BranchSCMHead("main"), "9fdd7b96d3f5c276d0b9e0bf38c879eb112d889a"));
+    }
+
+    @Test
+    @Issue("JENKINS-76514")
+    void test_create_branch() throws Exception {
+        sut.process(HookEventType.SERVER_REFS_CHANGED.getKey(), loadResource("branch_deleted.json"), Collections.emptyMap(), endpoint);
+
+        ServerPushEvent event = (ServerPushEvent) scmEvent;
+        assertThat(event).isNotNull();
+        assertThat(event.getSourceName()).isEqualTo("test-repos");
+        assertThat(event.getType()).isEqualTo(SCMEvent.Type.REMOVED);
+        assertThat(event.isMatch(mock(SCM.class))).isFalse();
+
+        BitbucketSCMSource scmSource = new BitbucketSCMSource("ASMUNIZ", "test-repos");
+        Iterable<BitbucketBranch> branches = event.getBranches(scmSource);
+        assertThat(branches).hasSize(1)
+            .first()
+            .usingRecursiveComparison()
+            .isEqualTo(new BitbucketServerBranch("feature/BB-1", null));
     }
 
     @Test

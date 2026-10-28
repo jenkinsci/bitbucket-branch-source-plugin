@@ -141,7 +141,7 @@ final class PluginPREvent extends AbstractSCMHeadEvent<BitbucketPullRequestEvent
     }
 
     @Override
-    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) throws InterruptedException {
+    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) {
         if (hookEvent == PULL_REQUEST_DECLINED || hookEvent == PULL_REQUEST_MERGED) {
             return Collections.emptySet();
         }
