@@ -44,6 +44,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.client.AbstractBitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.client.BitbucketTlsSocketStrategy;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketMultiCredentialsAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernamePasswordAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
@@ -160,6 +161,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     @Override
     protected boolean isSupportedAuthenticator(@CheckForNull BitbucketAuthenticator authenticator) {
         return authenticator == null
+                || authenticator instanceof BitbucketMultiCredentialsAuthenticator
                 || authenticator instanceof BitbucketClientCertificateAuthenticator // undocumented mutual TLS
                 || authenticator instanceof BitbucketAccessTokenAuthenticator // personal access token
                 || authenticator instanceof BitbucketUsernamePasswordAuthenticator; // username/password credentials

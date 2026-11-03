@@ -16,6 +16,15 @@
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select/>
   </f:entry>
+  <f:entry title="${%Additional Credentials - Experimental}" field="additionalCredentialsIds">
+    <f:repeatableProperty field="additionalCredentialsIds" honorOrder="true" hasHeader="false">
+      <f:block>
+        <div align="right">
+          <f:repeatableDeleteButton />
+        </div>
+      </f:block>
+    </f:repeatableProperty>
+  </f:entry>
   <f:entry title="${%Owner}" field="repoOwner">
     <f:textbox/>
   </f:entry>

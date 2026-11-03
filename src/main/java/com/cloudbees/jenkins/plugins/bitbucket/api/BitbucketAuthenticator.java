@@ -26,12 +26,15 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.util.BitbucketApiUtils;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.GitSCM;
 import jenkins.authentication.tokens.api.AuthenticationTokenContext;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.ProtectedExternally;
 
 /**
  * Support for various different methods of authenticating with Bitbucket
@@ -66,6 +69,7 @@ public interface BitbucketAuthenticator {
     /**
      * @return id of the credentials used.
      */
+    @NonNull
     String getId();
 
     /**
@@ -107,6 +111,21 @@ public interface BitbucketAuthenticator {
     }
 
     /**
+     * Signal the authenticator has reach the API limit.
+     */
+    @Restricted(ProtectedExternally.class)
+    default void markLimitReached() {
+    }
+
+    /**
+     * Returns if this credentials manages of API limit.
+     */
+    @Restricted(ProtectedExternally.class)
+    default boolean supportsRateLimit() {
+        return false;
+    }
+
+    /**
      * Generates context that sub-classes can use to determine if they would be able to authenticate against the
      * provided server.
      *
@@ -127,4 +146,5 @@ public interface BitbucketAuthenticator {
                 .with(BITBUCKET_INSTANCE_TYPE, isCloud ? BITBUCKET_INSTANCE_TYPE_CLOUD : BITBUCKET_INSTANCE_TYPE_SERVER)
                 .build();
     }
+
 }
