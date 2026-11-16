@@ -3,7 +3,7 @@
 [![Build](https://ci.jenkins.io/buildStatus/icon?job=Plugins%2Fbitbucket-branch-source-plugin%2Fmaster)](https://ci.jenkins.io/job/Plugins/job/bitbucket-branch-source-plugin/job/master/)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/bitbucket-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/releases/latest)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/cloudbees-bitbucket-branch-source?color=blue)](https://plugins.jenkins.io/cloudbees-bitbucket-branch-source)
-[![Contributors](https://img.shields.io/github/contributors/jenkinsci/bitbucket-branch-source-plugin.svg)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/contributors)
+[![Contributors](https://img.shields.io/github/contributors/jenkinsci/bitbucket-branch-source-plugin.svg)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/graphs/contributors)
 [![Join the chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jenkinsci/bitbucket-branch-source-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## User Guide
@@ -13,6 +13,12 @@ To configure this plugin correctly, read the [user guide here](docs/USER_GUIDE.a
 ## Notes
 
 ### General notes
+
+On Bitbucket Cloud, push webhooks do not contain open pull request information.
+When pull request discovery or PR-aware branch discovery is enabled, handling a
+push therefore queries open pull requests through the Bitbucket API. This allows
+**Exclude branches that are also filed as PRs** to suppress duplicate branch builds
+while still building branches without open PRs.
 
 Unlike GitHub, in Bitbucket, [team admins do not have access to forks](https://bitbucket.org/site/master/issues/4828/team-admins-dont-have-read-access-to-forks).
 This means that when you have a private repository, or a private fork of a public repository, the team admin will not be able to see the PRs within the fork.

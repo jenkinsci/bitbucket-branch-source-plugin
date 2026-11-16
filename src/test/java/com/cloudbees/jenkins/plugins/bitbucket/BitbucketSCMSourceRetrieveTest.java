@@ -34,15 +34,23 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
+import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestDestination;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketCloudPullRequestRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.BitbucketPlugin;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud.CloudPushWebhookProcessor;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.BitbucketServerAPIClient;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketClientMockUtils;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.BranchDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait;
 import com.cloudbees.jenkins.plugins.bitbucket.trait.ForkPullRequestDiscoveryTrait.TrustEveryone;
+import com.cloudbees.jenkins.plugins.bitbucket.trait.OriginPullRequestDiscoveryTrait;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Items;
 import hudson.model.TaskListener;
@@ -52,6 +60,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
@@ -64,6 +73,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mock;
@@ -314,6 +325,75 @@ class BitbucketSCMSourceRetrieveTest {
      * method with an event having a PR and verify the expected client API calls
      */
     private void dryRun(BitbucketSCMSource instance, SCMHeadEvent<?> event, BitbucketApi apiClient) throws Exception {
+        dryRun(instance, event, apiClient, headObserver);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "1, branch1, true, false",
+        "1, branch1, false, true",
+        "1, main, true, true",
+        "2, branch1, true, true",
+        "2, branch1, false, false",
+        "2, main, true, false",
+        "3, branch1, true, true",
+        "3, branch1, false, true"
+    })
+    void cloudPushHonorsBranchDiscoveryWithOpenPullRequests(
+            int strategy, String branchName, boolean hasOpenPR, boolean expectBranch) throws Exception {
+        BitbucketSCMSource instance = load("retrieve_prs_test_cloud");
+        instance.setTraits(List.of(new BranchDiscoveryTrait(strategy), new OriginPullRequestDiscoveryTrait(2)));
+        BitbucketCloudApiClient client = BitbucketClientMockUtils.getAPIClientMock(false, false);
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, client);
+        BitbucketCloudRepository origin = new BitbucketCloudRepository();
+        origin.setFullName(CLOUD_REPO_OWNER + "/" + REPO_NAME);
+        BitbucketCloudPullRequest openPR = new BitbucketCloudPullRequest();
+        openPR.setId(PR_ID.toString());
+        openPR.setAuthor(new BitbucketCloudPullRequest.Author());
+        openPR.setLinks(new BitbucketCloudPullRequest.Links("https://bitbucket.org/" + origin.getFullName() + "/pull-requests/" + PR_ID));
+        openPR.setSource(new BitbucketCloudPullRequestRepository(
+                origin, new BitbucketCloudBranch(BRANCH_NAME, COMMIT_HASH, 0), null));
+        openPR.setDestination(new BitbucketCloudPullRequestDestination(
+                origin, new BitbucketCloudBranch("main", COMMIT_HASH, 0), null));
+        when(client.getPullRequests()).thenReturn(hasOpenPR ? List.of(openPR) : Collections.emptyList());
+        when(client.getBranch(branchName)).thenReturn(new BitbucketCloudBranch(branchName, COMMIT_HASH, 0));
+
+        AtomicReference<SCMHeadEvent<?>> pushEvent = new AtomicReference<>();
+        CloudPushWebhookProcessor processor = new CloudPushWebhookProcessor() {
+            @Override
+            public void notifyEvent(SCMHeadEvent<?> event, int delaySeconds) {
+                pushEvent.set(event);
+            }
+        };
+        String payload = """
+                {
+                  "repository": {"full_name": "cloudbeers/stunning-adventure",
+                                 "name": "stunning-adventure", "owner": {"nickname": "cloudbeers"}},
+                  "push": {"changes": [{
+                    "old": {"type": "branch", "name": "%s", "target": {"hash": "%s"}},
+                    "new": {"type": "branch", "name": "%s", "target": {"hash": "%s"}},
+                    "created": false, "closed": false
+                  }]}
+                }
+                """.formatted(branchName, COMMIT_HASH, branchName, COMMIT_HASH);
+        processor.process("repo:push", payload, Collections.emptyMap(), mock(BitbucketEndpoint.class));
+        assertThat(pushEvent.get()).isNotNull();
+        BranchSCMHead branchHead = new BranchSCMHead(branchName);
+        assertThat(pushEvent.get().heads(instance)).containsKey(branchHead);
+
+        dryRun(instance, pushEvent.get(), client, SCMHeadObserver.filter(headObserver, branchHead));
+
+        if (expectBranch) {
+            assertThat(headObserver.result()).containsOnlyKeys(branchHead);
+        } else {
+            assertThat(headObserver.result()).isEmpty();
+        }
+        verify(client, never()).getBranches();
+        verify(client, never()).getTags();
+    }
+
+    private void dryRun(BitbucketSCMSource instance, SCMHeadEvent<?> event, BitbucketApi apiClient,
+                        SCMHeadObserver observer) throws Exception {
         String fullRepoName = instance.getRepoOwner() + '/' + instance.getRepository();
         when(repository.getFullName()).thenReturn(fullRepoName);
         when(repository.getRepositoryName()).thenReturn(instance.getRepository());
@@ -326,7 +406,7 @@ class BitbucketSCMSourceRetrieveTest {
         TaskListener taskListener = BitbucketClientMockUtils.getTaskListenerMock();
         when(criteria.isHead(Mockito.any(), Mockito.same(taskListener))).thenReturn(true);
 
-        instance.retrieve(criteria, headObserver, event, taskListener);
+        instance.retrieve(criteria, observer, event, taskListener);
     }
 
     private static final class HeadEvent extends SCMHeadEvent<BitbucketPullRequestEvent> implements HasPullRequests, HasTags {

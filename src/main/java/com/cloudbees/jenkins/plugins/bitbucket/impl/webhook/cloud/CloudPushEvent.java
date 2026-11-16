@@ -27,13 +27,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent.Reference;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent.Target;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
-import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -49,7 +47,8 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import org.apache.commons.lang3.Strings;
 
-final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> implements HasTags, HasPullRequests, HasBranches {
+// Push payloads contain no PR state; discovery must fetch it for PR-aware branch filters.
+final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> implements HasTags, HasBranches {
 
     CloudPushEvent(Type type, BitbucketPushEvent payload, String origin) {
         super(type, payload, origin);
@@ -129,11 +128,6 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> impl
             }
         }
         return tags;
-    }
-
-    @Override
-    public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) {
-        return Collections.emptyList();
     }
 
     @Override
