@@ -3,7 +3,7 @@
 [![Build](https://ci.jenkins.io/buildStatus/icon?job=Plugins%2Fbitbucket-branch-source-plugin%2Fmaster)](https://ci.jenkins.io/job/Plugins/job/bitbucket-branch-source-plugin/job/master/)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/bitbucket-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/releases/latest)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/cloudbees-bitbucket-branch-source?color=blue)](https://plugins.jenkins.io/cloudbees-bitbucket-branch-source)
-[![Contributors](https://img.shields.io/github/contributors/jenkinsci/bitbucket-branch-source-plugin.svg)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/jenkinsci/bitbucket-branch-source-plugin.svg)](https://github.com/jenkinsci/bitbucket-branch-source-plugin/contributors)
 [![Join the chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jenkinsci/bitbucket-branch-source-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## User Guide
