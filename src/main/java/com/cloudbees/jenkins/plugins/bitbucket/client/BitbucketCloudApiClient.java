@@ -60,6 +60,7 @@ import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -183,15 +184,26 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @NonNull
     @Override
     public List<BitbucketCloudPullRequest> getPullRequests() throws IOException {
+        return getPullRequests(null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    public List<BitbucketCloudPullRequest> getPullRequests(@Nullable String branchName) throws IOException {
         // we can not use the default max pagelen also if documented
         // https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests#get
         // so because with values greater than 50 the API returns HTTP 400
         int pageLen = 50;
-        String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{?page,pagelen}")
+        UriTemplate template = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{?page,pagelen,q}")
                 .set("owner", owner)
                 .set("repo", repositoryName)
-                .set("pagelen", pageLen)
-                .expand();
+                .set("pagelen", pageLen);
+        if (branchName != null) {
+            template.set("q", String.format("source.branch.name=\"%s\" AND state=\"OPEN\"" + branchName));
+        }
+        String url = template.expand();
 
         List<BitbucketCloudPullRequest> pullRequests = getPagedRequest(url, BitbucketCloudPullRequest.class);
         // PRs with missing destination branch are invalid and should be ignored.
