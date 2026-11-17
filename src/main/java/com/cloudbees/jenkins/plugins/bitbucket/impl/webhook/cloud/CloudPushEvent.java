@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket.impl.webhook.cloud;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPushEvent;
@@ -35,14 +36,19 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.api.HasTags;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
@@ -50,6 +56,8 @@ import jenkins.scm.api.SCMSource;
 import org.apache.commons.lang3.Strings;
 
 final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> implements HasTags, HasPullRequests, HasBranches {
+
+    private static final Logger logger = Logger.getLogger(CloudPushWebhookProcessor.class.getName());
 
     CloudPushEvent(Type type, BitbucketPushEvent payload, String origin) {
         super(type, payload, origin);
@@ -133,7 +141,20 @@ final class CloudPushEvent extends AbstractSCMHeadEvent<BitbucketPushEvent> impl
 
     @Override
     public Iterable<BitbucketPullRequest> getPullRequests(BitbucketSCMSource src) {
-        return Collections.emptyList();
+        List<BitbucketPullRequest> pullRequests = new ArrayList<>();
+        BitbucketRepository repository = getPayload().getRepository();
+        try (BitbucketApi client = src.buildBitbucketClient(repository.getOwnerName(), repository.getRepositoryName())) {
+            if (client instanceof BitbucketCloudApiClient cloudClient) {
+                for (BitbucketBranch branch : getBranches(src)) {
+                    pullRequests.addAll(cloudClient.getPullRequests(branch.getName()));
+                }
+            }
+        } catch (FileNotFoundException e) {
+            logger.log(Level.INFO, "No such Repository on Bitbucket: {0}", e.getMessage());
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to retrieve Pull Requests from Bitbucket", e);
+        }
+        return pullRequests;
     }
 
     @Override
