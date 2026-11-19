@@ -27,7 +27,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketMockApiFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.api.endpoint.BitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketIntegrationClientFactory;
 import com.cloudbees.jenkins.plugins.bitbucket.hooks.HookEventType;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.endpoint.BitbucketCloudEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.HookProcessorTestUtil;
@@ -48,16 +50,28 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+@WithJenkins
 class CloudPushWebhookProcessorTest {
 
     private CloudPushWebhookProcessor sut;
     private CloudPushEvent scmEvent;
+
+    @SuppressWarnings("unused")
+    private static JenkinsRule rule;
+
+    @BeforeAll
+    static void init(JenkinsRule rule) {
+        CloudPushWebhookProcessorTest.rule = rule;
+    }
 
     @BeforeEach
     void setup() {
@@ -67,6 +81,7 @@ class CloudPushWebhookProcessorTest {
                 CloudPushWebhookProcessorTest.this.scmEvent = (CloudPushEvent) event;
             }
         };
+        BitbucketMockApiFactory.add(BitbucketCloudEndpoint.SERVER_URL, BitbucketIntegrationClientFactory.getApiMockClient(BitbucketCloudEndpoint.SERVER_URL));
     }
 
     @Test
@@ -133,6 +148,7 @@ class CloudPushWebhookProcessorTest {
                 assertThat(tag.getDateMillis()).isEqualTo(1738608795000L);
             });
         assertThat(scmEvent.getBranches(scmSource)).isEmpty();
+
         assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
