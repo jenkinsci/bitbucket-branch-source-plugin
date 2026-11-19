@@ -133,7 +133,6 @@ class CloudPushWebhookProcessorTest {
                 assertThat(tag.getDateMillis()).isEqualTo(1738608795000L);
             });
         assertThat(scmEvent.getBranches(scmSource)).isEmpty();
-        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     @Test
@@ -160,7 +159,6 @@ class CloudPushWebhookProcessorTest {
                 assertThat(branch.getDateMillis()).isEqualTo(1745660606000L);
             });
         assertThat(scmEvent.getTags(scmSource)).isEmpty();
-        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     @Test
@@ -187,7 +185,6 @@ class CloudPushWebhookProcessorTest {
                 assertThat(branch.getDateMillis()).isEqualTo(1745660606000L);
             });
         assertThat(scmEvent.getTags(scmSource)).isEmpty();
-        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     @Test
@@ -216,7 +213,6 @@ class CloudPushWebhookProcessorTest {
                 assertThat(tag.getRawNode()).isNull();
             });
         assertThat(scmEvent.getBranches(scmSource)).isEmpty();
-        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     @Test
@@ -245,7 +241,6 @@ class CloudPushWebhookProcessorTest {
             });
 
         assertThat(scmEvent.getBranches(scmSource)).isEmpty();
-        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     @Test
@@ -273,7 +268,6 @@ class CloudPushWebhookProcessorTest {
             .hasSize(1)
             .extracting(BitbucketBranch::getName)
             .contains("feature/issue-819");
-        assertThat(scmEvent.getPullRequests(scmSource)).isEmpty();
     }
 
     private String loadResource(String resource) throws IOException {

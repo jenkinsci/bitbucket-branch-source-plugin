@@ -14,6 +14,12 @@ To configure this plugin correctly, read the [user guide here](docs/USER_GUIDE.a
 
 ### General notes
 
+On Bitbucket Cloud, push webhooks do not contain open pull request information.
+When pull request discovery or PR-aware branch discovery is enabled, handling a
+push therefore queries open pull requests through the Bitbucket API. This allows
+**Exclude branches that are also filed as PRs** to suppress duplicate branch builds
+while still building branches without open PRs.
+
 Unlike GitHub, in Bitbucket, [team admins do not have access to forks](https://bitbucket.org/site/master/issues/4828/team-admins-dont-have-read-access-to-forks).
 This means that when you have a private repository, or a private fork of a public repository, the team admin will not be able to see the PRs within the fork.
 
