@@ -32,7 +32,7 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
-import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
+import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.utils.DateUtils;
 import org.apache.hc.core5.annotation.Contract;
 import org.apache.hc.core5.annotation.ThreadingBehavior;
@@ -43,6 +43,7 @@ import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.Method;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.util.Args;
 import org.apache.hc.core5.util.TimeValue;
@@ -68,7 +69,7 @@ import org.apache.http.impl.client.cache.AsynchronousValidationRequest;
  * The resulting delay won't exceed maxExpiryInMillis.
  */
 @Contract(threading = ThreadingBehavior.SAFE)
-public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStrategy {
+public class ExponentialBackoffRetryStrategy implements HttpRequestRetryStrategy {
 
     public static final long DEFAULT_BACK_OFF_RATE = 10;
     public static final long DEFAULT_INITIAL_EXPIRY_IN_MILLIS = TimeUnit.SECONDS.toMillis(6);
@@ -152,6 +153,10 @@ public class ExponentialBackoffRetryStrategy extends DefaultHttpRequestRetryStra
 
         // Retry if the request is considered idempotent
         return handleAsIdempotent(request);
+    }
+
+    protected boolean handleAsIdempotent(final HttpRequest request) {
+        return Method.isIdempotent(request.getMethod());
     }
 
     @Override
