@@ -1212,13 +1212,13 @@ public class BitbucketSCMSource extends SCMSource {
             BitbucketSupplier<ListBoxModel> listBoxModelSupplier = bitbucket -> {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
-                List<? extends BitbucketRepository> repositories =
-                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.MEMBER);
-                if (repositories.isEmpty()) {
+                List<String> repositoryNames =
+                    bitbucket.getRepositoryNames(team != null ? null : UserRoleInRepository.MEMBER);
+                if (repositoryNames.isEmpty()) {
                     throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
                 }
-                for (BitbucketRepository repo : repositories) {
-                    result.add(repo.getRepositoryName());
+                for (String name : repositoryNames) {
+                    result.add(name);
                 }
                 return result;
             };

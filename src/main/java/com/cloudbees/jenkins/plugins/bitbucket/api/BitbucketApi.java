@@ -285,6 +285,20 @@ public interface BitbucketApi extends AutoCloseable {
             throws IOException, InterruptedException;
 
     /**
+     * Returns the repository names for selection in a configuration form.
+     *
+     * @param role the same optional role filter as {@link #getRepositories(UserRoleInRepository)}
+     * @return the repository names
+     * @throws IOException if the repositories cannot be retrieved
+     * @throws InterruptedException if interrupted while waiting on remote communications
+     */
+    @NonNull
+    default List<String> getRepositoryNames(@CheckForNull UserRoleInRepository role)
+            throws IOException, InterruptedException {
+        return getRepositories(role).stream().map(BitbucketRepository::getRepositoryName).toList();
+    }
+
+    /**
      * Returns all the repositories for the current owner (even if it's a regular user or a team).
      *
      * @return all repositories for the current {@link #getOwner()}

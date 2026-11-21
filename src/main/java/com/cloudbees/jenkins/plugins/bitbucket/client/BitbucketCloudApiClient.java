@@ -69,6 +69,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -86,6 +87,7 @@ import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -96,6 +98,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
     private static final String V2_WORKSPACES_API_BASE_URL = "https://api.bitbucket.org/2.0/workspaces";
     private static final String REPO_URL_TEMPLATE = V2_API_BASE_URL + "{/owner,repo}";
+    private static final String REPOSITORY_NAME_FIELDS = "next,values.full_name";
     // Limit images to 16k
     private static final int MAX_AVATAR_LENGTH = 16384;
     private static final int MAX_PAGE_LENGTH = 100;
@@ -611,6 +614,17 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     @NonNull
     @Override
     public List<BitbucketCloudRepository> getRepositories(@CheckForNull UserRoleInRepository role) throws IOException {
+        return getRepositories(role, false);
+    }
+
+    @NonNull
+    @Override
+    public List<String> getRepositoryNames(@CheckForNull UserRoleInRepository role) throws IOException {
+        return getRepositories(role, true).stream().map(BitbucketCloudRepository::getRepositoryName).toList();
+    }
+
+    private List<BitbucketCloudRepository> getRepositories(@CheckForNull UserRoleInRepository role, boolean namesOnly)
+            throws IOException {
         StringBuilder cacheKey = new StringBuilder();
         cacheKey.append(owner);
 
@@ -620,7 +634,7 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             cacheKey.append("::<anonymous>");
         }
 
-        final UriTemplate template = UriTemplate.fromTemplate(V2_API_BASE_URL + "{/owner}{?role,page,pagelen,q}")
+        final UriTemplate template = UriTemplate.fromTemplate(V2_API_BASE_URL + "{/owner}{?role,page,pagelen,q,fields}")
                 .set("owner", owner)
                 .set("pagelen", MAX_PAGE_LENGTH);
         if (StringUtils.isNotBlank(projectKey)) {
@@ -635,10 +649,15 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
         } else {
             cacheKey.append("::<undefined>");
         }
+        if (namesOnly) {
+            template.set("fields", REPOSITORY_NAME_FIELDS);
+            cacheKey.append("::namesOnly");
+        }
         String url = template.expand();
 
         ICheckedCallable<List<BitbucketCloudRepository>, IOException> request = () -> {
-            List<BitbucketCloudRepository> repositories = getPagedRequest(url, BitbucketCloudRepository.class);
+            List<BitbucketCloudRepository> repositories = getPagedRequest(url, BitbucketCloudRepository.class,
+                    namesOnly ? REPOSITORY_NAME_FIELDS : null);
             repositories.sort(Comparator.comparing(BitbucketCloudRepository::getRepositoryName));
             return repositories;
         };
@@ -776,6 +795,11 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
     }
 */
     private <V> List<V> getPagedRequest(String url, Class<V> resultType) throws IOException {
+        return getPagedRequest(url, resultType, null);
+    }
+
+    private <V> List<V> getPagedRequest(String url, Class<V> resultType, @CheckForNull String fields)
+            throws IOException {
         List<V> resources = new ArrayList<>();
         String response = getRequest(url);
 
@@ -808,7 +832,8 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             BitbucketCloudPage<V> page = JsonParser.toJava(response, type);
             resources.addAll(page.getValues());
             while (!page.isLastPage()){
-                response = getRequest(page.getNext());
+                String next = page.getNext();
+                response = getRequest(fields == null ? next : withFields(next, fields));
                 page = JsonParser.toJava(response, type);
                 resources.addAll(page.getValues());
             }
@@ -816,6 +841,18 @@ public class BitbucketCloudApiClient extends AbstractBitbucketApi implements Bit
             throw new IOException("I/O error when parsing response from URL: " + url, e);
         }
         return resources;
+    }
+
+    private String withFields(String url, String fields) throws IOException {
+        try {
+            URIBuilder next = new URIBuilder(url);
+            if (next.getQueryParams().stream().anyMatch(param -> "fields".equals(param.getName()))) {
+                return url;
+            }
+            return next.addParameter("fields", fields).build().toString();
+        } catch (URISyntaxException e) {
+            throw new IOException("Invalid Bitbucket pagination URL", e);
+        }
     }
 
     private <V> V getRequestAs(String url, Class<V> resultType) throws IOException {
