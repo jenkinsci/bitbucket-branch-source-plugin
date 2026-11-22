@@ -44,7 +44,8 @@ THE SOFTWARE.
     <f:textbox/>
   </f:entry>
   <f:entry title="${%Repository Name}" field="repository">
-    <f:select/>
+    <f:textbox placeholder="${%Type at least 2 characters}"/>
+    <f:description>${%Type at least 2 characters to search for repositories. Only the first results will be shown.}</f:description>
   </f:entry>
   <f:entry title="${%Clone from}" field="mirrorId">
     <f:select/>

@@ -74,6 +74,7 @@ import hudson.Util;
 import hudson.console.HyperlinkNote;
 import hudson.model.Action;
 import hudson.model.Actionable;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
@@ -1204,25 +1205,31 @@ public class BitbucketSCMSource extends SCMSource {
         }
 
         @RequirePOST
-        public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
-                                                  @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
-                                                  @QueryParameter(fixEmpty = true) String credentialsId,
-                                                  @QueryParameter(fixEmpty = true) String repoOwner) throws IOException {
+        public AutoCompletionCandidates doAutoCompleteRepository(@AncestorInPath SCMSourceOwner context,
+                                                                 @QueryParameter(fixEmpty = true, value = "serverUrl") String serverURL,
+                                                                 @QueryParameter(fixEmpty = true) String credentialsId,
+                                                                 @QueryParameter(fixEmpty = true) String repoOwner,
+                                                                 @QueryParameter(fixEmpty = true) String value) throws IOException {
+            AutoCompletionCandidates candidates = new AutoCompletionCandidates();
+            String filter = Util.fixEmptyAndTrim(value);
+            if (filter == null || filter.length() < 2) {
+                return candidates;
+            }
 
             BitbucketSupplier<ListBoxModel> listBoxModelSupplier = bitbucket -> {
                 ListBoxModel result = new ListBoxModel();
                 BitbucketTeam team = bitbucket.getTeam();
                 List<? extends BitbucketRepository> repositories =
-                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.MEMBER);
-                if (repositories.isEmpty()) {
-                    throw FormFillFailure.error(Messages.BitbucketSCMSource_NoMatchingOwner(repoOwner)).withSelectionCleared();
-                }
+                    bitbucket.getRepositories(team != null ? null : UserRoleInRepository.MEMBER, filter, 1);
                 for (BitbucketRepository repo : repositories) {
                     result.add(repo.getRepositoryName());
                 }
                 return result;
             };
-            return getFromBitbucket(context, serverURL, credentialsId, repoOwner, null, listBoxModelSupplier);
+            for (ListBoxModel.Option option : getFromBitbucket(context, serverURL, credentialsId, repoOwner, null, listBoxModelSupplier)) {
+                candidates.add(option.value);
+            }
+            return candidates;
         }
 
         @RequirePOST

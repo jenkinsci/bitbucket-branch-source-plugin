@@ -649,15 +649,32 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
      */
     @NonNull
     @Override
+    @Deprecated
     public List<BitbucketServerRepository> getRepositories(@CheckForNull UserRoleInRepository role)
             throws IOException {
+        return getRepositories(role, null, null);
+    }
+
+    @NonNull
+    @Override
+    public List<BitbucketServerRepository> getRepositories(@CheckForNull UserRoleInRepository role,
+                                                           @Nullable String filterName,
+                                                           @Nullable Integer page) throws IOException {
+        if (page != null && page < 1) {
+            throw new IllegalArgumentException("page must be null or greater than or equal to 1");
+        }
         UriTemplate template = UriTemplate
                 .fromTemplate(this.baseURL + API_REPOSITORIES_PATH)
                 .set("owner", getOwner());
+        if (StringUtils.isNotBlank(filterName)) {
+            template = UriTemplate.fromTemplate(this.baseURL + API_BASE_PATH + "/repos{?projectkey,name,start,limit}")
+                    .set("projectkey", getOwner())
+                    .set("name", filterName.trim());
+        }
 
         List<BitbucketServerRepository> repositories = new ArrayList<>();
         try {
-            repositories = getPagedRequest(template, BitbucketServerRepository.class);
+            repositories = getPagedRequest(template, BitbucketServerRepository.class, page);
             repositories.removeIf(BitbucketServerRepository::isArchived);
             repositories.sort(Comparator.comparing(BitbucketServerRepository::getRepositoryName));
         } catch (FileNotFoundException e) {
@@ -670,7 +687,7 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     @NonNull
     @Override
     public List<BitbucketServerRepository> getRepositories() throws IOException {
-        return getRepositories(null);
+        return getRepositories(null, null, null);
     }
 
     @Override
@@ -688,6 +705,10 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
     }
 
     private <V> List<V> getPagedRequest(UriTemplate template, Class<V> resultType) throws IOException {
+        return getPagedRequest(template, resultType, (Integer) null);
+    }
+
+    private <V> List<V> getPagedRequest(UriTemplate template, Class<V> resultType, @Nullable Integer targetPage) throws IOException {
         ParameterizedType parameterizedType = new ParameterizedType() {
 
             @Override
@@ -720,6 +741,8 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
             BitbucketServerPage<V> page;
             Integer pageNumber = 0;
             Integer limit = DEFAULT_PAGE_LIMIT;
+            int currentPage = 1;
+            boolean enablePaging = targetPage != null;
             do {
                 url = template //
                         .set("start", pageNumber) //
@@ -727,10 +750,16 @@ public class BitbucketServerAPIClient extends AbstractBitbucketApi implements Bi
                         .expand();
                 String response = getRequest(url);
                 page = JsonParser.toJava(response, type);
-                resources.addAll(page.getValues());
+                if (!enablePaging || currentPage == targetPage) {
+                    resources.addAll(page.getValues());
+                }
+                if (enablePaging && currentPage == targetPage) {
+                    break;
+                }
 
                 limit = page.getLimit();
                 pageNumber = page.getNextPageStart();
+                currentPage++;
             } while (!page.isLastPage());
 
             return resources;

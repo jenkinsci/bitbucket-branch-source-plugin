@@ -28,8 +28,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus.Status;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketCloudRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketAccessTokenAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketClientCertificateAuthenticator;
 import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketOAuthAuthenticator;
@@ -41,8 +43,11 @@ import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
 import hudson.ProxyConfiguration;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -50,6 +55,8 @@ import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
@@ -132,6 +139,78 @@ class BitbucketCloudApiClientTest {
         assertThat(request).isNotNull()
             .isInstanceOfSatisfying(HttpPut.class, put ->
                 assertThat(put.getRequestUri()).isEqualTo("https://api.bitbucket.org/2.0/repositories/amuniz/test-repos/hooks/%7B202cf34e-7ccf-44b7-ba6b-8827a14d5324%7D"));
+    }
+
+    @Test
+    void repository_requests_select_the_requested_page_and_apply_remote_filter() throws Exception {
+        try (RepositoryClient client = new RepositoryClient()) {
+            assertThat(client.getRepositories(UserRoleInRepository.MEMBER, " test ", 1))
+                    .extracting(BitbucketRepository::getRepositoryName).containsExactly("test-first");
+            assertThat(client.requests).hasSize(1);
+            assertThat(client.requests.get(0)).contains("page=1", "role=member",
+                    "q=project.key=\"PROJECT\" AND name~\"test\"");
+
+            assertThat(client.getRepositories(null, "test", 2))
+                    .extracting(BitbucketRepository::getRepositoryName).containsExactly("test-second");
+            assertThat(client.requests).hasSize(2);
+            assertThat(client.requests.get(1)).contains("page=2");
+
+            assertThat(client.getRepositories(null, "test", null))
+                    .extracting(BitbucketRepository::getRepositoryName).containsExactly("test-first", "test-second");
+            assertThat(client.requests).hasSize(4);
+
+            client.getRepositories(null, "a\\b\"c", 1);
+            assertThat(client.requests.get(4)).contains("name~\"a\\\\b\\\"c\"");
+        }
+    }
+
+    @Test
+    void filtered_or_single_page_requests_do_not_read_or_populate_cache() throws Exception {
+        try (RepositoryClient client = new RepositoryClient()) {
+            client.getRepositories(null, null, null);
+            client.getRepositories(null, " ", null);
+            assertThat(client.requests).hasSize(2);
+
+            client.getRepositories(null, "test", null);
+            client.getRepositories(null, "test", null);
+            assertThat(client.requests).hasSize(6);
+
+            client.getRepositories(null, null, 1);
+            client.getRepositories(null, null, 1);
+            assertThat(client.requests).hasSize(8);
+
+            client.getRepositories(null, null, null);
+            assertThat(client.requests).hasSize(8);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-2, -1, 0})
+    void invalid_repository_page_does_not_make_a_request(int page) throws Exception {
+        try (RepositoryClient client = new RepositoryClient()) {
+            assertThatThrownBy(() -> client.getRepositories(null, null, page)).isInstanceOf(IllegalArgumentException.class);
+            assertThat(client.requests).isEmpty();
+        }
+    }
+
+    private static class RepositoryClient extends BitbucketCloudApiClient {
+        private final List<String> requests = new ArrayList<>();
+
+        RepositoryClient() {
+            super(true, 5, 5, "repository-paging-test", "PROJECT", null, mock(BitbucketOAuthAuthenticator.class));
+            BitbucketCloudApiClient.clearCaches();
+        }
+
+        @Override
+        protected String getRequest(String path) {
+            String url = URLDecoder.decode(path, StandardCharsets.UTF_8);
+            requests.add(url);
+            if (url.contains("page=2")) {
+                return "{\"values\":[{\"full_name\":\"owner/test-second\"}]}";
+            }
+            return "{\"values\":[{\"full_name\":\"owner/test-first\"}],"
+                    + "\"next\":\"https://api.bitbucket.org/2.0/repositories/repository-paging-test?page=2\"}";
+        }
     }
 
     @Test

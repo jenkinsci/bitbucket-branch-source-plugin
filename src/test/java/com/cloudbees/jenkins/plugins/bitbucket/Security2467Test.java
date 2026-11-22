@@ -41,7 +41,7 @@ class Security2467Test {
     @Issue("SECURITY-2467")
     @Test
     @WithJenkins
-    void doFillRepositoryItemsWhenInvokedUsingGetMethodThenReturnMethodNotAllowed(JenkinsRule rule) throws Exception {
+    void doAutoCompleteRepositoryWhenInvokedUsingGetMethodThenReturnMethodNotAllowed(JenkinsRule rule) throws Exception {
         String admin = "Admin";
         String projectName = "p";
         rule.jenkins.createProject(WorkflowMultiBranchProject.class, projectName);
@@ -51,7 +51,7 @@ class Security2467Test {
 
         JenkinsRule.WebClient webClient = rule.createWebClient().withThrowExceptionOnFailingStatusCode(false);
         webClient.login(admin);
-        HtmlPage htmlPage = webClient.goTo("job/" + projectName +"/descriptorByName/com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource/fillRepositoryItems?serverUrl=http://hacker:9000&credentialsId=ID_Admin&repoOwner=admin");
+        HtmlPage htmlPage = webClient.goTo("job/" + projectName +"/descriptorByName/com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource/autoCompleteRepository?serverUrl=http://hacker:9000&credentialsId=ID_Admin&repoOwner=admin&value=test");
 
         WebResponse webResponse = htmlPage.getWebResponse();
         assertThat(webResponse.getStatusCode()).isEqualTo(HttpURLConnection.HTTP_BAD_METHOD);
