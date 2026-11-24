@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.impl.avatars.AvatarImage;
 import org.kohsuke.accmod.Restricted;
@@ -279,10 +280,47 @@ public interface BitbucketApi extends AutoCloseable {
      * @return the repositories list (it can be empty)
      * @throws IOException if there was a network communications error.
      * @throws InterruptedException if interrupted while waiting on remote communications.
+     * @deprecated Use {@link #getRepositories(UserRoleInRepository, String, Integer)} instead.
      */
     @NonNull
+    @Deprecated(since = "937.3.11", forRemoval = true)
     List<? extends BitbucketRepository> getRepositories(@CheckForNull UserRoleInRepository role)
             throws IOException, InterruptedException;
+
+    /**
+     * Returns repositories applying the given filters.
+     * The compatibility implementation filters and pages the deprecated method's results locally.
+     *
+     * @param role the owner's role, or null for a team
+     * @param filterName optional repository name filter
+     * @param page must be null to retrieve all pages, or greater than or equal to 1;
+     *             1 identifies the first page
+     * @return matching repositories
+     * @throws IOException if communication fails
+     * @throws InterruptedException if communication is interrupted
+     */
+    @NonNull
+    default List<? extends BitbucketRepository> getRepositories(@CheckForNull UserRoleInRepository role,
+                                                                @Nullable String filterName,
+                                                                @Nullable Integer page) throws IOException, InterruptedException {
+        if (page != null && page < 1) {
+            throw new IllegalArgumentException("page must be null or greater than or equal to 1");
+        }
+        List<? extends BitbucketRepository> repositories = getRepositories(role);
+        if (filterName != null && !filterName.isBlank()) {
+            String text = filterName.trim().toLowerCase(Locale.ROOT);
+            repositories = repositories.stream()
+                    .filter(repo -> repo.getRepositoryName().toLowerCase(Locale.ROOT).contains(text))
+                    .toList();
+        }
+        if (page == null) {
+            return repositories;
+        }
+        return repositories.stream()
+                .skip((page - 1L) * 100)
+                .limit(100)
+                .toList();
+    }
 
     /**
      * Returns all the repositories for the current owner (even if it's a regular user or a team).

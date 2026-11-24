@@ -38,7 +38,9 @@ import com.cloudbees.jenkins.plugins.bitbucket.impl.credentials.BitbucketUsernam
 import com.cloudbees.jenkins.plugins.bitbucket.test.util.BitbucketTestUtil;
 import hudson.ProxyConfiguration;
 import java.io.InputStream;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -54,6 +56,8 @@ import org.apache.hc.core5.http.HttpRequest;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
@@ -157,6 +161,60 @@ class BitbucketServerAPIClientTest {
                     .hasScheme("https")
                     .hasHost("acme.bitbucket.org")
                     .hasPath("/rest/api/1.0/projects/amuniz/repos/test-repos/browse/Jenkinsfile"));
+    }
+
+    @Test
+    void repository_requests_apply_remote_filter_and_follow_page_cursor() throws Exception {
+        try (RepositoryClient client = new RepositoryClient()) {
+            assertThat(client.getRepositories(null, " test ", 1))
+                    .extracting(BitbucketRepository::getRepositoryName).containsExactly("test-first");
+            assertThat(client.requests).hasSize(1);
+            assertThat(client.requests.get(0)).startsWith("https://bitbucket.example/rest/api/1.0/repos?")
+                    .contains("projectkey=PROJECT", "name=test", "start=0");
+
+            client.requests.clear();
+            assertThat(client.getRepositories(null, "test", 2))
+                    .extracting(BitbucketRepository::getRepositoryName).containsExactly("test-second");
+            assertThat(client.requests).hasSize(2);
+            assertThat(client.requests.get(1)).contains("start=37");
+
+            client.requests.clear();
+            assertThat(client.getRepositories(null, null, null))
+                    .extracting(BitbucketRepository::getRepositoryName).containsExactly("test-first", "test-second");
+            assertThat(client.requests).hasSize(2);
+            assertThat(client.requests.get(0)).startsWith("https://bitbucket.example/rest/api/1.0/projects/PROJECT/repos?")
+                    .doesNotContain("name=");
+
+            assertThat(client.getRepositories(null, "test", 3)).isEmpty();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-2, -1, 0})
+    void invalid_repository_page_does_not_make_a_request(int page) throws Exception {
+        try (RepositoryClient client = new RepositoryClient()) {
+            assertThatThrownBy(() -> client.getRepositories(null, null, page)).isInstanceOf(IllegalArgumentException.class);
+            assertThat(client.requests).isEmpty();
+        }
+    }
+
+    private static class RepositoryClient extends BitbucketServerAPIClient {
+        private final List<String> requests = new ArrayList<>();
+
+        RepositoryClient() {
+            super("https://bitbucket.example", "PROJECT", null, null, false);
+        }
+
+        @Override
+        protected String getRequest(String path) {
+            String url = URLDecoder.decode(path, StandardCharsets.UTF_8);
+            requests.add(url);
+            if (url.contains("start=37")) {
+                return "{\"values\":[{\"slug\":\"test-second\"}],\"limit\":25,\"isLastPage\":true}";
+            }
+            return "{\"values\":[{\"slug\":\"test-first\"}],\"limit\":25,"
+                    + "\"isLastPage\":false,\"nextPageStart\":37}";
+        }
     }
 
     @Test
